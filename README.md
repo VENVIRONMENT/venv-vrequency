@@ -117,3 +117,8 @@ QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   #
 
 See [docs/HARDWARE.md](docs/HARDWARE.md) for the audit and [docs/STATUS.md](docs/STATUS.md) for what is
 verified, what still needs a human with the device in hand, and known limits.
+
+## Licence
+
+MIT: use it, change it and share it freely, keeping the copyright notice. See [LICENSE](LICENSE).
+The app uses Qt 6 and PipeWire from the system; they are not included here and keep their own licences.
