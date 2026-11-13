@@ -764,8 +764,19 @@ void MainWindow::paintEvent(QPaintEvent *) {
         first = false;
         if (qEnvironmentVariableIsSet("VREQUENCY_TIMING")) fprintf(stderr, "vrequency: first frame %lld ms after launch\n", (long long)msSinceStart());
     }
-    QPainter painter(this);
-    drawAll(painter, width(), height());
+    QElapsedTimer pt; pt.start();
+    {
+        QPainter painter(this);
+        drawAll(painter, width(), height());
+    }
+    // VREQUENCY_TIMING=1 prints how often the window is drawn and how long a frame takes
+    static const bool timing = qEnvironmentVariableIsSet("VREQUENCY_TIMING");
+    static int frames = 0; static qint64 spent = 0, since = 0;
+    ++frames; spent += pt.nsecsElapsed();
+    if (timing && clock.elapsed() - since >= 2000) {
+        fprintf(stderr, "vrequency: page %d, %.1f frames/s, %.1f ms each\n", pg, frames * 1000.0 / (clock.elapsed() - since), spent / 1e6 / frames);
+        frames = 0; spent = 0; since = clock.elapsed();
+    }
 }
 
 void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {

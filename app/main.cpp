@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         else if (a == "--shots" && i + 1 < argc) shots = argv[++i];
         else if (a == "--render" && i + 1 < argc) render = argv[++i];
         else if (a == "--audio" && i + 1 < argc) prefer = argv[++i];
-        else if (a == "--version") { std::printf("vrequency 0.8.0\n"); return 0; }
+        else if (a == "--version") { std::printf("vrequency 0.8.1\n"); return 0; }
         else if (a == "--help" || a == "-h") {
             std::printf("venv vrequency - pocket string synthesiser\n\n"
                         "  vrequency               start full screen\n"

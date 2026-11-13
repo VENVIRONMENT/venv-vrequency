@@ -85,6 +85,22 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         for (int i = 0; i < 40; ++i) w.shot();
         std::printf("  info  play page redraw: %.1f ms per frame\n", pt.elapsed() / 40.0);
     }
+    { // a busy wave on the scope once cost 40 to 60 ms a frame: a whole processor core at 25 frames a second
+        static const char *pn[] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help"};
+        key(w, Qt::Key_Z, true); key(w, Qt::Key_S, true); key(w, Qt::Key_E, true); wait(300);
+        double worst = 0; int worstPage = 0;
+        for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
+            w.setPage(p); w.shot();
+            QElapsedTimer t; t.start();
+            for (int i = 0; i < 20; ++i) w.shot();
+            const double ms = t.nsecsElapsed() / 20e6;
+            if (ms > worst) { worst = ms; worstPage = p; }
+        }
+        key(w, Qt::Key_E, false); key(w, Qt::Key_S, false); key(w, Qt::Key_Z, false);
+        inst.cmd(EV_PANIC); // no release tails left for the checks that follow
+        w.setPage(MainWindow::PG_PLAY); wait(400);
+        check(worst < 25.0, QString("with three notes sounding every page redraws well inside a 40 ms frame (slowest: %1, %2 ms)").arg(pn[worstPage]).arg(worst, 0, 'f', 1));
+    }
 
     std::printf("- keyboard events -> notes\n");
     key(w, Qt::Key_Z, true); wait(120);
@@ -289,6 +305,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(T().clips.size() == 3 && T().clips[0]->kind == CK_BEAT && T().clips[1]->kind == CK_CHORDS && T().clips[2]->kind == CK_LOOP,
               "+ Keep copies the beat, the chords and the loop onto the shelf");
         check(w.clipInHand(), "and the newest clip is in hand, ready to place");
+        wait(3200);
+        QJsonObject aj; store::readJson(store::baseDir() + "/state.json", aj);
+        check(aj["track"].toObject()["clips"].toArray().size() == 3, "a moment after an edit the track is in the state file without being asked");
         tap(w, "keep"); wait(60);
         check(T().clips.size() == 3, "keeping the same things again adds nothing");
         QRectF lanes = w.zoneRect("lanes");
