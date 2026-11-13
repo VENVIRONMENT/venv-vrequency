@@ -29,7 +29,7 @@ constexpr int kProgMax = 8;
 constexpr int kLayerEvents = 6000;
 constexpr int kLayerPatches = 8;
 constexpr double kMaxLoopBeats = 256; // 64 bars
-constexpr int kScopeSize = 4096;
+constexpr int kScopeSize = 16384; // 340 ms at 48 kHz: enough for the slowest timebase
 
 template <typename T, int N> // single-producer single-consumer ring, N power of two
 class Spsc {

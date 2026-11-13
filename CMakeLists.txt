@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(tendril VERSION 0.1.0 LANGUAGES C CXX)
+project(tendril VERSION 0.2.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -41,6 +41,11 @@ if(TENDRIL_BUILD_APP)
   add_executable(tendril
     app/main.cpp
     app/mainwindow.cpp
+    app/panel.cpp
+    app/crt.cpp
+    app/hw.cpp
+    app/hw.h
+    app/shared.h
     app/mainwindow.h
     app/store.cpp
     app/keymap.cpp

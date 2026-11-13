@@ -26,17 +26,17 @@ Everything below was read from the running system on 2026-11-13. Nothing is assu
 
 **For low latency** plug a USB audio adapter (or USB-C headphones/DAC) into the Hackberry, or use HDMI audio.
 Tendril follows the system default output, so nothing needs configuring: choose the output in GNOME's sound menu.
-The SYSTEM page shows which output is in use and whether it is Bluetooth.
+Utility → Status shows which output is in use and whether it is Bluetooth; the Output lamp under the tube is amber on Bluetooth.
 
 **Loop timing on Bluetooth.** Because you hear yourself late, you naturally play late against the metronome.
-When the output is Bluetooth, Tendril shifts recorded loop events earlier by 200 ms (SYSTEM → LOOP TIMING FIX,
+When the output is Bluetooth, Tendril shifts recorded loop events earlier by 200 ms (Time → Loop fix,
 adjustable 0–500 ms). On a wired output it is set to 0.
 
 ## Sensors
 
 | Looked for | Found |
 |---|---|
-| Accelerometer / gyroscope (IIO) | **None.** No tilt control was built; the touch XY pad does that job. |
+| Accelerometer / gyroscope (IIO) | **None.** No tilt control was built; touching the trace on the tube (X-Y control) does that job. |
 | Microphone | **None.** The Listen feature exists and is unit-tested on synthetic audio, but on this device it can only report "no audio input". Plug in a USB microphone and it has something to hear. |
 
 ## Keyboard (Q20, ZitaoTech RP2040 firmware, Vial/QMK)
@@ -74,7 +74,7 @@ QMK boards normally have a diode per key (no ghosting), but I could not confirm 
 
 Run `python3 scripts/ghost_analysis.py` for the full list.
 
-**To find out:** open Tendril, MENU → SYSTEM → KEY TEST (or run `tendril --keytest`). It shows every key the
+**To find out:** open Tendril, Utility → Key test (or run `tendril --keytest`). It shows every key the
 app currently believes is held, a log of the latest press/release events and the highest number held at once.
 Try the combinations above. If only the keys you are pressing light up, the matrix has diodes and none of
 this matters.
