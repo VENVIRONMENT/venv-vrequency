@@ -556,7 +556,12 @@ that file restores the defaults.
 | My drum hits land on the wrong step | The Bluetooth speaker is late, so you hit late. System page, Loop fix moves recorded hits earlier; raise it if hits land a step late, lower it if early. |
 | The sound is distorted or quiet with "Limit" showing | Lower Master volume, or the sound's Drive. |
 
-To reconnect the speaker from a terminal:
+To reconnect the speaker from a terminal, list the paired devices to find its address
+(the Hackberry's built-in speaker is the one named `XWF-M18-M28-M38`), then connect to it:
+
+```bash
+bluetoothctl devices
+```
 
 ```bash
 bluetoothctl connect XX:XX:XX:XX:XX:XX

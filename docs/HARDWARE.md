@@ -19,7 +19,7 @@ Everything below was read from the running system on 2026-11-13. Nothing is assu
 |---|---|
 | Sound server: PipeWire 1.0.5 + WirePlumber | venv vrequency talks to PipeWire natively (256-frame quantum at 48 kHz = 5.3 ms). ALSA is a fallback. |
 | ALSA cards: only the two HDMI outputs | No analogue/I²S sound card exists. |
-| **The built-in speakers are a Bluetooth module**, `XWF-M18-M28-M38` (A2DP, SBC codec) | It was paired but disconnected, so PipeWire showed only "Dummy Output". **I connected it** (`bluetoothctl connect XX:XX:XX:XX:XX:XX`); it is now the default sink at 60 % volume. |
+| **The built-in speakers are a Bluetooth module**, `XWF-M18-M28-M38` (A2DP, SBC codec) | It was paired but disconnected, so PipeWire showed only "Dummy Output". **I connected it** (`bluetoothctl connect` with its address, which `bluetoothctl devices` lists); it is now the default sink at 60 % volume. |
 | PipeWire reports **≈200 ms latency** for that speaker | This is the Bluetooth link, not the application: you will hear a note about a fifth of a second after pressing a key. It cannot be removed in software. venv vrequency's own share is ~5–10 ms. |
 | No capture device of any kind | No microphone. The Bluetooth module has no hands-free/mic profile. |
 | AirPods Pro are paired (not connected) | They would work, with similar or worse latency. |

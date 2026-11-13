@@ -83,6 +83,8 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 ## Build, install, remove
 
 ```bash
+git clone https://github.com/naninfinite/venv-vrequency.git
+cd venv-vrequency
 ./scripts/build.sh       # fetches audio headers into third_party/ (no root), builds, runs the tests
 ./scripts/install.sh     # installs to ~/.local/opt/vrequency + launcher + `vrequency` command
 ./scripts/uninstall.sh   # removes it (add --purge to also delete ~/vrequency)
