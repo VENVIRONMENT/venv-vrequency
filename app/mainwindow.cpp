@@ -783,6 +783,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     painter.setRenderHint(QPainter::TextAntialiasing, false);
     zones.clear();
     pollExport();
+    hearWatch();
 
     switch (pg) {
     case PG_TRACK: paintTabs(); paintTrack(); break;
@@ -1426,14 +1427,14 @@ void MainWindow::paintHelp() {
             {"Alt + arrows", "move the chosen clip a bar, or to the other loop lane"},
             {"Shift + L / R", "move the play line a bar (also , and .)"},
             {QString::fromUtf8("1 ‥ 5"), "take a clip from the shelf in hand"},
-            {c + "V", "paste: place the clip in hand at the play line"},
+            {c + "X / C / V", "cut / copy the chosen clip / paste at the play line"},
             {c + "T / " + c + "J", "split the chosen clip at the play line / join"},
             {c + "R", "repeat: a copy right after the chosen clip"},
-            {c + "X / " + c + "C", "cut / copy the chosen clip"},
             {c + "Z", "undo (with " + K(A_CHROMATIC) + ": redo)"},
             {K(A_PANIC), "delete the chosen clip from the track"},
             {"M / C", "mute the chosen clip / cycle on or off"},
-            {"E / K", "chop the chosen clip / keep what is live as clips"},
+            {"E / I", "chop the chosen clip / pick another sound for it"},
+            {"K", "keep what is live as clips"},
             {c + "B", "export the track as an audio file"},
             {K(A_TRACK_PLAY, true), "play or stop the track from any page"},
         };

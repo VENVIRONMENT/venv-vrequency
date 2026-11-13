@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(vrequency VERSION 0.7.0 LANGUAGES C CXX)
+project(vrequency VERSION 0.8.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,7 +14,7 @@ add_library(vreqcore STATIC
   core/instrument.cpp
   core/presets.cpp
   core/drums.cpp
-  core/track.cpp
+  core/track.cpp core/sounds.cpp
   core/analysis.cpp)
 target_include_directories(vreqcore PUBLIC core)
 find_package(Threads REQUIRED)

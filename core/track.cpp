@@ -89,6 +89,24 @@ bool sameClip(const Clip &a, const Clip &b) {
     }
 }
 
+bool samePick(const SoundPick &a, const SoundPick &b) {
+    if (a.on != b.on || a.kit != b.kit || a.octave != b.octave || a.own != b.own) return false;
+    return !a.on || samePatch(a.patch, b.patch);
+}
+
+const SoundPick &pickFor(const Clip &c, const Placement &pl) { return (pl.pick.own || pl.pick.any()) ? pl.pick : c.pick; }
+
+const char *recordedSoundName(const Clip &c) {
+    if (c.kind == CK_BEAT) return kitName(c.kit);
+    if (c.kind == CK_CHORDS) return c.patch.name;
+    return (!c.layers.empty() && !c.layers[0].patches.empty()) ? c.layers[0].patches[0].name : "";
+}
+
+const char *soundName(const Clip &c, const SoundPick &pick) {
+    if (c.kind == CK_BEAT) return pick.kit >= 0 ? kitName(std::clamp(pick.kit, 0, kKits - 1)) : kitName(c.kit);
+    return pick.on ? pick.patch.name : recordedSoundName(c);
+}
+
 Placement placeClip(const Clip &c, int bar) {
     Placement p;
     p.bar = bar; p.bars = c.bars;
@@ -228,7 +246,7 @@ bool joinPlacements(TrackData &t, int lane, int idx) {
     if (lane < 0 || lane >= kLanes || idx < 0 || idx + 1 >= (int)t.lane[lane].size()) return false;
     Placement &a = t.lane[lane][idx];
     const Placement &b = t.lane[lane][idx + 1];
-    if (a.clip != b.clip || a.bar + a.bars != b.bar || a.mute != b.mute) return false;
+    if (a.clip != b.clip || a.bar + a.bars != b.bar || a.mute != b.mute || !samePick(a.pick, b.pick)) return false;
     Placement want = a;
     want.pieces = rotatedPieces(a, a.bars * 4.0);
     const double total = piecesLength(a);
@@ -256,7 +274,7 @@ void Instrument::setTrack(std::shared_ptr<const TrackData> t) {
 static int lanePart0(int lane) { return kTrackPart0 + (lane == LN_LOOPB ? kLayers : 0); }
 
 void Instrument::laneOff(int lane) {
-    if (lane == LN_CHORDS) backPlaying = false;       // tickBacking lets the chord go
+    if (lane == LN_CHORDS) { backPlaying = false; partShift[1] = 0; } // tickBacking lets the chord go
     else if (lane == LN_LOOPA || lane == LN_LOOPB) {
         for (int li = 0; li < kLayers; ++li) {
             int p = lanePart0(lane) + li;
@@ -264,6 +282,7 @@ void Instrument::laneOff(int lane) {
             partOff(p, false);
             parts[p].clearMod();
             bendTarget[p] = 0;
+            partShift[p] = 0;
         }
     }
     laneSt[lane] = LaneState();
@@ -304,17 +323,19 @@ void Instrument::trackStop() {
         liveSaved = false;
     }
     backPlaying = false;
+    partShift[1] = 0;
 }
 
-void Instrument::applyTrackOp(int part, const LayerData &ld, const LoopEv &e) {
+// `keepSound`: a sound was picked for the clip, so the sound changes recorded in it are passed over.
+void Instrument::applyTrackOp(int part, const LayerData &ld, const LoopEv &e, bool keepSound) {
     switch (e.op) {
     case OP_ON: opOn(part, e.slot, e.a, e.b); break;
     case OP_GLIDE: opGlide(part, e.slot, e.a); break;
     case OP_OFF: opOff(part, e.slot); break;
     case OP_BEND: bendTarget[part] = e.a; break;
     case OP_XY: applyXY(part, e.slot & 0x0f, e.a, e.b, (e.slot & 0x80) != 0, (e.slot & 0x40) != 0); break;
-    case OP_PATCH: if (e.slot < ld.patches.size()) parts[part].patch = ld.patches[e.slot]; break;
-    case OP_PARAM: if (e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
+    case OP_PATCH: if (!keepSound && e.slot < ld.patches.size()) parts[part].patch = ld.patches[e.slot]; break;
+    case OP_PARAM: if (!keepSound && e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
     }
 }
 
@@ -359,6 +380,9 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
         const bool endsHere = segEnd >= pieceEndT - 1e-12;
         const bool silent = pl.mute || pcs.mute;
         const int ident = (int)(pass * 4096 + pc);
+        const SoundPick &pick = pickFor(c, pl);
+        const int kit = pick.kit >= 0 ? std::clamp(pick.kit, 0, kKits - 1) : std::clamp(c.kit, 0, kKits - 1);
+        const float shift = 12.0f * std::clamp(pick.octave, -2, 2);
 
         bool fresh = ls.pl != pi || ls.piece != ident;
         double srcA;
@@ -369,7 +393,7 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
             srcA = pcs.src + (into < 1e-6 ? 0.0 : into);
             const double gx = g + (x - a);
             if (c.kind == CK_BEAT) {
-                trackKit = c.kit;
+                trackKit = kit;
             } else if (c.kind == CK_CHORDS && !silent) {
                 progLen = std::clamp(c.progLen, 0, kProgMax);
                 for (int i = 0; i < kProgMax; ++i) prog[i] = ((c.prog[i] % 7) + 7) % 7;
@@ -378,7 +402,8 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
                 st.chordBeats = std::clamp(c.chordBeats, 1, 8);
                 st.arpRate = std::clamp(c.arpRate, 1, 4);
                 st.seventh = c.seventh;
-                parts[1].patch = c.patch;
+                parts[1].patch = pick.on ? pick.patch : c.patch;
+                if (partShift[1] != shift) { partOff(1, false); partShift[1] = shift; } // sounding chords start again at the new pitch
                 progOrigin = gx - srcA;
                 lastPulseStep = lastArpStep = -1;
                 backPlaying = true;
@@ -386,12 +411,14 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
                 for (int li = 0; li < (int)c.layers.size() && li < kLayers; ++li) {
                     const LayerData &ld = c.layers[li];
                     int p = lanePart0(lane) + li;
-                    if (!ld.patches.empty()) parts[p].patch = ld.patches[0];
+                    if (pick.on) parts[p].patch = pick.patch;
+                    else if (!ld.patches.empty()) parts[p].patch = ld.patches[0];
                     parts[p].gain = st.loopVol;
+                    partShift[p] = shift;
                     // catch up on the sound changes recorded before this point
                     for (const LoopEv &e : ld.ev) {
                         if (e.beat >= srcA) break;
-                        if (e.op == OP_PATCH || e.op == OP_PARAM) applyTrackOp(p, ld, e);
+                        if (e.op == OP_PATCH || e.op == OP_PARAM) applyTrackOp(p, ld, e, pick.on);
                     }
                 }
             }
@@ -408,7 +435,7 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
                     int step = (int)(((s % kDrumSteps) + kDrumSteps) % kDrumSteps);
                     for (int d = 0; d < kDrums; ++d) {
                         if (!(c.beat[d] & (1u << step))) continue;
-                        drums.trigger(c.kit, d, (d == D_HAT && (step & 3) != 0) ? 0.7f : 1.0f);
+                        drums.trigger(kit, d, (d == D_HAT && (step & 3) != 0) ? 0.7f : 1.0f);
                         ++drumHits[d];
                     }
                 }
@@ -418,7 +445,7 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
                     int p = lanePart0(lane) + li;
                     parts[p].gain = st.loopVol;
                     auto it = std::lower_bound(ld.ev.begin(), ld.ev.end(), srcA, [](const LoopEv &ev, double v) { return ev.beat < v; });
-                    for (; it != ld.ev.end() && it->beat < srcB; ++it) applyTrackOp(p, ld, *it);
+                    for (; it != ld.ev.end() && it->beat < srcB; ++it) applyTrackOp(p, ld, *it, pick.on);
                 }
             }
         }

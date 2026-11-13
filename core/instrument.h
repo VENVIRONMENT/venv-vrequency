@@ -172,6 +172,19 @@ enum ClipKind { CK_BEAT, CK_CHORDS, CK_LOOP };
 enum Lane { LN_BEAT, LN_CHORDS, LN_LOOPA, LN_LOOPB, kLanes };
 constexpr int kTrackMaxBars = 64;
 
+// A sound picked for a clip after it was kept. It stands in for the recorded one: every layer
+// of a loop plays it, a chords clip backs with it, a beat clip uses the kit. The octave moves
+// the notes of a loop or chords clip, with or without a picked sound.
+struct SoundPick {
+    bool on = false;  // `patch` stands in for the recorded sound
+    Patch patch;
+    int kit = -1;     // 0 or more: this kit stands in for the clip's own
+    int octave = 0;   // -2..+2
+    bool own = false; // on a placement: this one goes its own way, even back to the recorded sound
+    bool any() const { return on || kit >= 0 || octave != 0; }
+};
+bool samePick(const SoundPick &a, const SoundPick &b);
+
 struct Clip {
     int kind = CK_BEAT;
     char name[20] = {0};
@@ -187,6 +200,7 @@ struct Clip {
     Patch patch;
     // loop: the layers, each with its events in time order
     std::vector<LayerData> layers;
+    SoundPick pick;          // for every placement of this clip that has no pick of its own
     double beats() const { return bars * 4.0; }
 };
 
@@ -199,7 +213,13 @@ struct Placement {
     int bar = 0, bars = 1;   // where it sits; longer than the clip = the clip repeats
     bool mute = false;
     std::vector<Piece> pieces;
+    SoundPick pick;          // for this placement only; wins over the clip's
 };
+
+// What a placement really plays: its own pick, else the clip's, else what was recorded.
+const SoundPick &pickFor(const Clip &c, const Placement &pl);
+const char *soundName(const Clip &c, const SoundPick &pick);   // "" when a loop has no sound at all
+const char *recordedSoundName(const Clip &c);
 
 struct TrackData {
     std::vector<std::shared_ptr<const Clip>> clips; // shared, never changed: copying a track is cheap
@@ -343,6 +363,7 @@ private:
     Settings st;
     Part parts[kParts];
     float bendTarget[kParts] = {0};
+    float partShift[kParts] = {0};     // semitones added to every note of a part (a track clip's octave)
     Voice voices[kVoices];
     int slotVoice[kParts][kSlots];
     float slotNote[kParts][kSlots];
@@ -463,7 +484,7 @@ private:
     void runLanes(const TrackData &t, double a, double b, double globalBeat);
     void runLane(const TrackData &t, int lane, double a, double b, double globalBeat);
     void laneOff(int lane);
-    void applyTrackOp(int part, const LayerData &ld, const LoopEv &e);
+    void applyTrackOp(int part, const LayerData &ld, const LoopEv &e, bool keepSound);
 
     void block(float *l, float *r, int n);
     void publish();

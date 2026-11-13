@@ -6,6 +6,7 @@
 #include "instrument.h"
 #include "mainwindow.h"
 #include "presets.h"
+#include "sounds.h"
 #include <QApplication>
 #include <QDir>
 #include <QElapsedTimer>
@@ -454,6 +455,69 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         ctrl(Qt::Key_Z);
         check(T().clips.size() == 3 && T().lane[LN_BEAT].size() == 1, "and that can be undone too");
 
+        // the sound picker
+        press(Qt::Key_Return); w.shot();
+        touch(cell(LN_LOOPA, 0)); w.shot();
+        const int lci = T().lane[LN_LOOPA][0].clip;
+        auto lp = [&]() -> const Placement & { return T().lane[LN_LOOPA][0]; };
+        auto lc = [&]() -> const Clip & { return *T().clips[lci]; };
+        press(Qt::Key_I); w.shot();
+        check(w.pickingSound() && w.soundKindShown() == MainWindow::PK_SYNTH, "I opens the sound picker on the kind the clip plays now");
+        press(Qt::Key_Right); w.shot();
+        check(w.soundKindShown() == MainWindow::PK_GUITAR, "right arrow moves to Guitar");
+        const int undo0 = w.trackUndoDepth();
+        press(Qt::Key_1); w.shot();
+        check(lc().pick.on && QString(lc().pick.patch.name) == "Pluck" && !lp().pick.any() && lc().layers[0].patches[0].name != QString("Pluck"),
+              "1 picks Pluck for every placement of the clip; the recorded sound stays inside it");
+        check(w.trackUndoDepth() == undo0 + 1, "and that is one undo step");
+        check(w.hearingAlone(), "picking a sound while nothing plays starts the clip alone");
+        bool hv = false;
+        for (int i = 0; i < 60 && !hv; ++i) { wait(50); w.shot(); hv = inst.uiState().trackPlaying && inst.uiState().voices > 0; }
+        const uint32_t hh = inst.uiState().drumHits[D_HAT];
+        wait(700);
+        check(hv && w.hearingAlone() && inst.uiState().drumHits[D_HAT] == hh, "it is heard, and the beat lane is silent meanwhile");
+        press(Qt::Key_Right); press(Qt::Key_Right); w.shot();
+        check(w.soundKindShown() == MainWindow::PK_BASS, "right again is Bass, and it stops there");
+        press(Qt::Key_1); w.shot();
+        check(QString(lc().pick.patch.name) == "Sub" && lc().pick.octave == -1, "a bass sound puts the clip an octave down");
+        press(Qt::Key_Up); w.shot();
+        check(lc().pick.octave == 0, "up arrow lifts it an octave");
+        tap(w, "soct-"); tap(w, "soct-"); tap(w, "soct-"); w.shot();
+        check(lc().pick.octave == -2, "the Octave stepper stops two octaves down");
+        tap(w, "soct+"); tap(w, "soct+"); w.shot();
+        tap(w, "sscope"); w.shot();
+        check(lp().pick.own && QString(lp().pick.patch.name) == "Sub" && QString(lc().pick.patch.name) == "Sub", "Only this one: the placement takes the sound as its own");
+        tap(w, "skind0"); w.shot(); tap(w, "scell2"); w.shot();
+        check(QString(lp().pick.patch.name) == "Organ" && QString(lc().pick.patch.name) == "Sub", "now a pick changes this placement and leaves the clip's other copies alone");
+        press(Qt::Key_Backspace); w.shot();
+        check(lp().pick.own && !lp().pick.any() && QString(soundName(lc(), pickFor(lc(), lp()))) == QString(recordedSoundName(lc())),
+              "Backspace: this one plays as recorded again, the others keep Sub");
+        tap(w, "skind2"); w.shot(); tap(w, "scell0"); w.shot();
+        check(w.hearingAlone() && inst.uiState().trackPlaying, "all the while the clip keeps going round alone");
+        press(Qt::Key_Space); wait(200); w.shot();
+        check(!w.hearingAlone() && !inst.uiState().trackPlaying, "Space stops it");
+        press(Qt::Key_Return); w.shot();
+        check(!w.pickingSound(), "Enter closes the picker");
+
+        touch(cell(LN_BEAT, T().lane[LN_BEAT][0].bar)); w.shot();
+        const int bci = T().lane[LN_BEAT][0].clip;
+        tap(w, "tsound"); w.shot();
+        check(w.pickingSound() && w.soundKindShown() == MainWindow::PK_DRUMS, "the Sound button on a beat clip offers the kits");
+        const int otherKit = (T().clips[bci]->kit + 1) % kKits;
+        press(Qt::Key_1 + otherKit); w.shot();
+        check(T().clips[bci]->pick.kit == otherKit && !T().clips[bci]->pick.on, "a number picks another kit for the beat");
+        press(Qt::Key_Up); press(Qt::Key_Right); w.shot();
+        check(T().clips[bci]->pick.octave == 0 && w.soundKindShown() == MainWindow::PK_DRUMS, "a beat has no octave and no other kinds");
+        tap(w, "srec"); w.shot();
+        check(!T().clips[bci]->pick.any(), "As recorded gives the beat its own kit back");
+        press(Qt::Key_1 + otherKit); w.shot();
+        tap(w, "sdone"); wait(250); w.shot();
+        check(!w.pickingSound() && !w.hearingAlone() && !inst.uiState().trackPlaying, "Done closes the picker and stops the clip");
+        ctrl(Qt::Key_Z);
+        check(!T().clips[bci]->pick.any(), "undo takes the kit back");
+        key(w, Qt::Key_Shift, true); ctrl(Qt::Key_Z); key(w, Qt::Key_Shift, false);
+        check(T().clips[bci]->pick.kit == otherKit, "and redo picks it again");
+
         w.saveState();
         QJsonObject tj; store::readJson(store::baseDir() + "/state.json", tj);
         TrackData rt; store::trackFromJson(tj["track"].toObject(), rt);
@@ -461,10 +525,13 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         for (int ln = 0; rsame && ln < kLanes; ++ln) {
             rsame = rt.lane[ln].size() == T().lane[ln].size();
             for (size_t i = 0; rsame && i < rt.lane[ln].size(); ++i)
-                rsame = rt.lane[ln][i].bar == T().lane[ln][i].bar && rt.lane[ln][i].bars == T().lane[ln][i].bars && rt.lane[ln][i].clip == T().lane[ln][i].clip;
+                rsame = rt.lane[ln][i].bar == T().lane[ln][i].bar && rt.lane[ln][i].bars == T().lane[ln][i].bars && rt.lane[ln][i].clip == T().lane[ln][i].clip
+                        && samePick(rt.lane[ln][i].pick, T().lane[ln][i].pick);
         }
-        for (size_t i = 0; rsame && i < rt.clips.size(); ++i) rsame = sameClip(*rt.clips[i], *T().clips[i]);
-        check(rsame, "the track read back from the saved state is the same track");
+        for (size_t i = 0; rsame && i < rt.clips.size(); ++i) rsame = sameClip(*rt.clips[i], *T().clips[i]) && samePick(rt.clips[i]->pick, T().clips[i]->pick);
+        check(rsame, "the track read back from the saved state is the same track, picked sounds included");
+        check(rt.lane[LN_LOOPA][0].pick.own && QString(rt.lane[LN_LOOPA][0].pick.patch.name) == "Pluck" && QString(rt.clips[lci]->pick.patch.name) == "Sub"
+              && rt.clips[bci]->pick.kit == otherKit, "a placement's own sound, a clip's sound and a beat's kit all come back");
         QString sp2 = store::baseDir() + "/sessions/selftest-track.json";
         check(w.saveSession(sp2), "a session saves the track with it");
         const int bars0 = T().bars;
@@ -592,6 +659,15 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/11-chop.png").arg(dir));
         tap(w, "cdone");
+        w.shot();
+        press(Qt::Key_I); w.shot();                                                     // the sound picker for the chosen loop
+        press(Qt::Key_Right); w.shot();
+        press(Qt::Key_1); w.shot();                                                     // Guitar, Pluck
+        press(Qt::Key_Space);                                                           // not playing in the picture
+        wait(1900);
+        for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/12-sound.png").arg(dir));
+        press(Qt::Key_Return);
         inst.cmd(EV_PANIC); wait(60);
     }
     if (qEnvironmentVariableIsSet("VREQUENCY_HELP_SHOTS")) { // every page of the built-in guide, for proof-reading

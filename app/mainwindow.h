@@ -63,7 +63,11 @@ public:
     bool clipInHand() const { return handOn; }
     int chosenLane() const { return selLane; }
     int chosenIndex() const { return selIdx; }
+    enum PickKind { PK_KEYS, PK_SYNTH, PK_GUITAR, PK_BASS, PK_DRUMS, PK_COUNT }; // the sound picker's kinds
     bool chopping() const { return chopOpen; }
+    bool pickingSound() const { return soundOpen; }
+    int soundKindShown() const { return soundKind; }
+    bool hearingAlone() const { return hearOn; }
     int playLineBar() const { return playBar; }
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
     QString lastRecordingPath() const { return lastRecording; }
@@ -139,6 +143,13 @@ private:
     int shelfPage = 0, viewBar = 0, playBar = 0;
     bool chopOpen = false;
     int chopPiece = 0;
+    // the sound picker: kinds of sound across the top, six cells below, for the chosen placed clip
+    bool soundOpen = false;
+    int soundKind = PK_SYNTH, soundPage = 0;
+    int soundForLane = -1, soundForIdx = -1; // the placement the kind and page were last set up for
+    bool hearOn = false, hearSeen = false;   // the chosen clip is playing alone, round and round
+    int hearLane = -1, hearIdx = -1;
+    qint64 hearAt = 0;
     int removeArmed = -1; qint64 removeArmedAt = 0;
     bool dragOn = false, dragMoved = false;
     int dragGrab = 0;
@@ -209,6 +220,7 @@ private:
     void paintTrack();
     void paintTrackTools();
     void paintChop();
+    void paintClipSound();
     void drawPlacement(int lane, int idx);
     void drawClipBody(const td::Clip &c, double srcA, double srcB, QRectF r, QColor ink);
     void hatch(QRectF r, QColor c);
@@ -262,6 +274,19 @@ private:
     void trackSelect(int dx, int dy);
     void trackMove(int dbar, int dlane);
     void trackChop();
+    void trackSound();
+    void soundSetup();
+    int soundCount(int kind) const;
+    td::Patch soundPatch(int kind, int i) const;
+    void soundApply(const std::function<void(td::SoundPick &)> &fn);
+    void soundPickAt(int cell);
+    void soundKindStep(int d);
+    void soundScope();
+    td::TrackData hearTrack();
+    void hearStart();
+    void hearEnd(bool stop);
+    void hearToggle();
+    void hearWatch();
     void trackExport();
     void pollExport();
     void laneTouch(QPointF p, int phase);

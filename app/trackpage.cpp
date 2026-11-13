@@ -5,6 +5,7 @@
 // shared and never change, so a copy of the track costs almost nothing.
 #include "mainwindow.h"
 #include "palette.h"
+#include "sounds.h"
 #include <QFileInfo>
 #include <QPainter>
 #include <QPainterPath>
@@ -30,10 +31,7 @@ QRectF laneRect(int ln) { return QRectF(GX, LY + ln * (LH + LG), GW, LH); }
 int barAtX(qreal x, int viewBar) { return viewBar + (int)std::floor((x - GX) / BW); }
 
 QString clipSub(const Clip &c) {
-    QString what;
-    if (c.kind == CK_BEAT) what = nice(kitName(c.kit));
-    else if (c.kind == CK_CHORDS) what = QString::fromUtf8(c.patch.name);
-    else if (!c.layers.empty() && !c.layers[0].patches.empty()) what = QString::fromUtf8(c.layers[0].patches[0].name);
+    const QString what = c.kind == CK_BEAT ? nice(soundName(c, c.pick)) : QString::fromUtf8(soundName(c, c.pick));
     return QString("%1 bar%2 %3").arg(c.bars).arg(c.bars == 1 ? "" : "s").arg(what).trimmed();
 }
 QString barsText(int bar, int bars) {
@@ -74,10 +72,11 @@ void MainWindow::trackSync() {
     }
     track.bars = qBound(qMax(1, last), track.bars, kTrackMaxBars);
     if (track.cycleTo <= track.cycleFrom || track.cycleTo > track.bars) track.cycleFrom = track.cycleTo = 0;
-    if (!chosen()) { selLane = selIdx = -1; chopOpen = false; }
+    if (!chosen()) { selLane = selIdx = -1; chopOpen = soundOpen = false; }
     if (handOn && (hand.clip < 0 || hand.clip >= (int)track.clips.size())) handOn = false;
     playBar = qBound(0, playBar, kTrackMaxBars - 1);
-    inst.setTrack(std::make_shared<const TrackData>(track));
+    if (hearOn && !(soundOpen && chosen())) { hearOn = false; inst.trackDo(TC_STOP); }
+    inst.setTrack(std::make_shared<const TrackData>(hearOn ? hearTrack() : track));
     trackSaveTimer.start(2500);
     update();
 }
@@ -315,6 +314,7 @@ void MainWindow::trackRedoDo() {
 }
 
 void MainWindow::trackPlayStop() {
+    if (hearOn) { hearEnd(true); return; }
     if (inst.uiState().trackPlaying) { inst.trackDo(TC_STOP); return; }
     bool any = false;
     for (int ln = 0; ln < kLanes; ++ln) any = any || !track.lane[ln].empty();
@@ -385,6 +385,7 @@ void MainWindow::trackChop() {
     if (chopOpen) { chopOpen = false; return; }
     if (!chosen()) { toast("Choose a placed clip first", 1400); return; }
     chopOpen = true; chopPiece = 0;
+    soundOpen = false;
 }
 
 void MainWindow::chopEdit(const std::function<bool(Placement &)> &fn) {
@@ -416,6 +417,173 @@ void MainWindow::chopTap(double frac, double stripWidth) {
         return;
     }
     chopPiece = qMax(0, pieceAt(*p, beat));
+}
+
+// ------------------------------------------------------------ sound picker
+//
+// A placed clip can play in another sound than the one it was recorded with: one of the
+// Keys, Guitar or Bass sounds, one of the player's own (slots 1-0, then the favourites), or
+// for a beat another kit. The pick goes to every placement of the clip or to this one only.
+// What was recorded stays in the clip, so "As recorded" always brings it back.
+
+void MainWindow::trackSound() {
+    if (soundOpen) { soundOpen = false; return; }
+    if (!chosen()) { toast("Choose a placed clip first", 1400); return; }
+    soundOpen = true; chopOpen = false;
+    soundSetup();
+}
+
+int MainWindow::soundCount(int kind) const {
+    if (kind == PK_DRUMS) return kKits;
+    if (kind == PK_SYNTH) return 10 + (int)favs.size();
+    return kLibSounds;
+}
+
+static int libKind(int pickKind) { return pickKind == 0 ? SK_KEYS : (pickKind == 2 ? SK_GUITAR : SK_BASS); }
+static int cellsPerPage(int count) { return count > 6 ? 5 : 6; } // a sixth cell turns the page when there are more
+
+Patch MainWindow::soundPatch(int kind, int i) const {
+    if (kind == PK_SYNTH) return i < 10 ? bank[qBound(0, i, 9)] : favs[qBound(0, i - 10, (int)favs.size() - 1)].patch;
+    return librarySound(libKind(kind), i);
+}
+
+// Open on the kind, and the page, that holds what the clip plays now.
+void MainWindow::soundSetup() {
+    Placement *p = chosen();
+    if (!p) return;
+    soundForLane = selLane; soundForIdx = selIdx;
+    const Clip &c = *track.clips[p->clip];
+    soundPage = 0;
+    if (c.kind == CK_BEAT) { soundKind = PK_DRUMS; return; }
+    const SoundPick &k = pickFor(c, *p);
+    const QString now = QString::fromUtf8(soundName(c, k));
+    const int lk = k.on ? libraryFind(k.patch.name) : -1;
+    soundKind = lk == SK_KEYS ? PK_KEYS : (lk == SK_GUITAR ? PK_GUITAR : (lk == SK_BASS ? PK_BASS : PK_SYNTH));
+    if (soundKind == PK_SYNTH) {
+        const int n = soundCount(PK_SYNTH), per = cellsPerPage(n);
+        for (int i = 0; i < n; ++i)
+            if (now == QString::fromUtf8(soundPatch(PK_SYNTH, i).name)) { soundPage = i / per; break; }
+    }
+}
+
+// Changes what the chosen placement plays. `fn` edits a copy of the pick in force; it then
+// goes to the clip (every placement) or stays with this placement, whichever is set.
+void MainWindow::soundApply(const std::function<void(SoundPick &)> &fn) {
+    Placement *p = chosen();
+    if (!p) return;
+    const int ln = selLane, i = selIdx, ci = p->clip;
+    const bool only = p->pick.own || p->pick.any();
+    trackApply([&](TrackData &t) {
+        Placement &pl = t.lane[ln][i];
+        SoundPick k = pickFor(*t.clips[ci], pl);
+        fn(k);
+        if (only) {
+            k.own = true;
+            if (samePick(k, pl.pick)) return false;
+            pl.pick = k;
+            return true;
+        }
+        k.own = false;
+        if (samePick(k, t.clips[ci]->pick)) return false;
+        Clip c = *t.clips[ci];
+        c.pick = k;
+        t.clips[ci] = std::make_shared<const Clip>(std::move(c));
+        return true;
+    });
+    dashCache.clear(); // the clip was copied: its drawing is cached by address
+}
+
+void MainWindow::soundPickAt(int cell) {
+    Placement *p = chosen();
+    if (!p || cell < 0 || cell > 5) return;
+    const Clip &c = *track.clips[p->clip];
+    const int kind = c.kind == CK_BEAT ? PK_DRUMS : (soundKind == PK_DRUMS ? PK_SYNTH : soundKind);
+    const int n = soundCount(kind), per = cellsPerPage(n), pages = qMax(1, (n + per - 1) / per);
+    if (n > 6 && cell == 5) { soundPage = (soundPage + 1) % pages; return; }
+    const int i = qBound(0, soundPage, pages - 1) * per + cell;
+    if (i >= n) return;
+    if (kind == PK_DRUMS) {
+        const int own = c.kit;
+        soundApply([i, own](SoundPick &k) { k.kit = i == own ? -1 : i; });
+    } else {
+        const Patch pt = soundPatch(kind, i);
+        const int oct = kind == PK_SYNTH ? 0 : libraryOctave(libKind(kind));
+        soundApply([&pt, oct](SoundPick &k) { k.on = true; k.patch = pt; k.octave = oct; });
+    }
+    if (!hearOn && !inst.uiState().trackPlaying) hearStart(); // nothing is playing: let the pick be heard
+}
+
+void MainWindow::soundKindStep(int d) {
+    Placement *p = chosen();
+    if (!p || track.clips[p->clip]->kind == CK_BEAT) return;
+    soundKind = qBound((int)PK_KEYS, (soundKind == PK_DRUMS ? (int)PK_SYNTH : soundKind) + d, (int)PK_BASS);
+    soundPage = 0;
+}
+
+// Every placement of the clip, or only this one. Either way this placement keeps its sound.
+void MainWindow::soundScope() {
+    Placement *p = chosen();
+    if (!p) return;
+    const int ln = selLane, i = selIdx, ci = p->clip;
+    const bool only = p->pick.own || p->pick.any();
+    const QString name = QString::fromUtf8(track.clips[ci]->name);
+    trackApply([&](TrackData &t) {
+        SoundPick k = pickFor(*t.clips[ci], t.lane[ln][i]);
+        if (!only) { k.own = true; t.lane[ln][i].pick = k; return true; }
+        k.own = false;
+        for (int l = 0; l < kLanes; ++l)
+            for (Placement &q : t.lane[l]) if (q.clip == ci) q.pick = SoundPick();
+        Clip c = *t.clips[ci];
+        c.pick = k;
+        t.clips[ci] = std::make_shared<const Clip>(std::move(c));
+        return true;
+    });
+    dashCache.clear();
+    toast(only ? QString("Every %1 now plays this sound").arg(name) : QString("From here on only this %1 changes").arg(name), 1800);
+}
+
+// The chosen clip alone, going round: the same track with everything else taken off.
+TrackData MainWindow::hearTrack() {
+    TrackData t = track;
+    Placement *p = chosen();
+    if (!p) return t;
+    Placement one = *p;
+    one.mute = false;
+    for (int ln = 0; ln < kLanes; ++ln) t.lane[ln].clear();
+    t.lane[selLane].push_back(one);
+    t.cycleFrom = one.bar; t.cycleTo = one.bar + one.bars;
+    t.bars = qMax(t.bars, t.cycleTo);
+    return t;
+}
+
+void MainWindow::hearStart() {
+    Placement *p = chosen();
+    if (!p) return;
+    hearOn = true; hearSeen = false; hearAt = clock.elapsed();
+    hearLane = selLane; hearIdx = selIdx;
+    inst.setTrack(std::make_shared<const TrackData>(hearTrack()));
+    inst.trackDo(TC_PLAY, p->bar);
+}
+
+void MainWindow::hearEnd(bool stop) {
+    if (!hearOn) return;
+    hearOn = false;
+    if (stop) inst.trackDo(TC_STOP);
+    inst.setTrack(std::make_shared<const TrackData>(track));
+}
+
+void MainWindow::hearToggle() {
+    if (hearOn) { hearEnd(true); return; }
+    hearStart();
+}
+
+// Called every frame: hearing alone ends with the picker, and follows the chosen clip.
+void MainWindow::hearWatch() {
+    if (!hearOn) return;
+    if (u.trackPlaying) hearSeen = true;
+    if (pg != PG_TRACK || !soundOpen || !chosen()) { hearEnd(true); return; }
+    if (hearSeen ? !u.trackPlaying : clock.elapsed() - hearAt > 1500) { hearEnd(false); return; } // stopped some other way
+    if (selLane != hearLane || selIdx != hearIdx) hearStart();
 }
 
 // ----------------------------------------------------------------- export
@@ -493,6 +661,25 @@ void MainWindow::pollExport() {
 // Cmd): T splits, J joins, R repeats, X C V cut, copy and paste, Z undoes, B exports.
 
 bool MainWindow::trackKey(int key, int plainAct) {
+    if (soundOpen && chosen() && !modCommand) { // the picker has the arrows, the numbers, Space and Enter
+        switch (plainAct) {
+        case A_SUSTAIN: hearToggle(); return true;
+        case A_LOOP: case A_HOME: soundOpen = false; return true;
+        case A_PANIC: soundApply([](SoundPick &k) { k = SoundPick(); }); return true;
+        case A_BEND_DOWN: soundKindStep(-1); return true;
+        case A_BEND_UP: soundKindStep(1); return true;
+        case A_OCT_UP: case A_OCT_DOWN: {
+            const int d = plainAct == A_OCT_UP ? 1 : -1;
+            if (track.clips[chosen()->clip]->kind != CK_BEAT) soundApply([d](SoundPick &k) { k.octave = qBound(-2, k.octave + d, 2); });
+            return true;
+        }
+        default: break;
+        }
+        if (plainAct >= A_SOUND_1 && plainAct <= A_SOUND_10) {
+            if (plainAct - A_SOUND_1 < 6) soundPickAt(plainAct - A_SOUND_1);
+            return true;
+        }
+    }
     if (modCommand) {
         switch (key) {
         case Qt::Key_T:
@@ -573,6 +760,7 @@ bool MainWindow::trackKey(int key, int plainAct) {
         return true;
     case Qt::Key_C: trackCycle(); return true;
     case Qt::Key_E: trackChop(); return true;
+    case Qt::Key_I: trackSound(); return true;
     case Qt::Key_K: trackKeep(); return true;
     }
     int row, col;
@@ -667,7 +855,14 @@ void MainWindow::drawPlacement(int ln, int idx) {
     g->fillRect(r, BG);
     const QRectF hd(r.x() + 1, r.y() + 1, r.width() - 2, 14);
     g->fillRect(hd, sel ? INK : GRAT);
-    txt(hd.adjusted(4, 0, -2, 0), fit(QString::fromUtf8(c.name) + (pl.mute ? " muted" : ""), 11, hd.width() - 6), 11,
+    const SoundPick &pk = pickFor(c, pl);
+    QString title = QString::fromUtf8(c.name) + (pl.mute ? " muted" : "");
+    if (pk.any()) { // a picked sound is named beside the clip
+        QString snd = c.kind == CK_BEAT ? nice(soundName(c, pk)) : QString::fromUtf8(soundName(c, pk));
+        if (pk.octave) snd += QString(" %1%2").arg(pk.octave > 0 ? "+" : "").arg(pk.octave);
+        title += "  " + snd;
+    }
+    txt(hd.adjusted(4, 0, -2, 0), fit(title, 11, hd.width() - 6), 11,
         sel ? BG : (pl.mute ? MID : INK), Qt::AlignLeft | Qt::AlignVCenter, true);
     const QRectF body(r.x() + 2, r.y() + 16, r.width() - 4, r.height() - 19);
     const double Lc = std::max(4.0, c.beats()), total = pl.bars * 4.0;
@@ -854,8 +1049,9 @@ void MainWindow::paintTrack() {
         }
     }
 
-    if (chopOpen && chosen()) paintChop();
-    else { chopOpen = false; paintTrackTools(); }
+    if (soundOpen && chosen()) paintClipSound();
+    else if (chopOpen && chosen()) paintChop();
+    else { chopOpen = soundOpen = false; paintTrackTools(); }
 }
 
 void MainWindow::paintTrackTools() {
@@ -874,13 +1070,22 @@ void MainWindow::paintTrackTools() {
     auto c4 = [pw](int i, qreal y) { return QRectF(std::floor(16 + i * (pw + 8)), y, std::floor(pw), 60); };
     int spotLane = -1, spotBar = -1;
     const bool spot = handOn && placeSpot(spotLane, spotBar);
-    button(c4(0, 438), "tplace", "Place", handOn, [this] { trackPlaceAtLine(); },
+    const qreal fw = (688 - 4 * 8) / 5.0;
+    auto r5 = [fw](int i) { return QRectF(std::floor(16 + i * (fw + 8)), 438, std::floor(fw), 60); };
+    button(r5(0), "tplace", "Place", handOn, [this] { trackPlaceAtLine(); },
            handOn ? (spot ? QString("at bar %1").arg(spotBar + 1) : QString("no room")) : QString("pick a clip first"));
-    button(c4(1, 438), "tchop", "Chop", false, [this] { trackChop(); }, "cut and reorder");
-    button(c4(2, 438), "trepeat", "Repeat", false, [this] { trackRepeat(); }, "copy to the right");
+    button(r5(1), "tchop", "Chop", false, [this] { trackChop(); }, "cut and reorder");
+    QString plays = "keys guitar bass";
+    if (sel) {
+        const Clip &sc = *track.clips[sel->clip];
+        const char *sn = soundName(sc, pickFor(sc, *sel));
+        plays = sc.kind == CK_BEAT ? nice(sn) + " kit" : QString::fromUtf8(sn);
+    }
+    button(r5(2), "tsound", "Sound", false, [this] { trackSound(); }, plays);
+    button(r5(3), "trepeat", "Repeat", false, [this] { trackRepeat(); }, "copy to the right");
     const bool armed = removeArmed >= 0 && clock.elapsed() - removeArmedAt <= 4000;
-    button(c4(3, 438), "tremove", "Remove", false, [this] { trackRemove(); },
-           armed ? QString("tap again to delete") : (!sel && handOn && handFromShelf ? QString("clip and its copies") : QString("from the track")),
+    button(r5(4), "tremove", "Remove", false, [this] { trackRemove(); },
+           armed ? QString("again to delete") : (!sel && handOn && handFromShelf ? QString("clip and copies") : QString("from the track")),
            armed ? LOOK_ARMED : LOOK_PLAIN);
 
     const int from = cyc && (playBar < track.cycleFrom || playBar >= track.cycleTo) ? track.cycleFrom : qMin(playBar, track.bars - 1);
@@ -910,7 +1115,7 @@ void MainWindow::paintTrackTools() {
     const QString cmd = km.keyFor(A_COMMAND, false);
     txt(QRectF(18, 644, 684, 20), QString("Keys: %1 play, %2 to bar 1, arrows choose a clip, Alt+arrows move it,")
             .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)), 12, MID, L);
-    txt(QRectF(18, 664, 684, 20), "Shift+arrows move the play line. 1-5 pick a clip. K keep, E chop, M mute, C cycle.", 12, MID, L);
+    txt(QRectF(18, 664, 684, 20), "Shift+arrows move the play line. 1-5 pick a clip. K keep, E chop, I sound, M mute, C cycle.", 12, MID, L);
     txt(QRectF(18, 684, 684, 20), QString("%1 + T split, J join, R repeat, X C V cut copy paste, Z undo, B export.").arg(cmd), 12, MID, L);
 }
 
@@ -995,4 +1200,84 @@ void MainWindow::paintChop() {
         if (Placement *p = chosen()) chopPiece = qMin(pc + 1, (int)p->pieces.size() - 1);
     }, "the next plays it too");
     txt(QRectF(18, 690, 684, 20), "Tap a dotted line to cut there, a cut to mend it, a piece to choose it. Pieces stay in time.", 12, MID, L);
+}
+
+void MainWindow::paintClipSound() {
+    const int L = Qt::AlignLeft | Qt::AlignVCenter;
+    if (selLane != soundForLane || selIdx != soundForIdx) soundSetup(); // another clip was chosen
+    Placement &pl = *chosen();
+    const Clip &c = *track.clips[pl.clip];
+    const bool beat = c.kind == CK_BEAT;
+    if (beat) soundKind = PK_DRUMS;
+    else if (soundKind == PK_DRUMS) soundKind = PK_SYNTH;
+    const SoundPick &pk = pickFor(c, pl);
+    const bool only = pl.pick.own || pl.pick.any();
+    auto shown = [beat](const char *s) { return beat ? nice(s) : QString::fromUtf8(s); };
+    const QString name = QString::fromUtf8(c.name), now = shown(soundName(c, pk)), rec = shown(recordedSoundName(c));
+    section(414, pk.on || pk.kit >= 0 ? QString("Sound for %1, %2   plays %3, recorded as %4").arg(name).arg(barsText(pl.bar, pl.bars)).arg(now).arg(rec)
+                                      : QString("Sound for %1, %2   plays %3, as recorded").arg(name).arg(barsText(pl.bar, pl.bars)).arg(rec));
+
+    // kinds of sound
+    static const char *KN[PK_COUNT] = {"Keys", "Synth", "Guitar", "Bass", "Drums"};
+    const QString KS[PK_COUNT] = {"pianos organs", QString("your %1 sounds").arg(soundCount(PK_SYNTH)), "plucked driven", "low end", "three kits"};
+    const qreal kw = (688 - 4 * 6) / 5.0;
+    for (int k = 0; k < PK_COUNT; ++k) {
+        const QRectF r(std::floor(16 + k * (kw + 6)), 438, std::floor(kw), 52);
+        const bool fits = beat ? k == PK_DRUMS : k != PK_DRUMS;
+        if (fits) {
+            button(r, QString("skind%1").arg(k), KN[k], soundKind == k, [this, k] { if (soundKind != k) { soundKind = k; soundPage = 0; } }, KS[k]);
+        } else { // not for this kind of clip
+            frame(r, GRAT, BG);
+            txt(QRectF(r.x(), r.y() + r.height() * 0.13, r.width(), r.height() * 0.46), KN[k], 16, LOW, Qt::AlignCenter, true);
+            txt(QRectF(r.x() + 2, r.y() + r.height() * 0.58, r.width() - 4, r.height() * 0.32), beat ? "notes only" : "beat clips only", 11, LOW);
+        }
+    }
+
+    // six cells: the sounds of that kind, or five and a way to the next page
+    const int n = soundCount(soundKind), per = cellsPerPage(n), pages = qMax(1, (n + per - 1) / per);
+    soundPage = qBound(0, soundPage, pages - 1);
+    const qreal cw = (688 - 2 * 8) / 3.0;
+    for (int cell = 0; cell < 6; ++cell) {
+        const QRectF r(std::floor(16 + (cell % 3) * (cw + 8)), 498 + (cell / 3) * 60, std::floor(cw), 54);
+        const QString zn = QString("scell%1").arg(cell);
+        const int i = soundPage * per + cell;
+        QString label, sub;
+        bool on = false;
+        if (n > 6 && cell == 5) { label = "More"; sub = QString("page %1 of %2").arg(soundPage + 1).arg(pages); }
+        else if (i >= n) { frame(r, GRAT, BG); continue; }
+        else if (soundKind == PK_DRUMS) {
+            label = nice(kitName(i)); sub = i == c.kit ? "as recorded" : "kit";
+            on = i == (pk.kit >= 0 ? pk.kit : c.kit);
+        } else if (soundKind == PK_SYNTH) {
+            label = QString::fromUtf8(soundPatch(PK_SYNTH, i).name);
+            sub = i < 10 ? QString("slot %1").arg((i + 1) % 10) : QString("favourite");
+            on = label == now;
+        } else {
+            label = QString::fromUtf8(librarySound(libKind(soundKind), i).name);
+            sub = libraryHint(libKind(soundKind), i);
+            on = pk.on && label == now;
+        }
+        button(r, zn, label, on, [this, cell] { soundPickAt(cell); }, sub);
+        txt(QRectF(r.x() + 5, r.y() + 3, 12, 14), QString::number(cell + 1), 11, on || downNames.contains(zn) ? BG : LOW, L);
+    }
+
+    const qreal y = 622, h = 56;
+    button(QRectF(16, y, 130, h), "shear", hearOn ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Hear"), hearOn, [this] { hearToggle(); }, "this clip alone");
+    const QRectF orr(154, y, 164, h);
+    if (beat) {
+        frame(orr, GRAT, BG);
+        txt(QRectF(orr.x(), orr.y() + 6, orr.width(), 16), "Octave", 12, LOW);
+        txt(QRectF(orr.x(), orr.y() + 22, orr.width(), h - 26), "notes only", 13, LOW);
+    } else {
+        stepper(orr, "soct", "Octave", pk.octave > 0 ? QString("+%1").arg(pk.octave) : QString::number(pk.octave),
+                [this] { soundApply([](SoundPick &k) { k.octave = qMax(-2, k.octave - 1); }); },
+                [this] { soundApply([](SoundPick &k) { k.octave = qMin(2, k.octave + 1); }); });
+    }
+    button(QRectF(326, y, 130, h), "sscope", only ? QString("Only this one") : QString("Every %1").arg(name), false, [this] { soundScope(); },
+           only ? QString("tap for every one") : QString("tap for only this"));
+    button(QRectF(464, y, 130, h), "srec", "As recorded", false, [this] { soundApply([](SoundPick &k) { k = SoundPick(); }); }, rec);
+    button(QRectF(602, y, 102, h), "sdone", "Done", false, [this] { soundOpen = false; }, "back to tools");
+    txt(QRectF(18, 688, 684, 20), beat ? QString("Keys: 1-3 pick a kit, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false))
+                                       : QString("Keys: left right pick a kind, 1-6 a sound, up down the octave, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)),
+        12, MID, L);
 }

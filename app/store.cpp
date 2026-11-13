@@ -181,6 +181,32 @@ bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
 
 // ---- the track ----
 
+// A picked sound is written only when there is one, so older files read the same as before.
+static void pickToJson(const td::SoundPick &k, QJsonObject &into) {
+    if (!k.any() && !k.own) return;
+    QJsonObject o;
+    if (k.own) o["own"] = true;
+    if (k.on) o["sound"] = patchToJson(k.patch);
+    if (k.kit >= 0) o["kit"] = k.kit;
+    if (k.octave != 0) o["octave"] = k.octave;
+    into["pick"] = o;
+}
+
+static td::SoundPick pickFromJson(const QJsonObject &from, int clipKind) {
+    td::SoundPick k;
+    const QJsonObject o = from["pick"].toObject();
+    if (o.isEmpty()) return k;
+    k.own = o["own"].toBool(false);
+    if (clipKind == td::CK_BEAT) { // a beat takes a kit and nothing else
+        const int kit = o["kit"].toInt(-1);
+        if (kit >= 0 && kit < td::kKits) k.kit = kit;
+        return k;
+    }
+    if (o["sound"].isObject()) { k.on = true; k.patch = patchFromJson(o["sound"].toObject()); }
+    k.octave = qBound(-2, o["octave"].toInt(0), 2);
+    return k;
+}
+
 QJsonObject trackToJson(const td::TrackData &t) {
     static const char *K[] = {"beat", "chords", "loop"};
     QJsonObject o;
@@ -203,6 +229,7 @@ QJsonObject trackToJson(const td::TrackData &t) {
         } else {
             co["layers"] = layersToJson(c.layers);
         }
+        pickToJson(c.pick, co);
         clips.append(co);
     }
     o["clips"] = clips;
@@ -219,6 +246,7 @@ QJsonObject trackToJson(const td::TrackData &t) {
                 pcs.append(a);
             }
             po["pieces"] = pcs;
+            pickToJson(p.pick, po);
             la.append(po);
         }
         lanes.append(la);
@@ -262,6 +290,7 @@ void trackFromJson(const QJsonObject &o, td::TrackData &t) {
                 std::stable_sort(ld.ev.begin(), ld.ev.end(), [](const td::LoopEv &a, const td::LoopEv &b) { return a.beat < b.beat; });
             }
         }
+        c.pick = pickFromJson(co, c.kind);
         td::addClip(t, c);
     }
     const QJsonArray lanes = o["lanes"].toArray();
@@ -284,6 +313,7 @@ void trackFromJson(const QJsonObject &o, td::TrackData &t) {
                 p.pieces.push_back(x);
             }
             if (!ok || std::fabs(total - c.beats()) > 1e-6) td::resetPieces(p, c); // unreadable cuts: the clip whole
+            p.pick = pickFromJson(po, c.kind);
             t.lane[ln].push_back(p);
         }
         td::sortLane(t, ln);

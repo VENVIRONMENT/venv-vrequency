@@ -1,6 +1,6 @@
 # How to use venv vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.7.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.8.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -306,9 +306,11 @@ so you can change the beat, keep again and have Beat 2.
 
 | Lane | Takes | Sounds like |
 |---|---|---|
-| Beat | Beat clips | The drums, in the kit the beat was kept with |
+| Beat | Beat clips | The drums, in the kit the beat was kept with (or the kit you pick with **Sound**) |
 | Chords | Chords clips | The backing, with the sound and style it was kept with |
 | Loop A, Loop B | Loop clips | The loop, every layer with its own sound. Two lanes, so two loops can play at once |
+
+Any placed clip can be given another sound afterwards: see **Sound** below.
 
 **Placing.**
 
@@ -354,6 +356,40 @@ piece to choose it, then:
 Pieces always stay in time: the clip keeps its length whatever you do. Chopping changes only that
 one placed copy, not the clip on the shelf.
 
+**Sound.** Choose a placed clip and tap **Sound** to play it with another instrument. What you
+recorded is not changed: the clip remembers its own sound, and **As recorded** brings it back.
+
+![Picking a sound for a loop](shots/12-sound.png)
+
+The top row is the kind of sound, the six cells under it are the sounds of that kind:
+
+| Kind | What is in it |
+|---|---|
+| **Keys** | E-piano, Soft keys, Organ, Toy keys, Clav, Strings |
+| **Synth** | Your own sounds: slots 1 to 0, then your favourites. With more than six, the last cell turns the page |
+| **Guitar** | Pluck, Steel, Clean, Drive, Mute, Twelve |
+| **Bass** | Sub, Round, Pick, Acid, Growl, Hollow. Picking one drops the clip an octave |
+| **Drums** | For beat clips only: the three kits |
+
+Tap a cell and the clip plays in that sound. If nothing is playing, the clip starts going round on
+its own so you can hear it; **Hear** starts and stops that. If the track is already playing, the
+change is heard in place.
+
+| Button | Does |
+|---|---|
+| **Hear** | Plays the chosen clip alone, round and round. Everything else on the track is silent meanwhile |
+| **Octave** | Moves the clip's notes up or down, two octaves each way. Works with the recorded sound too. Not for beats |
+| **Every Loop 1** / **Only this one** | Who gets the sound: every placed copy of the clip and the clip on the shelf, or just the chosen copy. Tap to switch. The chosen copy keeps what it plays either way |
+| **As recorded** | Back to the sound (or kit) the clip was kept with, and the octave it was played in |
+| **Done** | Back to the tools |
+
+A clip with a picked sound shows its name beside the clip's name on the lane. A loop with several
+layers plays every layer in the picked sound, and sound changes you made while recording it are
+passed over. A chords clip keeps its chords and style and changes only the backing's sound.
+
+The Keys, Guitar and Bass sounds are made with the same synth voice as everything else, shaped to
+suggest those instruments. They are not recordings of real ones.
+
 **Export.** Tap **Export** to write the whole track to a WAV file in `recordings/`. It plays once
 from bar 1 to the end, ignoring the cycle, at full master volume, and runs on until the echoes have
 died away. It is done in the background, much faster than real time, and does not need the speaker.
@@ -379,12 +415,17 @@ desktop music programs (`Ctrl` where a Mac uses Cmd):
 | `Backspace` | Delete the chosen clip (with nothing chosen it is Panic, as everywhere) |
 | `M` / `C` | Mute / cycle on and off |
 | `E` | Chop (again, or `Esc`, closes it) |
+| `I` | Sound: pick an instrument for the chosen clip |
 | `K` | Keep |
 | `Ctrl`+`B` | Export |
 | `Esc` | Put down the clip in hand; with nothing in hand, back to Synth |
 
 While Chop is open, `Left` / `Right` choose a piece, `Alt`+`Left` / `Right` move it, `M` mutes it,
 `Ctrl`+`T` cuts it in half, `Ctrl`+`J` mends it with the next and `Ctrl`+`R` repeats it.
+
+While Sound is open, `Left` / `Right` pick the kind, `1`‥`6` pick a sound (or turn the page),
+`Up` / `Down` move the octave, `Space` starts and stops Hear, `Backspace` goes back to the recorded
+sound, and `Enter`, `Esc` or `I` close it.
 
 Because the letters are commands here, `Ctrl`+`T` (tap tempo), `Ctrl`+`R` (new sound), `Ctrl`+`Z`
 (undo sound), `Ctrl`+`X` (clear backing), `Ctrl`+`J` (beat) and `Ctrl`+`B` (backing mode) mean the
@@ -393,8 +434,8 @@ things above while you are on this page.
 The track is saved a moment after every change, and inside sessions.
 
 Things it does not do yet: clips shorter than a bar or placed off the bar line, a volume for each
-lane, changing a clip's sound after it is kept, more than one beat lane, and tempo or key changes
-inside a track. Chords clips follow the key and scale you are in now, and every clip follows the
+lane, a different sound for each layer of one loop, more than one beat lane, and tempo or key
+changes inside a track. Chords clips follow the key and scale you are in now, and every clip follows the
 current tempo.
 
 ## 11. Key, scale and tempo
