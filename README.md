@@ -44,7 +44,7 @@ More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.p
 | Drag on the scope | XY sound control (filter, vibrato, timbre, space, bend). |
 | Drag along a string on screen | Play and slide by touch. |
 
-The full guide is built in: **Menu → Help** (or `Ctrl`+`H`). `Tab` cycles pages, `Esc` returns to the play page.
+The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: **Menu → Help** (or `Ctrl`+`H`). `Tab` cycles pages, `Esc` returns to the play page.
 
 ## What is in it
 
