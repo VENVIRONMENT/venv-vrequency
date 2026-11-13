@@ -24,7 +24,7 @@ its own volts/div and time/div (they follow the signal and never change the pitc
 frequency and level. Touching it is the X-Y sound control.
 
 More pictures: [Track](docs/shots/10-track.png), [Chop](docs/shots/11-chop.png), [Picking a sound for a clip](docs/shots/12-sound.png), [Mixer](docs/shots/13-mixer.png), [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
-[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Beat](docs/shots/9-beat.png).
+[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Beat](docs/shots/9-beat.png), [Chat with a copilot](docs/shots/14-chat.png).
 
 ## Play it in ten seconds
 
@@ -74,6 +74,8 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
   shift, for every copy of the clip or just one. **Mix** gives each lane a level, a mute, a solo and a
   meter, saved with the track and heard in an export. Keys follow the usual shortcuts of desktop music programs (`Ctrl`+`T` split,
   `Ctrl`+`J` join, `Ctrl`+`R` repeat, `Ctrl`+`X` `C` `V`, `Ctrl`+`Z`, `Space` play).
+- **Copilot**: a Chat tab and a local control socket let an AI agent play and edit the app live while you talk to it
+  (`Ctrl`+`Y` jumps to the chat). Local Unix socket only, off with `--no-control`. See [docs/CONTROL.md](docs/CONTROL.md).
 - **Looper**: event-based (notes, slides, bends, XY moves, sound changes), count-in, bar-snapped,
   up to 64 bars, six layers, undo, stop/start, clear. Each layer keeps its own sound. Follows tempo.
 - **Saving**: sounds, favourites, sessions (settings + sounds + backing + loops + beat + track), WAV export and play-back of the last recording
@@ -99,7 +101,7 @@ Tests:
 ```bash
 ./build/vrequency_tests                                   # 517 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 173 checks through the real app + audio thread
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 227 checks through the real app + audio thread
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 
@@ -109,8 +111,9 @@ QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   #
 |---|---|
 | `core/` | The engine, no GUI or device dependencies: `voice.h` (synth voice), `fx.h`, `scale.h`, `instrument.*` (strings, backing, looper, mixer), `drums.*` (the three kits), `track.cpp` (clips, lanes, chopping, picked sounds, track playback), `sounds.*` (the Keys, Guitar and Bass shelf), `presets.*` (sounds, randomiser), `analysis.*` (key/tempo) |
 | `audio/` | PipeWire backend (C), ALSA fallback, silent clock |
-| `app/` | Qt 6 interface, one custom-painted widget: `mainwindow.*` (pages, input, actions), `trackpage.cpp` (the Track page), `scope.cpp` (the oscilloscope), `palette.h`, key map, files, self-test |
+| `app/` | Qt 6 interface, one custom-painted widget: `mainwindow.*` (pages, input, actions), `trackpage.cpp` (the Track page), `scope.cpp` (the oscilloscope), `chatpage.cpp` (the Chat page and ticker), `control.*` (the control socket), `palette.h`, key map, files, self-test |
 | `tests/` | Engine tests and benchmark |
+| `docs/CONTROL.md` | The control-socket protocol: every command with an example |
 | `docs/HARDWARE.md` | What was found on this Hackberry and what it means |
 | `docs/STATUS.md` | What is tested, what still needs a person, known limits, and a five-minute test list |
 

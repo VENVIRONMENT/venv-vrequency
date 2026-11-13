@@ -1,6 +1,6 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.9.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.10.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -22,6 +22,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 13. [System page](#13-system-page)
 14. [All the keys](#14-all-the-keys)
 15. [When something is wrong](#15-when-something-is-wrong)
+16. [Chat with a copilot](#16-chat-with-a-copilot)
 
 ## 1. Start and quit
 
@@ -553,6 +554,7 @@ Commands, with `Ctrl` held:
 | `J` | Beat play / stop | `W` | Play last recording |
 | `I` | Beat Rec on / off | `Q` | Quit |
 | `H` | Help | `Space` | Track play / stop |
+| `Y` | Chat: jump to it and back | | |
 
 On the Beat page only:
 
@@ -595,3 +597,31 @@ bluetoothctl devices
 ```bash
 bluetoothctl connect XX:XX:XX:XX:XX:XX
 ```
+
+## 16. Chat with a copilot
+
+![The Chat page](shots/14-chat.png)
+
+The last tab, **Chat**, is a conversation between you and an AI copilot (for example the agent Rook, or
+Claude Code) that is connected to the app through its control socket. It can play notes, change the sound,
+set up a beat or a backing and look at the screen while you talk. The commands it uses are in
+[CONTROL.md](CONTROL.md). The socket is a local file only your user can open; `vrequency --no-control`
+switches it off, and then the Chat page simply stays quiet.
+
+- **Type** on the keyboard: on this page letters type instead of playing strings. `Enter` sends,
+  `Backspace` deletes a letter, `Up` / `Down` (or a finger drag on the history) scroll, `Esc` leaves the page.
+  The **Send** button sends by touch. `Tab` and the `Ctrl` commands still work.
+- **Hotkey**: `Ctrl`+`Y` jumps to Chat from any page, and the same keys take you back to where you were.
+  (It is bound as `chat` in `keymap.json`; the other `Ctrl` letters are unchanged.)
+- The copilot's messages have a white tag with its name; yours have an outlined `YOU`. A `?` after the
+  name means it is asking you something, `tip` marks a suggestion.
+- **The ticker**: when the copilot says something while you are on another page, the message appears in a
+  two-line strip at the bottom of the screen for about seven seconds, and the Chat tab shows how many are
+  unread (`Chat 2`). It never takes the keyboard or touch away, so you can keep playing; it does cover the
+  bottom row of controls while it shows.
+- **`copilot: listening`** at the top right means a copilot is connected and waiting for you
+  (it has asked for your messages in the last 45 seconds, or is waiting right now); otherwise it says
+  `copilot: not connected`. Messages you type then wait for it: they are kept.
+- The last 200 messages are kept between runs.
+
+![A message arriving while playing](shots/15-ticker.png)
