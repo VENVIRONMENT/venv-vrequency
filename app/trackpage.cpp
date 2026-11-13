@@ -385,7 +385,7 @@ void MainWindow::trackChop() {
     if (chopOpen) { chopOpen = false; return; }
     if (!chosen()) { toast("Choose a placed clip first", 1400); return; }
     chopOpen = true; chopPiece = 0;
-    soundOpen = false;
+    soundOpen = false; mixOpen = false;
 }
 
 void MainWindow::chopEdit(const std::function<bool(Placement &)> &fn) {
@@ -429,7 +429,7 @@ void MainWindow::chopTap(double frac, double stripWidth) {
 void MainWindow::trackSound() {
     if (soundOpen) { soundOpen = false; return; }
     if (!chosen()) { toast("Choose a placed clip first", 1400); return; }
-    soundOpen = true; chopOpen = false;
+    soundOpen = true; chopOpen = false; mixOpen = false;
     soundSetup();
 }
 
@@ -542,6 +542,63 @@ void MainWindow::soundScope() {
     toast(only ? QString("Every %1 now plays this sound").arg(name) : QString("From here on only this %1 changes").arg(name), 1800);
 }
 
+// ------------------------------------------------------------------ mixer
+//
+// Each lane has a level (80 = as recorded), a mute and a solo. They live in the track, so they
+// are saved with it, undone like any edit, and heard in an export.
+
+void MainWindow::trackMixer() {
+    mixOpen = !mixOpen;
+    if (mixOpen) {
+        chopOpen = false;
+        if (soundOpen) { soundOpen = false; hearEnd(true); }
+        if (selLane >= 0) mixLane = selLane;
+    }
+}
+
+void MainWindow::mixApply(int lane, const std::function<bool(LaneMix &)> &fn) {
+    if (lane < 0 || lane >= kLanes) return;
+    mixLane = lane;
+    trackApply([&](TrackData &t) {
+        LaneMix m = t.mix[lane];
+        if (!fn(m) || sameMix(m, t.mix[lane])) return false;
+        t.mix[lane] = m;
+        return true;
+    });
+}
+
+void MainWindow::mixReset() {
+    if (!trackApply([](TrackData &t) {
+            bool changed = false;
+            for (int ln = 0; ln < kLanes; ++ln) {
+                changed = changed || !sameMix(t.mix[ln], LaneMix());
+                t.mix[ln] = LaneMix();
+            }
+            return changed;
+        }))
+        toast("Every lane is already at 80", 1200);
+}
+
+// A fader follows the finger; letting go makes the whole move one undo step.
+void MainWindow::mixFader(int lane, qreal y, qreal top, qreal bottom, int ph) {
+    if (ph == PH_RELEASE) {
+        if (mixDragged) {
+            trackUndo.push_back(mixBefore);
+            if (trackUndo.size() > 40) trackUndo.erase(trackUndo.begin());
+            trackRedo.clear();
+        }
+        mixDragged = false;
+        return;
+    }
+    if (ph == PH_PRESS) { mixBefore = track; mixDragged = false; mixLane = lane; }
+    int v = qBound(0, (int)std::lround((bottom - y) / (bottom - top) * 100.0), 100);
+    if (std::abs(v - kLaneLevelNormal) <= 2) v = kLaneLevelNormal; // easy to find "as recorded" again
+    if (v == track.mix[lane].level) return;
+    track.mix[lane].level = v;
+    mixDragged = true;
+    trackSync();
+}
+
 // The chosen clip alone, going round: the same track with everything else taken off.
 TrackData MainWindow::hearTrack() {
     TrackData t = track;
@@ -549,7 +606,7 @@ TrackData MainWindow::hearTrack() {
     if (!p) return t;
     Placement one = *p;
     one.mute = false;
-    for (int ln = 0; ln < kLanes; ++ln) t.lane[ln].clear();
+    for (int ln = 0; ln < kLanes; ++ln) { t.lane[ln].clear(); t.mix[ln] = LaneMix(); } // heard alone, whatever the mixer says
     t.lane[selLane].push_back(one);
     t.cycleFrom = one.bar; t.cycleTo = one.bar + one.bars;
     t.bars = qMax(t.bars, t.cycleTo);
@@ -680,6 +737,30 @@ bool MainWindow::trackKey(int key, int plainAct) {
             return true;
         }
     }
+    if (mixOpen && !modCommand) { // the mixer has the arrows, 1-4, 0, M, S and Enter
+        switch (key) {
+        case Qt::Key_M: mixApply(mixLane, [](LaneMix &m) { m.mute = !m.mute; return true; }); return true;
+        case Qt::Key_S: mixApply(mixLane, [](LaneMix &m) { m.solo = !m.solo; return true; }); return true;
+        case Qt::Key_X: mixOpen = false; return true;
+        }
+        switch (plainAct) {
+        case A_LOOP: case A_HOME: mixOpen = false; return true;
+        case A_BEND_DOWN: mixLane = qMax(0, mixLane - 1); return true;
+        case A_BEND_UP: mixLane = qMin(kLanes - 1, mixLane + 1); return true;
+        case A_OCT_UP: case A_OCT_DOWN: {
+            const bool up = plainAct == A_OCT_UP; // to the next step of 5
+            mixApply(mixLane, [up](LaneMix &m) { m.level = up ? qMin(100, (m.level / 5 + 1) * 5) : qMax(0, ((m.level + 4) / 5 - 1) * 5); return true; });
+            return true;
+        }
+        default: break;
+        }
+        if (plainAct >= A_SOUND_1 && plainAct <= A_SOUND_10) {
+            const int k = plainAct - A_SOUND_1;
+            if (k < kLanes) mixLane = k;
+            else if (plainAct == A_SOUND_10) mixApply(mixLane, [](LaneMix &m) { m.level = kLaneLevelNormal; return true; });
+            return true;
+        }
+    }
     if (modCommand) {
         switch (key) {
         case Qt::Key_T:
@@ -762,6 +843,7 @@ bool MainWindow::trackKey(int key, int plainAct) {
     case Qt::Key_E: trackChop(); return true;
     case Qt::Key_I: trackSound(); return true;
     case Qt::Key_K: trackKeep(); return true;
+    case Qt::Key_X: trackMixer(); return true;
     }
     int row, col;
     return km.stringKey(key, row, col); // the other letters do nothing here: no stray notes
@@ -1002,7 +1084,13 @@ void MainWindow::paintTrack() {
         const QRectF lr = laneRect(ln);
         const bool target = handOn && laneTakes(ln, track.clips[hand.clip]->kind);
         const bool strong = target || selLane == ln;
-        txt(QRectF(134, lr.y(), 44, lr.height()), laneLabel(ln), 11, strong ? INK : MID, L, strong);
+        const bool heard = laneHeard(track, ln);
+        const QString state = track.mix[ln].mute ? "muted" : (!heard ? "off" : (track.mix[ln].solo ? "solo" : ""));
+        if (state.isEmpty()) txt(QRectF(134, lr.y(), 44, lr.height()), laneLabel(ln), 11, strong ? INK : MID, L, strong);
+        else {
+            txt(QRectF(134, lr.y() + lr.height() / 2 - 15, 44, 15), laneLabel(ln), 11, heard ? (strong ? INK : MID) : LOW, L, strong);
+            txt(QRectF(134, lr.y() + lr.height() / 2 + 1, 44, 15), state, 11, heard ? INK : LOW, L);
+        }
         frame(QRectF(lr.x(), lr.y(), lr.width() + 1, lr.height()), GRAT);
         for (int i = 1; i < VIEW; ++i)
             if (viewBar + i < track.bars) g->fillRect(QRectF(std::floor(GX + i * BW), lr.y() + 1, 1, lr.height() - 2), GRAT);
@@ -1012,6 +1100,8 @@ void MainWindow::paintTrack() {
     g->setClipRect(QRectF(GX, LY - 1, GW + 1, lanesBottom - LY + 2), Qt::IntersectClip);
     for (int ln = 0; ln < kLanes; ++ln)
         for (int i = 0; i < (int)track.lane[ln].size(); ++i) drawPlacement(ln, i);
+    for (int ln = 0; ln < kLanes; ++ln) // a lane the mixer silences is drawn faint
+        if (!laneHeard(track, ln)) g->fillRect(laneRect(ln).adjusted(1, 1, -1, -1), QColor(4, 4, 4, 160));
     int spotLane = -1, spotBar = -1;
     if (handOn && placeSpot(spotLane, spotBar)) { // where Place would put the clip in hand
         const QRectF lr = laneRect(spotLane);
@@ -1049,7 +1139,8 @@ void MainWindow::paintTrack() {
         }
     }
 
-    if (soundOpen && chosen()) paintClipSound();
+    if (mixOpen) paintMixer();
+    else if (soundOpen && chosen()) paintClipSound();
     else if (chopOpen && chosen()) paintChop();
     else { chopOpen = soundOpen = false; paintTrackTools(); }
 }
@@ -1109,13 +1200,17 @@ void MainWindow::paintTrackTools() {
     button(c5(1), "tjoin", "Join", false, [this] { trackJoin(); }, "with the next");
     button(c5(2), "tmute", "Mute", sel && sel->mute, [this] { trackMute(); }, "this clip");
     button(c5(3), "tundo", "Undo", false, [this] { trackUndoDo(); }, trackUndo.empty() ? QString("nothing yet") : QString("%1 step%2").arg(trackUndo.size()).arg(trackUndo.size() == 1 ? "" : "s"));
-    stepper(QRectF(440, 574, 264, 60), "tview", "Bars shown", QString("%1-%2").arg(viewBar + 1).arg(viewBar + VIEW),
+    QString mixSub = "lane levels";
+    for (int ln = 0; ln < kLanes; ++ln)
+        if (!laneHeard(track, ln) || track.mix[ln].level != kLaneLevelNormal) { mixSub = "lanes changed"; break; }
+    button(c5(4), "tmix", "Mix", false, [this] { trackMixer(); }, mixSub);
+    stepper(QRectF(546, 574, 158, 60), "tview", "Shown", QString("%1-%2").arg(viewBar + 1).arg(viewBar + VIEW),
             [this] { viewBar = qMax(0, viewBar - 4); }, [this] { viewBar = qMin(maxViewBar(), viewBar + 4); });
 
     const QString cmd = km.keyFor(A_COMMAND, false);
     txt(QRectF(18, 644, 684, 20), QString("Keys: %1 play, %2 to bar 1, arrows choose a clip, Alt+arrows move it,")
             .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)), 12, MID, L);
-    txt(QRectF(18, 664, 684, 20), "Shift+arrows move the play line. 1-5 pick a clip. K keep, E chop, I sound, M mute, C cycle.", 12, MID, L);
+    txt(QRectF(18, 664, 684, 20), "Shift+arrows move the line. 1-5 pick a clip. K keep, E chop, I sound, M mute, X mix, C cycle.", 12, MID, L);
     txt(QRectF(18, 684, 684, 20), QString("%1 + T split, J join, R repeat, X C V cut copy paste, Z undo, B export.").arg(cmd), 12, MID, L);
 }
 
@@ -1280,4 +1375,72 @@ void MainWindow::paintClipSound() {
     txt(QRectF(18, 688, 684, 20), beat ? QString("Keys: 1-3 pick a kit, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false))
                                        : QString("Keys: left right pick a kind, 1-6 a sound, up down the octave, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)),
         12, MID, L);
+}
+
+void MainWindow::paintMixer() {
+    const int L = Qt::AlignLeft | Qt::AlignVCenter;
+    mixLane = qBound(0, mixLane, kLanes - 1);
+    QString solos;
+    for (int ln = 0; ln < kLanes; ++ln)
+        if (track.mix[ln].solo) solos += (solos.isEmpty() ? "" : ", ") + QString(laneLabel(ln));
+    section(414, solos.isEmpty() ? QString("Mixer   %1 chosen   tap or drag a fader").arg(laneLabel(mixLane))
+                                 : QString("Mixer   %1 chosen   only %2 heard").arg(laneLabel(mixLane)).arg(solos));
+
+    const qreal W = 132, G = 7, y0 = 438, y1 = 638;
+    for (int ln = 0; ln < kLanes; ++ln) {
+        const LaneMix &m = track.mix[ln];
+        const bool chosenLane = ln == mixLane, heard = laneHeard(track, ln);
+        const qreal x = 16 + ln * (W + G);
+        const QRectF r(x, y0, W, y1 - y0);
+        frame(r, chosenLane ? INK : LOW, BG);
+        const QRectF hd(x, y0, W, 24);
+        if (chosenLane) g->fillRect(hd, INK);
+        txt(hd, laneLabel(ln), 13, chosenLane ? BG : (heard ? INK : LOW), Qt::AlignCenter, true);
+        g->fillRect(QRectF(x + 1, y0 + 24, W - 2, 1), GRAT);
+        zone(hd, QString("mxlane%1").arg(ln), [this, ln](QPointF, int ph) { if (ph == PH_PRESS) mixLane = ln; });
+
+        // the fader: the bar is the level; the notch beside it is 80, as recorded
+        const qreal top = y0 + 36, bottom = y0 + 150;
+        const QRectF fr(x + 24, top, 38, bottom - top);
+        frame(fr, heard ? LOW : GRAT, BG);
+        const qreal h = std::floor((fr.height() - 6) * m.level / 100.0);
+        g->fillRect(QRectF(fr.x() + 3, fr.bottom() - 3 - h, fr.width() - 6, h), heard ? INK : LOW);
+        const qreal ny = std::floor(fr.bottom() - 3 - (fr.height() - 6) * kLaneLevelNormal / 100.0);
+        g->fillRect(QRectF(fr.x() - 7, ny, 5, 1), MID);
+        txt(QRectF(x + 90, top, 40, 22), QString::number(m.level), 17, heard ? INK : LOW, L, true);
+        txt(QRectF(x + 90, top + 22, 40, 16), m.level == kLaneLevelNormal ? "as is" : (m.level > kLaneLevelNormal ? "louder" : "softer"), 11, MID, L);
+
+        // the meter: twenty steps from -48 dB to full scale, only while the track plays
+        const QRectF mr(x + 72, top, 12, bottom - top);
+        frame(mr, GRAT, BG);
+        const float pk = u.trackPlaying ? u.lanePeak[ln] : 0.0f;
+        const float db = pk > 1e-6f ? 20.0f * std::log10(pk) : -120.0f;
+        const qreal seg = (mr.height() - 4) / 20.0;
+        for (int sgm = 0; sgm < 20; ++sgm) {
+            const bool lit = db > -48.0f + sgm * 2.4f;
+            const qreal sy = std::floor(mr.bottom() - 2 - (sgm + 1) * seg);
+            g->fillRect(QRectF(mr.x() + 2, sy + 1, mr.width() - 4, std::max<qreal>(1, std::floor(seg) - 1)), lit ? INK : GRAT);
+        }
+        zone(QRectF(x + 4, top - 8, 82, bottom - top + 16), QString("mxfader%1").arg(ln),
+             [this, ln, top, bottom](QPointF p, int ph) { mixFader(ln, p.y(), top + 3, bottom - 3, ph); });
+
+        const qreal by = y0 + 160, bw = 56;
+        button(QRectF(x + 8, by, bw, 34), QString("mxmute%1").arg(ln), "M", m.mute,
+               [this, ln] { mixApply(ln, [](LaneMix &mm) { mm.mute = !mm.mute; return true; }); });
+        button(QRectF(x + 8 + bw + 4, by, bw, 34), QString("mxsolo%1").arg(ln), "S", m.solo,
+               [this, ln] { mixApply(ln, [](LaneMix &mm) { mm.solo = !mm.solo; return true; }); });
+    }
+
+    const qreal x = 16 + kLanes * (W + G), w = 704 - x;
+    const bool cyc = track.cycleTo > track.cycleFrom;
+    const int from = cyc && (playBar < track.cycleFrom || playBar >= track.cycleTo) ? track.cycleFrom : qMin(playBar, track.bars - 1);
+    button(QRectF(x, y0, w, 62), "mxplay", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying,
+           [this] { trackPlayStop(); }, u.trackPlaying ? QString("bar %1").arg((int)(u.trackPos / 4.0) + 1) : QString("from bar %1").arg(from + 1));
+    button(QRectF(x, y0 + 68, w, 62), "mxreset", "Reset", false, [this] { mixReset(); }, "all back to 80");
+    button(QRectF(x, y0 + 136, w, 64), "mxdone", "Done", false, [this] { mixOpen = false; }, "back to tools");
+
+    txt(QRectF(18, 652, 684, 18), QString("Keys: left right choose a lane (or 1-4), up down its level, 0 back to 80,"), 12, MID, L);
+    txt(QRectF(18, 670, 684, 18), QString("M mute, S solo, %1 play, %2 or X done. %3 + Z undoes a change.")
+            .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_HOME, false)).arg(km.keyFor(A_COMMAND, false)), 12, MID, L);
+    txt(QRectF(18, 692, 684, 18), "Levels, mutes and solos are kept with the track and heard in an export.", 12, LOW, L);
 }

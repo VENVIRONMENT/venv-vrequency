@@ -537,6 +537,51 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         key(w, Qt::Key_Shift, true); ctrl(Qt::Key_Z); key(w, Qt::Key_Shift, false);
         check(T().clips[bci]->pick.kit == otherKit, "and redo picks it again");
 
+        std::printf("- lane mixer\n");
+        press(Qt::Key_X); w.shot();
+        check(w.mixing() && !w.pickingSound() && !w.chopping(), "X opens the mixer in place of the tools");
+        press(Qt::Key_2); press(Qt::Key_Down); w.shot();
+        check(w.mixLaneShown() == LN_CHORDS && T().mix[LN_CHORDS].level == 75, "2 chooses Chords and Down lowers it to 75");
+        press(Qt::Key_Right); press(Qt::Key_Up); press(Qt::Key_Up); w.shot();
+        check(w.mixLaneShown() == LN_LOOPA && T().mix[LN_LOOPA].level == 90, "Right moves to Loop A and Up twice raises it to 90");
+        press(Qt::Key_0);
+        check(T().mix[LN_LOOPA].level == kLaneLevelNormal, "0 puts it back to 80");
+        tap(w, "mxmute3"); w.shot();
+        check(T().mix[LN_LOOPB].mute && !laneHeard(T(), LN_LOOPB) && w.mixLaneShown() == LN_LOOPB, "tapping M on Loop B mutes it");
+        ctrl(Qt::Key_Z);
+        check(!T().mix[LN_LOOPB].mute, "undo unmutes it");
+        key(w, Qt::Key_Shift, true); ctrl(Qt::Key_Z); key(w, Qt::Key_Shift, false);
+        check(T().mix[LN_LOOPB].mute, "and redo mutes it again");
+        press(Qt::Key_1); press(Qt::Key_S); w.shot();
+        check(T().mix[LN_BEAT].solo && !laneHeard(T(), LN_CHORDS) && laneHeard(T(), LN_BEAT), "1 then S solos the beat: the other lanes go quiet");
+        press(Qt::Key_S);
+        {
+            QRectF fr = w.zoneRect("mxfader1");
+            const int mixBeforeDrag = T().mix[LN_CHORDS].level;
+            w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30), MainWindow::PH_PRESS);
+            for (int i = 1; i <= 8; ++i) w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30 - i * 6), MainWindow::PH_MOVE);
+            w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 78), MainWindow::PH_RELEASE);
+            w.shot();
+            const int lv = T().mix[LN_CHORDS].level, before = mixBeforeDrag;
+            check(lv > 50 && lv < 75 && w.mixLaneShown() == LN_CHORDS, QString("dragging the Chords fader sets its level (%1)").arg(lv));
+            ctrl(Qt::Key_Z);
+            const int undone = T().mix[LN_CHORDS].level;
+            key(w, Qt::Key_Shift, true); ctrl(Qt::Key_Z); key(w, Qt::Key_Shift, false);
+            check(undone == before && T().mix[LN_CHORDS].level == lv, QString("the whole drag is one undo step (%1 back to %2)").arg(lv).arg(undone));
+        }
+        tap(w, "mxreset"); w.shot();
+        bool flat = true;
+        for (int ln = 0; ln < kLanes; ++ln) flat = flat && sameMix(T().mix[ln], LaneMix());
+        check(flat, "Reset puts every lane back to 80, unmuted");
+        ctrl(Qt::Key_Z);
+        check(T().mix[LN_LOOPB].mute && T().mix[LN_CHORDS].level != kLaneLevelNormal, "and undo brings the mix back");
+        press(Qt::Key_Escape); w.shot();
+        check(!w.mixing(), "Esc closes the mixer");
+        if (w.chosenLane() < 0) press(Qt::Key_Right);                                  // choose a clip
+        press(Qt::Key_X); press(Qt::Key_I); w.shot();
+        check(w.chosenLane() >= 0 && w.pickingSound() && !w.mixing(), "opening the sound picker closes the mixer");
+        press(Qt::Key_Return); w.shot();
+
         w.saveState();
         QJsonObject tj; store::readJson(store::baseDir() + "/state.json", tj);
         TrackData rt; store::trackFromJson(tj["track"].toObject(), rt);
@@ -548,7 +593,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
                         && samePick(rt.lane[ln][i].pick, T().lane[ln][i].pick);
         }
         for (size_t i = 0; rsame && i < rt.clips.size(); ++i) rsame = sameClip(*rt.clips[i], *T().clips[i]) && samePick(rt.clips[i]->pick, T().clips[i]->pick);
-        check(rsame, "the track read back from the saved state is the same track, picked sounds included");
+        for (int ln = 0; rsame && ln < kLanes; ++ln) rsame = sameMix(rt.mix[ln], T().mix[ln]);
+        check(rsame, "the track read back from the saved state is the same track, picked sounds and the mix included");
         check(rt.lane[LN_LOOPA][0].pick.own && QString(rt.lane[LN_LOOPA][0].pick.patch.name) == "Pluck" && QString(rt.clips[lci]->pick.patch.name) == "Sub"
               && rt.clips[bci]->pick.kit == otherKit, "a placement's own sound, a clip's sound and a beat's kit all come back");
         QString sp2 = store::baseDir() + "/sessions/selftest-track.json";
@@ -687,6 +733,17 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/12-sound.png").arg(dir));
         press(Qt::Key_Return);
+        inst.cmd(EV_PANIC); wait(60);
+        press(Qt::Key_X); w.shot();                                                     // the mixer, playing
+        press(Qt::Key_4); press(Qt::Key_M);                                             // Loop B muted
+        press(Qt::Key_2); for (int i = 0; i < 3; ++i) press(Qt::Key_Down);              // Chords at 65
+        press(Qt::Key_3); press(Qt::Key_Up); press(Qt::Key_Up);                         // Loop A at 90
+        press(Qt::Key_1);
+        tap(w, "mxplay");
+        wait(2600);
+        for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/13-mixer.png").arg(dir));
+        tap(w, "mxplay");
         inst.cmd(EV_PANIC); wait(60);
     }
     if (qEnvironmentVariableIsSet("VREQUENCY_HELP_SHOTS")) { // every page of the built-in guide, for proof-reading

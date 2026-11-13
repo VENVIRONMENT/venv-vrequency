@@ -68,6 +68,8 @@ public:
     bool pickingSound() const { return soundOpen; }
     int soundKindShown() const { return soundKind; }
     bool hearingAlone() const { return hearOn; }
+    bool mixing() const { return mixOpen; }
+    int mixLaneShown() const { return mixLane; }
     int playLineBar() const { return playBar; }
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
     QString lastRecordingPath() const { return lastRecording; }
@@ -150,6 +152,10 @@ private:
     bool hearOn = false, hearSeen = false;   // the chosen clip is playing alone, round and round
     int hearLane = -1, hearIdx = -1;
     qint64 hearAt = 0;
+    // the lane mixer: a strip for each lane in place of the tools
+    bool mixOpen = false, mixDragged = false;
+    int mixLane = 0;
+    td::TrackData mixBefore;                // the track before a fader drag: the whole drag is one undo step
     int removeArmed = -1; qint64 removeArmedAt = 0;
     bool dragOn = false, dragMoved = false;
     int dragGrab = 0;
@@ -221,6 +227,7 @@ private:
     void paintTrackTools();
     void paintChop();
     void paintClipSound();
+    void paintMixer();
     void drawPlacement(int lane, int idx);
     void drawClipBody(const td::Clip &c, double srcA, double srcB, QRectF r, QColor ink);
     void hatch(QRectF r, QColor c);
@@ -275,6 +282,10 @@ private:
     void trackMove(int dbar, int dlane);
     void trackChop();
     void trackSound();
+    void trackMixer();
+    void mixApply(int lane, const std::function<bool(td::LaneMix &)> &fn);
+    void mixReset();
+    void mixFader(int lane, qreal y, qreal top, qreal bottom, int phase);
     void soundSetup();
     int soundCount(int kind) const;
     td::Patch soundPatch(int kind, int i) const;

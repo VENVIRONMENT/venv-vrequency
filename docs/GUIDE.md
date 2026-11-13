@@ -1,6 +1,6 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.8.1 with the
+A guide to playing the synth, page by page. Everything here describes version 0.9.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -390,6 +390,34 @@ passed over. A chords clip keeps its chords and style and changes only the backi
 The Keys, Guitar and Bass sounds are made with the same synth voice as everything else, shaped to
 suggest those instruments. They are not recordings of real ones.
 
+**Mix.** Tap **Mix** (or press `X`, as in Logic) and the tools under the lanes become a mixer: a
+strip for each lane.
+
+![The mixer](shots/13-mixer.png)
+
+| On a strip | What it does |
+|---|---|
+| The fader | Tap or drag it to set the lane's level. **80** plays the lane as it was recorded; **100** is about 4 dB louder; **0** is silent. The small notch beside it marks 80, and dragging near it snaps there |
+| The meter | How loud the lane is right now, while the track plays |
+| **M** | Mute: the lane goes quiet, and on the lanes above its name says "muted" and its clips go faint |
+| **S** | Solo: only soloed lanes are heard. Solo two lanes to hear just those two. The others say "off" |
+
+**Reset** puts every lane back to 80, unmuted and unsoloed. **Play** works as it does in the tools,
+and **Done** (or `Esc`, `Enter` or `X` again) closes the mixer. Every change is one step of
+**Undo**, a whole fader drag included. The mix is saved with the track and is heard in an export.
+**Hear** in the sound picker plays its clip whatever the mixer says.
+
+| Key, while the mixer is open | Does |
+|---|---|
+| `Left` / `Right`, or `1`‥`4` | Choose a lane |
+| `Up` / `Down` | Its level, five at a time |
+| `0` | Its level back to 80 |
+| `M` / `S` | Mute / solo it |
+| `Esc`, `Enter` or `X` | Close the mixer |
+
+The mixer sets the track's lanes only. What you play live on the other pages keeps its own levels
+(Synth, Beat and Backing volumes on the System page).
+
 **Export.** Tap **Export** to write the whole track to a WAV file in `recordings/`. It plays once
 from bar 1 to the end, ignoring the cycle, at full master volume, and runs on until the echoes have
 died away. It is done in the background, much faster than real time, and does not need the speaker.
@@ -417,6 +445,7 @@ desktop music programs (`Ctrl` where a Mac uses Cmd):
 | `E` | Chop (again, or `Esc`, closes it) |
 | `I` | Sound: pick an instrument for the chosen clip |
 | `K` | Keep |
+| `X` | Mix: open or close the mixer |
 | `Ctrl`+`B` | Export |
 | `Esc` | Put down the clip in hand; with nothing in hand, back to Synth |
 

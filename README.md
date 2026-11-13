@@ -23,7 +23,7 @@ the only colour is in the scope while the Glitch control is on. The scope on the
 its own volts/div and time/div (they follow the signal and never change the pitch) and measured
 frequency and level. Touching it is the X-Y sound control.
 
-More pictures: [Track](docs/shots/10-track.png), [Chop](docs/shots/11-chop.png), [Picking a sound for a clip](docs/shots/12-sound.png), [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
+More pictures: [Track](docs/shots/10-track.png), [Chop](docs/shots/11-chop.png), [Picking a sound for a clip](docs/shots/12-sound.png), [Mixer](docs/shots/13-mixer.png), [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
 [System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Beat](docs/shots/9-beat.png).
 
 ## Play it in ten seconds
@@ -71,7 +71,8 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
   into pieces and reorder them, cycle a few bars, undo, and export the whole thing to a WAV file
   faster than real time. **Sound** gives a placed clip another instrument after the fact: six
   Keys, six Guitar and six Bass sounds, any of your own, or another kit for a beat, with an octave
-  shift, for every copy of the clip or just one. Keys follow the usual shortcuts of desktop music programs (`Ctrl`+`T` split,
+  shift, for every copy of the clip or just one. **Mix** gives each lane a level, a mute, a solo and a
+  meter, saved with the track and heard in an export. Keys follow the usual shortcuts of desktop music programs (`Ctrl`+`T` split,
   `Ctrl`+`J` join, `Ctrl`+`R` repeat, `Ctrl`+`X` `C` `V`, `Ctrl`+`Z`, `Space` play).
 - **Looper**: event-based (notes, slides, bends, XY moves, sound changes), count-in, bar-snapped,
   up to 64 bars, six layers, undo, stop/start, clear. Each layer keeps its own sound. Follows tempo.
@@ -96,9 +97,9 @@ machine. Nothing is installed system-wide and nothing starts at boot.
 Tests:
 
 ```bash
-./build/vrequency_tests                                   # 506 engine checks (offline rendering)
+./build/vrequency_tests                                   # 517 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 159 checks through the real app + audio thread
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 173 checks through the real app + audio thread
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 

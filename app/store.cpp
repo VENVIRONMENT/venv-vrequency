@@ -252,6 +252,15 @@ QJsonObject trackToJson(const td::TrackData &t) {
         lanes.append(la);
     }
     o["lanes"] = lanes;
+    QJsonArray mix; // level, mute and solo of each lane, in lane order
+    for (int ln = 0; ln < td::kLanes; ++ln) {
+        QJsonObject mo;
+        mo["level"] = t.mix[ln].level;
+        if (t.mix[ln].mute) mo["mute"] = true;
+        if (t.mix[ln].solo) mo["solo"] = true;
+        mix.append(mo);
+    }
+    o["mix"] = mix;
     return o;
 }
 
@@ -317,6 +326,13 @@ void trackFromJson(const QJsonObject &o, td::TrackData &t) {
             t.lane[ln].push_back(p);
         }
         td::sortLane(t, ln);
+    }
+    const QJsonArray mix = o["mix"].toArray(); // older files have none: every lane as recorded
+    for (int ln = 0; ln < td::kLanes && ln < mix.size(); ++ln) {
+        const QJsonObject mo = mix[ln].toObject();
+        t.mix[ln].level = qBound(0, mo["level"].toInt(td::kLaneLevelNormal), 100);
+        t.mix[ln].mute = mo["mute"].toBool(false);
+        t.mix[ln].solo = mo["solo"].toBool(false);
     }
     for (int ln = 0; ln < td::kLanes; ++ln)
         for (const td::Placement &p : t.lane[ln]) t.bars = qMax(t.bars, p.bar + p.bars);

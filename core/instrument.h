@@ -170,6 +170,7 @@ struct SessionData {
 
 enum ClipKind { CK_BEAT, CK_CHORDS, CK_LOOP };
 enum Lane { LN_BEAT, LN_CHORDS, LN_LOOPA, LN_LOOPB, kLanes };
+constexpr int kLaneLevelNormal = 80;
 constexpr int kTrackMaxBars = 64;
 
 // A sound picked for a clip after it was kept. It stands in for the recorded one: every layer
@@ -221,12 +222,24 @@ const SoundPick &pickFor(const Clip &c, const Placement &pl);
 const char *soundName(const Clip &c, const SoundPick &pick);   // "" when a loop has no sound at all
 const char *recordedSoundName(const Clip &c);
 
+// One lane's place in the mix. Level 80 plays a lane as recorded; 100 is about 4 dB louder.
+struct LaneMix {
+    int level = kLaneLevelNormal; // 0..100
+    bool mute = false, solo = false;
+};
+
 struct TrackData {
     std::vector<std::shared_ptr<const Clip>> clips; // shared, never changed: copying a track is cheap
     std::vector<Placement> lane[kLanes];
     int bars = 8;
     int cycleFrom = 0, cycleTo = 0; // in bars; cycleTo <= cycleFrom means the whole track
+    LaneMix mix[kLanes];
 };
+
+// What the mix makes of a lane: 0 when muted or another lane is soloed, 1 at level 80.
+float laneGain(const TrackData &t, int lane);
+bool laneHeard(const TrackData &t, int lane);
+inline bool sameMix(const LaneMix &a, const LaneMix &b) { return a.level == b.level && a.mute == b.mute && a.solo == b.solo; }
 
 inline int laneForKind(int kind) { return kind == CK_BEAT ? LN_BEAT : (kind == CK_CHORDS ? LN_CHORDS : LN_LOOPA); }
 inline bool laneTakes(int lane, int kind) { return kind == CK_LOOP ? (lane == LN_LOOPA || lane == LN_LOOPB) : lane == laneForKind(kind); }
@@ -289,6 +302,7 @@ struct UiState {
     double trackPos = 0;               // beats from the start of the track
     uint32_t trackPasses = 0;          // counts play-once passes that reached the end
     // meters
+    float lanePeak[kLanes] = {0};      // what each track lane is putting out (linear, held and falling)
     float peak = 0, limiter = 1;
     int voices = 0;
     bool sustain = false;
@@ -434,6 +448,7 @@ private:
     std::atomic<uint32_t> recW{0}, recR{0}, recDrops{0};
     std::atomic<bool> recOn{false};
     float peakHold = 0;
+    float laneHold[kLanes] = {0};
     int silentBlocks = 0;
     uint64_t frames = 0;
 

@@ -1445,7 +1445,7 @@ void MainWindow::paintHelp() {
             {K(A_PANIC), "delete the chosen clip from the track"},
             {"M / C", "mute the chosen clip / cycle on or off"},
             {"E / I", "chop the chosen clip / pick another sound for it"},
-            {"K", "keep what is live as clips"},
+            {"K / X", "keep what is live as clips / open the mixer"},
             {c + "B", "export the track as an audio file"},
             {K(A_TRACK_PLAY, true), "play or stop the track from any page"},
         };

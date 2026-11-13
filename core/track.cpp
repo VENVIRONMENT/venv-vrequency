@@ -327,6 +327,19 @@ void Instrument::trackStop() {
 }
 
 // `keepSound`: a sound was picked for the clip, so the sound changes recorded in it are passed over.
+bool laneHeard(const TrackData &t, int lane) {
+    if (lane < 0 || lane >= kLanes || t.mix[lane].mute) return false;
+    for (int l = 0; l < kLanes; ++l)
+        if (t.mix[l].solo) return t.mix[lane].solo;
+    return true;
+}
+
+float laneGain(const TrackData &t, int lane) {
+    if (!laneHeard(t, lane)) return 0.0f;
+    const float x = std::clamp(t.mix[lane].level, 0, 100) / (float)kLaneLevelNormal;
+    return x * x;
+}
+
 void Instrument::applyTrackOp(int part, const LayerData &ld, const LoopEv &e, bool keepSound) {
     switch (e.op) {
     case OP_ON: opOn(part, e.slot, e.a, e.b); break;
@@ -413,7 +426,6 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
                     int p = lanePart0(lane) + li;
                     if (pick.on) parts[p].patch = pick.patch;
                     else if (!ld.patches.empty()) parts[p].patch = ld.patches[0];
-                    parts[p].gain = st.loopVol;
                     partShift[p] = shift;
                     // catch up on the sound changes recorded before this point
                     for (const LoopEv &e : ld.ev) {
@@ -430,12 +442,13 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
 
         if (!silent) {
             if (c.kind == CK_BEAT) {
+                const float beatGain = laneGain(t, LN_BEAT); // the beat lane's level rides on each hit
                 const double e = 1e-7;
                 for (long s = (long)std::ceil((srcA - e) * 4.0); s * 0.25 < srcB - e; ++s) {
                     int step = (int)(((s % kDrumSteps) + kDrumSteps) % kDrumSteps);
                     for (int d = 0; d < kDrums; ++d) {
-                        if (!(c.beat[d] & (1u << step))) continue;
-                        drums.trigger(kit, d, (d == D_HAT && (step & 3) != 0) ? 0.7f : 1.0f);
+                        if (!(c.beat[d] & (1u << step)) || beatGain <= 0) continue;
+                        drums.trigger(kit, d, ((d == D_HAT && (step & 3) != 0) ? 0.7f : 1.0f) * beatGain);
                         ++drumHits[d];
                     }
                 }
@@ -443,7 +456,6 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
                 for (int li = 0; li < (int)c.layers.size() && li < kLayers; ++li) {
                     const LayerData &ld = c.layers[li];
                     int p = lanePart0(lane) + li;
-                    parts[p].gain = st.loopVol;
                     auto it = std::lower_bound(ld.ev.begin(), ld.ev.end(), srcA, [](const LoopEv &ev, double v) { return ev.beat < v; });
                     for (; it != ld.ev.end() && it->beat < srcB; ++it) applyTrackOp(p, ld, *it, pick.on);
                 }
