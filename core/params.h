@@ -1,4 +1,4 @@
-// Tendril — patch parameter table.
+// venv vrequency — patch parameter table.
 // A Patch is a flat array of floats described by a metadata table, so the
 // engine, the randomiser, the UI sliders and the JSON files all share one
 // definition of what a sound is.

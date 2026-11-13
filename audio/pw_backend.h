@@ -1,4 +1,4 @@
-/* Tendril — minimal PipeWire playback/capture wrapper (plain C). */
+/* venv vrequency — minimal PipeWire playback/capture wrapper (plain C). */
 #pragma once
 #ifdef __cplusplus
 extern "C" {

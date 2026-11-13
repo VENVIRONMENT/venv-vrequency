@@ -1,6 +1,6 @@
-// Tendril — files on disk: patches, favourites, sessions, recordings.
+// venv vrequency — files on disk: patches, favourites, sessions, recordings.
 //
-//   ~/Tendril/                 (or $TENDRIL_HOME)
+//   ~/vrequency/                 (or $VREQUENCY_HOME)
 //     state.json               last settings, the ten sound slots, current sound
 //     keymap.json              editable key bindings
 //     favourites/*.json        saved sounds

@@ -7,7 +7,7 @@ keys that sit on three corners of a matrix rectangle make the fourth corner
 look pressed too ("ghosting"), or the firmware hides one of them ("blocking").
 This lists the note chords (one key per string) that form such a rectangle and
 what sits on the fourth corner. Whether the hardware really ghosts has to be
-checked with Tendril's KEY TEST screen.
+checked with venv vrequency's KEY TEST screen.
 """
 M = {  # key -> (matrix row, column) on layer 0
     'W': (0, 1), 'G': (0, 2), 'S': (0, 3), 'L': (0, 4), 'H': (0, 5),

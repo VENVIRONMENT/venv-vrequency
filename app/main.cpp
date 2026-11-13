@@ -1,4 +1,4 @@
-// Tendril — pocket string synthesiser for the Hackberry Pi.
+// venv vrequency — pocket string synthesiser for the Hackberry Pi.
 #include "audio.h"
 #include "instrument.h"
 #include "mainwindow.h"
@@ -9,7 +9,7 @@
 #include <cstring>
 
 static std::chrono::steady_clock::time_point g_start = std::chrono::steady_clock::now();
-qint64 tendrilMsSinceStart() {
+qint64 msSinceStart() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - g_start).count();
 }
 
@@ -27,29 +27,29 @@ int main(int argc, char **argv) {
         else if (a == "--shots" && i + 1 < argc) shots = argv[++i];
         else if (a == "--render" && i + 1 < argc) render = argv[++i];
         else if (a == "--audio" && i + 1 < argc) prefer = argv[++i];
-        else if (a == "--version") { std::printf("tendril 0.2.0\n"); return 0; }
+        else if (a == "--version") { std::printf("vrequency 0.3.0\n"); return 0; }
         else if (a == "--help" || a == "-h") {
-            std::printf("Tendril - pocket string synthesiser\n\n"
-                        "  tendril               start full screen\n"
-                        "  tendril --windowed    start in a 720x720 window\n"
-                        "  tendril --keytest     open on the keyboard test screen\n"
-                        "  tendril --audio X     force a backend: pipewire | alsa | null\n"
-                        "  tendril --selftest [--shots DIR]   run the built-in checks (uses a temporary data folder)\n"
-                        "  tendril --render DIR  write pictures of every menu and view, then exit\n");
+            std::printf("venv vrequency - pocket string synthesiser\n\n"
+                        "  vrequency               start full screen\n"
+                        "  vrequency --windowed    start in a 720x720 window\n"
+                        "  vrequency --keytest     open on the keyboard test screen\n"
+                        "  vrequency --audio X     force a backend: pipewire | alsa | null\n"
+                        "  vrequency --selftest [--shots DIR]   run the built-in checks (uses a temporary data folder)\n"
+                        "  vrequency --render DIR  write pictures of every page, then exit\n");
             return 0;
         }
     }
     QApplication app(argc, argv);
-    app.setApplicationName("Tendril");
-    app.setDesktopFileName("tendril");
+    app.setApplicationName("venv vrequency");
+    app.setDesktopFileName("vrequency");
 
     QTemporaryDir tmp; // self-test never touches the player's real files
-    if (selftest || !render.isEmpty()) qputenv("TENDRIL_HOME", tmp.path().toLocal8Bit());
+    if (selftest || !render.isEmpty()) qputenv("VREQUENCY_HOME", tmp.path().toLocal8Bit());
 
     td::Instrument inst(48000.0f);
     AudioOut audio;
     audio.start([&inst](float *l, float *r, int n) { inst.process(l, r, n); }, 48000, 256, prefer.toStdString());
-    if (!audio.lastError().empty()) std::fprintf(stderr, "tendril: audio: %s\n", audio.lastError().c_str());
+    if (!audio.lastError().empty()) std::fprintf(stderr, "vrequency: audio: %s\n", audio.lastError().c_str());
 
     int rc;
     {

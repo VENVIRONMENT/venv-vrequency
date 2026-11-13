@@ -1,4 +1,4 @@
-// Tendril — one synthesiser voice and the Part (sound + live modulation) it plays.
+// venv vrequency — one synthesiser voice and the Part (sound + live modulation) it plays.
 #pragma once
 #include "dsp.h"
 #include "params.h"

@@ -3,10 +3,10 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
-#ifdef TENDRIL_PIPEWIRE
+#ifdef VREQUENCY_PIPEWIRE
 #include "pw_backend.h"
 #endif
-#ifdef TENDRIL_ALSA
+#ifdef VREQUENCY_ALSA
 #include <alsa/asoundlib.h>
 #endif
 
@@ -23,7 +23,7 @@ void AudioOut::renderInterleaved(float *dst, int frames) {
     if (l > 1.0f) over.fetch_add(1);
 }
 
-#ifdef TENDRIL_PIPEWIRE
+#ifdef VREQUENCY_PIPEWIRE
 static void pwRender(void *user, float *dst, int frames) { ((AudioOut *)user)->renderInterleaved(dst, frames); }
 #endif
 
@@ -34,7 +34,7 @@ bool AudioOut::start(Render r, int rate_, int quantum_, const std::string &prefe
     bl.assign(8192, 0.0f); br.assign(8192, 0.0f);
     ftz = false;
     running = true;
-#ifdef TENDRIL_PIPEWIRE
+#ifdef VREQUENCY_PIPEWIRE
     if (prefer == "auto" || prefer == "pipewire") {
         char err[160] = {0};
         pw = td_pw_start(pwRender, this, rate, quant, err, sizeof err);
@@ -42,7 +42,7 @@ bool AudioOut::start(Render r, int rate_, int quantum_, const std::string &prefe
         error = err;
     }
 #endif
-#ifdef TENDRIL_ALSA
+#ifdef VREQUENCY_ALSA
     if (prefer == "auto" || prefer == "alsa") {
         if (startAlsa()) { backendName = "ALSA"; return true; }
     }
@@ -53,7 +53,7 @@ bool AudioOut::start(Render r, int rate_, int quantum_, const std::string &prefe
 }
 
 bool AudioOut::streaming() const {
-#ifdef TENDRIL_PIPEWIRE
+#ifdef VREQUENCY_PIPEWIRE
     if (pw) return td_pw_streaming(pw) != 0;
 #endif
     return alsa != nullptr;
@@ -62,10 +62,10 @@ bool AudioOut::streaming() const {
 void AudioOut::stop() {
     running = false;
     if (th.joinable()) th.join();
-#ifdef TENDRIL_PIPEWIRE
+#ifdef VREQUENCY_PIPEWIRE
     if (pw) { td_pw_stop(pw); pw = nullptr; }
 #endif
-#ifdef TENDRIL_ALSA
+#ifdef VREQUENCY_ALSA
     if (alsa) { snd_pcm_close((snd_pcm_t *)alsa); alsa = nullptr; }
 #endif
 }
@@ -80,10 +80,10 @@ void AudioOut::nullLoop() {
     }
 }
 
-#ifdef TENDRIL_ALSA
+#ifdef VREQUENCY_ALSA
 bool AudioOut::startAlsa() {
     snd_pcm_t *pcm = nullptr;
-    const char *dev = std::getenv("TENDRIL_ALSA_DEVICE");
+    const char *dev = std::getenv("VREQUENCY_ALSA_DEVICE");
     int e = snd_pcm_open(&pcm, dev ? dev : "default", SND_PCM_STREAM_PLAYBACK, 0);
     if (e < 0) { error = std::string("ALSA: ") + snd_strerror(e); return false; }
     unsigned latencyUs = (unsigned)(1e6 * quant * 3 / rate);
@@ -113,7 +113,7 @@ void AudioOut::alsaLoop() {}
 #endif
 
 int captureMono(std::vector<float> &dst, int rate, double seconds, std::string &err) {
-#ifdef TENDRIL_PIPEWIRE
+#ifdef VREQUENCY_PIPEWIRE
     dst.assign((size_t)(rate * seconds), 0.0f);
     char e[160] = {0};
     int n = td_pw_capture(dst.data(), (int)dst.size(), rate, seconds, e, sizeof e);

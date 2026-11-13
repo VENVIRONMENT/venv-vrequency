@@ -5,4 +5,4 @@ cd "$(dirname "$0")/.."
 ./scripts/fetch-deps.sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j"$(nproc)"
-./build/tendril_tests
+./build/vrequency_tests

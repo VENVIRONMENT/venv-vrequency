@@ -1,4 +1,4 @@
-// Tendril — the instrument: string keyboard, scale lock, backing sequencer,
+// venv vrequency — the instrument: string keyboard, scale lock, backing sequencer,
 // event looper, voice pool and master effects.
 //
 // Threading model: one real-time thread calls process(). Any other thread

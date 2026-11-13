@@ -10,9 +10,9 @@
 namespace store {
 
 QString baseDir() {
-    QByteArray env = qgetenv("TENDRIL_HOME");
+    QByteArray env = qgetenv("VREQUENCY_HOME");
     if (!env.isEmpty()) return QString::fromLocal8Bit(env);
-    return QDir::homePath() + "/Tendril";
+    return QDir::homePath() + "/vrequency";
 }
 
 void ensureDirs() {
@@ -85,7 +85,7 @@ td::Settings settingsFromJson(const QJsonObject &o) {
 
 QJsonObject sessionToJson(const td::SessionData &s) {
     QJsonObject o;
-    o["format"] = "tendril-session-1";
+    o["format"] = "vrequency-session-1";
     o["settings"] = settingsToJson(s.settings);
     o["lead"] = patchToJson(s.lead);
     o["backing"] = patchToJson(s.backing);
@@ -113,7 +113,7 @@ QJsonObject sessionToJson(const td::SessionData &s) {
 }
 
 bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
-    if (o["format"].toString() != "tendril-session-1") return false;
+    if (o["format"].toString() != "vrequency-session-1") return false;
     s.settings = settingsFromJson(o["settings"].toObject());
     s.lead = patchFromJson(o["lead"].toObject());
     s.backing = patchFromJson(o["backing"].toObject());

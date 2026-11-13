@@ -1,4 +1,4 @@
-// Tendril — audio output: PipeWire (preferred), ALSA, or a silent clock when
+// venv vrequency — audio output: PipeWire (preferred), ALSA, or a silent clock when
 // no device can be opened (so the instrument still runs and can be tested).
 #pragma once
 #include <atomic>

@@ -1,4 +1,4 @@
-// Tendril — factory sounds, the sound randomiser and loudness normalisation.
+// venv vrequency — factory sounds, the sound randomiser and loudness normalisation.
 #pragma once
 #include "dsp.h"
 #include "params.h"

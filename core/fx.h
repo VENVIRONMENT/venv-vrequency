@@ -1,4 +1,4 @@
-// Tendril — master effects: chorus, tempo delay, reverb, limiter.
+// venv vrequency — master effects: chorus, tempo delay, reverb, limiter.
 // All buffers are allocated in init(); process paths never allocate.
 #pragma once
 #include "dsp.h"

@@ -1,9 +1,9 @@
-// Tendril — engine tests. Renders the instrument offline and measures what
+// venv vrequency — engine tests. Renders the instrument offline and measures what
 // actually comes out (frequencies, envelopes, voices), rather than trusting
 // internal state alone.
 //
-//   tendril_tests          run all checks
-//   tendril_tests --bench  CPU benchmark at maximum polyphony
+//   vrequency_tests          run all checks
+//   vrequency_tests --bench  CPU benchmark at maximum polyphony
 #include "analysis.h"
 #include "instrument.h"
 #include "presets.h"
