@@ -50,7 +50,7 @@ when the window loses focus, the scope's frequency readout, trigger and auto-ran
 | Idle CPU (app open, nothing playing) | 2.3 % of one core, measured headless with silent audio; not re-measured on the real screen since 0.1 (was about 8 %) |
 | Memory | 45 MB headless; on-screen figure not re-measured since 0.1 (was about 120 MB) |
 | Launch to first frame | not re-measured since 0.1 (was 0.07 s headless, about 0.3 s on screen) |
-| Output latency added by venv vrequency | one 5.3 ms block plus PipeWire's own buffering |
+| Output latency added by venv-vrequency | one 5.3 ms block plus PipeWire's own buffering |
 | Output latency of the built-in speaker | about 200 ms (Bluetooth; see HARDWARE.md) |
 
 ## Needs a person — NOT verified

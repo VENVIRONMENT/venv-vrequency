@@ -1,4 +1,4 @@
-// venv vrequency — built-in self-test. Drives the real window with real Qt key and
+// venv-vrequency — built-in self-test. Drives the real window with real Qt key and
 // pointer events while the real audio thread runs, then checks what the
 // engine did. (It cannot press the physical keys or listen to the speaker:
 // those two checks need a human.)
@@ -45,7 +45,7 @@ void tap(MainWindow &w, const QString &zone) {
 } // namespace
 
 int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString &shotsDir) {
-    std::printf("venv vrequency self-test\n");
+    std::printf("venv-vrequency self-test\n");
     inst.set(S_VOLUME, 0.06f); // keep it quiet: this plays through the real output
     wait(400);
     std::printf("- audio\n");

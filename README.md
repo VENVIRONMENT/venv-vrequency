@@ -1,4 +1,4 @@
-# venv vrequency
+# venv-vrequency
 
 A pocket string synthesiser for the Hackberry Pi CM5 (720×720 screen, Q20 keyboard).
 Each keyboard row is a string: hold a key and press another on the same row and the
@@ -12,7 +12,7 @@ pocket synths, with no code, firmware or branding taken from any of them.
 vrequency
 ```
 
-or tap **venv vrequency** in the app grid. `vrequency --windowed` runs it in a window,
+or tap **venv-vrequency** in the app grid. `vrequency --windowed` runs it in a window,
 `vrequency --help` lists the options.
 
 ## How it looks

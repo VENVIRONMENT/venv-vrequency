@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install venv vrequency for the current user (no root needed):
+# Install venv-vrequency for the current user (no root needed):
 #   ~/.local/opt/vrequency/         the application
 #   ~/.local/bin/vrequency          launcher command
 #   ~/.local/share/applications/  desktop entry
@@ -18,7 +18,7 @@ ln -sf "$PREFIX/bin/vrequency" "$HOME/.local/bin/vrequency"
 cat > "$HOME/.local/share/applications/vrequency.desktop" <<DESK
 [Desktop Entry]
 Type=Application
-Name=venv vrequency
+Name=venv-vrequency
 GenericName=Pocket Synthesiser
 Comment=Slide-string pocket synth for the Hackberry Pi
 Exec=$PREFIX/bin/vrequency
@@ -29,5 +29,5 @@ Keywords=synth;synthesizer;music;instrument;
 StartupWMClass=vrequency
 DESK
 update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
-echo "Installed. Start it with:  vrequency      (or the venv vrequency icon in the app grid)"
+echo "Installed. Start it with:  vrequency      (or the venv-vrequency icon in the app grid)"
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) echo "note: $HOME/.local/bin is not on your PATH";; esac

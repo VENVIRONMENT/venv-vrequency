@@ -1,4 +1,4 @@
-// venv vrequency — the track: clips arranged on four lanes and played against the beat clock.
+// venv-vrequency — the track: clips arranged on four lanes and played against the beat clock.
 //
 // A clip is a copy of something made elsewhere in the instrument: the one-bar beat, the
 // backing's chords, or the looper's layers. Placing it on a lane does not copy it again; a

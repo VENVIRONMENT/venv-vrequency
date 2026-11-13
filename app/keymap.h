@@ -1,4 +1,4 @@
-// venv vrequency — key bindings (editable in ~/vrequency/keymap.json).
+// venv-vrequency — key bindings (editable in ~/vrequency/keymap.json).
 #pragma once
 #include <QHash>
 #include <QString>

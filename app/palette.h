@@ -1,4 +1,4 @@
-// venv vrequency — the display's palette. One white phosphor on black: no colour anywhere.
+// venv-vrequency — the display's palette. One white phosphor on black: no colour anywhere.
 #pragma once
 #include <QColor>
 #include <QString>

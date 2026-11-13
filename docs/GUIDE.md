@@ -1,4 +1,4 @@
-# How to use venv vrequency
+# How to use venv-vrequency
 
 A guide to playing the synth, page by page. Everything here describes version 0.8.1 with the
 default key bindings.
@@ -25,7 +25,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 
 ## 1. Start and quit
 
-Start it from the app grid ("venv vrequency"), or from a terminal:
+Start it from the app grid ("venv-vrequency"), or from a terminal:
 
 ```bash
 vrequency

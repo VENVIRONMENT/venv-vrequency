@@ -1,4 +1,4 @@
-// venv vrequency — pocket string synthesiser for the Hackberry Pi.
+// venv-vrequency — pocket string synthesiser for the Hackberry Pi.
 #include "audio.h"
 #include "instrument.h"
 #include "mainwindow.h"
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
         else if (a == "--audio" && i + 1 < argc) prefer = argv[++i];
         else if (a == "--version") { std::printf("vrequency 0.8.1\n"); return 0; }
         else if (a == "--help" || a == "-h") {
-            std::printf("venv vrequency - pocket string synthesiser\n\n"
+            std::printf("venv-vrequency - pocket string synthesiser\n\n"
                         "  vrequency               start full screen\n"
                         "  vrequency --windowed    start in a 720x720 window\n"
                         "  vrequency --keytest     open on the keyboard test screen\n"
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
         }
     }
     QApplication app(argc, argv);
-    app.setApplicationName("venv vrequency");
+    app.setApplicationName("venv-vrequency");
     app.setDesktopFileName("vrequency");
 
     QTemporaryDir tmp; // self-test never touches the player's real files

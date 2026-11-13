@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- venv vrequency: a scope screen whose trace draws "vv". Black and white only. -->
+  <!-- venv-vrequency: a scope screen whose trace draws "vv". Black and white only. -->
   <rect width="128" height="128" rx="18" fill="#040404"/>
   <rect x="7.5" y="7.5" width="113" height="113" rx="11" fill="none" stroke="#f3f3ef" stroke-width="3"/>
   <!-- graticule -->

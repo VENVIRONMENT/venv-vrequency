@@ -1,4 +1,4 @@
-// venv vrequency — the 720x720 instrument panel. One custom-painted widget with a
+// venv-vrequency — the 720x720 instrument panel. One custom-painted widget with a
 // small immediate-mode layer: every frame draws the controls and registers
 // their touch zones, so drawing and hit-testing can never disagree.
 #pragma once

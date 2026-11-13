@@ -1,4 +1,4 @@
-// venv vrequency — the oscilloscope on the play page. It shows the instrument's real
+// venv-vrequency — the oscilloscope on the play page. It shows the instrument's real
 // output: triggered so the wave stands still, with its own time and voltage
 // scales (they follow the signal automatically and never affect the pitch),
 // measured frequency and level, and a fading white-phosphor trace. Touching it

@@ -1,4 +1,4 @@
-// venv vrequency — engine tests. Renders the instrument offline and measures what
+// venv-vrequency — engine tests. Renders the instrument offline and measures what
 // actually comes out (frequencies, envelopes, voices), rather than trusting
 // internal state alone.
 //

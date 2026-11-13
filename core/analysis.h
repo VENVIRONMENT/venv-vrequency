@@ -1,4 +1,4 @@
-// venv vrequency — "listen": estimate musical key and tempo from recorded audio.
+// venv-vrequency — "listen": estimate musical key and tempo from recorded audio.
 // Chromagram + Krumhansl-Kessler key profiles; onset-envelope autocorrelation
 // for tempo. Results carry confidences and alternatives: it never pretends to
 // be certain about ambiguous input.

@@ -1,4 +1,4 @@
-// venv vrequency — master effects: chorus, tempo delay, reverb, crush, limiter.
+// venv-vrequency — master effects: chorus, tempo delay, reverb, crush, limiter.
 // All buffers are allocated in init(); process paths never allocate.
 #pragma once
 #include "dsp.h"

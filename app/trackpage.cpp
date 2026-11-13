@@ -1,4 +1,4 @@
-// venv vrequency — the Track page: kept clips on the left, four lanes of bars, tools below.
+// venv-vrequency — the Track page: kept clips on the left, four lanes of bars, tools below.
 //
 // The window owns the track. Every edit goes through trackApply(), which keeps an undo
 // step, tidies the lanes and hands the engine a fresh immutable copy. Clips themselves are

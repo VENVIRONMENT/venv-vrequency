@@ -78,7 +78,7 @@ QString paramText(int p, float v) {
 // ------------------------------------------------------------- lifecycle
 
 MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
-    setWindowTitle("venv vrequency");
+    setWindowTitle("venv-vrequency");
     setAttribute(Qt::WA_AcceptTouchEvents);
     setAttribute(Qt::WA_OpaquePaintEvent);
     setFocusPolicy(Qt::StrongFocus);

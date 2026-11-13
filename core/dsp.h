@@ -1,4 +1,4 @@
-// venv vrequency — small DSP building blocks (header-only, allocation-free at run time).
+// venv-vrequency — small DSP building blocks (header-only, allocation-free at run time).
 #pragma once
 #include <cmath>
 #include <cstdint>

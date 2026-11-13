@@ -1,4 +1,4 @@
-// venv vrequency — drums: three synthesised kits of eight sounds, and the voices that play them.
+// venv-vrequency — drums: three synthesised kits of eight sounds, and the voices that play them.
 //
 // Every sound is computed once when the instrument is built (no sample files), then played
 // back from memory, so a hit costs almost nothing on the audio thread.

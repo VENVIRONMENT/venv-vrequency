@@ -57,7 +57,7 @@ td_pw *td_pw_start(td_render_fn fn, void *user, int rate, int quantum, char *err
     snprintf(lat, sizeof lat, "%d/%d", quantum, rate);
     struct pw_properties *props = pw_properties_new(
         PW_KEY_MEDIA_TYPE, "Audio", PW_KEY_MEDIA_CATEGORY, "Playback", PW_KEY_MEDIA_ROLE, "Music",
-        PW_KEY_APP_NAME, "venv vrequency", PW_KEY_NODE_NAME, "vrequency", PW_KEY_NODE_DESCRIPTION, "venv vrequency synth",
+        PW_KEY_APP_NAME, "venv-vrequency", PW_KEY_NODE_NAME, "vrequency", PW_KEY_NODE_DESCRIPTION, "venv-vrequency synth",
         PW_KEY_NODE_LATENCY, lat, NULL);
     s->stream = pw_stream_new_simple(pw_thread_loop_get_loop(s->loop), "vrequency", props, &out_events, s);
     if (!s->stream) { snprintf(err, errlen, "cannot create PipeWire stream (is PipeWire running?)"); pw_thread_loop_destroy(s->loop); free(s); return NULL; }
@@ -126,7 +126,7 @@ int td_pw_capture(float *dst, int maxFrames, int rate, double seconds, char *err
     if (!c.loop) { snprintf(err, errlen, "cannot create PipeWire loop"); return 0; }
     struct pw_properties *props = pw_properties_new(
         PW_KEY_MEDIA_TYPE, "Audio", PW_KEY_MEDIA_CATEGORY, "Capture", PW_KEY_MEDIA_ROLE, "Music",
-        PW_KEY_APP_NAME, "venv vrequency", PW_KEY_NODE_NAME, "vrequency-listen", NULL);
+        PW_KEY_APP_NAME, "venv-vrequency", PW_KEY_NODE_NAME, "vrequency-listen", NULL);
     c.stream = pw_stream_new_simple(pw_thread_loop_get_loop(c.loop), "vrequency-listen", props, &cap_events, &c);
     if (!c.stream) { snprintf(err, errlen, "cannot create capture stream"); pw_thread_loop_destroy(c.loop); return 0; }
     uint8_t buffer[1024];

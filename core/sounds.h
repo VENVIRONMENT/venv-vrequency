@@ -1,4 +1,4 @@
-// venv vrequency — the instrument shelf: ready-made Keys, Guitar and Bass sounds.
+// venv-vrequency — the instrument shelf: ready-made Keys, Guitar and Bass sounds.
 //
 // These are ordinary patches for the same voice as every other sound, shaped to stand in
 // for played instruments. The Track page offers them for a clip that is already recorded.

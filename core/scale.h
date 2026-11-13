@@ -1,4 +1,4 @@
-// venv vrequency — scales, string layout and diatonic chords.
+// venv-vrequency — scales, string layout and diatonic chords.
 #pragma once
 #include <cmath>
 #include <cstdio>
