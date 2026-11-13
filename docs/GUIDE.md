@@ -544,6 +544,7 @@ that file restores the defaults.
 | Problem | Try this |
 |---|---|
 | No sound, and "No audio device" under the sound name | The Bluetooth speaker has dropped. Reconnect it, then check Output on the System page. |
+| Sound on a Bluetooth speaker plays well for a few seconds, then stutters, again and again | Close the Bluetooth settings window. While it is open the device keeps searching for other devices, and that interrupts the music. |
 | A note is stuck | `Backspace`. |
 | Notes come out late | Normal on the built-in speaker: it is Bluetooth and runs about 0.2 s behind. Wired headphones do not. |
 | Loops play back early or late | System page, Loop fix. Adjust in steps until a recorded bar lines up. |
