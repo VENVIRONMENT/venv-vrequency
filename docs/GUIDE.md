@@ -1,6 +1,6 @@
 # How to use venv vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.4.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.5.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -165,7 +165,30 @@ the sound has, twelve to a page, with Prev and Next at the bottom.
   to a page. Tap one to recall it. To remove one, tap **Delete** and then the favourite.
 
 Factory sounds can be put back at any time: System page, **Factory sounds**. That overwrites slots
-1 to 0 and leaves favourites alone.
+1 to 0. It leaves your own favourites alone and puts back any of the five dream sounds you deleted.
+
+### Dream sounds
+
+Five favourites are there from the first start: **Haze**, **Fuzz**, **Teeth**, **Bend** and
+**Grain**. They are for slow, soft, washed-out playing. Each is built around a sine wave, so the
+scope draws a round wave instead of the jagged one Warm Lead makes, and each adds its own kind of buzz.
+
+![The wave each dream sound draws, next to Warm Lead](shots/8-dream-waves.png)
+
+| Sound | What it is |
+|---|---|
+| Haze | A sine with a quiet sine an octave above it. The plainest of the five. |
+| Fuzz | A sine pushed into soft distortion, with a low note underneath. |
+| Teeth | A sine with a quiet, bright sawtooth riding on it, which shows as small teeth on the wave. |
+| Bend | A sine whose shape is bent by a second sine. The dents drift slowly as you hold a note. |
+| Grain | A triangle and a sine that beat against each other, with a little hiss and a slow tremolo. |
+
+All five fade in gently, ring on for a couple of seconds after you let go, wobble slowly in pitch
+and sit in a lot of chorus, echo and reverb. They suit held notes, slides and chords on three
+strings more than fast playing. If the wash is too much, pull **Reverb** and **Delay** down.
+
+To put one on a number key: tap it, tap **Store**, then tap a slot. If you delete one, it stays
+deleted until you use **Factory sounds** on the System page.
 
 ## 7. Backing chords
 
@@ -267,7 +290,7 @@ To load a session, tap it in the list on the System page, then start the loop or
 - **Panic**: all notes off (same as `Backspace`).
 - **Loop fix**: shifts recorded loops earlier or later in milliseconds. Change it if your loops
   play back out of time with what you played.
-- **Factory sounds**: restores slots 1 to 0.
+- **Factory sounds**: restores slots 1 to 0 and puts back any deleted dream sounds.
 - **Quit**.
 
 ## 12. All the keys

@@ -98,6 +98,48 @@ Patch factoryPatch(int index) {
     }
 }
 
+// Sine-based "dream" sounds. Each adds a different kind of buzz to the same soft,
+// slowly wobbling, heavily washed sine.
+Patch extraPatch(int index) {
+    switch (index) {
+    case 0: // sine plus a quiet sine an octave up
+        return make("Haze", {
+            {P_WAVE1, W_SINE}, {P_WAVE2, W_SINE}, {P_MIX2, 0.2f}, {P_SEMI2, 12}, {P_DETUNE, 7},
+            {P_ATK, 0.25f}, {P_DEC, 2.0f}, {P_SUS, 0.9f}, {P_REL, 2.5f},
+            {P_FMODE, F_LP}, {P_CUTOFF, 2500}, {P_RESO, 0.05f}, {P_FENV, 0},
+            {P_VIBRATE, 0.6f}, {P_VIBDEPTH, 14}, {P_VIBDELAY, 0}, {P_GLIDE, 300},
+            {P_CHORUS, 0.8f}, {P_DLYMIX, 0.25f}, {P_DLYDIV, 3}, {P_DLYFB, 0.45f}, {P_REVMIX, 0.6f}, {P_REVSIZE, 0.92f}});
+    case 1: // sine into soft saturation, with a sub
+        return make("Fuzz", {
+            {P_WAVE1, W_SINE}, {P_MIX2, 0}, {P_SUB, 0.2f}, {P_DRIVE, 0.3f},
+            {P_ATK, 0.2f}, {P_DEC, 2.0f}, {P_SUS, 0.9f}, {P_REL, 2.2f},
+            {P_FMODE, F_LP}, {P_CUTOFF, 1800}, {P_RESO, 0.05f}, {P_FENV, 0},
+            {P_VIBRATE, 0.6f}, {P_VIBDEPTH, 12}, {P_VIBDELAY, 0}, {P_GLIDE, 300},
+            {P_CHORUS, 0.7f}, {P_DLYMIX, 0.22f}, {P_DLYDIV, 3}, {P_DLYFB, 0.45f}, {P_REVMIX, 0.55f}, {P_REVSIZE, 0.92f}});
+    case 2: // sine with a quiet saw two octaves up riding on it
+        return make("Teeth", {
+            {P_WAVE1, W_SINE}, {P_WAVE2, W_SAW}, {P_MIX2, 0.14f}, {P_SEMI2, 24}, {P_DETUNE, 5},
+            {P_ATK, 0.2f}, {P_DEC, 2.0f}, {P_SUS, 0.9f}, {P_REL, 2.2f},
+            {P_FMODE, F_LP}, {P_CUTOFF, 5000}, {P_RESO, 0.05f}, {P_FENV, 0}, {P_KTRK, 0.5f},
+            {P_VIBRATE, 0.6f}, {P_VIBDEPTH, 12}, {P_VIBDELAY, 0}, {P_GLIDE, 300},
+            {P_CHORUS, 0.6f}, {P_DLYMIX, 0.22f}, {P_DLYDIV, 3}, {P_DLYFB, 0.45f}, {P_REVMIX, 0.55f}, {P_REVSIZE, 0.92f}});
+    case 3: // sine gently bent by FM from a sine an octave up; the detune makes the shape drift
+        return make("Bend", {
+            {P_WAVE1, W_SINE}, {P_WAVE2, W_SINE}, {P_MIX2, 0}, {P_SEMI2, 12}, {P_DETUNE, 6}, {P_FM, 0.4f},
+            {P_ATK, 0.2f}, {P_DEC, 2.0f}, {P_SUS, 0.9f}, {P_REL, 2.2f},
+            {P_FMODE, F_LP}, {P_CUTOFF, 2500}, {P_RESO, 0.05f}, {P_FENV, 0},
+            {P_VIBRATE, 0.6f}, {P_VIBDEPTH, 10}, {P_VIBDELAY, 0}, {P_GLIDE, 300},
+            {P_CHORUS, 0.6f}, {P_DLYMIX, 0.22f}, {P_DLYDIV, 3}, {P_DLYFB, 0.45f}, {P_REVMIX, 0.55f}, {P_REVSIZE, 0.92f}});
+    default: // triangle and sine with a little hiss and a slow tremolo
+        return make("Grain", {
+            {P_WAVE1, W_TRI}, {P_WAVE2, W_SINE}, {P_MIX2, 0.5f}, {P_SEMI2, 0}, {P_DETUNE, 9}, {P_NOISE, 0.06f},
+            {P_ATK, 0.3f}, {P_DEC, 2.0f}, {P_SUS, 0.9f}, {P_REL, 2.5f},
+            {P_FMODE, F_LP}, {P_CUTOFF, 1500}, {P_RESO, 0.1f}, {P_FENV, 0},
+            {P_LFORATE, 3.5f}, {P_LFOAMP, 0.3f}, {P_VIBRATE, 0.6f}, {P_VIBDEPTH, 10}, {P_VIBDELAY, 0}, {P_GLIDE, 300},
+            {P_CHORUS, 0.7f}, {P_DLYMIX, 0.25f}, {P_DLYDIV, 3}, {P_DLYFB, 0.45f}, {P_REVMIX, 0.6f}, {P_REVSIZE, 0.92f}});
+    }
+}
+
 // --------------------------------------------------------------- loudness
 
 float normalisePatch(Patch &p, float sr) {

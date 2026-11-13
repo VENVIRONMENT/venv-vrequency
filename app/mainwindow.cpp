@@ -97,9 +97,11 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         curSlot = qBound(-1, st["slot"].toInt(0), 9);
         lead = st.contains("lead") ? store::patchFromJson(st["lead"].toObject()) : bank[qMax(0, curSlot)];
         chordRow = st["chordRow"].toBool(false);
+        extrasSeeded = st["extras"].toInt(0);
     }
     sd.lead = lead; sd.backing = lead;
     inst.restore(sd);
+    if (extrasSeeded < kExtraCount) addExtraSounds(extrasSeeded); // once: deleting one keeps it gone
     refreshLists();
 
     connect(&frameTimer, &QTimer::timeout, this, [this] {
@@ -162,7 +164,31 @@ void MainWindow::saveState() {
     o["slot"] = curSlot;
     o["lead"] = store::patchToJson(lead);
     o["chordRow"] = chordRow;
+    o["extras"] = extrasSeeded;
     store::writeJson(store::baseDir() + "/state.json", o);
+}
+
+// The engine's extra sounds (the sine-based dream sounds) live in the favourites folder, so they
+// can be recalled, stored to a slot or deleted like any saved sound. A sound whose name is already
+// there is left alone. Returns how many files were written.
+int MainWindow::addExtraSounds(int from) {
+    const QVector<store::NamedPatch> have = store::listPatches("favourites");
+    const QDateTime now = QDateTime::currentDateTime();
+    int wrote = 0;
+    for (int i = qMax(0, from); i < kExtraCount; ++i) {
+        Patch p = extraPatch(i);
+        bool there = false;
+        for (const store::NamedPatch &f : have) there = there || QString::fromUtf8(f.patch.name) == QString::fromUtf8(p.name);
+        if (there) continue;
+        QString path = store::savePatch("favourites", p);
+        if (path.isEmpty()) continue;
+        // The list shows the newest file first: date them so they appear in their own order.
+        QFile f(path);
+        if (f.open(QIODevice::ReadWrite)) f.setFileTime(now.addSecs(-1 - i), QFileDevice::FileModificationTime);
+        ++wrote;
+    }
+    extrasSeeded = kExtraCount;
+    return wrote;
 }
 
 void MainWindow::refreshLists() {
@@ -1199,7 +1225,9 @@ void MainWindow::paintSystem() {
             [this] { set(S_LATENCY, u.set.latencyMs - 10); }, [this] { set(S_LATENCY, u.set.latencyMs + 10); });
     button(c4(2, 642, 60), "factory", "Factory sounds", false, [this] {
         for (int k = 0; k < 10; ++k) bank[k] = factoryPatch(k);
-        toast("Sound slots 1-0 restored");
+        int back = addExtraSounds();
+        refreshLists();
+        toast(back ? QString("Slots 1-0 restored, %1 favourite%2 put back").arg(back).arg(back == 1 ? "" : "s") : QString("Sound slots 1-0 restored"));
     }, "restore slots 1-0");
     button(c4(3, 642, 60), "quit", "Quit", false, [this] { close(); }, "saves your setup");
 }

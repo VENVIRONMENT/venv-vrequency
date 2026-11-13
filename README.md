@@ -57,7 +57,8 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
   with its own envelope, vibrato, LFO to cutoff/amplitude/pulse-width, saturation. Master chorus,
   tempo-synced delay, reverb, a bit crusher (the Glitch pad mapping), limiter + soft clip (output can
   never exceed full scale).
-- **Sounds**: ten factory sounds in slots 1‥0, a randomiser that invents playable instruments
+- **Sounds**: ten factory sounds in slots 1‥0, five sine-based dream sounds (Haze, Fuzz, Teeth,
+  Bend, Grain) offered as favourites, a randomiser that invents playable instruments
   (every result is loudness-normalised), mutate, undo, favourites, an all-parameters editor.
 - **Backing**: diatonic triads/sevenths from the scale. Tap up to eight chords for a looping
   progression, or latch one chord, or latch drone notes. Sustain / pulse / arpeggio styles.
@@ -83,9 +84,9 @@ machine. Nothing is installed system-wide and nothing starts at boot.
 Tests:
 
 ```bash
-./build/vrequency_tests                                   # 337 engine checks (offline rendering)
+./build/vrequency_tests                                   # 360 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 50 checks through the real app + audio thread
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 54 checks through the real app + audio thread
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 

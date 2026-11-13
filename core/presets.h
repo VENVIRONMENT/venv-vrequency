@@ -8,6 +8,11 @@ namespace td {
 constexpr int kFactoryCount = 10;
 Patch factoryPatch(int index);
 
+// Extra sounds outside the ten number-key slots; the app offers them as favourites.
+// All five are built around a sine wave: soft, slow, washed in chorus and reverb.
+constexpr int kExtraCount = 5;
+Patch extraPatch(int index);
+
 // Generate a brand-new playable sound. Every result is loudness-normalised.
 Patch randomPatch(Rng &rng);
 // Nudge an existing sound; amount 0..1.

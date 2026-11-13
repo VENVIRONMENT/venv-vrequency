@@ -47,6 +47,7 @@ public:
     bool saveSession(const QString &path);
     bool loadSession(const QString &path);
     void saveState();
+    int addExtraSounds(int from = 0); // engine's extra sounds -> favourites; returns files written
     QString startRecording();
     QString stopRecording();
     void perform(int act, bool shift = false);
@@ -82,6 +83,7 @@ private:
     std::vector<td::Patch> undo;
     QVector<store::NamedPatch> favs;
     int favPage = 0;
+    int extrasSeeded = 0;   // how many of the engine's extra sounds have been offered as favourites
     bool favDelete = false, slotSave = false;
     td::Rng rng;
 

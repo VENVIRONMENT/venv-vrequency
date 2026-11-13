@@ -1,12 +1,12 @@
 # Status — what works, what is unproven, what is missing
 
-Version 0.4.0, 2026-11-13 (0.3.0 plus a Glitch touch-pad mapping: a bit crusher on the whole output, with colour streaks in the scope while it is on). "Tested" below means an automated test measured it; it does **not** mean a
+Version 0.5.0, 2026-11-13 (0.4.0 plus five sine-based "dream" sounds, offered as favourites; 0.4.0 added the Glitch touch-pad mapping). "Tested" below means an automated test measured it; it does **not** mean a
 person heard it or pressed a physical key. Those checks are listed separately.
 
 ## Working and covered by automated tests
 
-`vrequency_tests` renders audio offline and measures it (337 checks). `vrequency --selftest` drives the real
-application with real key and touch events while the real audio thread runs (50 checks).
+`vrequency_tests` renders audio offline and measures it (360 checks). `vrequency --selftest` drives the real
+application with real key and touch events while the real audio thread runs (54 checks).
 
 | Area | What the tests establish |
 |---|---|
@@ -16,6 +16,7 @@ application with real key and touch events while the real audio thread runs (50 
 | Chord glides | Three strings sound together; re-fingering a held shape glides all three voices to the new chord |
 | Scale lock | For every scale and every root, every key is in the scale and pitch rises left to right; chromatic override gives semitones; octave shift sweeps held notes without retriggering |
 | Sounds | The 10 factory sounds differ measurably; switching sound under a held note makes no click |
+| Dream sounds | Haze, Fuzz, Teeth, Bend and Grain each keep more than 85 % of their energy in the fundamental sine when measured dry (Warm Lead: under 80 %); three held notes stay inside full scale; each rings on after release; they appear as five favourites on first start, in order, and are not added twice |
 | Randomiser | 120 generated sounds: all audible, all different, none over the level ceiling; mutate stays close; undo and favourites work through the app |
 | Backing | Diatonic triads and sevenths named and built correctly; a tapped I–IV–V–IV progression loops in tempo under a live melody; remove / replace / stop / start / clear; hold and drone modes; arpeggio; backing keeps its sound when the lead changes |
 | Looper | Count-in, bar snap, playback, overdub, undo, stop/start, clear; a recorded slide replays as a slide; an 18-second loop; a layer keeps the sound it was recorded with |
@@ -107,6 +108,7 @@ Start with `vrequency`. If there is no sound, check that GNOME's sound output is
 | 8 | `Enter`, wait for the count, play a bar, `Enter` again | Your phrase loops in time | If it is early or late, change System → Loop fix and tell me the value that works |
 | 9 | Drag a finger across the scope | Sound changes with the finger; a square cursor follows it | |
 | 9c | Tap the Filter button on the scope until it says Glitch, hold a note, drag on the scope | Sound turns rough and digital while touched, coloured streaks trail from the wave, both stop when you lift | Tell me if it is too harsh, too quiet, or the colours are wrong |
+| 9d | Sound page, tap Haze (then Fuzz, Teeth, Bend, Grain) in Favourites, hold notes and slide | Soft, slow, washed sound; the scope draws a round wave | Tell me which are too quiet, too washed out or not buzzy enough. Nobody has heard these on the device yet |
 | 9b | Hold a low note, then a high one | The trace stays still and the ms/div readout steps by itself; pitch is unaffected | |
 | 10 | `Ctrl` + `R` a few times, `Ctrl` + `Z` | New sounds each time; undo brings the last one back | |
 | 11 | Menu → System → Key test, then try `Z`+`S`+`W`, `Space`+`Z`+`X`, `Alt`+`A`+`J` | Only the keys you hold are listed | A key you did not press appears: the keyboard ghosts on that combination |

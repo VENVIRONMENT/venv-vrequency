@@ -8,6 +8,7 @@
 #include "instrument.h"
 #include "presets.h"
 #include <algorithm>
+#include <string>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -369,6 +370,58 @@ static void testPresetsAndRandomiser() {
     float d = 0;
     for (int i = 0; i < P_COUNT; ++i) d += std::fabs(mu.p[i] - base.p[i]) / (paramInfo(i).max - paramInfo(i).min);
     CHECK(d > 0.05f && d < 6.0f, "mutation moved parameters moderately (%.3f)", d);
+}
+
+// Share of a signal's energy that sits at one frequency (projection onto a sine/cosine pair).
+static float shareAt(const float *x, int n, double hz) {
+    double c = 0, q = 0, e = 0;
+    for (int i = 0; i < n; ++i) {
+        double ph = 2.0 * M_PI * hz * i / SR;
+        c += x[i] * std::cos(ph); q += x[i] * std::sin(ph); e += (double)x[i] * x[i];
+    }
+    return e > 0 ? (float)(2.0 * (c * c + q * q) / (n * e)) : 0;
+}
+
+static void testExtraSounds() {
+    SECTION("extra sounds: five dream sounds built around a sine");
+    // Dry (no chorus, echo, reverb, wobble or detune beating) so the wave shape itself is measured:
+    // held A3 = 220 Hz.
+    auto dryShare = [](Patch p) {
+        p.p[P_DETUNE] = 0; p.p[P_CHORUS] = 0; p.p[P_DLYMIX] = 0; p.p[P_REVMIX] = 0; p.p[P_VIBDEPTH] = 0; p.p[P_LFOAMP] = 0;
+        Rig r;
+        r.inst.setPatch(0, p);
+        r.inst.key(1, 3, true);
+        r.run(2.0);
+        int n; const float *x = r.tail(0.5, n);   // 110 whole cycles
+        return shareAt(x, n, 220.0);
+    };
+    float saw = dryShare(factoryPatch(0));
+    CHECK(saw < 0.8f, "Warm Lead (saws) keeps %.0f%% of its energy at the fundamental", saw * 100);
+    std::vector<std::string> names;
+    for (int i = 0; i < kExtraCount; ++i) {
+        Patch p = extraPatch(i);
+        names.push_back(p.name);
+        float sh = dryShare(p);
+        CHECK(sh > 0.85f, "%s: %.0f%% of the energy is the fundamental sine", p.name, sh * 100);
+        Rig r;
+        r.inst.setPatch(0, p);
+        r.inst.key(0, 0, true); r.inst.key(1, 4, true); r.inst.key(2, 4, true);
+        r.run(3.0);
+        r.inst.key(0, 0, false); r.inst.key(1, 4, false); r.inst.key(2, 4, false);
+        r.run(1.0);
+        bool finite = true;
+        for (float v : r.L) if (!(v == v) || std::fabs(v) > 4.0f) finite = false;
+        float lvl = rms(r.L.data() + (int)SR, 2 * (int)SR);
+        CHECK(finite && peak(r.L) <= 1.0f, "%s: three held notes stay finite and below full scale (peak %.2f)", p.name, peak(r.L));
+        CHECK(lvl > 0.02f && lvl < 0.4f, "%s: playing level is sensible (rms %.3f)", p.name, lvl);
+        CHECK(rms(r.L.data() + (int)(3.6 * SR), (int)(0.4 * SR)) > 0.002f, "%s: rings on after release", p.name);
+    }
+    std::sort(names.begin(), names.end());
+    CHECK(std::adjacent_find(names.begin(), names.end()) == names.end(), "the %d names are all different", kExtraCount);
+    for (int i = 0; i < kExtraCount; ++i)
+        for (int k = 0; k < kFactoryCount; ++k)
+            if (std::strcmp(extraPatch(i).name, factoryPatch(k).name) == 0) names.clear();
+    CHECK(!names.empty(), "no extra sound shares a name with a factory sound");
 }
 
 static void testLimiter() {
@@ -787,6 +840,7 @@ int main(int argc, char **argv) {
     testFrequenciesAndGlide();
     testPolyphony();
     testPresetsAndRandomiser();
+    testExtraSounds();
     testLimiter();
     testXY();
     testGlitch();
