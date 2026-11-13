@@ -551,6 +551,42 @@ static void testDrums() {
         CHECK(r.inst.uiState().beatPat[D_SNARE] == (1u << 4), "with a 200 ms output delay a late hit is written where it was heard (pattern %04x)", r.inst.uiState().beatPat[D_SNARE]);
     }
 
+    SECTION("beat: switching to another kept beat");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120); r.inst.set(S_KIT, KIT_SOFT);
+        r.inst.beatDo(BT_STEP, D_KICK, 0, 1);
+        auto send = [&](uint16_t kick, uint16_t snare, int kit) {
+            for (int d = 0; d < kDrums; ++d) r.inst.beatDo(BT_NEXTROW, d, d == D_KICK ? (int16_t)kick : (d == D_SNARE ? (int16_t)snare : 0));
+            r.inst.beatDo(BT_SWITCH, -1, 0, kit);
+        };
+        send(0, 1u << 4, KIT_CRUNCHY);
+        r.run(0.01);
+        UiState u = r.inst.uiState();
+        CHECK(u.beatPat[D_KICK] == 0 && u.beatPat[D_SNARE] == (1u << 4) && u.set.kit == KIT_CRUNCHY && !u.beatSwitching,
+              "stopped, the other beat and its kit arrive at once");
+        send(1u << 0, 0, KIT_SOFT);
+        r.run(0.01);
+        r.inst.beatDo(BT_PLAYSTOP);
+        r.run(0.6); // at 120 bpm a bar is 2 s: step 5 has played, the bar is not over
+        send((1u << 0) | (1u << 8), 1u << 12, KIT_GLITCHY);
+        r.run(0.5);
+        u = r.inst.uiState();
+        CHECK(u.beatSwitching && u.beatPat[D_KICK] == 1u && u.set.kit == KIT_SOFT, "playing, it waits: the bar finishes as it was");
+        const uint32_t k0 = u.drumHits[D_KICK];
+        r.run(1.2); // past the bar line at 2 s
+        u = r.inst.uiState();
+        CHECK(!u.beatSwitching && u.beatPat[D_KICK] == ((1u << 0) | (1u << 8)) && u.beatPat[D_SNARE] == (1u << 12) && u.set.kit == KIT_GLITCHY,
+              "and switches on the bar line, kit included");
+        CHECK(u.drumHits[D_KICK] == k0 + 1, "the new beat's first kick plays on the bar line (%u hits)", u.drumHits[D_KICK] - k0);
+        send(0, 0, KIT_SOFT);
+        r.run(0.1);
+        r.inst.beatDo(BT_PLAYSTOP);
+        r.run(0.01);
+        u = r.inst.uiState();
+        CHECK(!u.beatSwitching && u.beatPat[D_KICK] == 0 && u.set.kit == KIT_SOFT, "stopping the beat lets a waiting one arrive at once");
+    }
+
     SECTION("beat: with backing, saved in a session, and never over full scale");
     {
         Rig r;

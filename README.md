@@ -65,6 +65,7 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
   The backing keeps the sound it started with while you change the lead.
 - **Beat**: a drum machine page. Eight synthesised drums (no samples) in three kits, eight big pads
   played by touch or from the keyboard, one bar of sixteen steps written by playing with Rec on.
+  Keep as many beats as you like in a row under the pads and switch between them on the bar line.
   Locked to the same bar lines as the backing and the looper.
 - **Track**: the first tab. Keep the beat, the chords and the loop as clips, place them on four
   lanes of bars (Beat, Chords, Loop A, Loop B), drag to move, repeat, split, join, mute, chop a clip

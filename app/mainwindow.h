@@ -69,6 +69,9 @@ public:
     int soundKindShown() const { return soundKind; }
     bool hearingAlone() const { return hearOn; }
     bool mixing() const { return mixOpen; }
+    int keptBeats() const { return (int)beatSlots.size(); }
+    int keptBeatShown() const { return beatCur; }
+    QString keptBeatName(int i) const { return i >= 0 && i < (int)beatSlots.size() ? beatSlots[i].name : QString(); }
     int mixLaneShown() const { return mixLane; }
     int playLineBar() const { return playBar; }
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
@@ -131,6 +134,11 @@ private:
     QProcess *player = nullptr;      // plays a recording back
     // beat page
     bool beatErase = false;          // Erase is armed: the next pad clears that drum
+    // kept beats: every beat you make has its own place; the one shown is the one the engine plays
+    struct BeatSlot { QString name; uint16_t pat[td::kDrums] = {0}; int kit = 0; };
+    std::vector<BeatSlot> beatSlots;
+    int beatCur = 0, beatPage = 0, beatNameNext = 2;
+    qint64 beatHoldUntil = 0;        // just switched: the engine has not caught up yet
     uint32_t seenHits[td::kDrums] = {0};
     qint64 padLit[td::kDrums] = {0}; // when each pad last sounded
 
@@ -219,6 +227,12 @@ private:
     void paintBacking();
     void paintBeat();
     void hitPad(int drum);
+    void beatsLoad(const QJsonObject &state, const td::SessionData &sd);
+    void beatsSave(QJsonObject &state);
+    void beatWatch();
+    void beatSwitchTo(int i);
+    void beatNew();
+    void paintKeptBeats(qreal y);
     void paintTune();
     void paintSystem();
     void paintHelp();

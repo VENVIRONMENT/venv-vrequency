@@ -1,6 +1,6 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.9.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.10.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -259,12 +259,28 @@ fingers. While you are on this page the bottom row (`Z`‥`M`) still plays the l
 **Play / Stop** (`Space` on this page) starts and stops the beat. From any other page, `Ctrl`+`J`
 starts and stops it and `Ctrl`+`I` switches Rec.
 
+**Keep several beats.** The row under the pads holds every beat you have made, like the patterns
+of a drum machine. The beat shown at the top is the one lit in the row, and whatever you do to it is
+kept in its place as you go: there is nothing to save by hand.
+
+| To | Do |
+|---|---|
+| Start a fresh beat and keep the one you have | Tap **+ New**. The new beat is empty and uses the kit you have now |
+| Go back to another beat | Tap it, or press `Left` / `Right` for the beat before or after |
+| See more than seven | Tap **More**: the row shows six beats a page, then More and + New |
+
+When the beat is playing, the one you tap starts on the next bar line, so it stays in time; until
+then it shows "next bar". Stopped, it changes at once. Each beat keeps its own kit; the tempo and
+the beat volume are shared by all of them. There is no limit to how many you keep, and they are
+saved a moment after each change. A beat cannot be deleted or renamed yet.
+
 **Kit** chooses the drum sounds: Soft (round and quiet, with a little room), Crunchy (driven and
 lo-fi) or Glitchy (zaps and crushed noise). **Beat volume** and **Tempo** are underneath.
 
 The beat follows the tempo and shares its bar lines with the backing chords and the loop pedal, so
 they stay together whichever you start first. The Glitch touch-pad mapping crushes the drums along
-with everything else. The beat is saved when you quit and inside sessions.
+with everything else. Every kept beat is saved a moment after it changes; a saved session holds
+the beat shown, not the whole row.
 
 Things it does not do yet: more than one bar, placing a hit by tapping the strip, and louder or
 quieter hits. The loop pedal does not record the pads.

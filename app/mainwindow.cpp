@@ -103,6 +103,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         extrasSeeded = st["extras"].toInt(0);
         if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
     }
+    beatsLoad(st, sd);
     sd.lead = lead; sd.backing = lead;
     inst.restore(sd);
     inst.setTrack(std::make_shared<const TrackData>(track));
@@ -177,6 +178,7 @@ void MainWindow::saveState() {
     o["beat"] = store::beatToJson(sd.beat);
     o["extras"] = extrasSeeded;
     o["track"] = store::trackToJson(track);
+    beatsSave(o);
     store::writeJson(store::baseDir() + "/state.json", o);
 }
 
@@ -520,6 +522,11 @@ void MainWindow::handleKey(int key, bool down) {
         if (km.stringKey(key, row, col) && row != 0) { held[key] = {HK_NONE, 0, 0}; return; } // between the pad keys: nothing
         if (plainAct == A_SUSTAIN) { inst.beatDo(BT_PLAYSTOP); held[key] = {HK_NONE, 0, 0}; return; }
         if (plainAct == A_LOOP) { inst.beatDo(BT_REC); held[key] = {HK_NONE, 0, 0}; return; }
+        if (plainAct == A_BEND_DOWN || plainAct == A_BEND_UP) { // the beat before or after
+            beatSwitchTo(qBound(0, beatCur + (plainAct == A_BEND_UP ? 1 : -1), (int)beatSlots.size() - 1));
+            held[key] = {HK_NONE, 0, 0};
+            return;
+        }
     }
     if (km.stringKey(key, row, col)) {
         if (row == 0 && (chordRow || modChord)) {
@@ -795,6 +802,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     zones.clear();
     pollExport();
     hearWatch();
+    beatWatch();
 
     switch (pg) {
     case PG_TRACK: paintTabs(); paintTrack(); break;
@@ -1204,7 +1212,7 @@ void MainWindow::paintBeat() {
         if (u.drumHits[d] != seenHits[d]) { seenHits[d] = u.drumHits[d]; padLit[d] = now; }
 
     // the whole bar for all eight drums
-    section(60, QString("Pattern  %1 bpm%2").arg((int)std::round(u.set.bpm)).arg(u.beatRec ? "  recording" : (u.beatPlaying ? "  playing" : "")));
+    section(60, QString("%1  %2 bpm%3").arg(beatSlots.empty() ? QString("Pattern") : beatSlots[beatCur].name).arg((int)std::round(u.set.bpm)).arg(u.beatRec ? "  recording" : (u.beatPlaying ? "  playing" : "")));
     const qreal ox = 104, cw = 37.5, sy = 84; const int ch = 12;
     for (int d = 0; d < kDrums; ++d) {
         qreal y = sy + d * (ch + 3);
@@ -1225,7 +1233,7 @@ void MainWindow::paintBeat() {
     section(222, beatErase ? "Pads  tap the drum to erase" : "Pads  tap to play");
     const qreal pw = (688 - 3 * 8) / 4.0;
     for (int d = 0; d < kDrums; ++d) {
-        QRectF r(std::floor(16 + (d % 4) * (pw + 8)), 244 + (d / 4) * 138, std::floor(pw), 130);
+        QRectF r(std::floor(16 + (d % 4) * (pw + 8)), 244 + (d / 4) * 108, std::floor(pw), 100);
         const QString name = QString("pad%1").arg(d);
         const bool lit = now - padLit[d] < 110 || downNames.contains(name);
         frame(r, INK, lit ? INK : BG);
@@ -1236,28 +1244,30 @@ void MainWindow::paintBeat() {
         const QColor fg = lit ? BG : INK, dim = lit ? BG : MID;
         txt(QRectF(r.x() + 12, r.y() + 10, 30, 18), QString::number(d + 1), 12, lit ? BG : LOW, Qt::AlignLeft | Qt::AlignVCenter, true);
         txt(QRectF(r.x() + 40, r.y() + 10, r.width() - 52, 18), km.drumKeys(d), 12, dim, Qt::AlignRight | Qt::AlignVCenter, true);
-        txt(QRectF(r.x(), r.bottom() - 46, r.width(), 26), nice(drumName(d)), 18, fg, Qt::AlignCenter, true);
-        if (beatErase && !lit) txt(QRectF(r.x(), r.y() + 48, r.width(), 18), "erase", 12, MID);
+        txt(QRectF(r.x(), r.bottom() - 40, r.width(), 26), nice(drumName(d)), 18, fg, Qt::AlignCenter, true);
+        if (beatErase && !lit) txt(QRectF(r.x(), r.y() + 34, r.width(), 18), "erase", 12, MID);
         zone(r, name, [this, d](QPointF, int ph) { if (ph == PH_PRESS) hitPad(d); });
     }
 
+    paintKeptBeats(460);
+
     // transport
     auto c4 = [pw](int i, qreal y, qreal h) { return QRectF(std::floor(16 + i * (pw + 8)), y, std::floor(pw), h); };
-    button(c4(0, 520, 60), "beatrec", QString::fromUtf8("● Rec"), u.beatRec, [this] { inst.beatDo(BT_REC); beatErase = false; },
+    button(c4(0, 540, 56), "beatrec", QString::fromUtf8("● Rec"), u.beatRec, [this] { inst.beatDo(BT_REC); beatErase = false; },
            u.beatRec ? "pads write hits" : "write what you play");
-    button(c4(1, 520, 60), "beatplay", u.beatPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.beatPlaying,
+    button(c4(1, 540, 56), "beatplay", u.beatPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.beatPlaying,
            [this] { inst.beatDo(BT_PLAYSTOP); }, u.beatPlaying ? "beat is playing" : "start the beat");
-    button(c4(2, 520, 60), "beaterase", "Erase", false, [this] { beatErase = !beatErase; }, beatErase ? "now tap a pad" : "one drum's hits",
+    button(c4(2, 540, 56), "beaterase", "Erase", false, [this] { beatErase = !beatErase; }, beatErase ? "now tap a pad" : "one drum's hits",
            beatErase ? LOOK_ARMED : LOOK_PLAIN);
-    stepper(c4(3, 520, 60), "kit", "Kit", nice(kitName(u.set.kit)),
+    stepper(c4(3, 540, 56), "kit", "Kit", nice(kitName(u.set.kit)),
             [this] { set(S_KIT, (float)((u.set.kit + kKits - 1) % kKits)); }, [this] { set(S_KIT, (float)((u.set.kit + 1) % kKits)); });
-    slider(QRectF(16, 588, 340, 58), "beatvol", "Beat volume", u.set.beatVol, QString("%1%").arg((int)(u.set.beatVol * 100)), [this](float n) { set(S_BEATVOL, n); });
-    stepper(QRectF(364, 588, 340, 58), "bpm3", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
+    slider(QRectF(16, 604, 340, 54), "beatvol", "Beat volume", u.set.beatVol, QString("%1%").arg((int)(u.set.beatVol * 100)), [this](float n) { set(S_BEATVOL, n); });
+    stepper(QRectF(364, 604, 340, 54), "bpm3", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
             [this] { set(S_BPM, std::round(u.set.bpm) - 2); }, [this] { set(S_BPM, std::round(u.set.bpm) + 2); });
-    txt(QRectF(18, 654, 684, 20), QString("Keys: %1 play the top pads, %2 the bottom ones. Hits snap to the nearest step.")
+    txt(QRectF(18, 666, 684, 20), QString("Keys: %1 play the top pads, %2 the bottom ones. Hits snap to the nearest step.")
             .arg(km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" ")).arg(km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" ")),
         12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(18, 676, 684, 20), QString("%1 starts and stops the beat, %2 is Rec. The metronome clicks while Rec is on.")
+    txt(QRectF(18, 688, 684, 20), QString("%1 starts and stops the beat, %2 is Rec, left right the beat before or after.")
             .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
 }
 
@@ -1428,6 +1438,8 @@ void MainWindow::paintHelp() {
             {"Rec + pads", "hits snap to the nearest of 16 steps in the bar"},
             {"Erase, pad", "tap Erase, then a pad: that drum's hits are removed"},
             {"Kit", "soft, crunchy or glitchy drum sounds"},
+            {"Left / Right", "Beat page: the kept beat before / after"},
+            {"+ New", "a fresh empty beat; the others are kept"},
         };
     } else if (helpPage == 3) {
         const QString c = km.keyFor(A_COMMAND, false) + "+";

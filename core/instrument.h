@@ -84,7 +84,9 @@ enum Setting {
 enum LoopCmd { LC_PEDAL, LC_UNDO, LC_CLEAR, LC_PLAYSTOP };
 enum BackCmd { BC_PLAYSTOP, BC_CLEAR, BC_REMOVE_LAST, BC_RESYNC_SOUND, BC_SELECT_SLOT };
 // BT_ERASE: b = drum (-1 = every drum). BT_STEP: b = drum, c = step, d = 0 off / 1 on / 2 toggle.
-enum BeatCmd { BT_PLAYSTOP, BT_REC, BT_ERASE, BT_STEP };
+// Switching to another beat: BT_NEXTROW (b = drum, c = its sixteen steps as bits) for each drum,
+// then BT_SWITCH (d = kit). Stopped, it switches at once; playing, at the start of the next bar.
+enum BeatCmd { BT_PLAYSTOP, BT_REC, BT_ERASE, BT_STEP, BT_NEXTROW, BT_SWITCH };
 // TC_PLAY: from bar b, round and round (or round the cycle). TC_ONCE: from bar b to the end, then stop.
 enum TrackCmd { TC_PLAY, TC_ONCE, TC_STOP };
 enum BackMode { BM_PROG, BM_HOLD, BM_DRONE, BM_COUNT };
@@ -295,6 +297,7 @@ struct UiState {
     // beat
     bool beatPlaying = false, beatRec = false;
     int beatStep = -1;                 // the step sounding now, -1 when stopped
+    bool beatSwitching = false;        // another beat waits for the next bar
     uint16_t beatPat[kDrums] = {0};
     uint32_t drumHits[kDrums] = {0};   // counts every hit of each drum (pads light up on a change)
     // track
@@ -413,6 +416,10 @@ private:
     uint16_t beatPat[kDrums] = {0};
     bool beatPlaying = false, beatRec = false;
     long lastDrumStep = -1;
+    uint16_t beatNext[kDrums] = {0};   // the beat to switch to
+    int beatNextKit = 0;
+    bool beatSwitching = false;
+    void beatSwitchNow();
     long skipStep[kDrums];             // a step just recorded by hand: do not sound it twice
     uint32_t drumHits[kDrums] = {0};
     // track

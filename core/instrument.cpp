@@ -159,6 +159,7 @@ void Instrument::panic() {
     if (trackPlaying) trackStop();
     backPlaying = false;
     beatPlaying = beatRec = false; drums.silence();
+    if (beatSwitching) beatSwitchNow(); // a beat waiting for the bar line arrives now
     if (loopState == L_COUNTIN || loopState == L_REC || closing) loopClear();
     else if (loopState == L_PLAY || loopState == L_OVERDUB) {
         if (recLayer >= 0) recLayer = -1;
@@ -333,7 +334,10 @@ void Instrument::beatCmd(int cmd, int drum, int step, int arg) {
         if (beatPlaying) {
             if (transportIdle()) { beat = 0; progOrigin = 0; lastDrumStep = -1; }   // start on step 1, now
             else lastDrumStep = (long)std::floor(beat * 4.0);                       // join the bar in progress
-        } else beatRec = false;
+        } else {
+            beatRec = false;
+            if (beatSwitching) beatSwitchNow();
+        }
         for (long &s : skipStep) s = -1;
         break;
     case BT_REC:
@@ -342,6 +346,14 @@ void Instrument::beatCmd(int cmd, int drum, int step, int arg) {
         break;
     case BT_ERASE:
         for (int d = 0; d < kDrums; ++d) if (drum < 0 || drum == d) beatPat[d] = 0;
+        break;
+    case BT_NEXTROW:
+        if (drum >= 0 && drum < kDrums) beatNext[drum] = (uint16_t)step;
+        break;
+    case BT_SWITCH:
+        beatNextKit = std::clamp(arg, 0, kKits - 1);
+        beatSwitching = true;
+        if (!beatPlaying) beatSwitchNow();
         break;
     case BT_STEP:
         if (drum >= 0 && drum < kDrums && step >= 0 && step < kDrumSteps) {
@@ -354,12 +366,19 @@ void Instrument::beatCmd(int cmd, int drum, int step, int arg) {
     }
 }
 
+void Instrument::beatSwitchNow() {
+    for (int d = 0; d < kDrums; ++d) { beatPat[d] = beatNext[d]; skipStep[d] = -1; }
+    st.kit = beatNextKit;
+    beatSwitching = false;
+}
+
 void Instrument::tickBeat(double, double b1) {
     if (!beatPlaying) return;
     long step = (long)std::floor(b1 * 4.0);
     if (step == lastDrumStep) return;
     lastDrumStep = step;
     int s = (int)(((step % kDrumSteps) + kDrumSteps) % kDrumSteps);
+    if (beatSwitching && s == 0) beatSwitchNow(); // the new beat starts on the bar line
     for (int d = 0; d < kDrums; ++d) {
         if (!(beatPat[d] & (1u << s))) continue;
         if (skipStep[d] == step) { skipStep[d] = -1; continue; }
@@ -897,7 +916,7 @@ void Instrument::publish() {
     } else u.loopPos = 0;
     u.layers = nLayers; u.countBeat = countBeat;
     u.loopFull = loopFull; u.loopClosing = closing;
-    u.beatPlaying = beatPlaying; u.beatRec = beatRec;
+    u.beatPlaying = beatPlaying; u.beatRec = beatRec; u.beatSwitching = beatSwitching;
     u.beatStep = beatPlaying ? (int)((((long)std::floor(beat * 4.0) % kDrumSteps) + kDrumSteps) % kDrumSteps) : -1;
     for (int d = 0; d < kDrums; ++d) { u.beatPat[d] = beatPat[d]; u.drumHits[d] = drumHits[d]; }
     u.trackPlaying = trackPlaying; u.trackPos = trackPos; u.trackPasses = trackPasses;

@@ -291,6 +291,56 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     check(!inst.uiState().beatPlaying && sj["beat"].toArray().size() == kDrums && sj["beat"].toArray()[D_HAT].toString().contains('x'),
           "the beat is kept in the saved state");
 
+    std::printf("- kept beats\n");
+    {
+        w.setPage(MainWindow::PG_BEAT); wait(80);
+        auto press = [&](int k) { key(w, k, true); key(w, k, false); };
+        const UiState b0 = inst.uiState();
+        const uint16_t hat0 = b0.beatPat[D_HAT];
+        const int kit0b = b0.set.kit, n0 = w.keptBeats();
+        check(n0 >= 1 && w.keptBeatName(w.keptBeatShown()).startsWith("Beat"), QString("the beat you have is a kept beat (%1 of %2)").arg(w.keptBeatShown() + 1).arg(n0));
+        tap(w, "beatnew"); wait(120);
+        UiState bn = inst.uiState();
+        bool empty = true;
+        for (int d = 0; d < kDrums; ++d) empty = empty && bn.beatPat[d] == 0;
+        check(w.keptBeats() == n0 + 1 && w.keptBeatShown() == n0 && empty, "+ New makes an empty beat and shows it; the others are kept");
+        tap(w, "beatnew"); wait(80);
+        check(w.keptBeats() == n0 + 1, "+ New on an empty beat makes no second empty one");
+        tap(w, "pad0"); wait(40); // not recording: plays, writes nothing
+        key(w, Qt::Key_Return, true); key(w, Qt::Key_Return, false); wait(120);
+        tap(w, "pad5"); wait(120);
+        key(w, Qt::Key_Space, true); key(w, Qt::Key_Space, false); wait(120);
+        const uint16_t rim = inst.uiState().beatPat[D_RIM];
+        check(rim != 0 && !inst.uiState().beatPlaying, "the new beat records hits of its own");
+        press(Qt::Key_Left); wait(150);
+        UiState bl = inst.uiState();
+        check(w.keptBeatShown() == n0 - 1 && bl.beatPat[D_HAT] == hat0 && bl.beatPat[D_RIM] == 0 && bl.set.kit == kit0b,
+              "Left goes back to the beat before, exactly as it was, kit included");
+        press(Qt::Key_Right); wait(150);
+        check(w.keptBeatShown() == n0 && inst.uiState().beatPat[D_RIM] == rim, "Right comes back to the new one, hits kept");
+        // while playing, a switch waits for the bar line
+        inst.set(S_BPM, 60); wait(40);
+        key(w, Qt::Key_Space, true); key(w, Qt::Key_Space, false); wait(300);
+        tap(w, QString("beatslot%1").arg(n0 - 1)); wait(150);
+        UiState bw = inst.uiState();
+        check(bw.beatSwitching && bw.beatPat[D_RIM] == rim && w.keptBeatShown() == n0 - 1, "playing, the beat tapped waits for the next bar");
+        wait(4200); // a bar at 60 bpm is 4 s
+        bw = inst.uiState();
+        check(!bw.beatSwitching && bw.beatPat[D_HAT] == hat0 && bw.beatPat[D_RIM] == 0, "and takes over on the bar line");
+        key(w, Qt::Key_Space, true); key(w, Qt::Key_Space, false); wait(80);
+        inst.set(S_BPM, 120);
+        for (int i = 0; i < 8; ++i) { tap(w, "beatnew"); wait(40); tap(w, "pad3"); key(w, Qt::Key_Return, true); key(w, Qt::Key_Return, false); wait(60); tap(w, "pad3"); wait(60); key(w, Qt::Key_Space, true); key(w, Qt::Key_Space, false); wait(60); }
+        check(w.keptBeats() > 8 && w.zoneRect("beatmore").width() > 0, QString("with %1 beats the row has a More page").arg(w.keptBeats()));
+        w.saveState(); wait(40);
+        QJsonObject kj; store::readJson(store::baseDir() + "/state.json", kj);
+        const QJsonArray ka = kj["beats"].toArray();
+        check(ka.size() == w.keptBeats() && kj["beatShown"].toInt() == w.keptBeatShown()
+              && ka[n0].toObject()["beat"].toArray()[D_RIM].toString().contains('x'), "every kept beat is in the state file");
+        for (int i = 0; i < 12; ++i) { press(Qt::Key_Left); wait(30); } // back to the first beat
+        wait(120);
+        check(w.keptBeatShown() == 0 && inst.uiState().beatPat[D_HAT] == hat0, "Left all the way comes back to Beat 1");
+    }
+
     std::printf("- track\n");
     {
         auto press = [&](int k) { key(w, k, true); key(w, k, false); };
