@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <memory>
 #include <vector>
 
 using namespace td;
@@ -586,6 +587,364 @@ static void testDrums() {
     }
 }
 
+// ---- the track ----
+
+static std::shared_ptr<const TrackData> share(const TrackData &t) { return std::make_shared<const TrackData>(t); }
+
+static Clip kickSnareClip() { // kick on step 1, snare on step 9
+    Clip c; c.kind = CK_BEAT; c.bars = 1; c.kit = KIT_SOFT;
+    c.beat[D_KICK] = 1u << 0; c.beat[D_SNARE] = 1u << 8;
+    return c;
+}
+
+static Clip noteClip(float note, double on, double off, int bars = 1) {
+    Clip c; c.kind = CK_LOOP; c.bars = bars;
+    LayerData ld; ld.patches.push_back(purePatch());
+    LoopEv a; a.beat = on; a.op = OP_ON; a.slot = 0; a.a = note; a.b = 1; a.seq = 0;
+    LoopEv b; b.beat = off; b.op = OP_OFF; b.slot = 0; b.a = 0; b.b = 0; b.seq = 1;
+    ld.ev.push_back(a); ld.ev.push_back(b);
+    c.layers.push_back(ld);
+    return c;
+}
+
+static void put(TrackData &t, int lane, int clip, int bar, int bars = 0) {
+    Placement p = placeClip(t.clips[clip], bar);
+    p.clip = clip;
+    if (bars > 0) p.bars = bars;
+    t.lane[lane].push_back(p);
+    sortLane(t, lane);
+}
+
+// seconds at which each new hit of `drum` was counted, to the nearest block of 256 frames
+static std::vector<double> hitTimes(Rig &r, int drum, double seconds) {
+    std::vector<double> out;
+    uint32_t seen = r.inst.uiState().drumHits[drum];
+    double t = 0;
+    r.run(seconds, [&] {
+        t += 256.0 / SR;
+        uint32_t now = r.inst.uiState().drumHits[drum];
+        for (; seen < now; ++seen) out.push_back(t);
+    });
+    return out;
+}
+
+static void testTrack() {
+    SECTION("track: chopping keeps a clip's length");
+    {
+        Clip c = kickSnareClip();
+        Placement p = placeClip(c, 0);
+        CHECK(p.pieces.size() == 1 && p.pieces[0].len == 4.0 && p.bars == 1, "a placed clip is one piece of four beats");
+        CHECK(cutPiece(p, 2.0) && p.pieces.size() == 2, "cut at beat 3 makes two pieces");
+        CHECK(!cutPiece(p, 2.0) && !cutPiece(p, 0.0) && !cutPiece(p, 4.0), "cutting on an existing edge does nothing");
+        CHECK(p.pieces[1].src == 2.0 && p.pieces[1].len == 2.0, "the second piece starts where the cut was");
+        CHECK(movePiece(p, 0, 1) && p.pieces[0].src == 2.0 && p.pieces[1].src == 0.0, "pieces swap places");
+        CHECK(!joinPieces(p, 0), "pieces out of order cannot be mended");
+        movePiece(p, 0, 1);
+        CHECK(joinPieces(p, 0) && p.pieces.size() == 1 && p.pieces[0].len == 4.0, "pieces in order mend back into one");
+        cutEvery(p, 1.0);
+        CHECK(p.pieces.size() == 4 && near((float)piecesLength(p), 4.0f, 1e-6f), "cut on every beat: four pieces, still four beats");
+        CHECK(repeatPiece(p, 0) && p.pieces[1].src == 0.0 && near((float)piecesLength(p), 4.0f, 1e-6f), "repeat: the next piece plays the same material");
+        double st = -1;
+        CHECK(pieceAt(p, 2.5, &st) == 2 && st == 2.0, "beat 2.5 falls in the third piece");
+        resetPieces(p, c);
+        CHECK(p.pieces.size() == 1 && p.pieces[0].src == 0.0, "reset undoes every cut");
+        TrackData t; t.clips.push_back(c);
+        put(t, LN_BEAT, 0, 2, 2);
+        CHECK(!laneFree(t, LN_BEAT, 3, 1) && !laneFree(t, LN_BEAT, 1, 2) && laneFree(t, LN_BEAT, 4, 1) && laneFree(t, LN_BEAT, 0, 2), "placements may not overlap");
+        CHECK(laneFree(t, LN_BEAT, 3, 1, 0) && placementAt(t, LN_BEAT, 3) == 0 && placementAt(t, LN_BEAT, 4) == -1, "a placement can be moved over itself");
+        CHECK(laneTakes(LN_LOOPB, CK_LOOP) && laneTakes(LN_LOOPA, CK_LOOP) && !laneTakes(LN_BEAT, CK_LOOP) && !laneTakes(LN_LOOPA, CK_CHORDS), "each kind of clip has its lanes");
+    }
+
+    SECTION("track: keeping what is live as clips");
+    {
+        Rig r;
+        SessionData s; r.inst.snapshot(s);
+        Clip c;
+        CHECK(!beatClip(s, c) && !chordsClip(s, c) && !loopClip(s, c), "nothing to keep from an empty instrument");
+        r.inst.set(S_KIT, KIT_GLITCHY);
+        r.inst.beatDo(BT_STEP, D_KICK, 0, 1);
+        r.inst.set(S_BACKMODE, BM_PROG); r.inst.set(S_CHORDBEATS, 4);
+        r.inst.cmd(EV_CHORD, 0); r.inst.cmd(EV_CHORD, 3); r.inst.cmd(EV_CHORD, 4);
+        r.run(0.1);
+        r.inst.cmd(EV_BACK, BC_PLAYSTOP);
+        r.run(0.1);
+        r.inst.snapshot(s);
+        Clip b, ch;
+        CHECK(beatClip(s, b) && b.kind == CK_BEAT && b.kit == KIT_GLITCHY && b.beat[D_KICK] == 1 && b.bars == 1, "the beat becomes a one-bar clip with its kit");
+        CHECK(chordsClip(s, ch) && ch.kind == CK_CHORDS && ch.progLen == 3 && ch.bars == 3, "three chords of a bar each become a three-bar clip");
+        Clip b2 = b;
+        CHECK(sameClip(b, b2), "a clip equals its copy");
+        b2.beat[D_HAT] = 5;
+        CHECK(!sameClip(b, b2) && !sameClip(b, ch), "and differs from a changed one");
+    }
+
+    SECTION("track: a beat clip plays in time, a gap is silent, the track goes round");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120); // one bar = 2 s
+        TrackData t; t.bars = 2;
+        t.clips.push_back(kickSnareClip());
+        put(t, LN_BEAT, 0, 0);
+        r.inst.setTrack(share(t));
+        r.run(0.2);
+        CHECK(!r.inst.uiState().trackPlaying && r.inst.uiState().drumHits[D_KICK] == 0, "setting a track does not start it");
+        r.inst.trackDo(TC_PLAY, 0);
+        std::vector<double> k = hitTimes(r, D_KICK, 8.1);
+        CHECK(k.size() == 3, "kick once per pass of a two-bar track: 3 in 8.1 s (got %zu)", k.size());
+        if (k.size() == 3) CHECK(k[0] < 0.02 && near((float)k[1], 4.0f, 0.02f) && near((float)k[2], 8.0f, 0.02f), "at 0, 4 and 8 s (%.3f %.3f %.3f)", k[0], k[1], k[2]);
+        CHECK(r.inst.uiState().drumHits[D_SNARE] == 2, "snare twice (%u)", r.inst.uiState().drumHits[D_SNARE]);
+        UiState u = r.inst.uiState();
+        CHECK(u.trackPlaying && near((float)u.trackPos, 0.2f, 0.15f), "the position wrapped to the start (%.3f beats)", u.trackPos);
+        r.inst.trackDo(TC_STOP);
+        r.run(0.1);
+        uint32_t n = r.inst.uiState().drumHits[D_KICK];
+        r.run(4.5);
+        CHECK(!r.inst.uiState().trackPlaying && r.inst.uiState().drumHits[D_KICK] == n, "stop stops it");
+    }
+
+    SECTION("track: a clip stretched over more bars repeats");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        TrackData t; t.bars = 4;
+        t.clips.push_back(kickSnareClip());
+        put(t, LN_BEAT, 0, 1, 3);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        std::vector<double> k = hitTimes(r, D_KICK, 7.9);
+        CHECK(k.size() == 3, "placed on bars 2 to 4: three kicks (got %zu)", k.size());
+        if (k.size() == 3) CHECK(near((float)k[0], 2.0f, 0.02f) && near((float)k[1], 4.0f, 0.02f) && near((float)k[2], 6.0f, 0.02f), "at 2, 4 and 6 s (%.3f %.3f %.3f)", k[0], k[1], k[2]);
+    }
+
+    SECTION("track: chopped pieces play in their new order; a muted piece is silent");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        TrackData t; t.bars = 1;
+        t.clips.push_back(kickSnareClip());
+        put(t, LN_BEAT, 0, 0);
+        Placement &p = t.lane[LN_BEAT][0];
+        cutPiece(p, 2.0);
+        movePiece(p, 0, 1); // second half first: snare on beat 1, kick on beat 3
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_ONCE, 0);
+        std::vector<double> sn, k;
+        {
+            uint32_t ss = 0, kk = 0; double tm = 0;
+            r.run(2.5, [&] {
+                tm += 256.0 / SR;
+                UiState u = r.inst.uiState();
+                for (; ss < u.drumHits[D_SNARE]; ++ss) sn.push_back(tm);
+                for (; kk < u.drumHits[D_KICK]; ++kk) k.push_back(tm);
+            });
+        }
+        CHECK(sn.size() == 1 && k.size() == 1, "one snare and one kick (%zu, %zu)", sn.size(), k.size());
+        if (sn.size() == 1 && k.size() == 1) CHECK(sn[0] < 0.02 && near((float)k[0], 1.0f, 0.02f), "swapped halves: snare at 0 s, kick at 1 s (%.3f, %.3f)", sn[0], k[0]);
+        UiState u = r.inst.uiState();
+        CHECK(!u.trackPlaying && u.trackPasses == 1, "play once stops at the end and says so");
+
+        t.lane[LN_BEAT][0].pieces[0].mute = true; // mute the snare half
+        r.inst.setTrack(share(t));
+        uint32_t s0 = u.drumHits[D_SNARE], k0 = u.drumHits[D_KICK];
+        r.inst.trackDo(TC_ONCE, 0);
+        r.run(2.5);
+        u = r.inst.uiState();
+        CHECK(u.drumHits[D_SNARE] == s0 && u.drumHits[D_KICK] == k0 + 1, "muted piece: no snare, the kick still plays");
+
+        // repeat: both halves play the kick half
+        Placement &q = t.lane[LN_BEAT][0];
+        resetPieces(q, t.clips[0]); cutPiece(q, 2.0); repeatPiece(q, 0);
+        r.inst.setTrack(share(t));
+        s0 = u.drumHits[D_SNARE]; k0 = u.drumHits[D_KICK];
+        r.inst.trackDo(TC_ONCE, 0);
+        r.run(2.5);
+        u = r.inst.uiState();
+        CHECK(u.drumHits[D_SNARE] == s0 && u.drumHits[D_KICK] == k0 + 2, "repeated piece: the kick twice, no snare (%u, %u)", u.drumHits[D_KICK] - k0, u.drumHits[D_SNARE] - s0);
+    }
+
+    SECTION("track: a loop clip plays its notes on its own parts");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        TrackData t; t.bars = 2;
+        t.clips.push_back(noteClip(69, 0.0, 2.0));
+        t.clips.push_back(noteClip(57, 1.0, 3.0));
+        put(t, LN_LOOPA, 0, 1);
+        put(t, LN_LOOPB, 1, 1);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        r.run(1.5);
+        CHECK(r.active(kTrackPart0) == 0 && r.active(kTrackPart0 + kLayers) == 0, "nothing before the clips start");
+        r.run(0.75); // 2.25 s: bar 2, beat 1.5
+        CHECK(r.gated(kTrackPart0) == 1 && r.gated(kTrackPart0 + kLayers) == 0, "lane A's note is on, lane B's has not started");
+        r.clear(); r.run(0.2);
+        int n; const float *x = r.tail(0.15, n);
+        CHECK(near(measureHz(x, n), 440.0f, 0.01f), "and it is the A that was recorded (%.1f Hz)", measureHz(x, n));
+        r.run(0.3); // 2.75 s: beat 2.5 of the bar
+        CHECK(r.gated(kTrackPart0) == 1 && r.gated(kTrackPart0 + kLayers) == 1, "both lanes sound together");
+        r.run(0.5); // 3.25 s
+        CHECK(r.gated(kTrackPart0) == 0 && r.gated(kTrackPart0 + kLayers) == 1, "lane A's note has ended");
+        r.run(1.0); // 4.25 s: wrapped, bar 1 again
+        CHECK(r.gated(kTrackPart0) == 0 && r.gated(kTrackPart0 + kLayers) == 0, "after the wrap the lanes are silent again");
+        CHECK(r.gated(0) == 0, "the lead part was never used");
+    }
+
+    SECTION("track: a note still sounding at the end of a clip is let go");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        TrackData t; t.bars = 2;
+        Clip c = noteClip(69, 0.0, 3.9);
+        c.layers[0].ev.pop_back(); // never released
+        t.clips.push_back(c);
+        put(t, LN_LOOPA, 0, 0);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        r.run(1.0);
+        CHECK(r.gated(kTrackPart0) == 1, "held during the clip");
+        r.run(1.5);
+        CHECK(r.gated(kTrackPart0) == 0, "released when the clip ends");
+    }
+
+    SECTION("track: a chords clip drives the backing and gives it back");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        r.inst.set(S_BACKSTYLE, BS_PULSE); // the live backing: pulse, one chord, not playing
+        r.inst.set(S_CHORDBEATS, 2);
+        r.inst.cmd(EV_CHORD, 5);
+        r.run(0.1);
+        r.inst.cmd(EV_BACK, BC_PLAYSTOP);
+        r.run(0.5);
+        CHECK(r.gated(1) == 0 && r.inst.uiState().progLen == 1, "live backing: one chord, stopped");
+
+        Clip c; c.kind = CK_CHORDS; c.bars = 2;
+        c.prog[0] = 0; c.prog[1] = 3; c.progLen = 2; c.chordBeats = 4; c.backStyle = BS_SUSTAIN; c.patch = purePatch();
+        TrackData t; t.bars = 3;
+        t.clips.push_back(c);
+        put(t, LN_CHORDS, 0, 0);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        r.run(1.0);
+        UiState u = r.inst.uiState();
+        CHECK(u.backPlaying && u.curChord == 0 && r.gated(1) >= 3, "bar 1: chord I sounds (%d voices)", r.gated(1));
+        SessionData s; r.inst.snapshot(s);
+        CHECK(s.progLen == 1 && s.prog[0] == 5 && s.settings.backStyle == BS_PULSE && s.settings.chordBeats == 2, "a snapshot taken meanwhile still holds the live backing");
+        r.inst.cmd(EV_CHORD, 2);
+        r.run(1.5); // 2.5 s
+        u = r.inst.uiState();
+        CHECK(u.curChord == 3 && u.progLen == 2, "bar 2: chord IV; a chord tap during the track is ignored");
+        r.run(2.0); // 4.5 s: bar 3 is empty
+        CHECK(r.gated(1) == 0, "bar 3: no clip, the chord is let go");
+        r.run(2.0); // 6.5 s: wrapped into bar 1
+        CHECK(r.inst.uiState().curChord == 0 && r.gated(1) >= 3, "round again: chord I");
+        r.inst.trackDo(TC_STOP);
+        r.run(0.2);
+        u = r.inst.uiState();
+        CHECK(!u.backPlaying && r.gated(1) == 0, "stop lets the chord go");
+        CHECK(u.progLen == 1 && u.prog[0] == 5 && u.set.backStyle == BS_PULSE && u.set.chordBeats == 2, "and the live backing is back as it was");
+    }
+
+    SECTION("track: a chords clip cut in two and swapped starts on its second chord");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        Clip c; c.kind = CK_CHORDS; c.bars = 2;
+        c.prog[0] = 0; c.prog[1] = 4; c.progLen = 2; c.chordBeats = 4; c.patch = purePatch();
+        TrackData t; t.bars = 2;
+        t.clips.push_back(c);
+        put(t, LN_CHORDS, 0, 0);
+        cutPiece(t.lane[LN_CHORDS][0], 4.0);
+        movePiece(t.lane[LN_CHORDS][0], 0, 1);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        int first = -2;
+        r.run(0.05, [&] { if (first == -2 && r.inst.uiState().curChord >= 0) first = r.inst.uiState().curChord; });
+        CHECK(first == 4, "the very first chord heard is V, not I (%d)", first);
+        r.run(2.45);
+        CHECK(r.inst.uiState().curChord == 0, "then I in the second bar");
+    }
+
+    SECTION("track: cycle, play from a bar, and the live transport");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        r.inst.beatDo(BT_STEP, D_COWBELL, 0, 1);
+        r.inst.beatDo(BT_PLAYSTOP);
+        r.run(0.5);
+        CHECK(r.inst.uiState().beatPlaying, "the live beat is running");
+        TrackData t; t.bars = 4; t.cycleFrom = 2; t.cycleTo = 3;
+        t.clips.push_back(kickSnareClip());
+        put(t, LN_BEAT, 0, 0, 4);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 2);
+        r.run(0.1);
+        UiState u = r.inst.uiState();
+        CHECK(u.trackPlaying && !u.beatPlaying, "starting the track stops the live beat");
+        CHECK(u.trackPos >= 8.0 && u.trackPos < 8.5, "it starts from bar 3 (%.2f beats)", u.trackPos);
+        double lo = 1e9, hi = -1;
+        r.run(5.0, [&] { double p = r.inst.uiState().trackPos; lo = std::min(lo, p); hi = std::max(hi, p); });
+        CHECK(lo >= 8.0 && hi < 12.0, "with a cycle on bar 3 the position stays inside it (%.2f to %.2f)", lo, hi);
+        uint32_t cb = r.inst.uiState().drumHits[D_COWBELL];
+        r.inst.beatDo(BT_PLAYSTOP); // the live beat joins in
+        double before = r.inst.uiState().trackPos;
+        r.run(0.1);
+        double after = r.inst.uiState().trackPos;
+        CHECK(after > before && after - before < 0.3, "starting the live beat does not restart the track (%.2f to %.2f)", before, after);
+        r.run(4.0);
+        CHECK(r.inst.uiState().drumHits[D_COWBELL] >= cb + 2, "and the live beat plays over it");
+        t.cycleFrom = t.cycleTo = 0;
+        t.lane[LN_BEAT].clear();
+        r.inst.setTrack(share(t));
+        r.run(0.5);
+        CHECK(r.inst.uiState().trackPlaying, "changing the track while it plays keeps it playing");
+        r.inst.cmd(EV_PANIC);
+        r.run(0.1);
+        CHECK(!r.inst.uiState().trackPlaying && !r.inst.uiState().beatPlaying, "panic stops everything");
+        r.inst.setTrack(nullptr);
+        r.inst.trackDo(TC_PLAY, 0);
+        r.run(0.1);
+        CHECK(!r.inst.uiState().trackPlaying, "with no track there is nothing to play");
+    }
+
+    SECTION("track: recording a loop over a playing track stays on its bar lines");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        TrackData t; t.bars = 4;
+        t.clips.push_back(kickSnareClip());
+        put(t, LN_BEAT, 0, 0, 4);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        r.run(1.0);
+        r.inst.cmd(EV_LOOP, LC_PEDAL);
+        r.run(0.2);
+        UiState u = r.inst.uiState();
+        CHECK(u.trackPlaying && u.loopState == L_COUNTIN && u.trackPos > 2.0, "the count-in does not restart the track (%.2f beats)", u.trackPos);
+        r.run(3.0); // 4.2 s: recording began at the bar line at 4 s
+        CHECK(r.inst.uiState().loopState == L_REC, "recording starts on the next bar line but one");
+    }
+
+    SECTION("track: everything at once stays inside full scale");
+    {
+        Rig r;
+        r.inst.set(S_BPM, 150); r.inst.set(S_VOLUME, 1.0f); r.inst.set(S_BEATVOL, 1.0f); r.inst.set(S_LOOPVOL, 1.0f); r.inst.set(S_BACKVOL, 1.0f);
+        TrackData t; t.bars = 2;
+        Clip b; b.kind = CK_BEAT; b.kit = KIT_CRUNCHY;
+        for (int d = 0; d < kDrums; ++d) b.beat[d] = 0xffff;
+        Clip ch; ch.kind = CK_CHORDS; ch.bars = 1; ch.prog[0] = 0; ch.progLen = 1; ch.seventh = true; ch.patch = factoryPatch(0);
+        t.clips.push_back(b); t.clips.push_back(ch);
+        t.clips.push_back(noteClip(45, 0.0, 3.9)); t.clips.push_back(noteClip(64, 0.0, 3.9));
+        put(t, LN_BEAT, 0, 0, 2); put(t, LN_CHORDS, 1, 0, 2); put(t, LN_LOOPA, 2, 0, 2); put(t, LN_LOOPB, 3, 0, 2);
+        r.inst.setTrack(share(t));
+        r.inst.trackDo(TC_PLAY, 0);
+        r.run(4.0);
+        bool finite = true;
+        for (float v : r.L) if (!(v == v)) finite = false;
+        CHECK(finite && peak(r.L) <= 1.0f && peak(r.R) <= 1.0f && peak(r.L) > 0.3f, "peak %.3f / %.3f", peak(r.L), peak(r.R));
+    }
+}
+
 static void testLimiter() {
     SECTION("limiter: loud input cannot exceed full scale");
     Rig r;
@@ -1004,6 +1363,7 @@ int main(int argc, char **argv) {
     testPresetsAndRandomiser();
     testExtraSounds();
     testDrums();
+    testTrack();
     testLimiter();
     testXY();
     testGlitch();

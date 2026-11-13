@@ -13,6 +13,7 @@
 #include "voice.h"
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -22,7 +23,8 @@ constexpr int kStrings = 3;
 constexpr int kMaxHeld = 12;
 constexpr int kVoices = 28;
 constexpr int kLayers = 6;
-constexpr int kParts = 2 + kLayers; // 0 = lead, 1 = backing, 2.. = loop layers
+constexpr int kTrackPart0 = 2 + kLayers;  // the track's two loop lanes each get kLayers parts
+constexpr int kParts = 2 + 3 * kLayers; // 0 = lead, 1 = backing, 2.. = loop layers, then the track's loop lanes
 constexpr int kSlots = 12;          // voice slots per part
 constexpr int kChordSlots = 5;      // backing slots 0..4 = chord voices
 constexpr int kDroneSlot0 = 5;      // backing slots 5..11 = drones (degree 0..6)
@@ -68,6 +70,7 @@ enum EvType : uint8_t {
     EV_OCTAVE,     // a = delta (+1 / -1): held notes sweep with it
     EV_DRUM,       // a = Drum, f = velocity (0 = full): a pad hit; written into the beat while recording
     EV_BEAT,       // a = BeatCmd, b = drum, c = step
+    EV_TRACK,      // a = TrackCmd, b = bar to start from
 };
 
 enum Setting {
@@ -82,6 +85,8 @@ enum LoopCmd { LC_PEDAL, LC_UNDO, LC_CLEAR, LC_PLAYSTOP };
 enum BackCmd { BC_PLAYSTOP, BC_CLEAR, BC_REMOVE_LAST, BC_RESYNC_SOUND, BC_SELECT_SLOT };
 // BT_ERASE: b = drum (-1 = every drum). BT_STEP: b = drum, c = step, d = 0 off / 1 on / 2 toggle.
 enum BeatCmd { BT_PLAYSTOP, BT_REC, BT_ERASE, BT_STEP };
+// TC_PLAY: from bar b, round and round (or round the cycle). TC_ONCE: from bar b to the end, then stop.
+enum TrackCmd { TC_PLAY, TC_ONCE, TC_STOP };
 enum BackMode { BM_PROG, BM_HOLD, BM_DRONE, BM_COUNT };
 enum BackStyle { BS_SUSTAIN, BS_PULSE, BS_ARP_UP, BS_ARP_DOWN, BS_ARP_UPDOWN, BS_COUNT };
 enum LoopState { L_EMPTY, L_COUNTIN, L_REC, L_PLAY, L_OVERDUB, L_STOPPED };
@@ -161,6 +166,71 @@ struct SessionData {
     uint16_t beat[kDrums] = {0}; // one bit per sixteenth-note step, bit 0 = step 1
 };
 
+// ---- the track: clips kept from the beat, the backing and the looper, arranged on lanes ----
+
+enum ClipKind { CK_BEAT, CK_CHORDS, CK_LOOP };
+enum Lane { LN_BEAT, LN_CHORDS, LN_LOOPA, LN_LOOPB, kLanes };
+constexpr int kTrackMaxBars = 64;
+
+struct Clip {
+    int kind = CK_BEAT;
+    char name[20] = {0};
+    int bars = 1;
+    // beat
+    uint16_t beat[kDrums] = {0};
+    int kit = KIT_SOFT;
+    // chords: a copy of the backing as it was
+    int prog[kProgMax] = {0};
+    int progLen = 0, holdChord = -1, droneMask = 0;
+    int backStyle = BS_SUSTAIN, chordBeats = 4, arpRate = 2;
+    bool seventh = false;
+    Patch patch;
+    // loop: the layers, each with its events in time order
+    std::vector<LayerData> layers;
+    double beats() const { return bars * 4.0; }
+};
+
+// A placed clip is played as pieces laid end to end. Uncut, it is one piece covering the clip;
+// chopping makes more. Together the pieces always last exactly one pass of the clip.
+struct Piece { double src = 0, len = 4; bool mute = false; };
+
+struct Placement {
+    int clip = 0;
+    int bar = 0, bars = 1;   // where it sits; longer than the clip = the clip repeats
+    bool mute = false;
+    std::vector<Piece> pieces;
+};
+
+struct TrackData {
+    std::vector<Clip> clips;
+    std::vector<Placement> lane[kLanes];
+    int bars = 8;
+    int cycleFrom = 0, cycleTo = 0; // in bars; cycleTo <= cycleFrom means the whole track
+};
+
+inline int laneForKind(int kind) { return kind == CK_BEAT ? LN_BEAT : (kind == CK_CHORDS ? LN_CHORDS : LN_LOOPA); }
+inline bool laneTakes(int lane, int kind) { return kind == CK_LOOP ? (lane == LN_LOOPA || lane == LN_LOOPB) : lane == laneForKind(kind); }
+
+// Clips from what is live now (false = there is nothing of that kind to keep).
+bool beatClip(const SessionData &s, Clip &out);
+bool chordsClip(const SessionData &s, Clip &out);
+bool loopClip(const SessionData &s, Clip &out);
+bool sameClip(const Clip &a, const Clip &b);
+Placement placeClip(const Clip &c, int bar);
+// Arranging. Bars are whole numbers; nothing may overlap in a lane.
+bool laneFree(const TrackData &t, int lane, int bar, int bars, int ignore = -1);
+int placementAt(const TrackData &t, int lane, int bar);
+void sortLane(TrackData &t, int lane);
+// Chopping. Positions are beats inside one pass of the clip.
+double piecesLength(const Placement &p);
+int pieceAt(const Placement &p, double beat, double *start = nullptr);
+bool cutPiece(Placement &p, double beat);            // false when that is already an edge
+bool joinPieces(Placement &p, int first);            // mend the cut after piece `first`; false if they do not belong together
+void cutEvery(Placement &p, double every);
+void resetPieces(Placement &p, const Clip &c);
+bool movePiece(Placement &p, int i, int dir);        // swap with its neighbour
+bool repeatPiece(Placement &p, int i);               // the next piece plays this one's material again
+
 struct StringUi {
     bool gate = false;
     float note = 0, target = 0;
@@ -188,6 +258,10 @@ struct UiState {
     int beatStep = -1;                 // the step sounding now, -1 when stopped
     uint16_t beatPat[kDrums] = {0};
     uint32_t drumHits[kDrums] = {0};   // counts every hit of each drum (pads light up on a change)
+    // track
+    bool trackPlaying = false;
+    double trackPos = 0;               // beats from the start of the track
+    uint32_t trackPasses = 0;          // counts play-once passes that reached the end
     // meters
     float peak = 0, limiter = 1;
     int voices = 0;
@@ -214,10 +288,12 @@ public:
     void set(int setting, float v) { Event e; e.type = EV_SET; e.a = (int16_t)setting; e.f = v; push(e); }
     void cmd(uint8_t type, int a = 0, int b = 0) { Event e; e.type = type; e.a = (int16_t)a; e.b = (int16_t)b; push(e); }
     void hit(int drum, float vel = 1.0f) { Event e; e.type = EV_DRUM; e.a = (int16_t)drum; e.f = vel; push(e); }
+    void trackDo(int cmd, int bar = 0) { Event e; e.type = EV_TRACK; e.a = (int16_t)cmd; e.b = (int16_t)bar; push(e); }
     void beatDo(int cmd, int drum = -1, int step = 0, int arg = 2) {
         Event e; e.type = EV_BEAT; e.a = (int16_t)cmd; e.b = (int16_t)drum; e.c = (int16_t)step; e.d = (int16_t)arg; push(e);
     }
     void setPatch(int part, const Patch &p); // lock-free hand-off
+    void setTrack(std::shared_ptr<const TrackData> t); // short mutex; the old track is freed on the caller's thread
     UiState uiState() const;
     void readScope(float *dst, int n) const; // most recent n mono samples
 
@@ -298,6 +374,16 @@ private:
     long lastDrumStep = -1;
     long skipStep[kDrums];             // a step just recorded by hand: do not sound it twice
     uint32_t drumHits[kDrums] = {0};
+    // track
+    struct LaneState { int pl = -1, piece = -1; double lastLp = -1; };
+    struct LiveBacking { int prog[kProgMax]; int progLen, holdChord, droneMask, backStyle, chordBeats, arpRate; bool seventh; Patch patch; };
+    std::shared_ptr<const TrackData> track;
+    bool trackPlaying = false, trackOnce = false, trackDirty = false, liveSaved = false;
+    double trackPos = 0;
+    uint32_t trackPasses = 0;
+    int trackKit = -1;                 // the kit of the beat clip that is playing, -1 = none
+    LaneState laneSt[kLanes];
+    LiveBacking live;
     // click
     float clickEnv = 0, clickPh = 0, clickFreq = 1500;
     long lastClickBeat = -1;
@@ -364,7 +450,14 @@ private:
     void drumHit(int drum, float vel);
     void beatCmd(int cmd, int drum, int step, int arg);
     void tickBeat(double b0, double b1);
-    bool transportIdle() const { return !backingActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
+    bool transportIdle() const { return !trackPlaying && !backingActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
+    void trackStart(int fromBar, bool once);
+    void trackStop();
+    void tickTrack(double b0, double b1);
+    void runLanes(const TrackData &t, double a, double b, double globalBeat);
+    void runLane(const TrackData &t, int lane, double a, double b, double globalBeat);
+    void laneOff(int lane);
+    void applyTrackOp(int part, const LayerData &ld, const LoopEv &e);
 
     void block(float *l, float *r, int n);
     void publish();

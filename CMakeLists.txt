@@ -14,6 +14,7 @@ add_library(vreqcore STATIC
   core/instrument.cpp
   core/presets.cpp
   core/drums.cpp
+  core/track.cpp
   core/analysis.cpp)
 target_include_directories(vreqcore PUBLIC core)
 find_package(Threads REQUIRED)

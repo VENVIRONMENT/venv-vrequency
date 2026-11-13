@@ -156,6 +156,7 @@ void Instrument::panic() {
     }
     for (auto &v : voices)
         if (v.active()) v.kill(sr);
+    if (trackPlaying) trackStop();
     backPlaying = false;
     beatPlaying = beatRec = false; drums.silence();
     if (loopState == L_COUNTIN || loopState == L_REC || closing) loopClear();
@@ -275,12 +276,17 @@ void Instrument::handle(const Event &e) {
         case LC_PLAYSTOP: loopPlayStop(); break;
         }
         break;
+    case EV_TRACK:
+        if (e.a == TC_STOP) { if (trackPlaying) trackStop(); }
+        else trackStart(e.b, e.a == TC_ONCE);
+        break;
     case EV_BACK:
+        if (trackPlaying) break; // the chords lane is using the backing
         switch (e.a) {
         case BC_PLAYSTOP:
             backPlaying = !backPlaying;
             if (backPlaying) {
-                if (loopState == L_EMPTY && !beatPlaying) { beat = 0; progOrigin = 0; }
+                if (loopState == L_EMPTY && !beatPlaying && !trackPlaying) { beat = 0; progOrigin = 0; }
                 else progOrigin = std::floor(beat / st.chordBeats) * st.chordBeats;
                 lastPulseStep = lastArpStep = -1;
             }
@@ -367,6 +373,7 @@ void Instrument::tickBeat(double, double b1) {
 // ----------------------------------------------------------------- backing
 
 void Instrument::chordTap(int degree) {
+    if (trackPlaying) return; // the chords lane is using the backing
     degree = ((degree % 7) + 7) % 7;
     bool wasActive = backingActive();
     switch (st.backMode) {
@@ -399,7 +406,8 @@ void Instrument::tickBacking(double b0, double b1) {
     progPos = -1;
     if (backPlaying) {
         if (progLen > 0) {
-            double rel = (b0 - progOrigin) / st.chordBeats;
+            // a track piece can begin part-way through a block, so the track reads the chord at the block's end
+            double rel = ((trackPlaying ? b1 : b0) - progOrigin) / st.chordBeats;
             long idx = (long)std::floor(rel);
             idx %= progLen; if (idx < 0) idx += progLen;
             progPos = (int)idx;
@@ -548,7 +556,7 @@ void Instrument::loopCommit(bool atLoopEnd) {
 void Instrument::loopPedal() {
     switch (loopState) {
     case L_EMPTY:
-        if (backingActive() || beatPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
+        if (backingActive() || beatPlaying || trackPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
         else { beat = 0; progOrigin = 0; recStartBeat = 4; lastPulseStep = lastArpStep = -1; }
         loopState = L_COUNTIN;
         break;
@@ -613,7 +621,7 @@ void Instrument::loopPlayStop() {
         for (int i = 0; i < kLayers; ++i) partOff(2 + i, false);
         loopState = L_STOPPED;
     } else if (loopState == L_STOPPED && nLayers > 0) {
-        loopStart = (backingActive() || beatPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
+        loopStart = (backingActive() || beatPlaying || trackPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
         for (int i = 0; i < nLayers; ++i) resetLayerPart(i);
         loopState = L_PLAY;
     }
@@ -696,10 +704,12 @@ void Instrument::block(float *l, float *r, int n) {
     while (evq.pop(e)) handle(e);
 
     // a loop layer that switched the crusher on must not leave it on once the loop stops or goes
-    if (glitchOwner >= 2 && ((loopState != L_PLAY && loopState != L_OVERDUB) || glitchOwner - 2 >= nLayers)) {
+    if (glitchOwner >= kTrackPart0 ? !trackPlaying
+                                   : (glitchOwner >= 2 && ((loopState != L_PLAY && loopState != L_OVERDUB) || glitchOwner - 2 >= nLayers))) {
         crush.set(false, 0, 0); glitchOwner = -1;
     }
     double b0 = beat, b1 = beat + (double)st.bpm / 60.0 / sr * n;
+    tickTrack(b0, b1);
     tickLoop(b0, b1);
     tickBacking(b0, b1);
     tickBeat(b0, b1);
@@ -739,8 +749,9 @@ void Instrument::block(float *l, float *r, int n) {
     if (drums.active()) {
         float dl[kBlock], dr[kBlock];
         for (int i = 0; i < n; ++i) dl[i] = dr[i] = 0;
-        drums.render(st.kit, dl, dr, n);
-        const float g = st.beatVol * 0.85f, rv = drums.reverbSend(st.kit);
+        const int kit = trackKit >= 0 ? trackKit : st.kit; // one drum bus: a playing track's kit decides its colour
+        drums.render(kit, dl, dr, n);
+        const float g = st.beatVol * 0.85f, rv = drums.reverbSend(kit);
         for (int i = 0; i < n; ++i) {
             dryL[i] += dl[i] * g; dryR[i] += dr[i] * g;
             sR[i] += 0.5f * (dl[i] + dr[i]) * g * rv;
@@ -874,6 +885,7 @@ void Instrument::publish() {
     u.beatPlaying = beatPlaying; u.beatRec = beatRec;
     u.beatStep = beatPlaying ? (int)((((long)std::floor(beat * 4.0) % kDrumSteps) + kDrumSteps) % kDrumSteps) : -1;
     for (int d = 0; d < kDrums; ++d) { u.beatPat[d] = beatPat[d]; u.drumHits[d] = drumHits[d]; }
+    u.trackPlaying = trackPlaying; u.trackPos = trackPos; u.trackPasses = trackPasses;
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
     u.sustain = sustain; u.bend = parts[0].bend;
     u.xyX = xyX; u.xyY = xyY; u.xyTouch = xyTouch;
@@ -903,6 +915,13 @@ void Instrument::snapshot(SessionData &out) {
     out.backing = parts[1].patch;
     for (int i = 0; i < kProgMax; ++i) out.prog[i] = prog[i];
     out.progLen = progLen; out.holdChord = holdChord; out.droneMask = droneMask;
+    if (liveSaved) { // a track is playing on the backing: report the live backing, not the clip
+        out.settings.backStyle = live.backStyle; out.settings.chordBeats = live.chordBeats;
+        out.settings.arpRate = live.arpRate; out.settings.seventh = live.seventh;
+        out.backing = live.patch;
+        for (int i = 0; i < kProgMax; ++i) out.prog[i] = live.prog[i];
+        out.progLen = live.progLen; out.holdChord = live.holdChord; out.droneMask = live.droneMask;
+    }
     out.loopBeats = nLayers > 0 ? loopLen : 0;
     for (int d = 0; d < kDrums; ++d) out.beat[d] = beatPat[d];
     out.layers.clear();
