@@ -25,12 +25,22 @@
 
 class QPainter;
 class QProcess;
+class ControlServer;
+
+// One line of the copilot chat.
+struct ChatMsg {
+    int seq = 0;
+    QString from, text, kind; // kind: say, tip, ask (agents) or say (the user)
+    qint64 ts = 0;            // ms since the epoch
+    bool user = false;
+};
 
 class MainWindow : public QWidget {
     Q_OBJECT
+    friend class ControlServer;
 public:
     // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
-    enum Page { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_COUNT };
+    enum Page { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
     enum Phase { PH_PRESS, PH_MOVE, PH_RELEASE };
 
     MainWindow(td::Instrument &inst, AudioOut &audio);
@@ -73,6 +83,21 @@ public:
     int playLineBar() const { return playBar; }
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
     QString lastRecordingPath() const { return lastRecording; }
+    // --- the copilot chat ---
+    int chatAdd(const QString &from, const QString &text, const QString &kind, bool user); // returns its seq
+    const std::deque<ChatMsg> &chatLog() const { return chat; }
+    int chatLastSeq() const { return chatSeq; }
+    int chatUnreadCount() const { return chatUnread; }
+    QString chatDraftText() const { return chatDraft; }
+    void chatSeen() { copilotSeenAt = clock.elapsed(); update(); }   // a control client polled or is waiting
+    void chatWaiting(int n) { copilotWaiters = n; update(); }
+    bool chatTickerShowing() const { return clock.elapsed() < tickerUntil; }
+    void chatToggle();
+
+signals:
+    void userChatArrived();
+
+public:
 
 protected:
     void paintEvent(QPaintEvent *) override;
@@ -120,6 +145,15 @@ private:
     int touchCol[td::kStrings] = {-1, -1, -1};
     std::deque<float> trail[td::kStrings];
     QString toastText; qint64 toastUntil = 0;
+    // chat
+    std::deque<ChatMsg> chat;
+    int chatSeq = 0, chatUnread = 0, chatScroll = 0, chatReturn = PG_PLAY;
+    QString chatDraft, pendingText;
+    qint64 copilotSeenAt = -100000, tickerUntil = 0;
+    int copilotWaiters = 0;
+    ChatMsg ticker;
+    // synthetic notes from the control socket: string -> ids held
+    int nextNoteId = 0x400;
     std::vector<qint64> taps;
     QStringList sessions;
     td::UiState u;
@@ -222,6 +256,10 @@ private:
     void paintTune();
     void paintSystem();
     void paintHelp();
+    void paintChat();
+    void paintTicker();
+    bool chatKey(int key, int plainAct);
+    void chatSend();
     void paintTabs();
     void paintTrack();
     void paintTrackTools();

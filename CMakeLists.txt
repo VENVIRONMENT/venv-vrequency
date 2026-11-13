@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(vrequency VERSION 0.9.0 LANGUAGES C CXX)
+project(vrequency VERSION 0.10.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,7 +28,7 @@ add_test(NAME core COMMAND vrequency_tests)
 # ---- application ----
 option(VREQUENCY_BUILD_APP "Build the Qt application" ON)
 if(VREQUENCY_BUILD_APP)
-  find_package(Qt6 REQUIRED COMPONENTS Widgets)
+  find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
   set(CMAKE_AUTOMOC ON)
 
   # Audio headers: use the system dev packages when installed, otherwise the
@@ -44,6 +44,9 @@ if(VREQUENCY_BUILD_APP)
     app/main.cpp
     app/mainwindow.cpp
     app/trackpage.cpp
+    app/chatpage.cpp
+    app/control.cpp
+    app/control.h
     app/scope.cpp
     app/palette.h
     app/mainwindow.h
@@ -52,7 +55,7 @@ if(VREQUENCY_BUILD_APP)
     app/selftest.cpp
     audio/audio.cpp)
   target_include_directories(vrequency PRIVATE app audio)
-  target_link_libraries(vrequency PRIVATE vreqcore Qt6::Widgets)
+  target_link_libraries(vrequency PRIVATE vreqcore Qt6::Widgets Qt6::Network)
   if(PW_INC AND SPA_INC AND PW_LIB)
     message(STATUS "PipeWire backend: ON (${PW_INC})")
     target_compile_definitions(vrequency PRIVATE VREQUENCY_PIPEWIRE=1)
