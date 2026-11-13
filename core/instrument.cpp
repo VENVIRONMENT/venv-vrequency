@@ -110,6 +110,19 @@ void Instrument::keyDown(int s, int col, bool chromatic) {
     else leadOp(OP_ON, s, pitch, 1.0f);
 }
 
+void Instrument::noteDown(int s, int id, float pitch, float vel) {
+    if (s < 0 || s >= kStrings) return;
+    StringState &ss = strings[s];
+    for (int i = 0; i < ss.n; ++i)
+        if (ss.col[i] == id) return;
+    if (ss.n >= kMaxHeld) return;
+    pitch = clampf(pitch, 12.0f, 120.0f);
+    ss.col[ss.n] = id; ss.pitch[ss.n] = pitch; ++ss.n;
+    ss.pendingOff = false;
+    if (slotVoice[0][s] >= 0) leadOp(OP_GLIDE, s, pitch);
+    else leadOp(OP_ON, s, pitch, clampf(vel, 0.05f, 1.0f));
+}
+
 void Instrument::keyUp(int s, int col) {
     if (s < 0 || s >= kStrings) return;
     StringState &ss = strings[s];
@@ -244,6 +257,9 @@ void Instrument::handle(const Event &e) {
     switch (e.type) {
     case EV_KEY:
         if (e.c) keyDown(e.a, e.b, e.d != 0); else keyUp(e.a, e.b);
+        break;
+    case EV_NOTE:
+        if (e.c) noteDown(e.a, e.b, e.f, e.g); else keyUp(e.a, e.b);
         break;
     case EV_CHORD: chordTap(e.a); break;
     case EV_SUSTAIN: setSustain(e.a != 0); break;
