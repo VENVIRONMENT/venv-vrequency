@@ -7,6 +7,7 @@
 #include "analysis.h"
 #include "instrument.h"
 #include "presets.h"
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -420,6 +421,69 @@ static void testXY() {
     CHECK(near(hz, expect, 0.01f), "bend up reaches +2 semitones (%.2f vs %.2f Hz)", hz, expect);
 }
 
+static float heldFraction(const float *x, int n) { // how much of the wave is flat steps
+    int same = 0;
+    for (int i = 1; i < n; ++i) if (std::fabs(x[i] - x[i - 1]) < 2e-5f) ++same; // the limiter after it may drift by a hair
+    return n > 1 ? (float)same / (n - 1) : 0;
+}
+static int distinctLevels(const float *x, int n) {
+    std::vector<long> v(n);
+    for (int i = 0; i < n; ++i) v[i] = std::lround(x[i] * 2000);
+    std::sort(v.begin(), v.end());
+    return (int)(std::unique(v.begin(), v.end()) - v.begin());
+}
+
+static void testGlitch() {
+    SECTION("GLITCH pad mapping crushes the whole output and lets go cleanly");
+    Rig r;
+    r.inst.setPatch(0, purePatch());
+    r.inst.key(1, 2, true); // G3, 196 Hz
+    r.run(0.5);
+    int n; const float *t = r.tail(0.2, n);
+    const float hz = (float)midiToHz(55);
+    float cleanHeld = heldFraction(t, n), cleanRms = rms(t, n), cleanTone = goertzel(t, n, hz);
+    int cleanLevels = distinctLevels(t, n);
+    CHECK(cleanHeld < 0.05f && cleanLevels > 150, "clean sine is smooth (%.3f flat, %d levels)", cleanHeld, cleanLevels);
+
+    r.inst.set(S_XYMAP, XY_GLITCH);
+    Event e; e.type = EV_XY; e.a = 1; e.f = 0.5f; e.g = 0.8f; r.inst.push(e);
+    r.run(0.5);
+    t = r.tail(0.2, n);
+    float held = heldFraction(t, n), tone = goertzel(t, n, hz);
+    int levels = distinctLevels(t, n);
+    CHECK(r.inst.uiState().glitch, "pad down switches the crusher on");
+    CHECK(held > 0.8f, "wave becomes flat steps (%.3f flat; expect about %.3f)", held, 1.0f - 1.0f / r.inst.crusher().holdSamples());
+    CHECK(levels >= 4 && levels <= 64, "only a few levels are left (%d)", levels);
+    CHECK(tone > 0.5f * cleanTone, "the note is still there underneath (%.4f vs %.4f)", tone, cleanTone);
+    CHECK(rms(t, n) > 0.5f * cleanRms && rms(t, n) < 1.7f * cleanRms, "loudness stays in the same range (%.4f vs %.4f)", rms(t, n), cleanRms);
+    CHECK(peak(r.L) <= 1.0f, "output stays inside full scale (%.3f)", peak(r.L));
+
+    // moving on the pad changes the character: right = coarser, down = more levels
+    e.f = 0.95f; e.g = 0.1f; r.inst.push(e); r.run(0.3);
+    t = r.tail(0.2, n);
+    CHECK(heldFraction(t, n) > held && distinctLevels(t, n) > levels, "x coarsens, low y restores levels (%.3f flat, %d levels)", heldFraction(t, n), distinctLevels(t, n));
+
+    // quieter playing gets the same grit, not silence
+    r.inst.set(S_VOLUME, 0.15f); e.f = 0.5f; e.g = 0.8f; r.inst.push(e); r.run(0.8);
+    t = r.tail(0.2, n);
+    int quietLevels = distinctLevels(t, n);
+    CHECK(quietLevels >= 4 && quietLevels <= 64 && rms(t, n) > 0.001f, "same grit at low volume (%d levels, rms %.4f)", quietLevels, rms(t, n));
+    r.inst.set(S_VOLUME, 0.7f);
+
+    e.a = 0; r.inst.push(e); r.run(0.4);
+    t = r.tail(0.2, n);
+    CHECK(!r.inst.uiState().glitch && heldFraction(t, n) < 0.05f, "lifting the finger gives the clean sound back (%.3f flat)", heldFraction(t, n));
+
+    // Hold latches it; changing the mapping or panic always releases it
+    r.inst.set(S_XYHOLD, 1); e.a = 1; r.inst.push(e); r.run(0.1); e.a = 0; r.inst.push(e); r.run(0.2);
+    CHECK(r.inst.uiState().glitch, "Hold keeps it on after the finger lifts");
+    r.inst.set(S_XYMAP, XY_FILTER); r.run(0.2);
+    CHECK(!r.inst.uiState().glitch, "choosing another mapping switches it off");
+    r.inst.set(S_XYMAP, XY_GLITCH); e.a = 1; r.inst.push(e); r.run(0.1);
+    r.inst.cmd(EV_PANIC); r.run(0.1);
+    CHECK(!r.inst.uiState().glitch, "panic switches it off");
+}
+
 static void testBacking() {
     SECTION("backing: tapped progression loops at tempo and keeps its sound");
     Rig r;
@@ -725,6 +789,7 @@ int main(int argc, char **argv) {
     testPresetsAndRandomiser();
     testLimiter();
     testXY();
+    testGlitch();
     testBacking();
     testLooper();
     testSessionRoundTrip();

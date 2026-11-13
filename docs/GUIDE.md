@@ -1,6 +1,6 @@
 # How to use venv vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.3.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.4.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -122,9 +122,25 @@ the next pair. `Ctrl`+`G` does the same.
 | Morph | Timbre | Drive |
 | Space | Delay | Reverb |
 | Bend | Pitch | Cutoff |
+| Glitch | Coarse | Grit |
 
 **Hold** (next to it) keeps the position when you lift your finger. With Hold off, the sound
 returns to normal when you let go.
+
+### Glitch
+
+![The Glitch mapping](shots/7-glitch.png)
+
+Glitch crushes everything you hear (lead, backing and loop) into a rough, low-quality digital
+sound for as long as your finger is on the pad.
+
+- **Left to right (Coarse):** the sound gets blockier and more metallic.
+- **Bottom to top (Grit):** the sound gets rougher and noisier.
+
+While it is on, the scope leaves coloured copies of the wave streaking away diagonally. The white
+wave on top is still the real sound, which now looks like steps. Further right makes the streaks
+spread wider, and further up makes them last longer. Lift your finger and both the sound and the
+picture go back to normal. `Backspace` (panic) also switches it off.
 
 ## 6. Sounds
 

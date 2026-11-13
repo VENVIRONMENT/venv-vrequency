@@ -129,6 +129,7 @@ private:
     float measFreq = 0, measPk = 0;
     bool trigd = false;
     QImage phos;      // fading trace
+    float glitchVis = 0, glitchHue = 0; // colour streaks while the crusher is on
     QPixmap gratPix;  // graticule
     QPixmap facePix;  // scan lines and corner shading over the whole screen
 

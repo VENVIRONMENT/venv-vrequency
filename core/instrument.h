@@ -79,15 +79,15 @@ enum BackCmd { BC_PLAYSTOP, BC_CLEAR, BC_REMOVE_LAST, BC_RESYNC_SOUND, BC_SELECT
 enum BackMode { BM_PROG, BM_HOLD, BM_DRONE, BM_COUNT };
 enum BackStyle { BS_SUSTAIN, BS_PULSE, BS_ARP_UP, BS_ARP_DOWN, BS_ARP_UPDOWN, BS_COUNT };
 enum LoopState { L_EMPTY, L_COUNTIN, L_REC, L_PLAY, L_OVERDUB, L_STOPPED };
-enum XyMap { XY_FILTER, XY_WOBBLE, XY_MORPH, XY_SPACE, XY_BEND, XY_COUNT };
+enum XyMap { XY_FILTER, XY_WOBBLE, XY_MORPH, XY_SPACE, XY_BEND, XY_GLITCH, XY_COUNT };
 
 inline const char *xyMapName(int m) {
-    static const char *N[XY_COUNT] = {"FILTER", "WOBBLE", "MORPH", "SPACE", "BEND"};
+    static const char *N[XY_COUNT] = {"FILTER", "WOBBLE", "MORPH", "SPACE", "BEND", "GLITCH"};
     return N[m < 0 ? 0 : (m >= XY_COUNT ? XY_COUNT - 1 : m)];
 }
 inline const char *xyAxisName(int m, bool yAxis) {
-    static const char *X[XY_COUNT] = {"CUTOFF", "CUTOFF", "TIMBRE", "DELAY", "PITCH"};
-    static const char *Y[XY_COUNT] = {"RESONANCE", "VIBRATO", "DRIVE", "REVERB", "CUTOFF"};
+    static const char *X[XY_COUNT] = {"CUTOFF", "CUTOFF", "TIMBRE", "DELAY", "PITCH", "COARSE"};
+    static const char *Y[XY_COUNT] = {"RESONANCE", "VIBRATO", "DRIVE", "REVERB", "CUTOFF", "GRIT"};
     m = m < 0 ? 0 : (m >= XY_COUNT ? XY_COUNT - 1 : m);
     return yAxis ? Y[m] : X[m];
 }
@@ -180,6 +180,8 @@ struct UiState {
     bool sustain = false;
     float bend = 0, xyX = 0.5f, xyY = 0.5f;
     bool xyTouch = false;
+    bool glitch = false;        // the crusher is on
+    float glitchX = 0, glitchY = 0;
     char leadName[28] = {0};
     uint64_t frames = 0;
     uint32_t droppedEvents = 0;
@@ -218,6 +220,7 @@ public:
     const Voice &voice(int i) const { return voices[i]; }
     const Part &part(int i) const { return parts[i]; }
     const Settings &settings() const { return st; }
+    const Crush &crusher() const { return crush; }
 
 private:
     struct StringState {
@@ -274,7 +277,8 @@ private:
     long lastClickBeat = -1;
 
     // fx
-    Chorus chorus; Delay delay; Reverb reverb; Limiter limiter;
+    Chorus chorus; Delay delay; Reverb reverb; Crush crush; Limiter limiter;
+    int glitchOwner = -1; // the part whose pad (live or looped) switched the crusher on
     float volSm = 0.7f;
     float sendSm[kParts][3];
 

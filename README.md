@@ -18,13 +18,13 @@ or tap **venv vrequency** in the app grid. `vrequency --windowed` runs it in a w
 ## How it looks
 
 The whole 720×720 screen is drawn the way a bench oscilloscope draws its own display: white on black,
-one-pixel rules, raster type, inverse video for whatever is selected. There is no colour and no drawn
-hardware. The scope on the play page shows the real output, triggered so the wave stands still, with
+one-pixel rules, raster type, inverse video for whatever is selected. There is no drawn hardware, and
+the only colour is in the scope while the Glitch control is on. The scope on the play page shows the real output, triggered so the wave stands still, with
 its own volts/div and time/div (they follow the signal and never change the pitch) and measured
 frequency and level. Touching it is the X-Y sound control.
 
 More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
-[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png).
+[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png).
 
 ## Play it in ten seconds
 
@@ -41,7 +41,7 @@ More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.p
 | `1`‥`9`, `0` | Sounds 1‥10 (number layer on the Q20). |
 | `Alt` + `Z`‥`M`, or the pads on screen | Backing chords I‥VII. `$` turns the bottom row into chord keys. |
 | `Ctrl` + `R` / `Z` / `F` / `N` | New random sound / undo / save favourite / mutate. |
-| Drag on the scope | XY sound control (filter, vibrato, timbre, space, bend). |
+| Drag on the scope | XY sound control (filter, vibrato, timbre, space, bend, glitch). |
 | Drag along a string on screen | Play and slide by touch. |
 
 The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: **Menu → Help** (or `Ctrl`+`H`). `Tab` cycles pages, `Esc` returns to the play page.
@@ -55,7 +55,8 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Synth**: 28-voice pool; per voice two band-limited oscillators (sine, triangle, saw, pulse)
   plus unison copy, sub and noise, FM, ADSR, a zero-delay state-variable filter (low/high/band-pass)
   with its own envelope, vibrato, LFO to cutoff/amplitude/pulse-width, saturation. Master chorus,
-  tempo-synced delay, reverb, limiter + soft clip (output can never exceed full scale).
+  tempo-synced delay, reverb, a bit crusher (the Glitch pad mapping), limiter + soft clip (output can
+  never exceed full scale).
 - **Sounds**: ten factory sounds in slots 1‥0, a randomiser that invents playable instruments
   (every result is loudness-normalised), mutate, undo, favourites, an all-parameters editor.
 - **Backing**: diatonic triads/sevenths from the scale. Tap up to eight chords for a looping
@@ -82,9 +83,9 @@ machine. Nothing is installed system-wide and nothing starts at boot.
 Tests:
 
 ```bash
-./build/vrequency_tests                                   # 324 engine checks (offline rendering)
+./build/vrequency_tests                                   # 337 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 48 checks through the real app + audio thread
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 50 checks through the real app + audio thread
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 

@@ -1149,12 +1149,12 @@ void MainWindow::paintSystem() {
     slider(QRectF(364, 66, 340, 58), "loopvol", "Loop volume", u.set.loopVol, QString("%1%").arg((int)(u.set.loopVol * 100)), [this](float n) { set(S_LOOPVOL, n); });
 
     section(130, "Touch pad mapping");
-    qreal w6 = (688 - 5 * 6) / 6.0;
+    qreal w6 = (688 - XY_COUNT * 6) / (XY_COUNT + 1.0);
     auto c6 = [w6](int i) { return QRectF(std::floor(16 + i * (w6 + 6)), 154, std::floor(w6), 54); };
     for (int i = 0; i < XY_COUNT; ++i)
         button(c6(i), QString("xymap%1").arg(i), nice(xyMapName(i)), u.set.xyMap == i, [this, i] { set(S_XYMAP, (float)i); },
-               QString("%1/%2").arg(xyAxisName(i, false)).arg(xyAxisName(i, true)).toLower().replace("resonance", "reso"));
-    button(c6(5), "xyhold2", "Hold", u.set.xyHold, [this] { set(S_XYHOLD, u.set.xyHold ? 0 : 1); }, "keep position");
+               QString("%1/%2").arg(xyAxisName(i, false)).arg(xyAxisName(i, true)).toLower().replace("resonance", "reso").replace("vibrato", "vib"));
+    button(c6(XY_COUNT), "xyhold2", "Hold", u.set.xyHold, [this] { set(S_XYHOLD, u.set.xyHold ? 0 : 1); }, "keep it on");
 
     qreal w4 = (688 - 3 * 8) / 4.0;
     auto c4 = [w4](int i, qreal y, qreal h) { return QRectF(std::floor(16 + i * (w4 + 8)), y, std::floor(w4), h); };

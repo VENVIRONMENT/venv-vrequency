@@ -1,12 +1,12 @@
 # Status — what works, what is unproven, what is missing
 
-Version 0.3.0, 2026-11-13 (renamed from Tendril; same pages and controls as 0.1, redrawn as a black-and-white scope display). "Tested" below means an automated test measured it; it does **not** mean a
+Version 0.4.0, 2026-11-13 (0.3.0 plus a Glitch touch-pad mapping: a bit crusher on the whole output, with colour streaks in the scope while it is on). "Tested" below means an automated test measured it; it does **not** mean a
 person heard it or pressed a physical key. Those checks are listed separately.
 
 ## Working and covered by automated tests
 
-`vrequency_tests` renders audio offline and measures it (324 checks). `vrequency --selftest` drives the real
-application with real key and touch events while the real audio thread runs (48 checks).
+`vrequency_tests` renders audio offline and measures it (337 checks). `vrequency --selftest` drives the real
+application with real key and touch events while the real audio thread runs (50 checks).
 
 | Area | What the tests establish |
 |---|---|
@@ -19,6 +19,7 @@ application with real key and touch events while the real audio thread runs (48 
 | Randomiser | 120 generated sounds: all audible, all different, none over the level ceiling; mutate stays close; undo and favourites work through the app |
 | Backing | Diatonic triads and sevenths named and built correctly; a tapped I–IV–V–IV progression loops in tempo under a live melody; remove / replace / stop / start / clear; hold and drone modes; arpeggio; backing keeps its sound when the lead changes |
 | Looper | Count-in, bar snap, playback, overdub, undo, stop/start, clear; a recorded slide replays as a slide; an 18-second loop; a layer keeps the sound it was recorded with |
+| Glitch | With the pad down the wave becomes flat steps with only a few levels left, the note is still present, loudness stays in range and inside full scale; the grit is the same at low volume; lifting the finger, changing mapping or panic restores the clean sound; Hold latches it |
 | Live control | XY filter and vibrato mappings, pitch bend, sustain; touch on a string plays and slides (synthetic touch events) |
 | Safety | Master output cannot exceed full scale even with a deliberately abusive sound; panic frees every voice |
 | Files | Favourites, sessions (key, sounds, progression, loop) and settings save and load back the same; WAV export contains the audio that was played |
@@ -27,7 +28,7 @@ application with real key and touch events while the real audio thread runs (48 
 
 Implemented but with **no automated test**: loops following a tempo change, bends and XY moves inside loops,
 voice stealing at the 28-voice limit (benchmarked for speed, not checked for clicks), releasing all notes
-when the window loses focus, the scope's frequency readout, trigger and auto-ranging (checked by eye on rendered pictures only), pulse and up/down arpeggio styles, the on-screen sound editor's individual controls.
+when the window loses focus, the scope's frequency readout, trigger and auto-ranging (checked by eye on rendered pictures only), the Glitch colour streaks (seen on one rendered picture only), Glitch moves replayed from inside a loop, pulse and up/down arpeggio styles, the on-screen sound editor's individual controls.
 
 ## Measured on this device
 
@@ -105,6 +106,7 @@ Start with `vrequency`. If there is no sound, check that GNOME's sound output is
 | 7 | Number layer + `2`, `3`, `4` | Sound changes | Tell me which key is the layer key on your unit |
 | 8 | `Enter`, wait for the count, play a bar, `Enter` again | Your phrase loops in time | If it is early or late, change System → Loop fix and tell me the value that works |
 | 9 | Drag a finger across the scope | Sound changes with the finger; a square cursor follows it | |
+| 9c | Tap the Filter button on the scope until it says Glitch, hold a note, drag on the scope | Sound turns rough and digital while touched, coloured streaks trail from the wave, both stop when you lift | Tell me if it is too harsh, too quiet, or the colours are wrong |
 | 9b | Hold a low note, then a high one | The trace stays still and the ms/div readout steps by itself; pitch is unaffected | |
 | 10 | `Ctrl` + `R` a few times, `Ctrl` + `Z` | New sounds each time; undo brings the last one back | |
 | 11 | Menu → System → Key test, then try `Z`+`S`+`W`, `Space`+`Z`+`X`, `Alt`+`A`+`J` | Only the keys you hold are listed | A key you did not press appears: the keyboard ghosts on that combination |

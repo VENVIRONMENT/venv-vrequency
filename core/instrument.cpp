@@ -5,7 +5,7 @@
 namespace td {
 
 Instrument::Instrument(float sampleRate) : sr(sampleRate) {
-    chorus.init(sr); delay.init(sr); reverb.init(sr); limiter.init(sr);
+    chorus.init(sr); delay.init(sr); reverb.init(sr); crush.init(sr); limiter.init(sr);
     for (int p = 0; p < kParts; ++p)
         for (int s = 0; s < kSlots; ++s) { slotVoice[p][s] = -1; slotNote[p][s] = 0; }
     for (int s = 0; s < kSlots; ++s) backDesired[s] = -1;
@@ -145,6 +145,7 @@ void Instrument::shiftOctave(int delta) {
 }
 
 void Instrument::panic() {
+    crush.set(false, 0, 0); glitchOwner = -1;
     for (int s = 0; s < kStrings; ++s) { strings[s].n = 0; strings[s].pendingOff = false; }
     sustain = false;
     for (int p = 0; p < kParts; ++p) {
@@ -163,6 +164,13 @@ void Instrument::panic() {
 
 void Instrument::applyXY(int part, int map, float x, float y, bool touching, bool hold) {
     Part &p = parts[part];
+    if (map == XY_GLITCH) { // a master effect: it crushes everything you hear, not one part
+        p.clearMod();
+        if (touching || hold) { crush.set(true, x, y); glitchOwner = part; }
+        else if (glitchOwner == part) { crush.set(false, x, y); glitchOwner = -1; }
+        return;
+    }
+    if (glitchOwner == part) { crush.set(false, 0, 0); glitchOwner = -1; } // this pad moved to another mapping
     if (!touching && !hold) {
         p.clearMod();
         if (map == XY_BEND) bendTarget[part] = 0;
@@ -426,6 +434,7 @@ void Instrument::loopBeginLayer() {
 
 void Instrument::resetLayerPart(int li) {
     int p = 2 + li;
+    if (glitchOwner == p) { crush.set(false, 0, 0); glitchOwner = -1; }
     partOff(p, false);
     parts[p].patch = layers[li].patches[0];
     parts[p].clearMod();
@@ -617,6 +626,10 @@ void Instrument::block(float *l, float *r, int n) {
     Event e;
     while (evq.pop(e)) handle(e);
 
+    // a loop layer that switched the crusher on must not leave it on once the loop stops or goes
+    if (glitchOwner >= 2 && ((loopState != L_PLAY && loopState != L_OVERDUB) || glitchOwner - 2 >= nLayers)) {
+        crush.set(false, 0, 0); glitchOwner = -1;
+    }
     double b0 = beat, b1 = beat + (double)st.bpm / 60.0 / sr * n;
     tickLoop(b0, b1);
     tickBacking(b0, b1);
@@ -688,6 +701,7 @@ void Instrument::block(float *l, float *r, int n) {
         }
         l[i] = ol; r[i] = orr;
     }
+    crush.process(l, r, n);
     limiter.process(l, r, n);
 
     uint32_t sw = scopeW.load(std::memory_order_relaxed);
@@ -778,6 +792,7 @@ void Instrument::publish() {
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
     u.sustain = sustain; u.bend = parts[0].bend;
     u.xyX = xyX; u.xyY = xyY; u.xyTouch = xyTouch;
+    u.glitch = crush.on(); u.glitchX = crush.coarse; u.glitchY = crush.grit;
     u.frames = frames;
     u.droppedEvents = dropped.load(std::memory_order_relaxed);
     uiSeq.fetch_add(1, std::memory_order_acq_rel);

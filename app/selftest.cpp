@@ -182,6 +182,12 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     w.pointer(2, s1.center(), MainWindow::PH_RELEASE);
     w.pointer(1, xy.center(), MainWindow::PH_RELEASE); wait(80);
     check(!inst.uiState().xyTouch && std::fabs(inst.part(0).modCut) < 0.01f, "lifting the finger returns the sound to normal");
+    inst.set(S_XYMAP, XY_GLITCH); wait(60);
+    w.pointer(1, xy.center(), MainWindow::PH_PRESS); wait(80);
+    check(inst.uiState().glitch, "the Glitch mapping crushes the sound while the pad is touched");
+    w.pointer(1, xy.center(), MainWindow::PH_RELEASE); wait(80);
+    check(!inst.uiState().glitch, "and stops when the finger lifts");
+    inst.set(S_XYMAP, XY_FILTER); wait(60);
     tap(w, "chord4"); wait(60);
     check(inst.uiState().progLen == 5, "touch chord pads work");
 
@@ -239,6 +245,16 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         w.setPage(p);
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
         w.shot().save(QString("%1/%2-%3.png").arg(dir).arg(p).arg(names[p]));
+    }
+    {   // the Glitch mapping with a finger on the pad
+        w.setPage(MainWindow::PG_PLAY);
+        inst.set(S_XYMAP, XY_GLITCH); wait(60);
+        QRectF xy = w.zoneRect("xy");
+        w.pointer(1, QPointF(xy.left() + xy.width() * 0.45, xy.top() + xy.height() * 0.62), MainWindow::PH_PRESS);
+        for (int i = 0; i < 40; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/7-glitch.png").arg(dir));
+        w.pointer(1, xy.center(), MainWindow::PH_RELEASE);
+        inst.set(S_XYMAP, XY_FILTER); wait(60);
     }
     key(w, Qt::Key_F, false); key(w, Qt::Key_A, false);
     w.setPage(MainWindow::PG_SYS);

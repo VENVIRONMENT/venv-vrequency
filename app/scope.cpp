@@ -140,9 +140,24 @@ void MainWindow::drawScope(QRectF xy) {
 
     // ---- phosphor: the old trace fades, the new one is written on top ----
     if (phos.size() != QSize(GW, GH)) { phos = QImage(GW, GH, QImage::Format_RGB32); phos.fill(Qt::black); }
+    // Glitch: while the crusher is on, old traces are not simply faded: they are pushed along a
+    // diagonal, and each new trace is written in the next colour round the wheel. The result is
+    // many coloured outlines at once, streaked like a long exposure. The newest trace is drawn
+    // white on top, so the wave on screen is still the wave you hear.
+    glitchVis += ((u.glitch ? 1.0f : 0.0f) - glitchVis) * (u.glitch ? 0.5f : 0.2f);
+    const bool gl = glitchVis > 0.03f;
+    QPainterPath live;
     {
+        if (gl) {
+            QImage prev = phos.copy();
+            QPainter q0(&phos);
+            q0.fillRect(phos.rect(), Qt::black);
+            q0.setOpacity(u.glitch ? 0.87 + 0.10 * u.glitchY : 0.6);
+            const int step = 4 + (int)(7 * u.glitchX);
+            q0.drawImage(QPoint(step, (step * 2 + 1) / 3), prev);
+        }
         QPainter q(&phos);
-        q.fillRect(phos.rect(), QColor(0, 0, 0, 112));
+        if (!gl) q.fillRect(phos.rect(), QColor(0, 0, 0, 112));
         q.setRenderHint(QPainter::Antialiasing, true);
         const float vdiv = VD_V[vdIdx];
         auto Y = [&](float v) { return GH / 2.0 - qBound(-2.1f, v / vdiv, 2.1f) * div; };
@@ -168,14 +183,37 @@ void MainWindow::drawScope(QRectF xy) {
             }
         }
         q.setBrush(Qt::NoBrush);
-        q.setPen(QPen(QColor(255, 255, 255, 46), 7.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); // bloom
-        q.drawPath(path);
-        q.setPen(QPen(QColor(0xff, 0xff, 0xfb), 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        q.drawPath(path);
+        if (gl) {
+            glitchHue = std::fmod(glitchHue + 0.083f, 1.0f);
+            QColor c = QColor::fromHsvF(glitchHue, qBound(0.0f, glitchVis, 1.0f), 1.0f);
+            c.setAlpha(70);
+            q.setPen(QPen(c, 6.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); // bloom, in this frame's colour
+            q.drawPath(path);
+            c.setAlpha(255);
+            q.setPen(QPen(c, 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            q.drawPath(path);
+            live = path;
+        } else {
+            q.setPen(QPen(QColor(255, 255, 255, 46), 7.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); // bloom
+            q.drawPath(path);
+            q.setPen(QPen(QColor(0xff, 0xff, 0xfb), 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            q.drawPath(path);
+        }
     }
     g->setCompositionMode(QPainter::CompositionMode_Plus);
     g->drawImage(GR.topLeft(), phos);
     g->setCompositionMode(QPainter::CompositionMode_SourceOver);
+    if (gl) { // the present wave, white, over its own coloured history
+        g->save();
+        g->setClipRect(GR);
+        g->translate(GR.topLeft());
+        g->setRenderHint(QPainter::Antialiasing, true);
+        g->setBrush(Qt::NoBrush);
+        g->setPen(QPen(QColor(255, 255, 251, (int)(255 * qBound(0.0f, glitchVis, 1.0f))), 1.6, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        g->drawPath(live);
+        g->restore();
+        g->setRenderHint(QPainter::Antialiasing, false);
+    }
 
     // ---- markers: trigger point (top centre), channel ground (left margin) ----
     g->setRenderHint(QPainter::Antialiasing, true);
