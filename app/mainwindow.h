@@ -24,11 +24,12 @@
 #include <vector>
 
 class QPainter;
+class QProcess;
 
 class MainWindow : public QWidget {
     Q_OBJECT
 public:
-    enum Page { PG_PLAY, PG_SOUND, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_COUNT };
+    enum Page { PG_PLAY, PG_SOUND, PG_BACK, PG_BEAT, PG_TUNE, PG_SYS, PG_HELP, PG_COUNT };
     enum Phase { PH_PRESS, PH_MOVE, PH_RELEASE };
 
     MainWindow(td::Instrument &inst, AudioOut &audio);
@@ -50,6 +51,8 @@ public:
     int addExtraSounds(int from = 0); // engine's extra sounds -> favourites; returns files written
     QString startRecording();
     QString stopRecording();
+    bool togglePlayback();            // play the newest recording back, or stop it; false = nothing to play
+    bool playingBack() const;
     void perform(int act, bool shift = false);
     void setKeyTest(bool on) { keyTest = on; }
     int maxKeysHeld() const { return maxHeld; }
@@ -109,6 +112,11 @@ private:
     // recording
     WavWriter wav;
     QString lastRecording;
+    QProcess *player = nullptr;      // plays a recording back
+    // beat page
+    bool beatErase = false;          // Erase is armed: the next pad clears that drum
+    uint32_t seenHits[td::kDrums] = {0};
+    qint64 padLit[td::kDrums] = {0}; // when each pad last sounded
 
     // listen
     std::thread listenThread;
@@ -161,6 +169,8 @@ private:
     void drawScope(QRectF xy);
     void paintSound();
     void paintBacking();
+    void paintBeat();
+    void hitPad(int drum);
     void paintTune();
     void paintSystem();
     void paintHelp();

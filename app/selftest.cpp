@@ -9,6 +9,8 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QKeyEvent>
 #include <QScreen>
 #include <QThread>
@@ -57,7 +59,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     }
     QImage img = w.shot();
     check(img.width() == 720 && img.height() == 720, "interface renders at 720x720");
-    static const char *names[] = {"play", "sound", "backing", "tune", "system", "help"};
+    static const char *files[] = {"0-play", "1-sound", "2-backing", "9-beat", "3-tune", "4-system", "5-help"};
+    static const char *names[] = {"play", "sound", "backing", "beat", "tune", "system", "help"};
     if (!shotsDir.isEmpty()) QDir().mkpath(shotsDir);
     for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
         w.setPage(p);
@@ -70,7 +73,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             if (r.left() < 0 || r.top() < 0 || r.right() > 720 || r.bottom() > 720) inside = false;
         }
         check(inside && count > 5, QString("%1 page: all %2 controls fit inside 720x720 (no scrolling)").arg(names[p]).arg(count));
-        if (!shotsDir.isEmpty()) im.save(QString("%1/%2-%3.png").arg(shotsDir).arg(p).arg(names[p]));
+        if (!shotsDir.isEmpty()) im.save(QString("%1/%2.png").arg(shotsDir).arg(files[p]));
     }
     w.setPage(MainWindow::PG_PLAY);
     wait(100);
@@ -229,6 +232,50 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     w.saveState();
     check(QFile::exists(store::baseDir() + "/state.json") && QFile::exists(store::baseDir() + "/keymap.json"), "state and keymap files written");
 
+    std::printf("- beat\n");
+    w.setPage(MainWindow::PG_BEAT); wait(100);
+    inst.set(S_BEATVOL, 0.3f); inst.set(S_BPM, 120); wait(60);
+    uint32_t k0 = inst.uiState().drumHits[D_KICK];
+    tap(w, "pad0"); wait(80);
+    check(inst.uiState().drumHits[D_KICK] == k0 + 1 && !inst.uiState().beatPlaying, "tapping the first pad plays the kick");
+    key(w, Qt::Key_Q, true); key(w, Qt::Key_Q, false); wait(80);
+    key(w, Qt::Key_U, true); key(w, Qt::Key_U, false); wait(80);
+    check(inst.uiState().drumHits[D_KICK] == k0 + 3 && inst.uiState().voices == 0, "on the Beat page Q and U play the kick, not a string");
+    uint32_t c0 = inst.uiState().drumHits[D_CLAP];
+    key(w, Qt::Key_A, true); key(w, Qt::Key_A, false); wait(80);
+    check(inst.uiState().drumHits[D_CLAP] == c0 + 1, "A plays the clap (pad 5)");
+    key(w, Qt::Key_Return, true); key(w, Qt::Key_Return, false); wait(150);
+    check(inst.uiState().beatRec && inst.uiState().beatPlaying && inst.uiState().loopState == L_EMPTY, "Enter switches Rec on and starts the beat (not the loop pedal)");
+    key(w, Qt::Key_W, true); key(w, Qt::Key_W, false); wait(120);
+    tap(w, "pad2"); wait(120);
+    UiState bu = inst.uiState();
+    check(bu.beatPat[D_SNARE] != 0 && bu.beatPat[D_HAT] != 0, "hits played while Rec is on are written into the bar");
+    uint32_t s0 = bu.drumHits[D_SNARE];
+    wait(2100);
+    check(inst.uiState().drumHits[D_SNARE] > s0, "and the bar plays them back");
+    tap(w, "beaterase"); wait(60); tap(w, "pad1"); wait(100);
+    check(inst.uiState().beatPat[D_SNARE] == 0 && inst.uiState().beatPat[D_HAT] != 0, "Erase, then a pad, clears that drum only");
+    int kit0 = inst.uiState().set.kit;
+    tap(w, "kit+"); wait(80);
+    check(inst.uiState().set.kit == (kit0 + 1) % kKits, "the kit stepper changes the kit");
+    key(w, Qt::Key_Space, true); key(w, Qt::Key_Space, false); wait(100);
+    check(!inst.uiState().beatPlaying && !inst.uiState().beatRec && !inst.uiState().sustain, "Space stops the beat on this page");
+    w.setPage(MainWindow::PG_PLAY); wait(80);
+    key(w, Qt::Key_Control, true); key(w, Qt::Key_J, true); key(w, Qt::Key_J, false); key(w, Qt::Key_Control, false); wait(100);
+    check(inst.uiState().beatPlaying, "Ctrl+J starts the beat from the Play page");
+    key(w, Qt::Key_Control, true); key(w, Qt::Key_J, true); key(w, Qt::Key_J, false); key(w, Qt::Key_Control, false); wait(100);
+    w.saveState();
+    QJsonObject sj; store::readJson(store::baseDir() + "/state.json", sj);
+    check(!inst.uiState().beatPlaying && sj["beat"].toArray().size() == kDrums && sj["beat"].toArray()[D_HAT].toString().contains('x'),
+          "the beat is kept in the saved state");
+
+    std::printf("- listening back\n");
+    check(w.togglePlayback() && w.playingBack(), "Play last starts playing the newest recording");
+    wait(300);
+    check(w.togglePlayback(), "and the same button stops it");
+    wait(300);
+    check(!w.playingBack(), "playback has stopped");
+
     std::printf("- panic / health\n");
     key(w, Qt::Key_Q, true); key(w, Qt::Key_A, true); wait(60);
     key(w, Qt::Key_Backspace, true); key(w, Qt::Key_Backspace, false); wait(200);
@@ -245,16 +292,27 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
 // Pictures of every page, for the documentation: `vrequency --audio null --render DIR`.
 int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
     QDir().mkpath(dir);
-    static const char *names[] = {"play", "sound", "backing", "tune", "system", "help"};
+    static const char *files[] = {"0-play", "1-sound", "2-backing", "9-beat", "3-tune", "4-system", "5-help"};
+    static const char *names[] = {"play", "sound", "backing", "beat", "tune", "system", "help"};
     inst.set(S_VOLUME, 0.5f);
     w.setPage(MainWindow::PG_PLAY);
     key(w, Qt::Key_A, true); wait(250);
     key(w, Qt::Key_F, true); // a held slide, so the scope and the strings have something to show
     for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
         w.setPage(p);
+        if (p == MainWindow::PG_BEAT) { // a beat in progress, so the strip and the play line show something
+            static const char *pat[kDrums] = {"x......x..x.....", "....x.......x...", "x.x.x.x.x.x.x.x.", "...............x",
+                                              "............x...", "..x......x......", "..............x.", "................"};
+            for (int d = 0; d < kDrums; ++d)
+                for (int st = 0; st < kDrumSteps; ++st) inst.beatDo(BT_STEP, d, st, pat[d][st] == 'x');
+            inst.set(S_BEATVOL, 0.0f);
+            inst.beatDo(BT_PLAYSTOP);
+        }
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
-        w.shot().save(QString("%1/%2-%3.png").arg(dir).arg(p).arg(names[p]));
+        w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
+        if (p == MainWindow::PG_BEAT) { inst.beatDo(BT_PLAYSTOP); inst.set(S_BEATVOL, 0.7f); wait(60); }
     }
+    (void)names;
     {   // the Glitch mapping with a finger on the pad
         w.setPage(MainWindow::PG_PLAY);
         inst.set(S_XYMAP, XY_GLITCH); wait(60);

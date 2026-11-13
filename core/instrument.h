@@ -6,6 +6,7 @@
 // through uiState()/scope, or — for rare bulk operations (session save/load) —
 // through snapshot()/restore(), which take a short mutex.
 #pragma once
+#include "drums.h"
 #include "fx.h"
 #include "params.h"
 #include "scale.h"
@@ -65,17 +66,22 @@ enum EvType : uint8_t {
     EV_LOOP,       // a = LoopCmd
     EV_BACK,       // a = BackCmd, b = argument
     EV_OCTAVE,     // a = delta (+1 / -1): held notes sweep with it
+    EV_DRUM,       // a = Drum, f = velocity (0 = full): a pad hit; written into the beat while recording
+    EV_BEAT,       // a = BeatCmd, b = drum, c = step
 };
 
 enum Setting {
     S_ROOT, S_SCALE, S_OCTAVE, S_ROWINT, S_BPM, S_VOLUME, S_XYMAP, S_XYHOLD,
     S_BACKMODE, S_BACKSTYLE, S_CHORDBEATS, S_ARPRATE, S_SEVENTH, S_METRO,
     S_BENDRANGE, S_BENDTIME, S_GLIDESCALE, S_BACKVOL, S_LOOPVOL, S_LATENCY,
+    S_KIT, S_BEATVOL,
     S_COUNT
 };
 
 enum LoopCmd { LC_PEDAL, LC_UNDO, LC_CLEAR, LC_PLAYSTOP };
 enum BackCmd { BC_PLAYSTOP, BC_CLEAR, BC_REMOVE_LAST, BC_RESYNC_SOUND, BC_SELECT_SLOT };
+// BT_ERASE: b = drum (-1 = every drum). BT_STEP: b = drum, c = step, d = 0 off / 1 on / 2 toggle.
+enum BeatCmd { BT_PLAYSTOP, BT_REC, BT_ERASE, BT_STEP };
 enum BackMode { BM_PROG, BM_HOLD, BM_DRONE, BM_COUNT };
 enum BackStyle { BS_SUSTAIN, BS_PULSE, BS_ARP_UP, BS_ARP_DOWN, BS_ARP_UPDOWN, BS_COUNT };
 enum LoopState { L_EMPTY, L_COUNTIN, L_REC, L_PLAY, L_OVERDUB, L_STOPPED };
@@ -124,6 +130,8 @@ struct Settings {
     float backVol = 0.7f;
     float loopVol = 0.9f;
     float latencyMs = 0;   // output delay (e.g. Bluetooth): loop recordings are shifted earlier by this
+    int kit = KIT_SOFT;    // drum kit
+    float beatVol = 0.7f;
 };
 
 enum LoopOp : uint8_t { OP_ON, OP_GLIDE, OP_OFF, OP_BEND, OP_XY, OP_PATCH, OP_PARAM };
@@ -150,6 +158,7 @@ struct SessionData {
     int droneMask = 0;
     double loopBeats = 0;
     std::vector<LayerData> layers;
+    uint16_t beat[kDrums] = {0}; // one bit per sixteenth-note step, bit 0 = step 1
 };
 
 struct StringUi {
@@ -174,6 +183,11 @@ struct UiState {
     float loopPos = 0;
     int loopBars = 0, layers = 0, countBeat = 0;
     bool loopFull = false, loopClosing = false;
+    // beat
+    bool beatPlaying = false, beatRec = false;
+    int beatStep = -1;                 // the step sounding now, -1 when stopped
+    uint16_t beatPat[kDrums] = {0};
+    uint32_t drumHits[kDrums] = {0};   // counts every hit of each drum (pads light up on a change)
     // meters
     float peak = 0, limiter = 1;
     int voices = 0;
@@ -199,6 +213,10 @@ public:
     }
     void set(int setting, float v) { Event e; e.type = EV_SET; e.a = (int16_t)setting; e.f = v; push(e); }
     void cmd(uint8_t type, int a = 0, int b = 0) { Event e; e.type = type; e.a = (int16_t)a; e.b = (int16_t)b; push(e); }
+    void hit(int drum, float vel = 1.0f) { Event e; e.type = EV_DRUM; e.a = (int16_t)drum; e.f = vel; push(e); }
+    void beatDo(int cmd, int drum = -1, int step = 0, int arg = 2) {
+        Event e; e.type = EV_BEAT; e.a = (int16_t)cmd; e.b = (int16_t)drum; e.c = (int16_t)step; e.d = (int16_t)arg; push(e);
+    }
     void setPatch(int part, const Patch &p); // lock-free hand-off
     UiState uiState() const;
     void readScope(float *dst, int n) const; // most recent n mono samples
@@ -221,6 +239,7 @@ public:
     const Part &part(int i) const { return parts[i]; }
     const Settings &settings() const { return st; }
     const Crush &crusher() const { return crush; }
+    const DrumKit &drumKit() const { return drums; }
 
 private:
     struct StringState {
@@ -272,6 +291,13 @@ private:
     bool closing = false, loopFull = false;
     uint32_t evSeq = 0;
     int countBeat = 0;
+    // beat
+    DrumKit drums;
+    uint16_t beatPat[kDrums] = {0};
+    bool beatPlaying = false, beatRec = false;
+    long lastDrumStep = -1;
+    long skipStep[kDrums];             // a step just recorded by hand: do not sound it twice
+    uint32_t drumHits[kDrums] = {0};
     // click
     float clickEnv = 0, clickPh = 0, clickFreq = 1500;
     long lastClickBeat = -1;
@@ -335,6 +361,10 @@ private:
     void playLayers(double p0, double p1);
     void resetLayerPart(int li);
     void trigClick(bool accent);
+    void drumHit(int drum, float vel);
+    void beatCmd(int cmd, int drum, int step, int arg);
+    void tickBeat(double b0, double b1);
+    bool transportIdle() const { return !backingActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
 
     void block(float *l, float *r, int n);
     void publish();

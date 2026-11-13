@@ -14,6 +14,7 @@ enum Act {
     A_KEY_UP, A_SCALE_NEXT, A_RANDOM, A_MUTATE, A_UNDO_SOUND, A_FAVOURITE, A_METRO, A_TAP,
     A_BACK_STYLE, A_BACK_MODE, A_BACK_CLEAR, A_BACK_PLAY, A_BACK_REMOVE,
     A_LOOP_UNDO, A_LOOP_PLAY, A_LOOP_CLEAR, A_RECORD, A_HELP, A_XYMAP, A_QUIT,
+    A_BEAT_PLAY, A_BEAT_REC, A_PLAY_LAST,
     A_COUNT
 };
 
@@ -28,6 +29,8 @@ struct KeyMap {
 
     static KeyMap defaults();
     bool stringKey(int qtKey, int &row, int &col) const;
+    bool drumKey(int qtKey, int &drum) const;   // Beat page: Q W E R / A S D F (and U I O P / H J K L) are pads 1-8
+    QString drumKeys(int drum) const;           // e.g. "Q U"
     QString keyFor(int act, bool commandLayer) const; // for the on-screen guide
 
     // Loads `path` over the defaults; writes a fresh file when none exists.

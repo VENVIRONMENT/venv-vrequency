@@ -6,6 +6,8 @@ namespace td {
 
 Instrument::Instrument(float sampleRate) : sr(sampleRate) {
     chorus.init(sr); delay.init(sr); reverb.init(sr); crush.init(sr); limiter.init(sr);
+    drums.init(sr);
+    for (long &s : skipStep) s = -1;
     for (int p = 0; p < kParts; ++p)
         for (int s = 0; s < kSlots; ++s) { slotVoice[p][s] = -1; slotNote[p][s] = 0; }
     for (int s = 0; s < kSlots; ++s) backDesired[s] = -1;
@@ -155,6 +157,7 @@ void Instrument::panic() {
     for (auto &v : voices)
         if (v.active()) v.kill(sr);
     backPlaying = false;
+    beatPlaying = beatRec = false; drums.silence();
     if (loopState == L_COUNTIN || loopState == L_REC || closing) loopClear();
     else if (loopState == L_PLAY || loopState == L_OVERDUB) {
         if (recLayer >= 0) recLayer = -1;
@@ -230,6 +233,8 @@ void Instrument::applySetting(int s, float v) {
     case S_BACKVOL: st.backVol = clampf(v, 0, 1); break;
     case S_LOOPVOL: st.loopVol = clampf(v, 0, 1); break;
     case S_LATENCY: st.latencyMs = clampf(v, 0, 500); break;
+    case S_KIT: st.kit = std::clamp((int)v, 0, kKits - 1); break;
+    case S_BEATVOL: st.beatVol = clampf(v, 0, 1); break;
     default: break;
     }
 }
@@ -275,7 +280,7 @@ void Instrument::handle(const Event &e) {
         case BC_PLAYSTOP:
             backPlaying = !backPlaying;
             if (backPlaying) {
-                if (loopState == L_EMPTY) { beat = 0; progOrigin = 0; }
+                if (loopState == L_EMPTY && !beatPlaying) { beat = 0; progOrigin = 0; }
                 else progOrigin = std::floor(beat / st.chordBeats) * st.chordBeats;
                 lastPulseStep = lastArpStep = -1;
             }
@@ -292,6 +297,70 @@ void Instrument::handle(const Event &e) {
         }
         break;
     case EV_OCTAVE: shiftOctave(e.a); break;
+    case EV_DRUM: drumHit(e.a, e.f > 0 ? e.f : 1.0f); break;
+    case EV_BEAT: beatCmd(e.a, e.b, e.c, e.d); break;
+    }
+}
+
+// -------------------------------------------------------------------- beat
+//
+// One bar of sixteen steps for eight drums, locked to the beat clock: bars start on
+// multiples of four beats, the same grid the backing and the looper use.
+
+void Instrument::drumHit(int drum, float vel) {
+    if (drum < 0 || drum >= kDrums) return;
+    drums.trigger(st.kit, drum, vel);
+    ++drumHits[drum];
+    if (!(beatPlaying && beatRec)) return;
+    // The player hits in time with what they hear, which left the engine latencyMs ago.
+    double pos = beat - st.latencyMs * 0.001 * st.bpm / 60.0;
+    long q = std::lround(pos * 4.0);
+    int step = (int)(((q % kDrumSteps) + kDrumSteps) % kDrumSteps);
+    beatPat[drum] |= (uint16_t)(1u << step);
+    if (q > lastDrumStep) skipStep[drum] = q; // that step is still to come: it has just been heard
+}
+
+void Instrument::beatCmd(int cmd, int drum, int step, int arg) {
+    switch (cmd) {
+    case BT_PLAYSTOP:
+        beatPlaying = !beatPlaying;
+        if (beatPlaying) {
+            if (transportIdle()) { beat = 0; progOrigin = 0; lastDrumStep = -1; }   // start on step 1, now
+            else lastDrumStep = (long)std::floor(beat * 4.0);                       // join the bar in progress
+        } else beatRec = false;
+        for (long &s : skipStep) s = -1;
+        break;
+    case BT_REC:
+        beatRec = !beatRec;
+        if (beatRec && !beatPlaying) beatCmd(BT_PLAYSTOP, 0, 0, 0);
+        break;
+    case BT_ERASE:
+        for (int d = 0; d < kDrums; ++d) if (drum < 0 || drum == d) beatPat[d] = 0;
+        break;
+    case BT_STEP:
+        if (drum >= 0 && drum < kDrums && step >= 0 && step < kDrumSteps) {
+            uint16_t bit = (uint16_t)(1u << step);
+            if (arg == 0) beatPat[drum] &= (uint16_t)~bit;
+            else if (arg == 1) beatPat[drum] |= bit;
+            else beatPat[drum] ^= bit;
+        }
+        break;
+    }
+}
+
+void Instrument::tickBeat(double, double b1) {
+    if (!beatPlaying) return;
+    long step = (long)std::floor(b1 * 4.0);
+    if (step == lastDrumStep) return;
+    lastDrumStep = step;
+    int s = (int)(((step % kDrumSteps) + kDrumSteps) % kDrumSteps);
+    for (int d = 0; d < kDrums; ++d) {
+        if (!(beatPat[d] & (1u << s))) continue;
+        if (skipStep[d] == step) { skipStep[d] = -1; continue; }
+        // straight sixteenths played by a machine sound stiff: off-beat hats a little quieter
+        float vel = (d == D_HAT && (s & 3) != 0) ? 0.7f : 1.0f;
+        drums.trigger(st.kit, d, vel);
+        ++drumHits[d];
     }
 }
 
@@ -305,7 +374,7 @@ void Instrument::chordTap(int degree) {
         if (selSlot >= 0 && selSlot < progLen) { prog[selSlot] = degree; selSlot = -1; }
         else if (progLen < kProgMax) prog[progLen++] = degree;
         if (!backPlaying || !wasActive) {
-            if (loopState == L_EMPTY && !wasActive) { beat = 0; progOrigin = 0; }
+            if (loopState == L_EMPTY && !wasActive && !beatPlaying) { beat = 0; progOrigin = 0; }
             else progOrigin = std::floor(beat / st.chordBeats) * st.chordBeats;
             lastPulseStep = lastArpStep = -1;
             backPlaying = true;
@@ -479,7 +548,7 @@ void Instrument::loopCommit(bool atLoopEnd) {
 void Instrument::loopPedal() {
     switch (loopState) {
     case L_EMPTY:
-        if (backingActive()) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
+        if (backingActive() || beatPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
         else { beat = 0; progOrigin = 0; recStartBeat = 4; lastPulseStep = lastArpStep = -1; }
         loopState = L_COUNTIN;
         break;
@@ -544,7 +613,7 @@ void Instrument::loopPlayStop() {
         for (int i = 0; i < kLayers; ++i) partOff(2 + i, false);
         loopState = L_STOPPED;
     } else if (loopState == L_STOPPED && nLayers > 0) {
-        loopStart = backingActive() ? std::ceil(beat / 4.0) * 4.0 : beat;
+        loopStart = (backingActive() || beatPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
         for (int i = 0; i < nLayers; ++i) resetLayerPart(i);
         loopState = L_PLAY;
     }
@@ -577,7 +646,7 @@ void Instrument::tickLoop(double b0, double b1) {
     // beat clicks (count-in always, metronome when enabled)
     double m = std::ceil(b0);
     bool onBeat = m < b1;
-    if (onBeat && (loopState == L_COUNTIN || st.metro)) trigClick(((long)m) % 4 == 0);
+    if (onBeat && (loopState == L_COUNTIN || st.metro || (beatPlaying && beatRec))) trigClick(((long)m) % 4 == 0);
 
     switch (loopState) {
     case L_COUNTIN:
@@ -633,6 +702,7 @@ void Instrument::block(float *l, float *r, int n) {
     double b0 = beat, b1 = beat + (double)st.bpm / 60.0 / sr * n;
     tickLoop(b0, b1);
     tickBacking(b0, b1);
+    tickBeat(b0, b1);
     beat = b1;
 
     parts[0].gain = 1.0f;
@@ -664,6 +734,18 @@ void Instrument::block(float *l, float *r, int n) {
             dryL[i] += x * gl; dryR[i] += x * gr;
             sC[i] += x * c; sD[i] += x * d; sR[i] += x * rv;
         }
+    }
+
+    if (drums.active()) {
+        float dl[kBlock], dr[kBlock];
+        for (int i = 0; i < n; ++i) dl[i] = dr[i] = 0;
+        drums.render(st.kit, dl, dr, n);
+        const float g = st.beatVol * 0.85f, rv = drums.reverbSend(st.kit);
+        for (int i = 0; i < n; ++i) {
+            dryL[i] += dl[i] * g; dryR[i] += dr[i] * g;
+            sR[i] += 0.5f * (dl[i] + dr[i]) * g * rv;
+        }
+        ++nActive; // keeps the effects running and the idle shortcut off
     }
 
     // Nothing sounding and every effect tail has died away: skip the effects
@@ -789,6 +871,9 @@ void Instrument::publish() {
     } else u.loopPos = 0;
     u.layers = nLayers; u.countBeat = countBeat;
     u.loopFull = loopFull; u.loopClosing = closing;
+    u.beatPlaying = beatPlaying; u.beatRec = beatRec;
+    u.beatStep = beatPlaying ? (int)((((long)std::floor(beat * 4.0) % kDrumSteps) + kDrumSteps) % kDrumSteps) : -1;
+    for (int d = 0; d < kDrums; ++d) { u.beatPat[d] = beatPat[d]; u.drumHits[d] = drumHits[d]; }
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
     u.sustain = sustain; u.bend = parts[0].bend;
     u.xyX = xyX; u.xyY = xyY; u.xyTouch = xyTouch;
@@ -819,6 +904,7 @@ void Instrument::snapshot(SessionData &out) {
     for (int i = 0; i < kProgMax; ++i) out.prog[i] = prog[i];
     out.progLen = progLen; out.holdChord = holdChord; out.droneMask = droneMask;
     out.loopBeats = nLayers > 0 ? loopLen : 0;
+    for (int d = 0; d < kDrums; ++d) out.beat[d] = beatPat[d];
     out.layers.clear();
     for (int i = 0; i < nLayers; ++i) {
         LayerData ld;
@@ -841,6 +927,8 @@ void Instrument::restore(const SessionData &in) {
     for (int i = 0; i < kProgMax; ++i) prog[i] = ((in.prog[i] % 7) + 7) % 7;
     holdChord = in.holdChord; droneMask = in.droneMask & 0x7f; selSlot = -1;
     backPlaying = false;
+    st.kit = std::clamp(st.kit, 0, kKits - 1);
+    for (int d = 0; d < kDrums; ++d) beatPat[d] = in.beat[d];
     nLayers = 0;
     if (in.loopBeats >= 4 && !in.layers.empty()) {
         loopLen = std::min(in.loopBeats, kMaxLoopBeats);

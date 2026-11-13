@@ -24,7 +24,7 @@ its own volts/div and time/div (they follow the signal and never change the pitc
 frequency and level. Touching it is the X-Y sound control.
 
 More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
-[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png).
+[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Beat](docs/shots/9-beat.png).
 
 ## Play it in ten seconds
 
@@ -63,9 +63,12 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Backing**: diatonic triads/sevenths from the scale. Tap up to eight chords for a looping
   progression, or latch one chord, or latch drone notes. Sustain / pulse / arpeggio styles.
   The backing keeps the sound it started with while you change the lead.
+- **Beat**: a drum machine page. Eight synthesised drums (no samples) in three kits, eight big pads
+  played by touch or from the keyboard, one bar of sixteen steps written by playing with Rec on.
+  Locked to the same bar lines as the backing and the looper.
 - **Looper**: event-based (notes, slides, bends, XY moves, sound changes), count-in, bar-snapped,
   up to 64 bars, six layers, undo, stop/start, clear. Each layer keeps its own sound. Follows tempo.
-- **Saving**: sounds, favourites, sessions (settings + sounds + backing + loops) and WAV export
+- **Saving**: sounds, favourites, sessions (settings + sounds + backing + loops + beat), WAV export and play-back of the last recording
   under `~/vrequency/`. Key bindings are editable in `~/vrequency/keymap.json`.
 - **Listen** (optional): estimates key and tempo from the default audio input with confidence
   values. *This Hackberry has no microphone*, so it reports that instead of guessing.
@@ -84,9 +87,9 @@ machine. Nothing is installed system-wide and nothing starts at boot.
 Tests:
 
 ```bash
-./build/vrequency_tests                                   # 360 engine checks (offline rendering)
+./build/vrequency_tests                                   # 396 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 54 checks through the real app + audio thread
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 69 checks through the real app + audio thread
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 

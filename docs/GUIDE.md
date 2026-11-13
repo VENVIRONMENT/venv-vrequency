@@ -1,6 +1,6 @@
 # How to use venv vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.5.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.6.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -14,12 +14,13 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 5. [The scope and touch pad](#5-the-scope-and-touch-pad)
 6. [Sounds](#6-sounds)
 7. [Backing chords](#7-backing-chords)
-8. [The loop pedal](#8-the-loop-pedal)
-9. [Key, scale and tempo](#9-key-scale-and-tempo)
-10. [Saving and recording](#10-saving-and-recording)
-11. [System page](#11-system-page)
-12. [All the keys](#12-all-the-keys)
-13. [When something is wrong](#13-when-something-is-wrong)
+8. [Beat](#8-beat)
+9. [The loop pedal](#9-the-loop-pedal)
+10. [Key, scale and tempo](#10-key-scale-and-tempo)
+11. [Saving and recording](#11-saving-and-recording)
+12. [System page](#12-system-page)
+13. [All the keys](#13-all-the-keys)
+14. [When something is wrong](#14-when-something-is-wrong)
 
 ## 1. Start and quit
 
@@ -225,7 +226,47 @@ Also on the Backing page:
 From the keyboard, hold `Alt` and press `Z` to `M` for chords one to seven. `$` turns the whole
 bottom row into chord keys until you press it again.
 
-## 8. The loop pedal
+## 8. Beat
+
+![The Beat page](shots/9-beat.png)
+
+The Beat page is a small drum machine: eight drums, one bar of sixteen steps, three kits.
+
+**Play the pads.** Tap a pad, or use the keyboard:
+
+| Pads | Left hand | Right hand |
+|---|---|---|
+| 1 to 4: Kick, Snare, Hat, Open hat | `Q` `W` `E` `R` | `U` `I` `O` `P` |
+| 5 to 8: Clap, Rim, Tom, Cowbell | `A` `S` `D` `F` | `H` `J` `K` `L` |
+
+Each pad shows its two keys in the corner. Two keys per pad let you play fast repeats with two
+fingers. While you are on this page the bottom row (`Z`‥`M`) still plays the low string.
+
+**Make a beat.**
+
+1. Tap **Rec** (or press `Enter`). The beat starts and the metronome clicks.
+2. Play the pads in time. Each hit is written into the bar at the nearest step and plays back
+   the next time round. The strip at the top shows the whole bar; the box moving across it is
+   the step that is sounding.
+3. Tap **Rec** again to stop writing. The beat keeps playing, and the pads now play without
+   changing it.
+
+**Fix it.** Tap **Erase**, then the pad of the drum you want to clear. Only that drum's hits go.
+
+**Play / Stop** (`Space` on this page) starts and stops the beat. From any other page, `Ctrl`+`J`
+starts and stops it and `Ctrl`+`I` switches Rec.
+
+**Kit** chooses the drum sounds: Soft (round and quiet, with a little room), Crunchy (driven and
+lo-fi) or Glitchy (zaps and crushed noise). **Beat volume** and **Tempo** are underneath.
+
+The beat follows the tempo and shares its bar lines with the backing chords and the loop pedal, so
+they stay together whichever you start first. The Glitch touch-pad mapping crushes the drums along
+with everything else. The beat is saved when you quit and inside sessions.
+
+Things it does not do yet: more than one bar, placing a hit by tapping the strip, and louder or
+quieter hits. The loop pedal does not record the pads.
+
+## 9. The loop pedal
 
 One button, or the `Enter` key, does everything. The Loop button on the Play page always says what
 the next tap will do.
@@ -246,7 +287,7 @@ and the loop follows the tempo if you change it.
 
 Loop volume is on the System page.
 
-## 9. Key, scale and tempo
+## 10. Key, scale and tempo
 
 ![The Tune page](shots/3-tune.png)
 
@@ -264,7 +305,7 @@ Loop volume is on the System page.
 **Listen** tries to work out the key and tempo of music playing nearby. It needs a microphone,
 and this Hackberry does not have one, so it will say so.
 
-## 10. Saving and recording
+## 11. Saving and recording
 
 Everything is kept in the `vrequency` folder in your home folder.
 
@@ -272,19 +313,22 @@ Everything is kept in the `vrequency` folder in your home folder.
 |---|---|---|
 | Your setup | Automatic when you quit | `state.json` |
 | A favourite sound | Sound page, Save, or `Ctrl`+`F` | `favourites/` |
-| A session: sounds, backing and loops together | System page, Save session | `sessions/` |
-| A recording of what you hear | System page, Record WAV, or `Ctrl`+`E`. The same again stops it. | `recordings/` |
+| A session: sounds, backing, loops and the beat together | System page, Save session | `sessions/` |
+| A recording of what you hear | System page, Record, or `Ctrl`+`E`. The same again stops it. | `recordings/` |
 
-To load a session, tap it in the list on the System page, then start the loop or backing.
+**Listening back.** System page, **Play last** (or `Ctrl`+`W`) plays your newest recording through
+the speaker. The same again stops it. You can play along while it runs.
 
-## 11. System page
+To load a session, tap it in the list on the System page, then start the loop, backing or beat.
+
+## 12. System page
 
 ![The System page](shots/4-system.png)
 
 - **Master volume** and **Loop volume**.
 - **Touch pad mapping** and **Hold**: the same as the buttons on the scope.
 - **Chord row**: the bottom letter row plays chords (same as `$`).
-- **Record WAV**, **Save session** and the list of saved sessions.
+- **Record**, **Play last** (listen to the newest recording), **Save session** and the list of saved sessions.
 - **Key test**: shows which keys the keyboard reports, for checking how many it can read at once.
 - **Status**: the audio device in use, how hard the engine is working, and where files are kept.
 - **Panic**: all notes off (same as `Backspace`).
@@ -293,7 +337,7 @@ To load a session, tap it in the list on the System page, then start the loop or
 - **Factory sounds**: restores slots 1 to 0 and puts back any deleted dream sounds.
 - **Quit**.
 
-## 12. All the keys
+## 13. All the keys
 
 Playing:
 
@@ -324,12 +368,23 @@ Commands, with `Ctrl` held:
 | `T` | Tap tempo | `L` | Loop play / stop |
 | `M` | Metronome | `D` | Clear loop |
 | `G` | Next touch-pad mapping | `E` | Record WAV |
-| `H` | Help | `Q` | Quit |
+| `J` | Beat play / stop | `W` | Play last recording |
+| `I` | Beat Rec on / off | `Q` | Quit |
+| `H` | Help | | |
+
+On the Beat page only:
+
+| Key | Does |
+|---|---|
+| `Q` `W` `E` `R`, or `U` `I` `O` `P` | Pads 1 to 4 |
+| `A` `S` `D` `F`, or `H` `J` `K` `L` | Pads 5 to 8 |
+| `Space` | Beat play / stop |
+| `Enter` | Rec on / off |
 
 To change any binding, edit `keymap.json` in the `vrequency` folder and restart the app. Deleting
 that file restores the defaults.
 
-## 13. When something is wrong
+## 14. When something is wrong
 
 | Problem | Try this |
 |---|---|
@@ -339,6 +394,7 @@ that file restores the defaults.
 | Loops play back early or late | System page, Loop fix. Adjust in steps until a recorded bar lines up. |
 | Some keys do not sound when held together | Open Key test on the System page and hold the same keys. A key missing there is a limit of the keyboard, not the synth. |
 | A slot was overwritten by mistake | Storing to a slot cannot be undone. Factory sounds on the System page puts the ten originals back, replacing anything else you stored in slots. |
+| My drum hits land on the wrong step | The Bluetooth speaker is late, so you hit late. System page, Loop fix moves recorded hits earlier; raise it if hits land a step late, lower it if early. |
 | The sound is distorted or quiet with "Limit" showing | Lower Master volume, or the sound's Drive. |
 
 To reconnect the speaker from a terminal:

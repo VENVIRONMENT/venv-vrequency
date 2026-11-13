@@ -9,6 +9,7 @@
 #pragma once
 #include "instrument.h"
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
@@ -26,6 +27,8 @@ QJsonObject settingsToJson(const td::Settings &s);
 td::Settings settingsFromJson(const QJsonObject &o);
 QJsonObject sessionToJson(const td::SessionData &s);
 bool sessionFromJson(const QJsonObject &o, td::SessionData &s);
+QJsonArray beatToJson(const uint16_t *beat);
+void beatFromJson(const QJsonArray &a, uint16_t *beat);
 
 bool writeJson(const QString &path, const QJsonObject &o);
 bool readJson(const QString &path, QJsonObject &o);

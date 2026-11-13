@@ -55,6 +55,7 @@ QJsonObject settingsToJson(const td::Settings &s) {
     o["arpRate"] = s.arpRate; o["seventh"] = s.seventh; o["metro"] = s.metro;
     o["bendRange"] = s.bendRange; o["bendTime"] = s.bendTime; o["glideScale"] = s.glideScale;
     o["backVol"] = s.backVol; o["loopVol"] = s.loopVol; o["latencyMs"] = s.latencyMs;
+    o["kit"] = s.kit; o["beatVol"] = s.beatVol;
     return o;
 }
 
@@ -80,7 +81,29 @@ td::Settings settingsFromJson(const QJsonObject &o) {
     s.backVol = (float)qBound(0.0, o["backVol"].toDouble(0.7), 1.0);
     s.loopVol = (float)qBound(0.0, o["loopVol"].toDouble(0.9), 1.0);
     s.latencyMs = (float)qBound(0.0, o["latencyMs"].toDouble(0), 500.0);
+    s.kit = qBound(0, o["kit"].toInt(0), td::kKits - 1);
+    s.beatVol = (float)qBound(0.0, o["beatVol"].toDouble(0.7), 1.0);
     return s;
+}
+
+// The beat: one string of sixteen characters per drum, "x" for a hit and "." for a rest.
+QJsonArray beatToJson(const uint16_t *beat) {
+    QJsonArray a;
+    for (int d = 0; d < td::kDrums; ++d) {
+        QString row;
+        for (int s = 0; s < td::kDrumSteps; ++s) row += (beat[d] >> s) & 1 ? 'x' : '.';
+        a.append(row);
+    }
+    return a;
+}
+
+void beatFromJson(const QJsonArray &a, uint16_t *beat) {
+    for (int d = 0; d < td::kDrums; ++d) {
+        beat[d] = 0;
+        const QString row = d < a.size() ? a[d].toString() : QString();
+        for (int s = 0; s < td::kDrumSteps && s < row.size(); ++s)
+            if (row[s] == 'x') beat[d] |= (uint16_t)(1u << s);
+    }
 }
 
 QJsonObject sessionToJson(const td::SessionData &s) {
@@ -109,6 +132,7 @@ QJsonObject sessionToJson(const td::SessionData &s) {
         layers.append(lo);
     }
     o["layers"] = layers;
+    o["beat"] = beatToJson(s.beat);
     return o;
 }
 
@@ -123,6 +147,7 @@ bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
     s.holdChord = o["holdChord"].toInt(-1);
     s.droneMask = o["droneMask"].toInt(0);
     s.loopBeats = o["loopBeats"].toDouble(0);
+    beatFromJson(o["beat"].toArray(), s.beat);
     s.layers.clear();
     uint32_t seq = 0;
     for (const QJsonValue &lv : o["layers"].toArray()) {

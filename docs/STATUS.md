@@ -1,12 +1,12 @@
 # Status — what works, what is unproven, what is missing
 
-Version 0.5.0, 2026-11-13 (0.4.0 plus five sine-based "dream" sounds, offered as favourites; 0.4.0 added the Glitch touch-pad mapping). "Tested" below means an automated test measured it; it does **not** mean a
+Version 0.6.0, 2026-11-13 (0.5.0 plus a Beat page with eight drum pads in three kits, and a Play last button for listening back to a recording; 0.5.0 added five sine-based "dream" sounds, 0.4.0 the Glitch touch-pad mapping). "Tested" below means an automated test measured it; it does **not** mean a
 person heard it or pressed a physical key. Those checks are listed separately.
 
 ## Working and covered by automated tests
 
-`vrequency_tests` renders audio offline and measures it (360 checks). `vrequency --selftest` drives the real
-application with real key and touch events while the real audio thread runs (54 checks).
+`vrequency_tests` renders audio offline and measures it (396 checks). `vrequency --selftest` drives the real
+application with real key and touch events while the real audio thread runs (69 checks).
 
 | Area | What the tests establish |
 |---|---|
@@ -21,6 +21,8 @@ application with real key and touch events while the real audio thread runs (54 
 | Backing | Diatonic triads and sevenths named and built correctly; a tapped I–IV–V–IV progression loops in tempo under a live melody; remove / replace / stop / start / clear; hold and drone modes; arpeggio; backing keeps its sound when the lead changes |
 | Looper | Count-in, bar snap, playback, overdub, undo, stop/start, clear; a recorded slide replays as a slide; an 18-second loop; a layer keeps the sound it was recorded with |
 | Glitch | With the pad down the wave becomes flat steps with only a few levels left, the note is still present, loudness stays in range and inside full scale; the grit is the same at low volume; lifting the finger, changing mapping or panic restores the clean sound; Hold latches it |
+| Beat | All 24 drum sounds exist, end in silence and differ between kits; a pad hit sounds inside 30 ms; steps fall on the tempo grid (checked to about 20 ms) and follow a tempo change; hits played with Rec on land on the nearest step, are not sounded twice, and play back; a 200 ms output delay is compensated; erase, stop and panic work; starting the backing does not restart the bar; every drum on every step stays inside full scale; pads, pad keys, Rec, Erase, kit, Space and Enter work through the app; the beat is saved in the state file and in sessions |
+| Listening back | Play last starts the system player on the newest recording and the same button stops it (the test does not check what comes out of the speaker) |
 | Live control | XY filter and vibrato mappings, pitch bend, sustain; touch on a string plays and slides (synthetic touch events) |
 | Safety | Master output cannot exceed full scale even with a deliberately abusive sound; panic frees every voice |
 | Files | Favourites, sessions (key, sounds, progression, loop) and settings save and load back the same; WAV export contains the audio that was played |
@@ -29,7 +31,7 @@ application with real key and touch events while the real audio thread runs (54 
 
 Implemented but with **no automated test**: loops following a tempo change, bends and XY moves inside loops,
 voice stealing at the 28-voice limit (benchmarked for speed, not checked for clicks), releasing all notes
-when the window loses focus, the scope's frequency readout, trigger and auto-ranging (checked by eye on rendered pictures only), the Glitch colour streaks (seen on one rendered picture only), Glitch moves replayed from inside a loop, pulse and up/down arpeggio styles, the on-screen sound editor's individual controls.
+when the window loses focus, the scope's frequency readout, trigger and auto-ranging (checked by eye on rendered pictures only), the Glitch colour streaks (seen on one rendered picture only), Glitch moves replayed from inside a loop, pulse and up/down arpeggio styles, the pads lighting up when a drum sounds, the beat while a loop is recording or playing, old `keymap.json` files picking up the new key bindings, the on-screen sound editor's individual controls.
 
 ## Measured on this device
 
@@ -74,6 +76,9 @@ Nobody has yet confirmed any of these. See the test list at the end of this file
 - **Windowed mode** (`--windowed`) gets an odd size from GNOME on this screen; full screen is the default and is what was designed.
 - **Key remapping** is by editing `~/vrequency/keymap.json`; there is no on-screen editor.
 - **WAV export** records what you play from the moment you press record; it cannot render a loop offline after the fact.
+- **Beat** is one bar of sixteen steps. Hits are written by playing the pads with Rec on; the strip is a display and cannot be tapped. Every hit has the same loudness (off-beat hats are a little quieter). The loop pedal does not record the pads.
+- **Drum sounds were rebuilt inside the engine** from the sketches that were auditioned, so they are close to those clips but not identical; the hi-hat repeats and snare stutters in the glitchy sketch were part of that demo's pattern and are not a feature.
+- **Play last** uses the system's `pw-play` (or `aplay`); it plays the newest file only, with no list to choose from.
 - **Looper layers** all share one loop length (the first recording sets it).
 
 ## Not implemented
@@ -109,6 +114,10 @@ Start with `vrequency`. If there is no sound, check that GNOME's sound output is
 | 9 | Drag a finger across the scope | Sound changes with the finger; a square cursor follows it | |
 | 9c | Tap the Filter button on the scope until it says Glitch, hold a note, drag on the scope | Sound turns rough and digital while touched, coloured streaks trail from the wave, both stop when you lift | Tell me if it is too harsh, too quiet, or the colours are wrong |
 | 9d | Sound page, tap Haze (then Fuzz, Teeth, Bend, Grain) in Favourites, hold notes and slide | Soft, slow, washed sound; the scope draws a round wave | Tell me which are too quiet, too washed out or not buzzy enough. Nobody has heard these on the device yet |
+| 9e | Beat tab. Tap each pad, then press `Q W E R` and `A S D F` | Eight different drum sounds, each pad flashes | Tell me which sounds are wrong or too loud or quiet. Nobody has heard the drums on the device yet |
+| 9f | Beat tab: `Enter`, play kick and snare in time with the click for two bars, `Enter` again | Your hits appear in the strip and keep playing | If hits land a step early or late, change System → Loop fix and tell me the value that works |
+| 9g | Kit + on the Beat page while the beat plays | The same beat with crunchy, then glitchy sounds | |
+| 9h | System → Record, play a little, Record again, then Play last | You hear what you just played | Tell me what the message on screen says |
 | 9b | Hold a low note, then a high one | The trace stays still and the ms/div readout steps by itself; pitch is unaffected | |
 | 10 | `Ctrl` + `R` a few times, `Ctrl` + `Z` | New sounds each time; undo brings the last one back | |
 | 11 | Menu → System → Key test, then try `Z`+`S`+`W`, `Space`+`Z`+`X`, `Alt`+`A`+`J` | Only the keys you hold are listed | A key you did not press appears: the keyboard ghosts on that combination |
