@@ -99,7 +99,8 @@ void Instrument::keyDown(int s, int col, bool chromatic) {
     for (int i = 0; i < ss.n; ++i)
         if (ss.col[i] == col) return; // already held (repeat)
     if (ss.n >= kMaxHeld) return;
-    float pitch = (float)st.tuning.noteFor(s, col, chromatic);
+    // low byte = column (pitch); high bits identify the source (keyboard / touch)
+    float pitch = (float)st.tuning.noteFor(s, col & 0xff, chromatic);
     ss.col[ss.n] = col; ss.pitch[ss.n] = pitch; ++ss.n;
     ss.pendingOff = false;
     // A string that is already sounding slides; a silent one attacks.
@@ -220,6 +221,7 @@ void Instrument::applySetting(int s, float v) {
     case S_GLIDESCALE: st.glideScale = clampf(v, 0, 4); break;
     case S_BACKVOL: st.backVol = clampf(v, 0, 1); break;
     case S_LOOPVOL: st.loopVol = clampf(v, 0, 1); break;
+    case S_LATENCY: st.latencyMs = clampf(v, 0, 500); break;
     default: break;
     }
 }
@@ -402,8 +404,11 @@ void Instrument::loopRecord(uint8_t op, int slot, float a, float b) {
     bool isOff = op == OP_OFF;
     if (ly.n >= kLayerEvents - 16 && !isOff) { loopFull = true; return; }
     if (ly.n >= kLayerEvents) return;
-    double pos = beat - loopStart;
+    // The player reacts to what they hear, which left the engine latencyMs ago:
+    // place the event where it was meant to be.
+    double pos = beat - loopStart - st.latencyMs * 0.001 * st.bpm / 60.0;
     if (loopState != L_REC && loopLen > 0) { pos = std::fmod(pos, loopLen); if (pos < 0) pos += loopLen; }
+    else if (pos < 0) pos = 0;
     LoopEv &e = ly.ev[ly.n++];
     e.beat = pos; e.op = op; e.slot = (uint8_t)slot; e.a = a; e.b = b; e.seq = evSeq++;
 }
@@ -632,9 +637,11 @@ void Instrument::block(float *l, float *r, int n) {
     float dryL[kBlock], dryR[kBlock], sC[kBlock], sD[kBlock], sR[kBlock], tmp[kBlock];
     for (int i = 0; i < n; ++i) dryL[i] = dryR[i] = sC[i] = sD[i] = sR[i] = 0;
 
+    int nActive = 0;
     for (int vi = 0; vi < kVoices; ++vi) {
         Voice &v = voices[vi];
         if (!v.active()) continue;
+        ++nActive;
         int p = v.part;
         v.render(parts[p], sr, tmp, n);
         float gl = v.panL, gr = v.panR;
@@ -644,6 +651,19 @@ void Instrument::block(float *l, float *r, int n) {
             dryL[i] += x * gl; dryR[i] += x * gr;
             sC[i] += x * c; sD[i] += x * d; sR[i] += x * rv;
         }
+    }
+
+    // Nothing sounding and every effect tail has died away: skip the effects
+    // entirely (saves battery while the instrument sits idle).
+    bool recording = recOn.load(std::memory_order_relaxed);
+    if (nActive == 0 && clickEnv <= 1e-4f && silentBlocks > 600 && !recording) {
+        for (int i = 0; i < n; ++i) l[i] = r[i] = 0;
+        uint32_t sw0 = scopeW.load(std::memory_order_relaxed);
+        for (int i = 0; i < n; ++i) scope[(sw0 + i) & (kScopeSize - 1)] = 0;
+        scopeW.store(sw0 + n, std::memory_order_release);
+        peakHold *= 0.98f;
+        frames += n;
+        return;
     }
 
     const float *LP = parts[0].patch.p;
@@ -679,8 +699,9 @@ void Instrument::block(float *l, float *r, int n) {
     }
     scopeW.store(sw + n, std::memory_order_release);
     if (pk > peakHold) peakHold = pk; else peakHold *= 0.98f;
+    if (nActive == 0 && pk < 1e-6f) ++silentBlocks; else silentBlocks = 0;
 
-    if (recOn.load(std::memory_order_relaxed)) {
+    if (recording) {
         uint32_t w = recW.load(std::memory_order_relaxed), rd = recR.load(std::memory_order_acquire);
         const uint32_t cap = (uint32_t)(recBuf.size() / 2);
         for (int i = 0; i < n; ++i) {
@@ -735,7 +756,7 @@ void Instrument::publish() {
         u.str[s].note = v >= 0 ? voices[v].note : 0;
         u.str[s].target = v >= 0 ? voices[v].target : 0;
         u.str[s].held = strings[s].n;
-        u.str[s].topCol = strings[s].n > 0 ? strings[s].col[strings[s].n - 1] : -1;
+        u.str[s].topCol = strings[s].n > 0 ? (strings[s].col[strings[s].n - 1] & 0xff) : -1;
     }
     u.set = st;
     u.beat = beat;

@@ -70,7 +70,7 @@ enum EvType : uint8_t {
 enum Setting {
     S_ROOT, S_SCALE, S_OCTAVE, S_ROWINT, S_BPM, S_VOLUME, S_XYMAP, S_XYHOLD,
     S_BACKMODE, S_BACKSTYLE, S_CHORDBEATS, S_ARPRATE, S_SEVENTH, S_METRO,
-    S_BENDRANGE, S_BENDTIME, S_GLIDESCALE, S_BACKVOL, S_LOOPVOL,
+    S_BENDRANGE, S_BENDTIME, S_GLIDESCALE, S_BACKVOL, S_LOOPVOL, S_LATENCY,
     S_COUNT
 };
 
@@ -123,6 +123,7 @@ struct Settings {
     float glideScale = 1;  // multiplies each patch's glide time
     float backVol = 0.7f;
     float loopVol = 0.9f;
+    float latencyMs = 0;   // output delay (e.g. Bluetooth): loop recordings are shifted earlier by this
 };
 
 enum LoopOp : uint8_t { OP_ON, OP_GLIDE, OP_OFF, OP_BEND, OP_XY, OP_PATCH, OP_PARAM };
@@ -290,6 +291,7 @@ private:
     std::atomic<uint32_t> recW{0}, recR{0}, recDrops{0};
     std::atomic<bool> recOn{false};
     float peakHold = 0;
+    int silentBlocks = 0;
     uint64_t frames = 0;
 
     // ---- audio-thread internals ----
