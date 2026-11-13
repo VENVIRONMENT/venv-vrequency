@@ -608,7 +608,7 @@ static Clip noteClip(float note, double on, double off, int bars = 1) {
 }
 
 static void put(TrackData &t, int lane, int clip, int bar, int bars = 0) {
-    Placement p = placeClip(t.clips[clip], bar);
+    Placement p = placeClip(*t.clips[clip], bar);
     p.clip = clip;
     if (bars > 0) p.bars = bars;
     t.lane[lane].push_back(p);
@@ -648,10 +648,31 @@ static void testTrack() {
         CHECK(pieceAt(p, 2.5, &st) == 2 && st == 2.0, "beat 2.5 falls in the third piece");
         resetPieces(p, c);
         CHECK(p.pieces.size() == 1 && p.pieces[0].src == 0.0, "reset undoes every cut");
-        TrackData t; t.clips.push_back(c);
+        TrackData t; addClip(t, c);
         put(t, LN_BEAT, 0, 2, 2);
         CHECK(!laneFree(t, LN_BEAT, 3, 1) && !laneFree(t, LN_BEAT, 1, 2) && laneFree(t, LN_BEAT, 4, 1) && laneFree(t, LN_BEAT, 0, 2), "placements may not overlap");
         CHECK(laneFree(t, LN_BEAT, 3, 1, 0) && placementAt(t, LN_BEAT, 3) == 0 && placementAt(t, LN_BEAT, 4) == -1, "a placement can be moved over itself");
+        // split at a bar line and join again
+        Clip two = noteClip(60, 0.0, 7.0, 2);
+        TrackData s; int ci = addClip(s, two);
+        put(s, LN_LOOPA, ci, 0, 4); // two passes
+        cutPiece(s.lane[LN_LOOPA][0], 4.0);
+        movePiece(s.lane[LN_LOOPA][0], 0, 1); // heard: bar 2 of the clip, then bar 1
+        const Placement whole = s.lane[LN_LOOPA][0];
+        CHECK(splitPlacement(s, LN_LOOPA, 0, 1) && s.lane[LN_LOOPA].size() == 2, "a placed clip splits at a bar line");
+        CHECK(!splitPlacement(s, LN_LOOPA, 0, 0) && !splitPlacement(s, LN_LOOPA, 1, 4), "but not at its own edges");
+        const Placement &lft = s.lane[LN_LOOPA][0], &rgt = s.lane[LN_LOOPA][1];
+        CHECK(lft.bar == 0 && lft.bars == 1 && rgt.bar == 1 && rgt.bars == 3, "into bars 1 and 2 to 4");
+        bool sameSound = true;
+        for (double x = 0.1; x < 12.0; x += 0.25) // bars 2 to 4 as heard before and after
+            if (std::fabs(sourceAt(whole, std::fmod(4.0 + x, 8.0)) - sourceAt(rgt, std::fmod(x, 8.0))) > 1e-6) sameSound = false;
+        CHECK(sameSound && near((float)piecesLength(rgt), 8.0f, 1e-6f), "the right half carries on from where the left stops");
+        CHECK(joinPlacements(s, LN_LOOPA, 0) && s.lane[LN_LOOPA].size() == 1 && s.lane[LN_LOOPA][0].bars == 4, "and the two join back into one");
+        put(s, LN_LOOPA, ci, 4, 2);
+        CHECK(!joinPlacements(s, LN_LOOPA, 0), "a fresh copy does not continue a reordered clip, so they do not join");
+        TrackData s2; ci = addClip(s2, two);
+        put(s2, LN_LOOPA, ci, 0); put(s2, LN_LOOPA, ci, 2);
+        CHECK(joinPlacements(s2, LN_LOOPA, 0) && s2.lane[LN_LOOPA][0].bars == 4, "a clip and its repeat join into one long one");
         CHECK(laneTakes(LN_LOOPB, CK_LOOP) && laneTakes(LN_LOOPA, CK_LOOP) && !laneTakes(LN_BEAT, CK_LOOP) && !laneTakes(LN_LOOPA, CK_CHORDS), "each kind of clip has its lanes");
     }
 
@@ -683,7 +704,7 @@ static void testTrack() {
         Rig r;
         r.inst.set(S_BPM, 120); // one bar = 2 s
         TrackData t; t.bars = 2;
-        t.clips.push_back(kickSnareClip());
+        addClip(t, kickSnareClip());
         put(t, LN_BEAT, 0, 0);
         r.inst.setTrack(share(t));
         r.run(0.2);
@@ -707,7 +728,7 @@ static void testTrack() {
         Rig r;
         r.inst.set(S_BPM, 120);
         TrackData t; t.bars = 4;
-        t.clips.push_back(kickSnareClip());
+        addClip(t, kickSnareClip());
         put(t, LN_BEAT, 0, 1, 3);
         r.inst.setTrack(share(t));
         r.inst.trackDo(TC_PLAY, 0);
@@ -721,7 +742,7 @@ static void testTrack() {
         Rig r;
         r.inst.set(S_BPM, 120);
         TrackData t; t.bars = 1;
-        t.clips.push_back(kickSnareClip());
+        addClip(t, kickSnareClip());
         put(t, LN_BEAT, 0, 0);
         Placement &p = t.lane[LN_BEAT][0];
         cutPiece(p, 2.0);
@@ -753,7 +774,7 @@ static void testTrack() {
 
         // repeat: both halves play the kick half
         Placement &q = t.lane[LN_BEAT][0];
-        resetPieces(q, t.clips[0]); cutPiece(q, 2.0); repeatPiece(q, 0);
+        resetPieces(q, *t.clips[0]); cutPiece(q, 2.0); repeatPiece(q, 0);
         r.inst.setTrack(share(t));
         s0 = u.drumHits[D_SNARE]; k0 = u.drumHits[D_KICK];
         r.inst.trackDo(TC_ONCE, 0);
@@ -767,8 +788,8 @@ static void testTrack() {
         Rig r;
         r.inst.set(S_BPM, 120);
         TrackData t; t.bars = 2;
-        t.clips.push_back(noteClip(69, 0.0, 2.0));
-        t.clips.push_back(noteClip(57, 1.0, 3.0));
+        addClip(t, noteClip(69, 0.0, 2.0));
+        addClip(t, noteClip(57, 1.0, 3.0));
         put(t, LN_LOOPA, 0, 1);
         put(t, LN_LOOPB, 1, 1);
         r.inst.setTrack(share(t));
@@ -796,7 +817,7 @@ static void testTrack() {
         TrackData t; t.bars = 2;
         Clip c = noteClip(69, 0.0, 3.9);
         c.layers[0].ev.pop_back(); // never released
-        t.clips.push_back(c);
+        addClip(t, c);
         put(t, LN_LOOPA, 0, 0);
         r.inst.setTrack(share(t));
         r.inst.trackDo(TC_PLAY, 0);
@@ -821,7 +842,7 @@ static void testTrack() {
         Clip c; c.kind = CK_CHORDS; c.bars = 2;
         c.prog[0] = 0; c.prog[1] = 3; c.progLen = 2; c.chordBeats = 4; c.backStyle = BS_SUSTAIN; c.patch = purePatch();
         TrackData t; t.bars = 3;
-        t.clips.push_back(c);
+        addClip(t, c);
         put(t, LN_CHORDS, 0, 0);
         r.inst.setTrack(share(t));
         r.inst.trackDo(TC_PLAY, 0);
@@ -852,7 +873,7 @@ static void testTrack() {
         Clip c; c.kind = CK_CHORDS; c.bars = 2;
         c.prog[0] = 0; c.prog[1] = 4; c.progLen = 2; c.chordBeats = 4; c.patch = purePatch();
         TrackData t; t.bars = 2;
-        t.clips.push_back(c);
+        addClip(t, c);
         put(t, LN_CHORDS, 0, 0);
         cutPiece(t.lane[LN_CHORDS][0], 4.0);
         movePiece(t.lane[LN_CHORDS][0], 0, 1);
@@ -874,7 +895,7 @@ static void testTrack() {
         r.run(0.5);
         CHECK(r.inst.uiState().beatPlaying, "the live beat is running");
         TrackData t; t.bars = 4; t.cycleFrom = 2; t.cycleTo = 3;
-        t.clips.push_back(kickSnareClip());
+        addClip(t, kickSnareClip());
         put(t, LN_BEAT, 0, 0, 4);
         r.inst.setTrack(share(t));
         r.inst.trackDo(TC_PLAY, 2);
@@ -912,7 +933,7 @@ static void testTrack() {
         Rig r;
         r.inst.set(S_BPM, 120);
         TrackData t; t.bars = 4;
-        t.clips.push_back(kickSnareClip());
+        addClip(t, kickSnareClip());
         put(t, LN_BEAT, 0, 0, 4);
         r.inst.setTrack(share(t));
         r.inst.trackDo(TC_PLAY, 0);
@@ -933,8 +954,8 @@ static void testTrack() {
         Clip b; b.kind = CK_BEAT; b.kit = KIT_CRUNCHY;
         for (int d = 0; d < kDrums; ++d) b.beat[d] = 0xffff;
         Clip ch; ch.kind = CK_CHORDS; ch.bars = 1; ch.prog[0] = 0; ch.progLen = 1; ch.seventh = true; ch.patch = factoryPatch(0);
-        t.clips.push_back(b); t.clips.push_back(ch);
-        t.clips.push_back(noteClip(45, 0.0, 3.9)); t.clips.push_back(noteClip(64, 0.0, 3.9));
+        addClip(t, b); addClip(t, ch);
+        addClip(t, noteClip(45, 0.0, 3.9)); addClip(t, noteClip(64, 0.0, 3.9));
         put(t, LN_BEAT, 0, 0, 2); put(t, LN_CHORDS, 1, 0, 2); put(t, LN_LOOPA, 2, 0, 2); put(t, LN_LOOPB, 3, 0, 2);
         r.inst.setTrack(share(t));
         r.inst.trackDo(TC_PLAY, 0);

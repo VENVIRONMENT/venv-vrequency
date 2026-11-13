@@ -6,7 +6,7 @@ note *slides* there. Everything is locked to a scale, so it sounds musical whate
 you press. Original code and interface; inspired by the playing mechanics of slide-string
 pocket synths, with no code, firmware or branding taken from any of them.
 
-![The play page](docs/shots/0-play.png)
+![The Synth page](docs/shots/0-play.png)
 
 ```bash
 vrequency
@@ -19,11 +19,11 @@ or tap **venv vrequency** in the app grid. `vrequency --windowed` runs it in a w
 
 The whole 720×720 screen is drawn the way a bench oscilloscope draws its own display: white on black,
 one-pixel rules, raster type, inverse video for whatever is selected. There is no drawn hardware, and
-the only colour is in the scope while the Glitch control is on. The scope on the play page shows the real output, triggered so the wave stands still, with
+the only colour is in the scope while the Glitch control is on. The scope on the Synth page shows the real output, triggered so the wave stands still, with
 its own volts/div and time/div (they follow the signal and never change the pitch) and measured
 frequency and level. Touching it is the X-Y sound control.
 
-More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
+More pictures: [Track](docs/shots/10-track.png), [Chop](docs/shots/11-chop.png), [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
 [System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Beat](docs/shots/9-beat.png).
 
 ## Play it in ten seconds
@@ -44,7 +44,7 @@ More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.p
 | Drag on the scope | XY sound control (filter, vibrato, timbre, space, bend, glitch). |
 | Drag along a string on screen | Play and slide by touch. |
 
-The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: **Menu → Help** (or `Ctrl`+`H`). `Tab` cycles pages, `Esc` returns to the play page.
+The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: **Menu → Help** (or `Ctrl`+`H`). `Tab` cycles pages, `Esc` returns to the Synth page (the instrument, shown above).
 
 ## What is in it
 
@@ -66,9 +66,14 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Beat**: a drum machine page. Eight synthesised drums (no samples) in three kits, eight big pads
   played by touch or from the keyboard, one bar of sixteen steps written by playing with Rec on.
   Locked to the same bar lines as the backing and the looper.
+- **Track**: the first tab. Keep the beat, the chords and the loop as clips, place them on four
+  lanes of bars (Beat, Chords, Loop A, Loop B), drag to move, repeat, split, join, mute, chop a clip
+  into pieces and reorder them, cycle a few bars, undo, and export the whole thing to a WAV file
+  faster than real time. Keys follow the usual shortcuts of desktop music programs (`Ctrl`+`T` split,
+  `Ctrl`+`J` join, `Ctrl`+`R` repeat, `Ctrl`+`X` `C` `V`, `Ctrl`+`Z`, `Space` play).
 - **Looper**: event-based (notes, slides, bends, XY moves, sound changes), count-in, bar-snapped,
   up to 64 bars, six layers, undo, stop/start, clear. Each layer keeps its own sound. Follows tempo.
-- **Saving**: sounds, favourites, sessions (settings + sounds + backing + loops + beat), WAV export and play-back of the last recording
+- **Saving**: sounds, favourites, sessions (settings + sounds + backing + loops + beat + track), WAV export and play-back of the last recording
   under `~/vrequency/`. Key bindings are editable in `~/vrequency/keymap.json`.
 - **Listen** (optional): estimates key and tempo from the default audio input with confidence
   values. *This Hackberry has no microphone*, so it reports that instead of guessing.
@@ -87,9 +92,9 @@ machine. Nothing is installed system-wide and nothing starts at boot.
 Tests:
 
 ```bash
-./build/vrequency_tests                                   # 396 engine checks (offline rendering)
+./build/vrequency_tests                                   # 466 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 69 checks through the real app + audio thread
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 133 checks through the real app + audio thread
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 
@@ -97,9 +102,9 @@ QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   #
 
 | Path | What |
 |---|---|
-| `core/` | The engine, no GUI or device dependencies: `voice.h` (synth voice), `fx.h`, `scale.h`, `instrument.*` (strings, backing, looper, mixer), `presets.*` (sounds, randomiser), `analysis.*` (key/tempo) |
+| `core/` | The engine, no GUI or device dependencies: `voice.h` (synth voice), `fx.h`, `scale.h`, `instrument.*` (strings, backing, looper, mixer), `drums.*` (the three kits), `track.cpp` (clips, lanes, chopping, track playback), `presets.*` (sounds, randomiser), `analysis.*` (key/tempo) |
 | `audio/` | PipeWire backend (C), ALSA fallback, silent clock |
-| `app/` | Qt 6 interface, one custom-painted widget: `mainwindow.*` (pages, input, actions), `scope.cpp` (the oscilloscope), `palette.h`, key map, files, self-test |
+| `app/` | Qt 6 interface, one custom-painted widget: `mainwindow.*` (pages, input, actions), `trackpage.cpp` (the Track page), `scope.cpp` (the oscilloscope), `palette.h`, key map, files, self-test |
 | `tests/` | Engine tests and benchmark |
 | `docs/HARDWARE.md` | What was found on this Hackberry and what it means |
 | `docs/STATUS.md` | What is tested, what still needs a person, known limits, and a five-minute test list |

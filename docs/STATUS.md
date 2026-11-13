@@ -1,12 +1,12 @@
 # Status — what works, what is unproven, what is missing
 
-Version 0.6.0, 2026-11-13 (0.5.0 plus a Beat page with eight drum pads in three kits, and a Play last button for listening back to a recording; 0.5.0 added five sine-based "dream" sounds, 0.4.0 the Glitch touch-pad mapping). "Tested" below means an automated test measured it; it does **not** mean a
+Version 0.7.0, 2026-11-13 (0.6.0 plus a Track page for arranging kept beats, chords and loops on lanes, with chop, cycle and export; the tabs now start with Track and the Play page is called Synth. 0.6.0 added the Beat page and Play last, 0.5.0 five sine-based "dream" sounds, 0.4.0 the Glitch touch-pad mapping). "Tested" below means an automated test measured it; it does **not** mean a
 person heard it or pressed a physical key. Those checks are listed separately.
 
 ## Working and covered by automated tests
 
-`vrequency_tests` renders audio offline and measures it (396 checks). `vrequency --selftest` drives the real
-application with real key and touch events while the real audio thread runs (69 checks).
+`vrequency_tests` renders audio offline and measures it (466 checks). `vrequency --selftest` drives the real
+application with real key and touch events while the real audio thread runs (133 checks).
 
 | Area | What the tests establish |
 |---|---|
@@ -22,24 +22,27 @@ application with real key and touch events while the real audio thread runs (69 
 | Looper | Count-in, bar snap, playback, overdub, undo, stop/start, clear; a recorded slide replays as a slide; an 18-second loop; a layer keeps the sound it was recorded with |
 | Glitch | With the pad down the wave becomes flat steps with only a few levels left, the note is still present, loudness stays in range and inside full scale; the grit is the same at low volume; lifting the finger, changing mapping or panic restores the clean sound; Hold latches it |
 | Beat | All 24 drum sounds exist, end in silence and differ between kits; a pad hit sounds inside 30 ms; steps fall on the tempo grid (checked to about 20 ms) and follow a tempo change; hits played with Rec on land on the nearest step, are not sounded twice, and play back; a 200 ms output delay is compensated; erase, stop and panic work; starting the backing does not restart the bar; every drum on every step stays inside full scale; pads, pad keys, Rec, Erase, kit, Space and Enter work through the app; the beat is saved in the state file and in sessions |
+| Track (engine) | A beat clip plays on the tempo grid (checked to about 20 ms), a gap is silent and the track goes round; a clip stretched over more bars repeats; chopped pieces play in their new order, a muted piece is silent, a repeated piece plays twice; loop clips play the recorded note at the right pitch on their own parts, two lanes at once, and a note still held at a clip's end is let go; a chords clip drives the backing, a cut-and-swapped one starts on its second chord, and the live backing comes back exactly when the track stops; cycle keeps the position inside its bars; play-once stops at the end; starting the track stops the live beat, and starting the live beat or a loop count-in does not restart the track; panic stops it; everything at once stays inside full scale; split at a bar line sounds the same as before and joins back |
+| Track (app) | Keep copies the beat, chords and loop to the shelf once each; tap-to-place, Place, drag to move (one undo step), Repeat, Split, Join, Mute, Remove (clip removal asks twice and re-points the other clips), Cycle, Length, Undo and redo; the Chop panel's cut, mend, Halves, Move, Mute piece, Reset and Done; every Track-page and Chop key listed in the guide except `Ctrl`+`B` (Export is tested through its button); Space plays, the loop's notes and the beat's hats are counted by the engine, letters play no strings on this page, the Synth page plays over the track, `Ctrl`+`Space` stops it; Export writes a WAV of the track's length plus its tail with audio in it; the track reads back the same from the state file and from a session |
 | Listening back | Play last starts the system player on the newest recording and the same button stops it (the test does not check what comes out of the speaker) |
 | Live control | XY filter and vibrato mappings, pitch bend, sustain; touch on a string plays and slides (synthetic touch events) |
 | Safety | Master output cannot exceed full scale even with a deliberately abusive sound; panic frees every voice |
-| Files | Favourites, sessions (key, sounds, progression, loop) and settings save and load back the same; WAV export contains the audio that was played |
+| Files | Favourites, sessions (key, sounds, progression, a recorded loop, the track) and settings save and load back the same; WAV export contains the audio that was played |
 | Key handling | Auto-repeat does not retrigger; no input events dropped |
 | Listen | Key and tempo found on synthetic test music; silence is refused rather than guessed; noise gives low confidence |
 
 Implemented but with **no automated test**: loops following a tempo change, bends and XY moves inside loops,
 voice stealing at the 28-voice limit (benchmarked for speed, not checked for clicks), releasing all notes
-when the window loses focus, the scope's frequency readout, trigger and auto-ranging (checked by eye on rendered pictures only), the Glitch colour streaks (seen on one rendered picture only), Glitch moves replayed from inside a loop, pulse and up/down arpeggio styles, the pads lighting up when a drum sounds, the beat while a loop is recording or playing, old `keymap.json` files picking up the new key bindings, the on-screen sound editor's individual controls.
+when the window loses focus, the scope's frequency readout, trigger and auto-ranging (checked by eye on rendered pictures only), the Glitch colour streaks (seen on one rendered picture only), Glitch moves replayed from inside a loop, pulse and up/down arpeggio styles, the pads lighting up when a drum sounds, the beat while a loop is recording or playing, old `keymap.json` files picking up the new key bindings, the on-screen sound editor's individual controls. On the Track page: the picture of each clip (beat dots, chord names, note dashes) and the moving play line (looked at on two rendered pictures only), the automatic save a moment after an edit, following the play line past bar 8, the shelf's second page, keeping more than 40 clips, dragging a loop between Loop A and Loop B, sound changes and touch-pad moves recorded inside a loop clip, editing the track while it plays, what an exported file sounds like (only its length and that it is not silent are checked), and Play last on an exported file.
 
 ## Measured on this device
 
 | | |
 |---|---|
 | Engine cost, 28 voices + all effects | 5 % of one core (19.6× faster than real time); worst 256-frame block 0.35 ms of the 5.33 ms budget |
-| Engine load while the self-test runs on the real audio thread | 1.3 % average, 7.5 % peak, 0 late blocks |
-| Drawing one frame of the play page | 4.8 ms (25 frames a second while anything sounds, about two a second when idle) |
+| Engine load while the self-test runs on the real audio thread | 1.2 % average, 15.9 % peak, 0 late blocks |
+| Exporting an 8-bar track at 120 bpm (16.5 s of audio, three lanes in use) | 0.2 s |
+| Drawing one frame of the Synth page | 4.3 to 5.0 ms (25 frames a second while anything sounds, about two a second when idle) |
 | Idle CPU (app open, nothing playing) | 2.3 % of one core, measured headless with silent audio; not re-measured on the real screen since 0.1 (was about 8 %) |
 | Memory | 45 MB headless; on-screen figure not re-measured since 0.1 (was about 120 MB) |
 | Launch to first frame | not re-measured since 0.1 (was 0.07 s headless, about 0.3 s on screen) |
@@ -56,6 +59,8 @@ Nobody has yet confirmed any of these. See the test list at the end of this file
 3. How many keys the keyboard reports at once, and whether it ghosts (HARDWARE.md has the suspect combinations).
 4. That touch on the real screen plays strings, pads and the XY area (tested only with synthetic pointer events).
 7. That the new look reads well on the real LCD: 11–13 px raster text, the dim grey secondary labels, the faint scan lines.
+8. That the Track page is usable by finger: bars are 65 pixels wide and lanes 66 high, and the Chop strip's cut lines can be as close as 43 pixels.
+9. That the track sounds right: nobody has heard it, or an exported file.
 5. That the 200 ms loop timing fix feels right on the Bluetooth speaker.
 6. Long-session stability (longest automated run is about a minute).
 
@@ -75,13 +80,22 @@ Nobody has yet confirmed any of these. See the test list at the end of this file
 - **Listen** is implemented but has no input to listen to on this hardware.
 - **Windowed mode** (`--windowed`) gets an odd size from GNOME on this screen; full screen is the default and is what was designed.
 - **Key remapping** is by editing `~/vrequency/keymap.json`; there is no on-screen editor.
-- **WAV export** records what you play from the moment you press record; it cannot render a loop offline after the fact.
+- **Record** captures what you play from the moment you press it. Only the Track page's Export renders offline.
+- **Track**: clips sit on whole bars; nothing can be placed off the bar line or made shorter than a bar except by muting chopped pieces. One Beat lane, one Chords lane, two Loop lanes. No per-lane volume: the Beat, Backing and Loop volume sliders apply. A clip's sound, kit and chord style are fixed when it is kept. Chords clips follow the current key and scale, and all clips the current tempo; there are no tempo or key changes inside a track. Clips cannot be renamed.
+- **Track and the live backing share one voice.** While the track plays, chord taps and the Backing page's play button are ignored, and the live backing is put back when the track stops.
+- **One drum bus.** Pads played live over a track that has a beat clip come through that clip's kit colouring (crunch or glitch), not the Beat page's.
+- **Starting in the middle** of a long loop clip (playing from a later bar, or after an edit while playing) does not sound notes that began earlier; they come in at their next note.
+- **Editing while the track plays** lets go of the loop lanes' sounding notes at each edit.
+- **Export** always renders the whole track once at 100 % master volume (the limiter still applies), not the cycle, and not anything played live.
+- **Letters are commands on the Track page**, so the strings cannot be played from the keyboard there; several `Ctrl` shortcuts mean something else on that page (listed in the guide).
 - **Beat** is one bar of sixteen steps. Hits are written by playing the pads with Rec on; the strip is a display and cannot be tapped. Every hit has the same loudness (off-beat hats are a little quieter). The loop pedal does not record the pads.
 - **Drum sounds were rebuilt inside the engine** from the sketches that were auditioned, so they are close to those clips but not identical; the hi-hat repeats and snare stutters in the glitchy sketch were part of that demo's pattern and are not a feature.
 - **Play last** uses the system's `pw-play` (or `aplay`); it plays the newest file only, with no list to choose from.
 - **Looper layers** all share one loop length (the first recording sets it).
 
 ## Not implemented
+
+- An in-app beginner course (asked for, to be designed after the Track page).
 
 - Tilt / motion control (no sensor in the device).
 - MIDI in or out.
@@ -118,6 +132,12 @@ Start with `vrequency`. If there is no sound, check that GNOME's sound output is
 | 9f | Beat tab: `Enter`, play kick and snare in time with the click for two bars, `Enter` again | Your hits appear in the strip and keep playing | If hits land a step early or late, change System → Loop fix and tell me the value that works |
 | 9g | Kit + on the Beat page while the beat plays | The same beat with crunchy, then glitchy sounds | |
 | 9h | System → Record, play a little, Record again, then Play last | You hear what you just played | Tell me what the message on screen says |
+| 9i | Make a beat, tap two chords, record a loop. Track tab, **+ Keep** | Three clips appear on the left | Tell me what the message says |
+| 9j | Tap Beat 1, tap bar 1 and bar 2 in the Beat lane; tap Loop 1, tap bar 1 in Loop A; `Space` | The beat and your loop play together, the line moves, it goes round after the last bar | Tell me what is missing or out of time. Nobody has heard the track on the device yet |
+| 9k | Drag a placed clip sideways with a finger | It follows in whole bars | Tell me if it is too fiddly at this screen size |
+| 9l | Choose the loop, **Chop**, **Beats**, tap a piece, **Move ›**, **Done**, `Space` | The loop plays in its new order, still in time | |
+| 9m | With a clip chosen: `Ctrl`+`R`, `Ctrl`+`T`, `Ctrl`+`Z`, `M`, `Backspace` | Repeat, split at the line, undo, mute, delete | Tell me which keys do not arrive (the Q20's `Ctrl` and symbol keys are unproven) |
+| 9n | **Export**, then System → **Play last** | A message with the file name, then you hear the whole track | |
 | 9b | Hold a low note, then a high one | The trace stays still and the ms/div readout steps by itself; pitch is unaffected | |
 | 10 | `Ctrl` + `R` a few times, `Ctrl` + `Z` | New sounds each time; undo brings the last one back | |
 | 11 | Menu → System → Key test, then try `Z`+`S`+`W`, `Space`+`Z`+`X`, `Alt`+`A`+`J` | Only the keys you hold are listed | A key you did not press appears: the keyboard ghosts on that combination |

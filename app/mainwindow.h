@@ -29,7 +29,8 @@ class QProcess;
 class MainWindow : public QWidget {
     Q_OBJECT
 public:
-    enum Page { PG_PLAY, PG_SOUND, PG_BACK, PG_BEAT, PG_TUNE, PG_SYS, PG_HELP, PG_COUNT };
+    // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
+    enum Page { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_COUNT };
     enum Phase { PH_PRESS, PH_MOVE, PH_RELEASE };
 
     MainWindow(td::Instrument &inst, AudioOut &audio);
@@ -57,6 +58,15 @@ public:
     void setKeyTest(bool on) { keyTest = on; }
     int maxKeysHeld() const { return maxHeld; }
     QString lastToast() const { return toastText; }
+    const td::TrackData &trackData() const { return track; }
+    int trackUndoDepth() const { return (int)trackUndo.size(); }
+    bool clipInHand() const { return handOn; }
+    int chosenLane() const { return selLane; }
+    int chosenIndex() const { return selIdx; }
+    bool chopping() const { return chopOpen; }
+    int playLineBar() const { return playBar; }
+    int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
+    QString lastRecordingPath() const { return lastRecording; }
 
 protected:
     void paintEvent(QPaintEvent *) override;
@@ -118,6 +128,27 @@ private:
     uint32_t seenHits[td::kDrums] = {0};
     qint64 padLit[td::kDrums] = {0}; // when each pad last sounded
 
+    // track page
+    struct Dash { float a, b, pitch; };
+    struct ClipDash { std::vector<Dash> d; float lo = 60, hi = 60; };
+    td::TrackData track;                    // the master copy; the engine gets its own after every edit
+    std::vector<td::TrackData> trackUndo, trackRedo;
+    int selLane = -1, selIdx = -1;          // the chosen placed clip
+    bool handOn = false, handFromShelf = false; // a clip in hand: tap a bar, or Place, puts it down
+    td::Placement hand;
+    int shelfPage = 0, viewBar = 0, playBar = 0;
+    bool chopOpen = false;
+    int chopPiece = 0;
+    int removeArmed = -1; qint64 removeArmedAt = 0;
+    bool dragOn = false, dragMoved = false;
+    int dragGrab = 0;
+    td::TrackData dragBefore;
+    QTimer trackSaveTimer;
+    std::thread exportThread;
+    std::atomic<int> exportState{0}, exportPct{0}, exportSecs{0}; // state: 0 idle, 1 working, 2 done, 3 failed
+    QString exportFile;
+    QHash<const td::Clip *, ClipDash> dashCache;
+
     // listen
     std::thread listenThread;
     std::atomic<int> listenState{0}; // 0 idle, 1 listening, 2 result, 3 failed
@@ -175,6 +206,13 @@ private:
     void paintSystem();
     void paintHelp();
     void paintTabs();
+    void paintTrack();
+    void paintTrackTools();
+    void paintChop();
+    void drawPlacement(int lane, int idx);
+    void drawClipBody(const td::Clip &c, double srcA, double srcB, QRectF r, QColor ink);
+    void hatch(QRectF r, QColor c);
+    const ClipDash &dashes(const td::Clip &c);
     void paintKeyTest();
     void paintChordPads(QRectF area, bool withSlots);
     void paintLoopButton(QRectF r);
@@ -197,6 +235,39 @@ private:
     void releaseAllKeys();
     void refreshLists();
     void drainRecording();
+
+    // the track
+    td::Placement *chosen();
+    void trackSync();
+    bool trackApply(const std::function<bool(td::TrackData &)> &fn); // one undoable edit
+    void chooseAt(int lane, int bar);
+    void showBar(int bar);
+    int maxViewBar() const;
+    bool placeSpot(int &lane, int &bar) const;
+    void trackTake(int clip);
+    void trackKeep();
+    bool trackPlace(int lane, int bar);
+    void trackPlaceAtLine();
+    void trackRemove();
+    void trackRepeat();
+    void trackSplit();
+    void trackJoin();
+    void trackMute();
+    void trackCycle();
+    void trackCopy(bool cut);
+    void trackUndoDo();
+    void trackRedoDo();
+    void trackPlayStop();
+    void trackLine(int dbar);
+    void trackSelect(int dx, int dy);
+    void trackMove(int dbar, int dlane);
+    void trackChop();
+    void trackExport();
+    void pollExport();
+    void laneTouch(QPointF p, int phase);
+    void chopTap(double frac, double stripWidth);
+    void chopEdit(const std::function<bool(td::Placement &)> &fn);
+    bool trackKey(int key, int plainAct);
 };
 
 QString paramText(int param, float v);

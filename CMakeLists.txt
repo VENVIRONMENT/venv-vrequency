@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(vrequency VERSION 0.6.0 LANGUAGES C CXX)
+project(vrequency VERSION 0.7.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,6 +43,7 @@ if(VREQUENCY_BUILD_APP)
   add_executable(vrequency
     app/main.cpp
     app/mainwindow.cpp
+    app/trackpage.cpp
     app/scope.cpp
     app/palette.h
     app/mainwindow.h

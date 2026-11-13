@@ -191,6 +191,57 @@ bool repeatPiece(Placement &p, int i) {
     return true;
 }
 
+double sourceAt(const Placement &p, double beat) {
+    double st = 0;
+    int i = pieceAt(p, beat, &st);
+    if (i < 0 || p.pieces[i].mute) return -1;
+    return p.pieces[i].src + (beat - st);
+}
+
+std::vector<Piece> rotatedPieces(const Placement &p, double offset) {
+    Placement q = p;
+    double total = piecesLength(q);
+    if (total <= 0) return q.pieces;
+    offset = std::fmod(offset, total);
+    if (offset < kEdge || offset > total - kEdge) return q.pieces;
+    cutPiece(q, offset); // no effect when a cut is already there
+    double acc = 0; size_t k = 0;
+    while (k < q.pieces.size() && acc < offset - kEdge) acc += q.pieces[k++].len;
+    std::rotate(q.pieces.begin(), q.pieces.begin() + k, q.pieces.end());
+    return q.pieces;
+}
+
+bool splitPlacement(TrackData &t, int lane, int idx, int atBar) {
+    if (lane < 0 || lane >= kLanes || idx < 0 || idx >= (int)t.lane[lane].size()) return false;
+    Placement a = t.lane[lane][idx];
+    if (atBar <= a.bar || atBar >= a.bar + a.bars) return false;
+    Placement b = a;
+    b.bar = atBar; b.bars = a.bar + a.bars - atBar;
+    b.pieces = rotatedPieces(a, (atBar - a.bar) * 4.0);
+    a.bars = atBar - a.bar;
+    t.lane[lane][idx] = a;
+    t.lane[lane].insert(t.lane[lane].begin() + idx + 1, b);
+    return true;
+}
+
+bool joinPlacements(TrackData &t, int lane, int idx) {
+    if (lane < 0 || lane >= kLanes || idx < 0 || idx + 1 >= (int)t.lane[lane].size()) return false;
+    Placement &a = t.lane[lane][idx];
+    const Placement &b = t.lane[lane][idx + 1];
+    if (a.clip != b.clip || a.bar + a.bars != b.bar || a.mute != b.mute) return false;
+    Placement want = a;
+    want.pieces = rotatedPieces(a, a.bars * 4.0);
+    const double total = piecesLength(a);
+    if (std::fabs(total - piecesLength(b)) > kEdge) return false;
+    for (double x = 0.0625; x < total; x += 0.125) { // the second must carry on exactly where the first stops
+        double p = sourceAt(want, x), q = sourceAt(b, x);
+        if (std::fabs(p - q) > 1e-4) return false;
+    }
+    a.bars += b.bars;
+    t.lane[lane].erase(t.lane[lane].begin() + idx + 1);
+    return true;
+}
+
 // ---------------------------------------------------------------- playback
 
 void Instrument::setTrack(std::shared_ptr<const TrackData> t) {
@@ -281,7 +332,7 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
             if (x >= s && x < e) { pi = i; break; }
             if (s > x && s < next) next = s;
         }
-        if (pi >= 0 && (pls[pi].clip < 0 || pls[pi].clip >= (int)t.clips.size() || pls[pi].pieces.empty())) {
+        if (pi >= 0 && (pls[pi].clip < 0 || pls[pi].clip >= (int)t.clips.size() || !t.clips[pls[pi].clip] || pls[pi].pieces.empty())) {
             x = std::min(b, pls[pi].bar * 4.0 + pls[pi].bars * 4.0); // damaged data: treat as a gap
             if (ls.pl != -1) laneOff(lane);
             continue;
@@ -293,7 +344,7 @@ void Instrument::runLane(const TrackData &t, int lane, double a, double b, doubl
             continue;
         }
         const Placement &pl = pls[pi];
-        const Clip &c = t.clips[pl.clip];
+        const Clip &c = *t.clips[pl.clip];
         const double ps = pl.bar * 4.0, pe = ps + pl.bars * 4.0, L = std::max(4.0, c.beats());
         double local = x - ps;
         long pass = (long)std::floor((local + 1e-9) / L);

@@ -29,6 +29,8 @@ QJsonObject sessionToJson(const td::SessionData &s);
 bool sessionFromJson(const QJsonObject &o, td::SessionData &s);
 QJsonArray beatToJson(const uint16_t *beat);
 void beatFromJson(const QJsonArray &a, uint16_t *beat);
+QJsonObject trackToJson(const td::TrackData &t);
+void trackFromJson(const QJsonObject &o, td::TrackData &t); // anything damaged is left out
 
 bool writeJson(const QString &path, const QJsonObject &o);
 bool readJson(const QString &path, QJsonObject &o);

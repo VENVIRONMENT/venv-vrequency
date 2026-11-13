@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "instrument.h"
 #include "mainwindow.h"
+#include "presets.h"
 #include <QApplication>
 #include <QDir>
 #include <QElapsedTimer>
@@ -14,6 +15,7 @@
 #include <QKeyEvent>
 #include <QScreen>
 #include <QThread>
+#include <array>
 #include <cmath>
 #include <cstdio>
 
@@ -59,8 +61,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     }
     QImage img = w.shot();
     check(img.width() == 720 && img.height() == 720, "interface renders at 720x720");
-    static const char *files[] = {"0-play", "1-sound", "2-backing", "9-beat", "3-tune", "4-system", "5-help"};
-    static const char *names[] = {"play", "sound", "backing", "beat", "tune", "system", "help"};
+    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help"};
+    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help"};
     if (!shotsDir.isEmpty()) QDir().mkpath(shotsDir);
     for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
         w.setPage(p);
@@ -176,6 +178,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     check(inst.uiState().layers == 2, "overdub adds a second layer");
     key(w, Qt::Key_Control, true); key(w, Qt::Key_U, true); key(w, Qt::Key_U, false); wait(80);
     check(inst.uiState().layers == 1, "Ctrl+U undoes the overdub");
+    key(w, Qt::Key_Control, false);
 
     std::printf("- touch\n");
     QRectF xy = w.zoneRect("xy");
@@ -216,6 +219,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     QString sp = store::baseDir() + "/sessions/selftest.json";
     SessionData a; inst.snapshot(a);
     check(w.saveSession(sp), "session saved");
+    check(a.layers.size() == 1 && !a.layers[0].ev.empty() && a.loopBeats >= 4, "the session holds the recorded loop");
+    key(w, Qt::Key_Control, true);
     key(w, Qt::Key_X, true); key(w, Qt::Key_X, false);   // Ctrl+X clear backing
     key(w, Qt::Key_D, true); key(w, Qt::Key_D, false);   // Ctrl+D clear loop
     key(w, Qt::Key_Control, false);
@@ -245,7 +250,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     key(w, Qt::Key_A, true); key(w, Qt::Key_A, false); wait(80);
     check(inst.uiState().drumHits[D_CLAP] == c0 + 1, "A plays the clap (pad 5)");
     key(w, Qt::Key_Return, true); key(w, Qt::Key_Return, false); wait(150);
-    check(inst.uiState().beatRec && inst.uiState().beatPlaying && inst.uiState().loopState == L_EMPTY, "Enter switches Rec on and starts the beat (not the loop pedal)");
+    check(inst.uiState().beatRec && inst.uiState().beatPlaying && inst.uiState().loopState == L_STOPPED, "Enter switches Rec on and starts the beat (not the loop pedal)");
     key(w, Qt::Key_W, true); key(w, Qt::Key_W, false); wait(120);
     tap(w, "pad2"); wait(120);
     UiState bu = inst.uiState();
@@ -262,12 +267,213 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     check(!inst.uiState().beatPlaying && !inst.uiState().beatRec && !inst.uiState().sustain, "Space stops the beat on this page");
     w.setPage(MainWindow::PG_PLAY); wait(80);
     key(w, Qt::Key_Control, true); key(w, Qt::Key_J, true); key(w, Qt::Key_J, false); key(w, Qt::Key_Control, false); wait(100);
-    check(inst.uiState().beatPlaying, "Ctrl+J starts the beat from the Play page");
+    check(inst.uiState().beatPlaying, "Ctrl+J starts the beat from the Synth page");
     key(w, Qt::Key_Control, true); key(w, Qt::Key_J, true); key(w, Qt::Key_J, false); key(w, Qt::Key_Control, false); wait(100);
     w.saveState();
     QJsonObject sj; store::readJson(store::baseDir() + "/state.json", sj);
     check(!inst.uiState().beatPlaying && sj["beat"].toArray().size() == kDrums && sj["beat"].toArray()[D_HAT].toString().contains('x'),
           "the beat is kept in the saved state");
+
+    std::printf("- track\n");
+    {
+        auto press = [&](int k) { key(w, k, true); key(w, k, false); };
+        auto ctrl = [&](int k) { key(w, Qt::Key_Control, true); press(k); key(w, Qt::Key_Control, false); };
+        auto T = [&]() -> const TrackData & { return w.trackData(); };
+        w.setPage(MainWindow::PG_TRACK); wait(100);
+        check(w.page() == MainWindow::PG_TRACK && MainWindow::PG_TRACK == 0 && MainWindow::PG_PLAY == 1, "Track is the first tab, Synth the second");
+        check(T().clips.empty(), "the track starts empty");
+        press(Qt::Key_Space); wait(80);
+        check(!inst.uiState().trackPlaying, "Space on an empty track plays nothing");
+        tap(w, "keep"); wait(80);
+        check(T().clips.size() == 3 && T().clips[0]->kind == CK_BEAT && T().clips[1]->kind == CK_CHORDS && T().clips[2]->kind == CK_LOOP,
+              "+ Keep copies the beat, the chords and the loop onto the shelf");
+        check(w.clipInHand(), "and the newest clip is in hand, ready to place");
+        tap(w, "keep"); wait(60);
+        check(T().clips.size() == 3, "keeping the same things again adds nothing");
+        QRectF lanes = w.zoneRect("lanes");
+        auto cell = [&](int lane, double bar) { return QPointF(lanes.left() + (bar + 0.5) * lanes.width() / 8.0, lanes.top() + 2 + lane * 70 + 33); };
+        auto touch = [&](QPointF a) { w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); };
+        if (!w.clipInHand()) press(Qt::Key_3);
+        touch(cell(LN_LOOPA, 0)); wait(60);
+        check(T().lane[LN_LOOPA].size() == 1 && T().lane[LN_LOOPA][0].bar == 0 && w.chosenLane() == LN_LOOPA, "with a clip in hand, tapping a bar places it there");
+        press(Qt::Key_1);
+        key(w, Qt::Key_Control, true); press(Qt::Key_V); press(Qt::Key_V); key(w, Qt::Key_Control, false); wait(60);
+        check(T().lane[LN_BEAT].size() == 2 && T().lane[LN_BEAT][1].bar == 1 && w.playLineBar() == 2, "1 takes the first clip; Ctrl+V places it at the play line, twice");
+        press(Qt::Key_Left);
+        check(w.chosenLane() == LN_BEAT && w.chosenIndex() == 0, "Left chooses the clip before");
+        ctrl(Qt::Key_J);
+        check(T().lane[LN_BEAT].size() == 1 && T().lane[LN_BEAT][0].bars == 2, "Ctrl+J joins a clip with its repeat");
+        ctrl(Qt::Key_R);
+        check(T().lane[LN_BEAT].size() == 2 && T().lane[LN_BEAT][1].bar == 2 && w.chosenIndex() == 1, "Ctrl+R repeats it to the right");
+        press(Qt::Key_Return);
+        key(w, Qt::Key_Shift, true); press(Qt::Key_Right); key(w, Qt::Key_Shift, false);
+        check(w.playLineBar() == 1, "Enter sends the play line to bar 1, Shift+Right moves it a bar");
+        press(Qt::Key_Left);
+        ctrl(Qt::Key_T);
+        check(T().lane[LN_BEAT].size() == 3 && T().lane[LN_BEAT][0].bars == 1 && T().lane[LN_BEAT][1].bar == 1, "Ctrl+T splits the chosen clip at the play line");
+        int depth = w.trackUndoDepth();
+        ctrl(Qt::Key_Z);
+        check(T().lane[LN_BEAT].size() == 2 && w.trackUndoDepth() == depth - 1, "Ctrl+Z undoes the split");
+        key(w, Qt::Key_Control, true); key(w, Qt::Key_Shift, true); press(Qt::Key_Z); key(w, Qt::Key_Shift, false); key(w, Qt::Key_Control, false);
+        check(T().lane[LN_BEAT].size() == 3, "Shift+Ctrl+Z does it again");
+        ctrl(Qt::Key_Z);
+        depth = w.trackUndoDepth();
+        w.pointer(3, cell(LN_BEAT, 2), MainWindow::PH_PRESS);
+        w.pointer(3, cell(LN_BEAT, 3.6), MainWindow::PH_MOVE);
+        w.pointer(3, cell(LN_BEAT, 5), MainWindow::PH_MOVE);
+        w.pointer(3, cell(LN_BEAT, 5), MainWindow::PH_RELEASE);
+        check(T().lane[LN_BEAT].size() == 2 && T().lane[LN_BEAT][1].bar == 5 && w.trackUndoDepth() == depth + 1, "dragging a clip moves it by whole bars, as one undo step");
+        press(Qt::Key_M);
+        check(T().lane[LN_BEAT][1].mute, "M mutes the chosen clip");
+        press(Qt::Key_M);
+        key(w, Qt::Key_Alt, true); press(Qt::Key_Right); key(w, Qt::Key_Alt, false);
+        check(!T().lane[LN_BEAT][1].mute && T().lane[LN_BEAT][1].bar == 6, "Alt+Right moves it a bar");
+        press(Qt::Key_2);
+        tap(w, "tplace"); wait(60);
+        check(T().lane[LN_CHORDS].size() == 1 && T().lane[LN_CHORDS][0].bar == 1 && T().lane[LN_CHORDS][0].bars == T().clips[1]->bars, "Place puts the chords clip on the Chords lane at the play line");
+        press(Qt::Key_Escape);
+        check(w.page() == MainWindow::PG_TRACK && !w.clipInHand(), "Esc puts the clip in hand down (and stays on the page)");
+
+        touch(cell(LN_LOOPA, 0));
+        press(Qt::Key_E); wait(60);
+        check(w.chopping() && w.chosenLane() == LN_LOOPA, "E opens Chop for the chosen clip");
+        const double Lc = T().clips[2]->beats();
+        tap(w, "chalves"); wait(40);
+        check(T().lane[LN_LOOPA][0].pieces.size() == 2, "Halves cuts it in two");
+        tap(w, "cright"); wait(40);
+        check(T().lane[LN_LOOPA][0].pieces[0].src == Lc / 2 && T().lane[LN_LOOPA][0].pieces[1].src == 0, "Move swaps the halves");
+        tap(w, "cmute"); wait(40);
+        check(T().lane[LN_LOOPA][0].pieces[1].mute, "Mute piece silences the chosen piece");
+        tap(w, "creset"); wait(40);
+        check(T().lane[LN_LOOPA][0].pieces.size() == 1 && !T().lane[LN_LOOPA][0].pieces[0].mute, "Reset undoes every cut");
+        QRectF strip = w.zoneRect("chopstrip");
+        const QPointF quarter(strip.left() + strip.width() / 4 + 3, strip.center().y());
+        touch(quarter); wait(40);
+        check(T().lane[LN_LOOPA][0].pieces.size() == 2 && T().lane[LN_LOOPA][0].pieces[0].len == Lc / 4, "tapping a dotted line cuts there");
+        touch(quarter); wait(40);
+        check(T().lane[LN_LOOPA][0].pieces.size() == 1, "tapping the cut mends it");
+        tap(w, "cdone"); wait(40);
+        check(!w.chopping(), "Done closes Chop");
+
+        press(Qt::Key_Up); press(Qt::Key_Up);
+        check(w.chosenLane() == LN_BEAT && w.chosenIndex() == 0, "Up chooses a clip on the lane above");
+        press(Qt::Key_Right);
+        check(w.chosenLane() == LN_BEAT && w.chosenIndex() == 1, "Right chooses the clip after");
+        press(Qt::Key_Down);
+        check(w.chosenLane() == LN_CHORDS, "Down chooses a clip on the lane below");
+        press(Qt::Key_Up);
+        const int line0 = w.playLineBar();
+        press(Qt::Key_Period);
+        const int line1 = w.playLineBar();
+        press(Qt::Key_Comma);
+        key(w, Qt::Key_Shift, true); press(Qt::Key_Left); key(w, Qt::Key_Shift, false);
+        check(line1 == line0 + 1 && w.playLineBar() == line0 - 1, ". and , (and Shift+Left) move the play line");
+        press(Qt::Key_Period);
+        ctrl(Qt::Key_C);
+        check(w.clipInHand() && T().lane[LN_BEAT].size() == 2, "Ctrl+C takes a copy of the chosen clip in hand");
+        ctrl(Qt::Key_V);
+        check(T().lane[LN_BEAT].size() == 3 && T().lane[LN_BEAT][2].bar == 8 && T().bars == 10, "Ctrl+V puts it on the first free bars after the line, and the track grows to fit");
+        ctrl(Qt::Key_X);
+        check(T().lane[LN_BEAT].size() == 2 && w.clipInHand(), "Ctrl+X takes the chosen clip off the track and into your hand");
+        press(Qt::Key_Escape);
+        ctrl(Qt::Key_Z); ctrl(Qt::Key_Z);
+        check(T().lane[LN_BEAT].size() == 2 && T().bars == 8, "two undos take the paste back, and the track's length with it");
+        press(Qt::Key_K);
+        check(T().clips.size() == 3 && w.lastToast().startsWith("Already kept"), "K is Keep (nothing new to keep this time)");
+
+        press(Qt::Key_Return); w.shot(); // the paste scrolled the bars: back to bar 1
+        touch(cell(LN_LOOPA, 0));
+        press(Qt::Key_E);
+        ctrl(Qt::Key_T);
+        check(w.chopping() && T().lane[LN_LOOPA][0].pieces.size() == 2, "in Chop, Ctrl+T cuts the chosen piece in half");
+        press(Qt::Key_Right); press(Qt::Key_M);
+        check(T().lane[LN_LOOPA][0].pieces[1].mute && !T().lane[LN_LOOPA][0].pieces[0].mute, "Right chooses the next piece, M mutes it");
+        key(w, Qt::Key_Alt, true); press(Qt::Key_Left); key(w, Qt::Key_Alt, false);
+        check(T().lane[LN_LOOPA][0].pieces[0].mute && T().lane[LN_LOOPA][0].pieces[0].src > 0, "Alt+Left moves the piece earlier");
+        press(Qt::Key_M);
+        key(w, Qt::Key_Alt, true); press(Qt::Key_Right); key(w, Qt::Key_Alt, false);
+        press(Qt::Key_Left);
+        ctrl(Qt::Key_J);
+        check(T().lane[LN_LOOPA][0].pieces.size() == 1, "Ctrl+J mends the piece with the one after it");
+        ctrl(Qt::Key_T); ctrl(Qt::Key_R);
+        check(T().lane[LN_LOOPA][0].pieces.size() == 2 && T().lane[LN_LOOPA][0].pieces[1].src == 0, "Ctrl+R makes the next piece repeat it");
+        ctrl(Qt::Key_Z); ctrl(Qt::Key_Z);
+        press(Qt::Key_E);
+        check(!w.chopping() && T().lane[LN_LOOPA][0].pieces.size() == 1, "E closes Chop again");
+        touch(cell(LN_LOOPA, 0));
+
+        press(Qt::Key_C);
+        check(T().cycleTo > T().cycleFrom && T().cycleFrom == 0, "C cycles round the chosen clip");
+        press(Qt::Key_C);
+        check(T().cycleTo == 0, "C again switches the cycle off");
+
+        press(Qt::Key_Return);
+        uint32_t h0 = inst.uiState().drumHits[D_HAT];
+        press(Qt::Key_Space); wait(200);
+        UiState tu = inst.uiState();
+        check(tu.trackPlaying && !tu.sustain, "Space plays the track");
+        bool voiced = false, hat = false;
+        for (int i = 0; i < 50 && !(voiced && hat); ++i) { wait(50); tu = inst.uiState(); voiced = voiced || tu.voices > 0; hat = hat || tu.drumHits[D_HAT] > h0; }
+        check(voiced && hat, "the loop clip's notes and the beat clip's hats sound");
+        const double p0 = inst.uiState().trackPos; wait(200);
+        check(inst.uiState().trackPos > p0, "the play line moves");
+        key(w, Qt::Key_Q, true); wait(80);
+        check(!inst.uiState().str[2].gate, "on the Track page letters are commands: Q plays no string");
+        key(w, Qt::Key_Q, false);
+        w.setPage(MainWindow::PG_PLAY); wait(60);
+        key(w, Qt::Key_Q, true); wait(80);
+        check(inst.uiState().str[2].gate && inst.uiState().trackPlaying, "on the Synth page you play over the track");
+        key(w, Qt::Key_Q, false);
+        ctrl(Qt::Key_Space); wait(120);
+        check(!inst.uiState().trackPlaying, "Ctrl+Space stops the track from any page");
+        w.setPage(MainWindow::PG_TRACK); wait(60);
+
+        tap(w, "texport");
+        check(w.exportStatus() == 1, "Export starts writing in the background");
+        QElapsedTimer et; et.start();
+        while (w.exportStatus() != 0 && et.elapsed() < 60000) { wait(100); w.shot(); }
+        QFile ef(w.lastRecordingPath());
+        const bool eok = ef.open(QIODevice::ReadOnly);
+        const QByteArray ed = eok ? ef.readAll() : QByteArray();
+        int enz = 0;
+        for (int i = 44; i + 1 < ed.size(); i += 2) if (ed[i] != 0 || ed[i + 1] != 0) ++enz;
+        const double esec = (ed.size() - 44) / 4.0 / audio.sampleRate(), want = T().bars * 4 * 60.0 / inst.uiState().set.bpm;
+        std::printf("  info  export: %d bars, %.1f s of audio, written in %.1f s\n", T().bars, esec, et.elapsed() / 1000.0);
+        check(eok && w.lastRecordingPath().contains("/track-") && ed.startsWith("RIFF") && enz > 1000, "the track is exported as a WAV file with audio in it");
+        check(esec >= want && esec < want + 9, QString("it lasts the track plus the dying echoes (%1 s for a %2 s track)").arg(esec, 0, 'f', 1).arg(want, 0, 'f', 1));
+
+        touch(cell(LN_BEAT, 0));
+        press(Qt::Key_Backspace); wait(60);
+        check(T().lane[LN_BEAT].size() == 1, "Backspace deletes the chosen clip");
+        press(Qt::Key_1);
+        tap(w, "tremove"); wait(40);
+        check(T().clips.size() == 3, "Remove on a shelf clip asks twice");
+        tap(w, "tremove"); wait(40);
+        check(T().clips.size() == 2 && T().lane[LN_BEAT].empty() && T().lane[LN_CHORDS][0].clip == 0 && T().lane[LN_LOOPA][0].clip == 1,
+              "the second tap deletes the clip and every copy of it; the others keep pointing at the right clips");
+        ctrl(Qt::Key_Z);
+        check(T().clips.size() == 3 && T().lane[LN_BEAT].size() == 1, "and that can be undone too");
+
+        w.saveState();
+        QJsonObject tj; store::readJson(store::baseDir() + "/state.json", tj);
+        TrackData rt; store::trackFromJson(tj["track"].toObject(), rt);
+        bool rsame = rt.clips.size() == T().clips.size() && rt.bars == T().bars;
+        for (int ln = 0; rsame && ln < kLanes; ++ln) {
+            rsame = rt.lane[ln].size() == T().lane[ln].size();
+            for (size_t i = 0; rsame && i < rt.lane[ln].size(); ++i)
+                rsame = rt.lane[ln][i].bar == T().lane[ln][i].bar && rt.lane[ln][i].bars == T().lane[ln][i].bars && rt.lane[ln][i].clip == T().lane[ln][i].clip;
+        }
+        for (size_t i = 0; rsame && i < rt.clips.size(); ++i) rsame = sameClip(*rt.clips[i], *T().clips[i]);
+        check(rsame, "the track read back from the saved state is the same track");
+        QString sp2 = store::baseDir() + "/sessions/selftest-track.json";
+        check(w.saveSession(sp2), "a session saves the track with it");
+        const int bars0 = T().bars;
+        tap(w, "tlen+"); wait(40);
+        check(T().bars == bars0 + 1, "the Length stepper makes the track longer");
+        check(w.loadSession(sp2) && T().bars == bars0 && T().clips.size() == 3, "loading the session brings the track back");
+        inst.set(S_VOLUME, 0.06f);
+        w.setPage(MainWindow::PG_PLAY); wait(60);
+    }
 
     std::printf("- listening back\n");
     check(w.togglePlayback() && w.playingBack(), "Play last starts playing the newest recording");
@@ -292,8 +498,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
 // Pictures of every page, for the documentation: `vrequency --audio null --render DIR`.
 int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
     QDir().mkpath(dir);
-    static const char *files[] = {"0-play", "1-sound", "2-backing", "9-beat", "3-tune", "4-system", "5-help"};
-    static const char *names[] = {"play", "sound", "backing", "beat", "tune", "system", "help"};
+    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help"};
+    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help"};
     inst.set(S_VOLUME, 0.5f);
     w.setPage(MainWindow::PG_PLAY);
     key(w, Qt::Key_A, true); wait(250);
@@ -309,7 +515,7 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
             inst.beatDo(BT_PLAYSTOP);
         }
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
-        w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
+        if (p != MainWindow::PG_TRACK) w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
         if (p == MainWindow::PG_BEAT) { inst.beatDo(BT_PLAYSTOP); inst.set(S_BEATVOL, 0.7f); wait(60); }
     }
     (void)names;
@@ -324,6 +530,74 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         inst.set(S_XYMAP, XY_FILTER); wait(60);
     }
     key(w, Qt::Key_F, false); key(w, Qt::Key_A, false);
+    {   // a small arrangement for the Track page: two beats, a progression and two loops
+        auto press = [&](int k) { key(w, k, true); key(w, k, false); };
+        auto ctrl = [&](int k) { key(w, Qt::Key_Control, true); press(k); key(w, Qt::Key_Control, false); };
+        auto melody = [](const Patch &sound, std::initializer_list<std::array<double, 3>> notes) {
+            LayerData ld; ld.patches.push_back(sound);
+            uint32_t seq = 0;
+            for (const auto &n : notes) {
+                LoopEv a; a.beat = n[0]; a.op = OP_ON; a.slot = 0; a.a = (float)n[2]; a.b = 1; a.seq = seq++;
+                LoopEv b; b.beat = n[0] + n[1]; b.op = OP_OFF; b.slot = 0; b.a = b.b = 0; b.seq = seq++;
+                ld.ev.push_back(a); ld.ev.push_back(b);
+            }
+            return ld;
+        };
+        SessionData sd; inst.snapshot(sd);
+        sd.prog[0] = 5; sd.prog[1] = 3; sd.prog[2] = 0; sd.prog[3] = 4; sd.progLen = 4; sd.settings.chordBeats = 4;
+        sd.backing = extraPatch(1);
+        sd.loopBeats = 8;
+        sd.layers = {melody(extraPatch(0), {{0, 1.5, 64}, {1.5, 1.5, 67}, {3.5, 0.5, 69}, {4, 2, 72}, {6, 1, 71}, {7, 0.9, 67}})};
+        inst.restore(sd); wait(80);
+        w.setPage(MainWindow::PG_TRACK); wait(60);
+        tap(w, "keep"); wait(60);                       // Beat 1, Chords 1, Loop 1
+        inst.beatDo(BT_ERASE, D_HAT); inst.beatDo(BT_STEP, D_CLAP, 4, 1); inst.beatDo(BT_STEP, D_TOM, 13, 1); wait(80);
+        inst.snapshot(sd);
+        sd.loopBeats = 16;
+        sd.layers = {melody(extraPatch(1), {{0, 3, 52}, {4, 2, 55}, {6, 2, 57}, {8, 3.5, 60}, {12, 1, 59}, {13, 1, 57}, {14, 1.9, 55}}),
+                     melody(extraPatch(1), {{2, 1, 76}, {7, 0.5, 79}, {10, 2, 81}, {15, 0.5, 79}})};
+        inst.restore(sd); wait(80);
+        tap(w, "keep"); wait(60);                       // Beat 2, Loop 2
+        press(Qt::Key_Escape);
+        press(Qt::Key_Return);
+        press(Qt::Key_1); for (int i = 0; i < 4; ++i) ctrl(Qt::Key_V);                 // Beat 1 on bars 1-4
+        press(Qt::Key_4); ctrl(Qt::Key_V);                                              // Beat 2 on bar 5
+        press(Qt::Key_1); for (int i = 0; i < 3; ++i) ctrl(Qt::Key_V);                 // Beat 1 on bars 6-8
+        press(Qt::Key_Return); press(Qt::Key_2); ctrl(Qt::Key_V); ctrl(Qt::Key_V);     // Chords 1 twice
+        QRectF lanes = w.zoneRect("lanes");
+        auto cell = [&](int lane, double bar) { return QPointF(lanes.left() + (bar + 0.5) * lanes.width() / 8.0, lanes.top() + 2 + lane * 70 + 33); };
+        auto touch = [&](QPointF a) { w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); };
+        press(Qt::Key_3); touch(cell(LN_LOOPA, 2)); touch(cell(LN_LOOPA, 6));          // Loop 1 on bars 3-4 and 7-8
+        press(Qt::Key_5); touch(cell(LN_LOOPB, 4));                                     // Loop 2 on bars 5-8
+        press(Qt::Key_Escape);
+        touch(cell(LN_BEAT, 0)); ctrl(Qt::Key_J); ctrl(Qt::Key_J); ctrl(Qt::Key_J);    // the four beat bars become one clip
+        touch(cell(LN_LOOPA, 2));
+        press(Qt::Key_Return);
+        key(w, Qt::Key_Shift, true); press(Qt::Key_Right); press(Qt::Key_Right); key(w, Qt::Key_Shift, false); // play line on bar 3
+        press(Qt::Key_C);                                                               // cycle round the chosen loop
+        press(Qt::Key_3);                                                               // Loop 1 in hand again
+        touch(cell(LN_LOOPA, 2));
+        wait(1700);                                                                     // let the notices fade
+        for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/10-track.png").arg(dir));
+        press(Qt::Key_Escape);
+        press(Qt::Key_C);
+        press(Qt::Key_E);
+        w.shot();
+        QRectF strip = w.zoneRect("chopstrip");
+        for (double f : {0.25, 0.5, 0.75}) { touch(QPointF(strip.left() + strip.width() * f + 2, strip.center().y())); w.shot(); }
+        touch(QPointF(strip.left() + strip.width() * 0.6, strip.center().y())); w.shot(); // choose piece C
+        tap(w, "cleft"); w.shot();
+        wait(1700);
+        for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/11-chop.png").arg(dir));
+        tap(w, "cdone");
+        inst.cmd(EV_PANIC); wait(60);
+    }
+    if (qEnvironmentVariableIsSet("VREQUENCY_HELP_SHOTS")) { // every page of the built-in guide, for proof-reading
+        w.setPage(MainWindow::PG_HELP);
+        for (int i = 0; i < 4; ++i) { w.shot(); w.shot().save(QString("%1/help-%2.png").arg(dir).arg(i)); tap(w, "helppage"); }
+    }
     w.setPage(MainWindow::PG_SYS);
     w.setKeyTest(true);
     key(w, Qt::Key_Z, true); key(w, Qt::Key_S, true); key(w, Qt::Key_E, true); wait(120);

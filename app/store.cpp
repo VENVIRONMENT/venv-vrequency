@@ -1,4 +1,6 @@
 #include "store.h"
+#include <algorithm>
+#include <cmath>
 #include <QDateTime>
 #include <QDir>
 #include <QJsonArray>
@@ -106,6 +108,44 @@ void beatFromJson(const QJsonArray &a, uint16_t *beat) {
     }
 }
 
+static QJsonArray layersToJson(const std::vector<td::LayerData> &src) {
+    QJsonArray layers;
+    for (const td::LayerData &ld : src) {
+        QJsonObject lo;
+        QJsonArray pats, evs;
+        for (const td::Patch &p : ld.patches) pats.append(patchToJson(p));
+        for (const td::LoopEv &e : ld.ev) {
+            QJsonArray a; // compact: [beat, op, slot, a, b]
+            a.append(e.beat); a.append((int)e.op); a.append((int)e.slot); a.append((double)e.a); a.append((double)e.b);
+            evs.append(a);
+        }
+        lo["patches"] = pats; lo["events"] = evs;
+        layers.append(lo);
+    }
+    return layers;
+}
+
+static std::vector<td::LayerData> layersFromJson(const QJsonArray &src) {
+    std::vector<td::LayerData> out;
+    uint32_t seq = 0;
+    for (const QJsonValue &lv : src) {
+        QJsonObject lo = lv.toObject();
+        td::LayerData ld;
+        for (const QJsonValue &pv : lo["patches"].toArray()) ld.patches.push_back(patchFromJson(pv.toObject()));
+        for (const QJsonValue &ev : lo["events"].toArray()) {
+            QJsonArray a = ev.toArray();
+            if (a.size() < 5) continue;
+            td::LoopEv e;
+            e.beat = a[0].toDouble(); e.op = (uint8_t)a[1].toInt(); e.slot = (uint8_t)a[2].toInt();
+            e.a = (float)a[3].toDouble(); e.b = (float)a[4].toDouble(); e.seq = seq++;
+            if (e.beat < 0 || e.beat > td::kMaxLoopBeats || e.op > td::OP_PARAM) continue;
+            ld.ev.push_back(e);
+        }
+        out.push_back(std::move(ld));
+    }
+    return out;
+}
+
 QJsonObject sessionToJson(const td::SessionData &s) {
     QJsonObject o;
     o["format"] = "vrequency-session-1";
@@ -118,20 +158,7 @@ QJsonObject sessionToJson(const td::SessionData &s) {
     o["holdChord"] = s.holdChord;
     o["droneMask"] = s.droneMask;
     o["loopBeats"] = s.loopBeats;
-    QJsonArray layers;
-    for (const td::LayerData &ld : s.layers) {
-        QJsonObject lo;
-        QJsonArray pats, evs;
-        for (const td::Patch &p : ld.patches) pats.append(patchToJson(p));
-        for (const td::LoopEv &e : ld.ev) {
-            QJsonArray a; // compact: [beat, op, slot, a, b]
-            a.append(e.beat); a.append((int)e.op); a.append((int)e.slot); a.append((double)e.a); a.append((double)e.b);
-            evs.append(a);
-        }
-        lo["patches"] = pats; lo["events"] = evs;
-        layers.append(lo);
-    }
-    o["layers"] = layers;
+    o["layers"] = layersToJson(s.layers);
     o["beat"] = beatToJson(s.beat);
     return o;
 }
@@ -148,24 +175,122 @@ bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
     s.droneMask = o["droneMask"].toInt(0);
     s.loopBeats = o["loopBeats"].toDouble(0);
     beatFromJson(o["beat"].toArray(), s.beat);
-    s.layers.clear();
-    uint32_t seq = 0;
-    for (const QJsonValue &lv : o["layers"].toArray()) {
-        QJsonObject lo = lv.toObject();
-        td::LayerData ld;
-        for (const QJsonValue &pv : lo["patches"].toArray()) ld.patches.push_back(patchFromJson(pv.toObject()));
-        for (const QJsonValue &ev : lo["events"].toArray()) {
-            QJsonArray a = ev.toArray();
-            if (a.size() < 5) continue;
-            td::LoopEv e;
-            e.beat = a[0].toDouble(); e.op = (uint8_t)a[1].toInt(); e.slot = (uint8_t)a[2].toInt();
-            e.a = (float)a[3].toDouble(); e.b = (float)a[4].toDouble(); e.seq = seq++;
-            if (e.beat < 0 || e.beat > td::kMaxLoopBeats || e.op > td::OP_PARAM) continue;
-            ld.ev.push_back(e);
-        }
-        s.layers.push_back(std::move(ld));
-    }
+    s.layers = layersFromJson(o["layers"].toArray());
     return true;
+}
+
+// ---- the track ----
+
+QJsonObject trackToJson(const td::TrackData &t) {
+    static const char *K[] = {"beat", "chords", "loop"};
+    QJsonObject o;
+    o["bars"] = t.bars; o["cycleFrom"] = t.cycleFrom; o["cycleTo"] = t.cycleTo;
+    QJsonArray clips;
+    for (const auto &cp : t.clips) {
+        const td::Clip &c = *cp;
+        QJsonObject co;
+        co["kind"] = K[qBound(0, c.kind, 2)];
+        co["name"] = QString::fromUtf8(c.name);
+        co["bars"] = c.bars;
+        if (c.kind == td::CK_BEAT) {
+            co["kit"] = c.kit; co["beat"] = beatToJson(c.beat);
+        } else if (c.kind == td::CK_CHORDS) {
+            QJsonArray prog;
+            for (int i = 0; i < c.progLen; ++i) prog.append(c.prog[i]);
+            co["progression"] = prog; co["holdChord"] = c.holdChord; co["droneMask"] = c.droneMask;
+            co["style"] = c.backStyle; co["chordBeats"] = c.chordBeats; co["arpRate"] = c.arpRate; co["seventh"] = c.seventh;
+            co["sound"] = patchToJson(c.patch);
+        } else {
+            co["layers"] = layersToJson(c.layers);
+        }
+        clips.append(co);
+    }
+    o["clips"] = clips;
+    QJsonArray lanes;
+    for (int ln = 0; ln < td::kLanes; ++ln) {
+        QJsonArray la;
+        for (const td::Placement &p : t.lane[ln]) {
+            QJsonObject po;
+            po["clip"] = p.clip; po["bar"] = p.bar; po["bars"] = p.bars;
+            if (p.mute) po["mute"] = true;
+            QJsonArray pcs;
+            for (const td::Piece &x : p.pieces) {
+                QJsonArray a; a.append(x.src); a.append(x.len); a.append(x.mute ? 1 : 0);
+                pcs.append(a);
+            }
+            po["pieces"] = pcs;
+            la.append(po);
+        }
+        lanes.append(la);
+    }
+    o["lanes"] = lanes;
+    return o;
+}
+
+void trackFromJson(const QJsonObject &o, td::TrackData &t) {
+    t = td::TrackData();
+    t.bars = qBound(1, o["bars"].toInt(8), td::kTrackMaxBars);
+    t.cycleFrom = qBound(0, o["cycleFrom"].toInt(0), td::kTrackMaxBars);
+    t.cycleTo = qBound(0, o["cycleTo"].toInt(0), td::kTrackMaxBars);
+    for (const QJsonValue &cv : o["clips"].toArray()) {
+        const QJsonObject co = cv.toObject();
+        td::Clip c;
+        const QString kind = co["kind"].toString();
+        c.kind = kind == "chords" ? td::CK_CHORDS : (kind == "loop" ? td::CK_LOOP : td::CK_BEAT);
+        qstrncpy(c.name, co["name"].toString().toUtf8().constData(), sizeof c.name);
+        c.bars = qBound(1, co["bars"].toInt(1), td::kTrackMaxBars);
+        if (c.kind == td::CK_BEAT) {
+            c.kit = qBound(0, co["kit"].toInt(0), td::kKits - 1);
+            beatFromJson(co["beat"].toArray(), c.beat);
+            c.bars = 1;
+        } else if (c.kind == td::CK_CHORDS) {
+            const QJsonArray prog = co["progression"].toArray();
+            c.progLen = qMin((int)prog.size(), td::kProgMax);
+            for (int i = 0; i < c.progLen; ++i) c.prog[i] = ((prog[i].toInt() % 7) + 7) % 7;
+            c.holdChord = qBound(-1, co["holdChord"].toInt(-1), 6);
+            c.droneMask = co["droneMask"].toInt(0) & 0x7f;
+            c.backStyle = qBound(0, co["style"].toInt(0), td::BS_COUNT - 1);
+            c.chordBeats = qBound(1, co["chordBeats"].toInt(4), 8);
+            c.arpRate = qBound(1, co["arpRate"].toInt(2), 4);
+            c.seventh = co["seventh"].toBool(false);
+            c.patch = patchFromJson(co["sound"].toObject());
+        } else {
+            c.layers = layersFromJson(co["layers"].toArray());
+            if ((int)c.layers.size() > td::kLayers) c.layers.resize(td::kLayers);
+            for (td::LayerData &ld : c.layers) {
+                if (ld.patches.empty()) ld.patches.push_back(td::Patch());
+                std::stable_sort(ld.ev.begin(), ld.ev.end(), [](const td::LoopEv &a, const td::LoopEv &b) { return a.beat < b.beat; });
+            }
+        }
+        td::addClip(t, c);
+    }
+    const QJsonArray lanes = o["lanes"].toArray();
+    for (int ln = 0; ln < td::kLanes && ln < lanes.size(); ++ln) {
+        for (const QJsonValue &pv : lanes[ln].toArray()) {
+            const QJsonObject po = pv.toObject();
+            td::Placement p;
+            p.clip = po["clip"].toInt(-1); p.bar = po["bar"].toInt(-1); p.bars = po["bars"].toInt(0);
+            p.mute = po["mute"].toBool(false);
+            if (p.clip < 0 || p.clip >= (int)t.clips.size()) continue;
+            const td::Clip &c = *t.clips[p.clip];
+            if (!td::laneTakes(ln, c.kind) || !td::laneFree(t, ln, p.bar, p.bars)) continue;
+            double total = 0; bool ok = true;
+            for (const QJsonValue &xv : po["pieces"].toArray()) {
+                const QJsonArray a = xv.toArray();
+                if (a.size() < 2) { ok = false; break; }
+                td::Piece x; x.src = a[0].toDouble(); x.len = a[1].toDouble(); x.mute = a.size() > 2 && a[2].toInt() != 0;
+                if (x.len < 0.124 || x.src < 0 || x.src + x.len > c.beats() + 1e-6) { ok = false; break; }
+                total += x.len;
+                p.pieces.push_back(x);
+            }
+            if (!ok || std::fabs(total - c.beats()) > 1e-6) td::resetPieces(p, c); // unreadable cuts: the clip whole
+            t.lane[ln].push_back(p);
+        }
+        td::sortLane(t, ln);
+    }
+    for (int ln = 0; ln < td::kLanes; ++ln)
+        for (const td::Placement &p : t.lane[ln]) t.bars = qMax(t.bars, p.bar + p.bars);
+    if (t.cycleTo > t.bars || t.cycleTo <= t.cycleFrom) t.cycleFrom = t.cycleTo = 0;
 }
 
 bool writeJson(const QString &path, const QJsonObject &o) {

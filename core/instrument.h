@@ -202,7 +202,7 @@ struct Placement {
 };
 
 struct TrackData {
-    std::vector<Clip> clips;
+    std::vector<std::shared_ptr<const Clip>> clips; // shared, never changed: copying a track is cheap
     std::vector<Placement> lane[kLanes];
     int bars = 8;
     int cycleFrom = 0, cycleTo = 0; // in bars; cycleTo <= cycleFrom means the whole track
@@ -217,6 +217,7 @@ bool chordsClip(const SessionData &s, Clip &out);
 bool loopClip(const SessionData &s, Clip &out);
 bool sameClip(const Clip &a, const Clip &b);
 Placement placeClip(const Clip &c, int bar);
+inline int addClip(TrackData &t, const Clip &c) { t.clips.push_back(std::make_shared<const Clip>(c)); return (int)t.clips.size() - 1; }
 // Arranging. Bars are whole numbers; nothing may overlap in a lane.
 bool laneFree(const TrackData &t, int lane, int bar, int bars, int ignore = -1);
 int placementAt(const TrackData &t, int lane, int bar);
@@ -230,6 +231,11 @@ void cutEvery(Placement &p, double every);
 void resetPieces(Placement &p, const Clip &c);
 bool movePiece(Placement &p, int i, int dir);        // swap with its neighbour
 bool repeatPiece(Placement &p, int i);               // the next piece plays this one's material again
+double sourceAt(const Placement &p, double beat);    // where in the clip a moment of the pass reads from; -1 = muted
+std::vector<Piece> rotatedPieces(const Placement &p, double offset); // the pass as heard from `offset` beats in
+// Splitting a placed clip at a bar line makes two that sound the same as before; joining undoes it.
+bool splitPlacement(TrackData &t, int lane, int idx, int atBar);
+bool joinPlacements(TrackData &t, int lane, int idx); // with the one after it; false if they do not belong together
 
 struct StringUi {
     bool gate = false;

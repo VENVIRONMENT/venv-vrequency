@@ -15,6 +15,7 @@
 #include <QTouchEvent>
 #include <cmath>
 #include <cstring>
+#include <memory>
 
 using namespace td;
 
@@ -100,9 +101,13 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         chordRow = st["chordRow"].toBool(false);
         store::beatFromJson(st["beat"].toArray(), sd.beat);
         extrasSeeded = st["extras"].toInt(0);
+        if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
     }
     sd.lead = lead; sd.backing = lead;
     inst.restore(sd);
+    inst.setTrack(std::make_shared<const TrackData>(track));
+    trackSaveTimer.setSingleShot(true);
+    connect(&trackSaveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
     if (extrasSeeded < kExtraCount) addExtraSounds(extrasSeeded); // once: deleting one keeps it gone
     refreshLists();
 
@@ -113,7 +118,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || !captured.isEmpty() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !held.isEmpty() ||
-                    s.beatPlaying || playingBack();
+                    s.beatPlaying || playingBack() || s.trackPlaying || exportState.load() != 0;
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -149,6 +154,7 @@ MainWindow::~MainWindow() {
     if (listenThread.joinable()) listenThread.join();
     if (wav.isOpen()) stopRecording();
     if (playingBack()) { player->kill(); player->waitForFinished(500); }
+    if (exportThread.joinable()) exportThread.join();
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -170,6 +176,7 @@ void MainWindow::saveState() {
     o["chordRow"] = chordRow;
     o["beat"] = store::beatToJson(sd.beat);
     o["extras"] = extrasSeeded;
+    o["track"] = store::trackToJson(track);
     store::writeJson(store::baseDir() + "/state.json", o);
 }
 
@@ -341,7 +348,9 @@ void MainWindow::drainRecording() {
 bool MainWindow::saveSession(const QString &path) {
     SessionData sd;
     inst.snapshot(sd);
-    bool ok = store::writeJson(path, store::sessionToJson(sd));
+    QJsonObject o = store::sessionToJson(sd);
+    o["track"] = store::trackToJson(track);
+    bool ok = store::writeJson(path, o);
     refreshLists();
     return ok;
 }
@@ -353,6 +362,14 @@ bool MainWindow::loadSession(const QString &path) {
     releaseAllKeys();
     inst.restore(sd);
     lead = sd.lead; curSlot = -1;
+    if (o.contains("track")) { // sessions saved before the track existed leave the track alone
+        trackUndo.push_back(track);
+        trackRedo.clear();
+        store::trackFromJson(o["track"].toObject(), track);
+        selLane = selIdx = -1; handOn = false; chopOpen = false; dashCache.clear();
+        playBar = viewBar = 0;
+        trackSync();
+    }
     return true;
 }
 
@@ -441,6 +458,7 @@ void MainWindow::perform(int act, bool shift) {
     case A_BEAT_PLAY: inst.beatDo(BT_PLAYSTOP); toast(u.beatPlaying ? "Beat stopped" : "Beat playing", 900); break;
     case A_BEAT_REC: inst.beatDo(BT_REC); toast(u.beatRec ? "Beat recording off" : "Beat recording: pads write hits", 1200); break;
     case A_PLAY_LAST: togglePlayback(); break;
+    case A_TRACK_PLAY: trackPlayStop(); break;
     case A_HELP: pg = pg == PG_HELP ? PG_PLAY : PG_HELP; break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
@@ -489,6 +507,7 @@ void MainWindow::handleKey(int key, bool down) {
     if (plainAct == A_CHORD_LAYER) { modChord = true; held[key] = {HK_ACT, A_CHORD_LAYER, 0}; return; }
     if (plainAct == A_COMMAND) { modCommand = true; held[key] = {HK_ACT, A_COMMAND, 0}; return; }
 
+    if (pg == PG_TRACK && !keyTest && trackKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
     if (modCommand) {
         perform(km.command.value(key, A_NONE), modChromatic);
         held[key] = {HK_NONE, 0, 0};
@@ -763,8 +782,10 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setRenderHint(QPainter::TextAntialiasing, false);
     zones.clear();
+    pollExport();
 
     switch (pg) {
+    case PG_TRACK: paintTabs(); paintTrack(); break;
     case PG_PLAY: paintPlay(); break;
     case PG_SOUND: paintTabs(); paintSound(); break;
     case PG_BACK: paintTabs(); paintBacking(); break;
@@ -778,7 +799,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     if (clock.elapsed() < toastUntil && !toastText.isEmpty()) { // a message box, as the scope reports "Auto-scale"
         QString t = fit(toastText, 14, 640);
         int w = t.size() * chW(14) + 28;
-        QRectF r(std::floor((CW - w) / 2), 86, w, 30);
+        QRectF r(std::floor((CW - w) / 2), pg == PG_TRACK ? 398 : 86, w, 30); // on the Track page, clear of the bars
         frame(r.adjusted(-4, -4, 4, 4), INK, BG);
         tag(r, t, 14);
     }
@@ -801,11 +822,11 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
 }
 
 void MainWindow::paintTabs() {
-    static const char *N[PG_COUNT] = {"Play", "Sound", "Backing", "Beat", "Tune", "System", "Help"};
+    static const char *N[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help"};
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
         button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab%1").arg(i), N[i], pg == i,
-               [this, i] { pg = i; deepEdit = false; slotSave = false; beatErase = false; });
+               [this, i] { pg = i; deepEdit = false; slotSave = false; beatErase = false; removeArmed = -1; });
 }
 
 void MainWindow::paintLoopButton(QRectF r) {
@@ -906,7 +927,7 @@ void MainWindow::paintPlay() {
     txt(QRectF(552, 6, 86, 44), QString::number((int)std::round(u.set.bpm)), 28, INK, R, true);
     txt(QRectF(552, 52, 86, 20), "bpm", 13, MID, R);
     double frac = u.beat - std::floor(u.beat);
-    bool running = u.backPlaying || u.loopState != L_EMPTY;
+    bool running = u.backPlaying || u.loopState != L_EMPTY || u.beatPlaying || u.trackPlaying;
     frame(QRectF(552, 24, 9, 9), running ? INK : LOW, running && frac < 0.25 ? INK : BG); // beat lamp
     txt(QRectF(644, 6, 60, 44), QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave), 28, INK, R, true);
     txt(QRectF(644, 52, 60, 20), "oct", 13, MID, R);
@@ -1378,7 +1399,7 @@ void MainWindow::paintHelp() {
             {QString::fromUtf8("1 ‥ 9, 0"), "sounds 1 to 10"},
             {K(A_CHORD_LAYER) + "+" + km.rows[0].left(1) + QString::fromUtf8("‥") + km.rows[0].right(1), QString::fromUtf8("backing chord I ‥ VII")},
             {K(A_CHORD_ROW), "toggle: bottom row plays chords"},
-            {"Tab / Esc", "next page / back to the play page"},
+            {"Tab / Esc", "next page / back to the Synth page"},
             {"screen", "drag the scope = X-Y control, drag a string = slide"},
         };
     } else if (helpPage == 2) {
@@ -1395,6 +1416,26 @@ void MainWindow::paintHelp() {
             {"Rec + pads", "hits snap to the nearest of 16 steps in the bar"},
             {"Erase, pad", "tap Erase, then a pad: that drum's hits are removed"},
             {"Kit", "soft, crunchy or glitchy drum sounds"},
+        };
+    } else if (helpPage == 3) {
+        const QString c = km.keyFor(A_COMMAND, false) + "+";
+        rows = {
+            {K(A_SUSTAIN) + " / " + K(A_LOOP), "Track page: play or stop / back to bar 1"},
+            {"Left / Right", "choose the clip before / after"},
+            {"Up / Down", "choose a clip on the lane above / below"},
+            {"Alt + arrows", "move the chosen clip a bar, or to the other loop lane"},
+            {"Shift + L / R", "move the play line a bar (also , and .)"},
+            {QString::fromUtf8("1 ‥ 5"), "take a clip from the shelf in hand"},
+            {c + "V", "paste: place the clip in hand at the play line"},
+            {c + "T / " + c + "J", "split the chosen clip at the play line / join"},
+            {c + "R", "repeat: a copy right after the chosen clip"},
+            {c + "X / " + c + "C", "cut / copy the chosen clip"},
+            {c + "Z", "undo (with " + K(A_CHROMATIC) + ": redo)"},
+            {K(A_PANIC), "delete the chosen clip from the track"},
+            {"M / C", "mute the chosen clip / cycle on or off"},
+            {"E / K", "chop the chosen clip / keep what is live as clips"},
+            {c + "B", "export the track as an audio file"},
+            {K(A_TRACK_PLAY, true), "play or stop the track from any page"},
         };
     } else {
         rows = {
@@ -1416,7 +1457,7 @@ void MainWindow::paintHelp() {
             {K(A_HELP, true) + " " + K(A_QUIT, true), "this guide / quit"},
         };
     }
-    tag(QRectF(16, 64, 688, 22), helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false))), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    tag(QRectF(16, 64, 688, 22), helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters are commands on the Track page") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false)))), 14, Qt::AlignLeft | Qt::AlignVCenter);
     for (size_t i = 0; i < rows.size(); ++i) {
         qreal y = 96 + i * 33.5;
         QRectF kr(16, std::floor(y), 176, 28);
@@ -1425,7 +1466,7 @@ void MainWindow::paintHelp() {
         txt(QRectF(204, std::floor(y), 500, 28), fit(rows[i].d, 13, 500), 13, i % 2 ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
     }
     txt(QRectF(18, 638, 680, 20), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    button(QRectF(16, 664, 340, 44), "helppage", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : QString::fromUtf8("‹ Playing keys")), false, [this] { helpPage = (helpPage + 1) % 3; });
+    button(QRectF(16, 664, 340, 44), "helppage", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; });
     button(QRectF(364, 664, 340, 44), "helpplay", "Back to playing", false, [this] { pg = PG_PLAY; });
 }
 
