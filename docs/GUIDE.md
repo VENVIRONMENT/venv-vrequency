@@ -23,6 +23,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 14. [All the keys](#14-all-the-keys)
 15. [When something is wrong](#15-when-something-is-wrong)
 16. [Chat with a copilot](#16-chat-with-a-copilot)
+17. [Asking Rook while you play (the chat dock)](#17-asking-rook-while-you-play-the-chat-dock)
 
 ## 1. Start and quit
 
@@ -570,7 +571,7 @@ Commands, with `Ctrl` held:
 | `J` | Beat play / stop | `W` | Play last recording |
 | `I` | Beat Rec on / off | `Q` | Quit |
 | `H` | Help | `Space` | Track play / stop |
-| `Y` | Chat: jump to it and back | | |
+| `Y` | Chat dock: ask Rook on this page (`Shift`: the Chat page) | | |
 
 On the Beat page only:
 
@@ -627,17 +628,49 @@ switches it off, and then the Chat page simply stays quiet.
 - **Type** on the keyboard: on this page letters type instead of playing strings. `Enter` sends,
   `Backspace` deletes a letter, `Up` / `Down` (or a finger drag on the history) scroll, `Esc` leaves the page.
   The **Send** button sends by touch. `Tab` and the `Ctrl` commands still work.
-- **Hotkey**: `Ctrl`+`Y` jumps to Chat from any page, and the same keys take you back to where you were.
-  (It is bound as `chat` in `keymap.json`; the other `Ctrl` letters are unchanged.)
+- **Hotkey**: `Ctrl`+`Shift`+`Y` jumps to this page from any page, and `Ctrl`+`Y` here takes you back to where
+  you were. (On the other pages `Ctrl`+`Y` opens the chat dock instead, chapter 17. It is bound as `chat`
+  in `keymap.json`; the other `Ctrl` letters are unchanged.)
 - The copilot's messages have a white tag with its name; yours have an outlined `YOU`. A `?` after the
   name means it is asking you something, `tip` marks a suggestion.
 - **The ticker**: when the copilot says something while you are on another page, the message appears in a
   two-line strip at the bottom of the screen for about seven seconds, and the Chat tab shows how many are
-  unread (`Chat 2`). It never takes the keyboard or touch away, so you can keep playing; it does cover the
-  bottom row of controls while it shows.
+  unread (`Chat 2`). It never takes the keyboard away, so you can keep playing; it does cover the
+  bottom row of controls while it shows. Touch it, or press `Ctrl`+`Y`, to answer in the chat dock (chapter 17).
 - **`copilot: listening`** at the top right means a copilot is connected and waiting for you
   (it has asked for your messages in the last 45 seconds, or is waiting right now); otherwise it says
   `copilot: not connected`. Messages you type then wait for it: they are kept.
 - The last 200 messages are kept between runs.
 
 ![A message arriving while playing](shots/15-ticker.png)
+
+## 17. Asking Rook while you play (the chat dock)
+
+![The chat dock on the Synth page, with OCTAVE highlighted](shots/16-dock-synth.png)
+
+You do not have to leave the page you are on to talk to the copilot. Press `Ctrl`+`Y` on any page
+except Chat and a **dock** opens over the bottom of the screen: the last two or three messages, an
+input line and Send. The page behind it stays visible and keeps working above the dock.
+
+- **Keys.** `Ctrl`+`Y` opens the dock and gives it the keyboard: letters type (they do not play strings),
+  `Enter` sends, `Backspace` deletes, `Up` / `Down` scroll. `Esc` gives the keyboard back to the page and
+  leaves the dock showing, so the keys play again; `Esc` once more closes the dock. `Ctrl`+`Y` while the dock
+  is open switches the keyboard between the two. `Ctrl`+`Shift`+`Y` opens the full Chat page. By touch:
+  tap the input line to type, **Send**, **Full** (the Chat page), **Hide**.
+- **From the ticker.** When Rook speaks while the dock is closed, the ticker shows the message; touch it, or
+  press `Ctrl`+`Y`, to answer straight away.
+- **Pointing.** Rook can ring the controls it is talking about with a pulsing double outline, sometimes with a
+  small caption tag next to it. The dock's header then says what is being discussed (`▸ OCTAVE`). The highlight
+  goes away after a few seconds, or as soon as you change page. If the dock would cover what Rook points at, it
+  gets shorter or moves to the top of the screen. When you answer, your message tells Rook which page you
+  were on and what was highlighted, so "what does this do?" works.
+- **On the Help page** every row is touchable. Tap a row and the dock opens with the question already started
+  ("What does "Enter: loop pedal ..." do?"); press `Enter`. **Ask Rook** at the top opens the dock for the section you
+  are reading. Rook can highlight a row ("the Loop pedal row") while it explains.
+
+![The Help page with the dock, one row highlighted](shots/17-dock-help.png)
+
+![A caption tag on a highlighted control](shots/18-caption.png)
+
+Rook needs to be connected (the dock says `Rook is listening`); if it is not, your messages wait for it.
+The commands Rook uses are in [CONTROL.md](CONTROL.md).

@@ -155,7 +155,7 @@ is false).
 ```
 
 ### page
-`name`: track, synth, sound, beat, backing, tune, system, help or chat.
+`name`: track, synth, sound, beat, backing, tune, system, help or chat. Changing page clears any highlight.
 ```
 {"id":28,"cmd":"page","name":"chat"}
 ```
@@ -181,7 +181,7 @@ history survives restarts and the numbering carries on.
 ### chat_say
 `text` 1-2000 characters; `from` (default `"rook"`, up to 16 characters; `"you"` is the player and refused);
 `kind` `say` (default), `tip` or `ask`. Shows on the Chat page and, while the player is on another page, in a
-two-line ticker at the bottom of the screen for a few seconds (it takes no key and no touch).
+two-line ticker at the bottom of the screen for a few seconds (it takes no key; touching it opens the chat dock). The `Ctrl`+`Y` hotkey now opens the dock, see below.
 ```
 {"id":31,"cmd":"chat_say","from":"claude","kind":"ask","text":"Want a slower tempo?"}
 ```
@@ -201,6 +201,110 @@ empty `messages` list. Nothing else is blocked meanwhile, and several clients ca
 {"id":33,"cmd":"chat_wait","since":14,"timeout_ms":20000}
 ```
 While any chat_wait is pending, the Chat page says `copilot: listening`.
+
+## Guided help: pointing at the screen
+
+Every control on the screen is a named **zone**. An agent can ring the zones it is talking about, learn what
+exists on a page, and see the player's answer arrive from a small chat dock that opens over whatever page the
+player is on (`Ctrl`+`Y`), together with where the player was when they asked.
+
+### highlight
+`zones`: 1-16 zone names (each up to 48 characters); `label`: optional caption up to 40 characters (control
+characters become spaces); `ms`: how long, 100-30000 (default 8000); `page`: optional page to switch to
+**first, in the same step** (any page name as for `page`); `sub`: with `help`, which section of the Help page
+(`playing`, `commands`, `beat`, `track` or 0-3).
+
+The named zones of the page being shown get a pulsing double rule (two white lines, 2 px clear of the control).
+With a `label` a small caption tag sits next to the first one: always on screen, never over a highlighted zone,
+and never under the chat dock. A name can also be an **alias** (`octave` = `octave_down` + `octave_up`; `strings`,
+`tabs`, `chords`, `pads`) or end in `*` to mean every zone with that prefix (`chord*`). Names that do not exist
+on that page are returned in `unknown`; the others still highlight (if none exist, nothing is highlighted and
+`highlighted` is empty). The reply:
+```
+-> {"id":40,"cmd":"highlight","zones":["octave"],"label":"OCTAVE","ms":10000}
+<- {"id":40,"ok":true,"result":{"page":"synth","highlighted":["octave_down","octave_up"],"unknown":[],
+    "ms":10000,"caption":true,"dock":{"open":false}}}
+-> {"id":41,"cmd":"highlight","zones":["help_ask","nope"],"page":"help"}
+<- {"id":41,"ok":true,"result":{"page":"help","highlighted":["help_ask"],"unknown":["nope"],"ms":8000,"caption":false,"dock":{"open":false}}}
+```
+A highlight ends when its time is up, on `unhighlight`, or **when the player changes page** (issue it again
+if you want it back). If the chat dock is open it moves clear of the highlighted zones: shorter, then to the
+top of the screen, and the dock's header shows `▸ OCTAVE` (the label, or else the name asked for) while that is
+what is being discussed. A new agent message that follows a highlight within 5 seconds keeps that tag.
+
+### unhighlight
+Clears the highlight at once. The reply says how many zones were cleared.
+```
+{"id":42,"cmd":"unhighlight"}
+```
+
+### zones
+`page` (default: the page shown), `sub` for Help. Returns every named zone of that page as
+`{name, label, x, y, w, h}` (canvas pixels, 720 x 720) and `dock_open`; a zone the open dock covers has
+`covered_by_dock: true`. `label` is the text drawn on the control where there is one, else a readable name.
+Another page is drawn off-screen to list it: the player stays where they are and nothing is touched.
+```
+-> {"id":43,"cmd":"zones","page":"synth"}
+<- {"id":43,"ok":true,"result":{"page":"synth","dock_open":false,"zones":[{"name":"octave_up","label":"Octave up","x":396,"y":628,"w":54,"h":80}, ...]}}
+```
+The Track page lists what its current view shows (shelf and tools, Chop, sound picker or mixer).
+
+### help_focus (in state)
+```
+"help_focus":{"page":"synth","highlighted":["octave_down","octave_up"],"dock_open":true,"dock_focus":true,
+              "last_question_zone":"octave_down","topic":"OCTAVE"}
+```
+`last_question_zone` is the first focus zone of the last message the player sent. `topic` is what the dock's tag says.
+
+### What the player's message carries
+A message typed in the dock (or on the Chat page) is an ordinary chat message with the next `seq`; `chat_poll` and
+`chat_wait` return it with extra fields: `page` (where the player was: `synth`, `help`...), `focus` (the highlighted
+zones, else the zones the last agent message was about, else the control the player touched last on that page;
+possibly empty) and `via` (`dock` or `chat`). So an agent reads "asked on synth with octave_down, octave_up
+highlighted" and can answer about exactly that. Tapping a row on the Help page asks about that row: `focus`
+is the row's zone name.
+```
+{"seq":57,"from":"you","user":true,"text":"why does it jump so far?","page":"synth","focus":["octave_down","octave_up"],"via":"dock",...}
+```
+
+### The chat dock (what the player sees)
+`Ctrl`+`Y` on any page except Chat opens a dock over the bottom of the screen (the top, if something highlighted is
+down there), with the last few lines, an input and Send. The keyboard goes to it: letters type, `Enter` sends,
+`Esc` gives the keys back to the page and keeps the dock; `Esc` again closes it; `Ctrl`+`Y` toggles the
+keyboard while it is open; `Ctrl`+`Shift`+`Y` opens the full Chat page. A new agent message while the dock is
+closed shows the ticker, which can be touched (or `Ctrl`+`Y` pressed) to open the dock. Dock zones: `dock`, `dock_history`,
+`dock_input`, `dock_send`, `dock_full`, `dock_close`, `ticker`. They are not accepted by `highlight`.
+
+### Zone names
+
+Names are stable; add new ones rather than renaming. Names ending in a digit are numbered from 0 (`string0`
+lowest, `pad0` first drum, `bslot0` first progression slot...). The authoritative list for the current screen is
+`zones`.
+
+| Page | Zones |
+|---|---|
+| every page but Synth | `tab_track` `tab_synth` `tab_sound` `tab_beat` `tab_backing` `tab_tune` `tab_system` `tab_help` `tab_chat` |
+| synth | `hdr_sound` (name) `hdr_tune` (key, tempo, octave) `key_readout` `tempo_readout` `octave_readout` `xy` (scope pad) `xymap` `xyhold` `string0` `string1` `string2` `pslot0`-`pslot7` `chord0`-`chord6` `backmode` `backplay` `loop_pedal` `loop_undo` `loop_playstop` `sustain` `octave_down` `octave_up` `new_sound` `menu` |
+| sound | `slot0`-`slot9` `newsound` `mutate` `undosound` `slotsave` `fav` `deep` `param<N>` `deepprev` `deepnext` `favitem0`-`favitem5` `favprev` `favdel` |
+| beat | `pad0`-`pad7` `beatrec` `beatplay` `beaterase` `kit-` `kit+` `beatvol` `bpm3-` `bpm3+` `beatslot0`... `beatnew` `beatmore` |
+| backing | `bmode0`-`bmode2` `bstyle0`-`bstyle4` `bslot0`-`bslot7` `chord0`-`chord6` `bremove` `bclear` `bseventh` `bmetro` `chordbeats-/+` `arprate-/+` `bpm2-/+` `backvol` `bresync` |
+| tune | `root0`-`root11` `scale0`-`scale7` `oct-/+` `rowint-/+` `bendr-/+` `bpm-/+` `tap` `glidescale` `listen` `lkey` `ltempo` `lboth` `lnext` |
+| system | `volume` `loopvol` `xymap0`-`xymap5` `xyhold2` `chordrow` `recwav` `playlast` `savesession` `keytest` `session0`... `panic` `latency-/+` `factory` `quit` |
+| help | `help_section` `help_next` `help_ask` `help_back` and one `help_row_<description>` per row, e.g. `help_row_loop_pedal_count_in_record_play_ov`; four sections (`sub`), list them with `zones` |
+| chat | `chat_history` `chat_input` `chat_send` |
+| track (shelf and tools) | `shelf_clip0`-`shelf_clip4` `track_keep` `track_shelf_page` `track_ruler` `track_lanes` `track_place` `track_chop` `track_sound` `track_repeat` `track_remove` `track_play` `track_cycle` `track_length-/+` `track_export` `track_split` `track_join` `track_mute` `track_undo` `track_mixer` `track_view-/+` |
+| track (Chop) | `chop_strip` `chop_halves` `chop_beats` `chop_reset` `chop_done` `chop_move_left` `chop_move_right` `chop_mute_piece` `chop_repeat_piece` |
+| track (sound picker) | `sound_kind0`-`sound_kind4` `sound_cell0`-`sound_cell5` `sound_hear` `sound_octave-/+` `sound_scope` `sound_as_recorded` `sound_done` |
+| track (mixer) | `mixer_lane0`-`mixer_lane3` `mixer_fader0`-`mixer_fader3` `mixer_mute0`-`mixer_mute3` `mixer_solo0`-`mixer_solo3` `mixer_play` `mixer_reset` `mixer_done` |
+
+Renamed in 0.12.0 (old name -> new): `tab0`-`tab8` -> `tab_<page>`; `loop` -> `loop_pedal`; `loopundo` -> `loop_undo`;
+`loopstop` -> `loop_playstop`; `sus` -> `sustain`; `octdn` `octup` -> `octave_down` `octave_up`; `dice` -> `new_sound`;
+`keep` -> `track_keep`; `shelf<N>` -> `shelf_clip<N>`; `shelfpage` -> `track_shelf_page`; `ruler` `lanes` -> `track_ruler` `track_lanes`;
+`tplace tchop tsound trepeat tremove tplay tcycle tlen texport tsplit tjoin tmute tundo tmix tview` -> `track_place ... track_view`;
+`chalves cbeats creset cdone cleft cright cmute crepeat chopstrip` -> `chop_halves chop_beats chop_reset chop_done chop_move_left chop_move_right chop_mute_piece chop_repeat_piece chop_strip`;
+`skind<N> scell<N> shear soct sscope srec sdone` -> `sound_kind<N> sound_cell<N> sound_hear sound_octave sound_scope sound_as_recorded sound_done`;
+`mxlane<N> mxfader<N> mxmute<N> mxsolo<N> mxplay mxreset mxdone` -> `mixer_lane<N> ... mixer_done`; `chathist chatsend` -> `chat_history chat_send`;
+`helppage helpplay` -> `help_next help_back`. Zones added: `octave_readout` `key_readout` `tempo_readout`, `chat_input`, `help_*`, `dock*`, `ticker`.
 
 ## Errors you may see
 

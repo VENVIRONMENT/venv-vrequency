@@ -206,7 +206,7 @@ void MainWindow::paintHighlights() {
     QVector<QRectF> avoid;
     for (const QRectF &r : rects) avoid << inflated(r, 8);
     if (!dockR.isNull()) avoid << inflated(dockR, 4);
-    if (pg != PG_CHAT && !dockOpen && clock.elapsed() < tickerUntil) avoid << QRectF(12, 664, 696, 52);
+    if (pg != PG_CHAT && !dockOpen && clock.elapsed() < tickerUntil) avoid << QRectF(12, 2, 696, 52) << QRectF(12, 664, 696, 52);
     const QRectF z = rects[0], screen(2, 2, 716, 716);
     auto ok = [&](const QRectF &c) {
         if (!screen.contains(c)) return false;
@@ -345,7 +345,7 @@ void MainWindow::paintDock() {
     QString shown = chatDraft.size() > bc - 1 ? QString::fromUtf8("…") + chatDraft.right(bc - 2) : chatDraft;
     if (chatDraft.isEmpty()) {
         const QString hint = dockFocus ? QString("type to ask  (Esc: back to the keys)") : QString("%1+%2 or touch to type").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true));
-        txt(box.adjusted(10, 0, -10, 0), fit(hint, 14, box.width() - 20), 14, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+        txt(box.adjusted(10 + (dockFocus ? chW(15) : 0), 0, -10, 0), fit(hint, 14, box.width() - 20), 14, LOW, Qt::AlignLeft | Qt::AlignVCenter);
     } else txt(box.adjusted(10, 0, -10, 0), shown, 15, dockFocus ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, dockFocus);
     if (dockFocus && (clock.elapsed() / 500) % 2 == 0) {
         const qreal cx = box.x() + 10 + (chatDraft.isEmpty() ? 0 : shown.size() * chW(15));

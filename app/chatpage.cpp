@@ -10,6 +10,7 @@
 using namespace pal;
 
 namespace {
+bool inflatedHit(const QRectF &zone, const QRectF &r) { return !zone.isNull() && zone.adjusted(-8, -8, 8, 8).intersects(r.adjusted(-3, -3, 3, 3)); }
 const int kKeep = 200;       // messages kept in the state file
 const int kDraftMax = 400;
 qreal dragLastY = 0;
@@ -187,7 +188,9 @@ void MainWindow::paintChat() {
 // over the page and takes no key, so playing carries on; touching it opens the chat dock to answer.
 void MainWindow::paintTicker() {
     if (pg == PG_CHAT || dockOpen || clock.elapsed() >= tickerUntil) return;
-    const QRectF r(16, 668, 688, 44);
+    QRectF r(16, 668, 688, 44);
+    for (const QString &n : highlightedZones()) // never over what is highlighted: then it goes to the top
+        if (inflatedHit(zoneRect(n), r)) { r = QRectF(16, 6, 688, 44); break; }
     frame(r.adjusted(-2, -2, 2, 2), INK, BG);
     const int cw = chW(13);
     QString name = ticker.from.toUpper();

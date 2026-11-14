@@ -1279,6 +1279,13 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             w.chatAdd("rook", "And another one.", "say", false);
             check(w.chatUnreadCount() == unread && !w.chatTickerShowing(), "with the dock open there is no ticker and nothing counts as unread");
             w.dockClose();
+            { // the ticker does not cover a highlight: it moves to the top
+                QStringList unk; w.refreshZones(); w.setHighlight({"loop_pedal"}, QString(), 20000, unk);
+                w.chatAdd("rook", "Look at the loop pedal.", "say", false); w.shot();
+                check(w.zoneRect("ticker").top() < 100 && !w.zoneRect("ticker").intersects(w.zoneRect("loop_pedal")), "when a highlight is at the bottom the ticker moves to the top");
+                w.clearHighlight(); w.shot();
+                check(w.zoneRect("ticker").top() > 600, "and is back at the bottom without one");
+            }
             w.chatAdd("rook", "Ticker again.", "say", false); w.shot();
             ctrl(Qt::Key_Y);
             check(w.dockIsOpen() && w.dockHasFocus(), "Ctrl+Y while the ticker shows also opens the dock");
@@ -1428,6 +1435,31 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         w.chatAdd("rook", "Nice slide. Try ending the phrase on the fifth: hold Z, press N.", "tip", false);
         for (int i = 0; i < 8; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/15-ticker.png").arg(dir));
+    }
+    {   // guided help: the dock on Synth with the octave buttons highlighted, a caption without the dock, the dock on Help
+        QStringList unk;
+        w.setPage(MainWindow::PG_PLAY);
+        wait(7300); w.refreshZones();   // the ticker has gone
+        w.setHighlight({"loop_pedal"}, "LOOP PEDAL", 20000, unk);
+        for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/18-caption.png").arg(dir));
+        w.clearHighlight();
+        w.dockOpenFocus(); w.shot();
+        w.chatAdd("you", "what does octave do?", "say", true, "synth", {});
+        w.chatAdd("rook", "It moves every string up or down twelve notes. Tap + and play the same key again.", "say", false);
+        w.setHighlight({"octave"}, "OCTAVE", 20000, unk);
+        for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/16-dock-synth.png").arg(dir));
+        w.clearHighlight(); w.dockClose();
+        w.setPage(MainWindow::PG_HELP); w.shot();
+        w.dockOpenFocus();
+        w.chatAdd("rook", "Here is the Loop pedal row: Enter starts a count-in, records, then plays and overdubs.", "say", false);
+        w.shot();
+        w.setHighlight({"help_row_loop_pedal_count_in_record_play_ov"}, "LOOP PEDAL", 20000, unk);
+        for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/17-dock-help.png").arg(dir));
+        w.clearHighlight(); w.dockClose();
+        w.setPage(MainWindow::PG_PLAY);
     }
     {   // the Glitch mapping with a finger on the pad
         w.setPage(MainWindow::PG_PLAY);
