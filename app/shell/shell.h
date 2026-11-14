@@ -9,6 +9,7 @@
 #include <QElapsedTimer>
 
 class AudioOut;
+class Sounds;
 
 // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
 enum PageId { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
@@ -37,6 +38,8 @@ public:
     virtual void saveState() = 0;
     virtual void saveSoon() = 0;             // an edit is on disk a moment later
     virtual void refreshLists() = 0;         // read the favourites and sessions on disk again
+    virtual const Sounds &soundShelf() const = 0;              // the ten slots and the favourites
+    virtual void setLastRecording(const QString &path) = 0;    // an exported track is the newest recording
     void set(int setting, float v) { inst.set(setting, v); }
 
 protected:
