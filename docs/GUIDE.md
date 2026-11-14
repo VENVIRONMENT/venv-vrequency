@@ -1,6 +1,6 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.12.1 with the
+A guide to playing the synth, page by page. Everything here describes version 0.13.0 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -24,6 +24,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 15. [When something is wrong](#15-when-something-is-wrong)
 16. [Chat with a copilot](#16-chat-with-a-copilot)
 17. [Asking Rook while you play (the chat dock)](#17-asking-rook-while-you-play-the-chat-dock)
+18. [The tour](#18-the-tour)
 
 ## 1. Start and quit
 
@@ -679,3 +680,42 @@ input line and Send. The page behind it stays visible and keeps working above th
 
 Rook needs to be connected (the dock says `Rook is listening`); if it is not, your messages wait for it.
 The commands Rook uses are in [CONTROL.md](CONTROL.md).
+
+## 18. The tour
+
+![The tour on the Synth page, OCTAVE selected](shots/20-tour-synth.png)
+
+The tour is a picture of every page with a card for every control on it. Nothing in it is live: it never plays,
+never changes your sound or settings, and the keys do not reach the synth while it is open.
+
+**Opening it.** Tap **Tour** at the top of the Help page, or press `Ctrl`+`O` on any page. The first time the
+app starts it offers the tour in a banner at the top (`Enter` takes it, `Esc` or waiting says later; it is only
+offered once). Rook can also open it for you. It reopens on the page you left it on.
+
+**Reading it.** The chips under the title pick the page (Track, Chop, Clip, Mix, Synth, Sound, Edit, Beat,
+Bkng, Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
+the rest dims, and the card on the right says what it does, how to use it by touch and by keys, and **Recall**,
+which is where to find it again. **Related** chips jump to the next card. Readouts that are not buttons (the
+level strip, scope readouts, the step grid, the Listen result, the status box, the key list rows) have cards
+too. Tap empty space to clear. **Concepts** lists the ideas behind the controls (scale lock, tempo, bar lines...).
+The Edit chip is the All parameters editor; its Prev and Next flip through the four parameter pages.
+
+**Keys.** Arrows move between controls, `Tab` / `Shift`+`Tab` go in reading order, `,` and `.` change page,
+`C` opens Concepts, `V` switches picture variant where a page has two (for example the sound picker on a beat
+clip), `Space` or `Page Down` scrolls a long card, `Home` clears the selection, `Esc` closes a card, then the
+concept list, then the selection, then the tour.
+
+**Start here.** The first time, or from the banner, the tour walks ten pages in order (Synth, Sound, Tune,
+Backing, Beat, Track, Mixer, System, Help, Chat) with Back, Next and **Explore freely**.
+
+**Ask Rook.** The button at the bottom right leaves the tour, goes to the real page the card belongs to, and
+opens the chat dock with a question already written (not sent). Press `Enter` to send it; Rook is told the
+page and which control you were reading (`via` is `tour`).
+
+![A mixer fader card](shots/22-tour-mixer.png)
+
+![A concept card, with Recall](shots/23-tour-concept-recall.png)
+
+The first time the tour opens in a run it draws its pictures (two or three seconds on the Pi; it says so).
+The cards come from `docs/helpcards.json`, built into the program; a damaged file shows a "Help unavailable"
+card, never a crash. `scripts/check_helpcards.py` checks that every control has a card.

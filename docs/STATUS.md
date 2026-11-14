@@ -6,7 +6,7 @@ person heard it or pressed a physical key. Those checks are listed separately.
 ## Working and covered by automated tests
 
 `vrequency_tests` renders audio offline and measures it (522 checks). `vrequency --selftest` drives the real
-application with real key and touch events while the real audio thread runs (343 checks; one of them, "audio backend opened", can only pass with a real audio backend).
+application with real key and touch events while the real audio thread runs (about 452 checks; one of them, "audio backend opened", can only pass with a real audio backend).
 
 | Area | What the tests establish |
 |---|---|
@@ -58,6 +58,23 @@ when the window loses focus, the scope's frequency readout, trigger and auto-ran
 | Launch to first frame | not re-measured since 0.1 (was 0.07 s headless, about 0.3 s on screen) |
 | Output latency added by venv-vrequency | one 5.3 ms block plus PipeWire's own buffering |
 | Output latency of the built-in speaker | about 200 ms (Bluetooth; see HARDWARE.md) |
+
+### Added in 0.13.0 (the tour)
+Covered by `vrequency --selftest` (about 110 checks): the card file is read and validated (14 pages, 258 cards,
+28 concepts; a damaged file shows an error card); every control on 18 pictures (565 hotspots, 8 are tour-only
+readouts with concept cards) has a card; the tour opens from the Help button, `Ctrl`+`O` and the control socket;
+touch and arrow-key selection, Tab order, page chips, guided path and replay; a long tap and key sequence leaves
+the synth state untouched; Ask Rook sends via `tour` with focus; the first-run offer is shown once and
+`tourSeen` and the last page persist across launches; no card overflows (2 of 286 use a 12 px font); redraw
+is well inside a frame; hostile `tour` arguments are refused. The self-test can show one late audio block
+while the tour draws its pictures (seen 1 of 2 runs, peak load 112% then 60%): the pictures are built on the
+UI thread and compete for the CPU. It is untested on the real audio backend.
+
+Needs a person (not verified):
+- **Finger feel.** Page chips are about 46 x 20 px, Related chips about 20 px high; whether a finger hits them reliably is unproven.
+- **LCD legibility.** Card text is 13 px (12 or 11 px on a few long cards) and the dimmed picture is small (380 px); readability on the real screen is judged from rendered pictures only.
+- **Picture accuracy.** The pictures are drawn from demo data, not your live state; whether they look like your Synth at a glance is a judgement.
+- **A real Rook.** Ask Rook and the `tour` command were exercised by the self-test's own client only.
 
 ## Needs a person — NOT verified
 
