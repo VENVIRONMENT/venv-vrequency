@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "tour.h"
 #include "palette.h"
 #include <QApplication>
 #include <QCloseEvent>
@@ -78,7 +79,7 @@ QString paramText(int p, float v) {
 
 // ------------------------------------------------------------- lifecycle
 
-MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
+MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : inst(i), audio(a), scratchWindow(scratch) {
     setWindowTitle("venv-vrequency");
     setAttribute(Qt::WA_AcceptTouchEvents);
     setAttribute(Qt::WA_OpaquePaintEvent);
@@ -87,13 +88,13 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
     rng.s = (uint32_t)QDateTime::currentMSecsSinceEpoch() | 1u;
     clock.start();
 
-    store::ensureDirs();
-    km = KeyMap::loadOrCreate(store::baseDir() + "/keymap.json");
+    if (!scratch) store::ensureDirs();
+    km = scratch ? KeyMap::defaults() : KeyMap::loadOrCreate(store::baseDir() + "/keymap.json");
     for (int k = 0; k < 10; ++k) bank[k] = factoryPatch(k);
     lead = bank[0];
     SessionData sd;
     QJsonObject st;
-    if (store::readJson(store::baseDir() + "/state.json", st)) {
+    if (!scratch && store::readJson(store::baseDir() + "/state.json", st)) {
         sd.settings = store::settingsFromJson(st["settings"].toObject());
         QJsonArray sl = st["slots"].toArray();
         for (int k = 0; k < 10 && k < sl.size(); ++k) bank[k] = store::patchFromJson(sl[k].toObject());
@@ -113,6 +114,8 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
             if (m.seq > 0 && !m.text.isEmpty()) chat.push_back(m);
         }
         chatSeq = st["chatSeq"].toInt(0);
+        tourSeenFlag = st["tourSeen"].toBool(false);
+        tourLastPage = st["tourPage"].toString();
         if (!chat.empty()) chatSeq = qMax(chatSeq, chat.back().seq);
     }
     beatsLoad(st, sd);
@@ -121,8 +124,13 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
     inst.setTrack(std::make_shared<const TrackData>(track));
     trackSaveTimer.setSingleShot(true);
     connect(&trackSaveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
+    if (scratch) {
+        extrasSeeded = kExtraCount;
+        return;                                              // a picture-drawing copy: no timers, no probes, no files
+    }
     if (extrasSeeded < kExtraCount) addExtraSounds(extrasSeeded); // once: deleting one keeps it gone
     refreshLists();
+    tourView = std::make_unique<TourView>(*this);
 
     connect(&frameTimer, &QTimer::timeout, this, [this] {
         // 25 fps while anything moves; a slow tick when the instrument is idle (battery).
@@ -131,7 +139,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || !captured.isEmpty() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !held.isEmpty() ||
-                    s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0;
+                    s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -177,6 +185,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 }
 
 void MainWindow::saveState() {
+    if (scratchWindow) return;
     SessionData sd;
     inst.snapshot(sd);
     QJsonObject o;
@@ -202,6 +211,8 @@ void MainWindow::saveState() {
     }
     o["chat"] = ca;
     o["chatSeq"] = chatSeq;
+    o["tourSeen"] = tourSeenFlag;
+    if (!tourLastPage.isEmpty()) o["tourPage"] = tourLastPage;
     store::writeJson(store::baseDir() + "/state.json", o);
 }
 
@@ -492,6 +503,7 @@ void MainWindow::perform(int act, bool shift) {
         else dockFocus = !dockFocus;
         break;
     case A_HELP: goPage(pg == PG_HELP ? PG_PLAY : PG_HELP); break;
+    case A_TOUR: if (tourView) { if (tourView->isOpen()) tourView->close(); else tourView->open(QString(), QString(), false, nullptr, true); } break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
     default:
@@ -539,6 +551,13 @@ void MainWindow::handleKey(int key, bool down) {
     if (plainAct == A_CHORD_LAYER) { modChord = true; held[key] = {HK_ACT, A_CHORD_LAYER, 0}; return; }
     if (plainAct == A_COMMAND) { modCommand = true; held[key] = {HK_ACT, A_COMMAND, 0}; return; }
 
+    if (tourView && tourView->promptKey(key)) { held[key] = {HK_NONE, 0, 0}; return; } // Enter / Esc answer the first-run offer
+    if (tourOpen()) { // the tour is a picture: its keys never reach the synth
+        tourView->key(key, pendingText, modChromatic);
+        pendingText.clear();
+        held[key] = {HK_NONE, 0, 0};
+        return;
+    }
     if (dockOpen && pg != PG_CHAT && !keyTest && !modCommand) { // the chat dock
         if (dockFocus && chatKey(key, plainAct, true)) { held[key] = {HK_NONE, 0, 0}; return; }
         if (!dockFocus && plainAct == A_HOME) { dockClose(); held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
@@ -610,7 +629,7 @@ void MainWindow::pointer(int id, QPointF c, int phase) {
             if (zones[i].r.contains(c)) {
                 captured[id] = zones[i];
                 downNames.insert(zones[i].name);
-                if (!zones[i].name.startsWith("dock") && zones[i].name != "ticker" && zones[i].name != "keytestblock" && !zones[i].name.startsWith("tab_")) { lastTapped = zones[i].name; lastTappedPage = pg; }
+                if (!tourOpen() && !zones[i].name.startsWith("dock") && zones[i].name != "ticker" && zones[i].name != "keytestblock" && !zones[i].name.startsWith("tab_")) { lastTapped = zones[i].name; lastTappedPage = pg; }
                 zones[i].fn(c, PH_PRESS);
                 break;
             }
@@ -627,6 +646,8 @@ void MainWindow::pointer(int id, QPointF c, int phase) {
 void MainWindow::mousePressEvent(QMouseEvent *e) { pointer(-1, toCanvas(e->position()), PH_PRESS); }
 void MainWindow::mouseMoveEvent(QMouseEvent *e) { if (e->buttons()) pointer(-1, toCanvas(e->position()), PH_MOVE); }
 void MainWindow::mouseReleaseEvent(QMouseEvent *e) { pointer(-1, toCanvas(e->position()), PH_RELEASE); }
+
+bool MainWindow::tourOpen() const { return tourView && tourView->isOpen() && !tourSuspended; }
 
 bool MainWindow::event(QEvent *ev) {
     switch (ev->type()) {
@@ -849,7 +870,8 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     hearWatch();
     beatWatch();
 
-    switch (pg) {
+    if (tourOpen()) tourView->paint(); // the tour draws a picture instead of the page: nothing on it is live
+    else switch (pg) {
     case PG_TRACK: paintTabs(); paintTrack(); break;
     case PG_PLAY: paintPlay(); break;
     case PG_SOUND: paintTabs(); paintSound(); break;
@@ -861,11 +883,14 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     case PG_CHAT: paintTabs(); paintChat(); break;
     }
     recordText = false;
-    layoutDock();
-    paintHighlights();
-    paintTicker();
-    paintDock();
-    if (keyTest) paintKeyTest();
+    if (!tourOpen()) {
+        layoutDock();
+        paintHighlights();
+        paintTicker();
+        paintDock();
+        if (keyTest) paintKeyTest();
+        if (tourView) tourView->paintPrompt();
+    }
 
     if (clock.elapsed() < toastUntil && !toastText.isEmpty()) { // a message box, as the scope reports "Auto-scale"
         QString t = fit(toastText, 14, 640);
@@ -1543,12 +1568,13 @@ void MainWindow::paintHelp() {
             {K(A_HELP, true) + " " + K(A_CHAT, true) + " " + K(A_QUIT, true), "this guide / chat dock (with Shift: Chat page) / quit"},
         };
     }
-    const QString title = helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters are commands here") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false))));
-    // header: what this page of the guide is, the next page, and the way to ask
-    tag(QRectF(16, 62, 372, 30), fit(title, 14, 360), 14, Qt::AlignLeft | Qt::AlignVCenter);
-    zone(QRectF(16, 62, 372, 30), "help_section", [](QPointF, int) {});
-    button(QRectF(394, 62, 160, 30), "help_next", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; helpSel.clear(); });
-    button(QRectF(560, 62, 144, 30), "help_ask", "Ask Rook", false, [this] { helpAsk(); });
+    const QString title = helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters = commands") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false))));
+    // header: what this page of the guide is, the tour, the next page, and the way to ask
+    tag(QRectF(16, 62, 242, 30), fit(title, 14, 230), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    zone(QRectF(16, 62, 242, 30), "help_section", [](QPointF, int) {});
+    button(QRectF(264, 62, 84, 30), "help_tour", "Tour", false, [this] { if (tourView) tourView->open(QString(), QString(), false, nullptr, true); });
+    button(QRectF(354, 62, 178, 30), "help_next", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; helpSel.clear(); });
+    button(QRectF(538, 62, 166, 30), "help_ask", "Ask Rook", false, [this] { helpAsk(); });
     // every row is a zone with a stable name built from its description, so Rook can point at it and a tap asks about it
     helpDesc.clear();
     QSet<QString> used;
@@ -1571,6 +1597,7 @@ void MainWindow::paintHelp() {
     }
     txt(QRectF(18, 586, 680, 18), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     txt(QRectF(18, 606, 680, 18), QString("Ask Rook: tap a row, or press %1+%2. Rook answers here and can point at things.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    txt(QRectF(18, 626, 680, 18), QString("Tour: tap Tour (or press %1+%2) for a picture of every page. Tap any control to read what it does.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_TOUR, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     button(QRectF(16, 664, 688, 44), "help_back", "Back to playing", false, [this] { goPage(PG_PLAY); });
 }
 

@@ -20,12 +20,14 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <memory>
 #include <thread>
 #include <vector>
 
 class QPainter;
 class QProcess;
 class ControlServer;
+class TourView;
 
 // One line of the copilot chat.
 struct ChatMsg {
@@ -42,12 +44,15 @@ struct ChatMsg {
 class MainWindow : public QWidget {
     Q_OBJECT
     friend class ControlServer;
+    friend class TourView;
+    friend struct TourDemo;
 public:
     // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
     enum Page { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
     enum Phase { PH_PRESS, PH_MOVE, PH_RELEASE };
 
-    MainWindow(td::Instrument &inst, AudioOut &audio);
+    // `scratch`: an off-screen copy used only to draw the tour's pictures: it reads and writes no files
+    MainWindow(td::Instrument &inst, AudioOut &audio, bool scratch = false);
     ~MainWindow() override;
 
     // --- also used by the self-test ---
@@ -131,6 +136,12 @@ public:
     int helpSubPage() const { return helpPage; }
     void setHelpSubPage(int i) { helpPage = qBound(0, i, 3); update(); }
 
+    // --- the interactive tour (app/tour.cpp) ---
+    TourView &tour() { return *tourView; }
+    bool tourOpen() const;
+    bool tourSuspended = false;                              // set while the real page is drawn for a catalogue
+    void tourAsk(const QString &page, const QString &zone, const QString &text); // Ask Rook from a tour card
+
 signals:
     void userChatArrived();
 
@@ -205,6 +216,11 @@ private:
     bool dockOpen = false, dockFocus = false;
     int dockLines = 0;
     bool recordText = false;
+    bool scratchWindow = false;
+    bool tourSeenFlag = false;                               // the player has answered the first-run offer
+    QString tourLastPage;                                    // the tour page last looked at (saved)
+    std::unique_ptr<TourView> tourView;
+    QStringList askFocus; QString askPage, askVia;                   // a question started from the tour: sent with via "tour"
     std::vector<std::pair<QRectF, QString>> drawnText;       // text drawn this frame, for zone labels
     QString helpPrefill;
     QString helpSel;                                         // the Help row last tapped

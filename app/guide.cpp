@@ -91,6 +91,8 @@ QVector<MainWindow::ZoneInfo> MainWindow::zoneCatalogue(int page, int helpSub) {
     const Hl sHl = hl;
     const QString sTopic = topicLabel, sTap = lastTapped, sSel = helpSel;
     const QStringList sTopicZ = topicZones;
+    const bool sTourSusp = tourSuspended;
+    tourSuspended = true;                                   // the page itself is wanted, not the tour's picture of it
     if (page != pg) { pg = page; deepEdit = false; }
     if (page == PG_HELP && helpSub >= 0) helpPage = qBound(0, helpSub, 3);
     hl.page = pg; hl.zones = sHl.page == page ? sHl.zones : QStringList(); hl.until = sHl.until;
@@ -105,6 +107,7 @@ QVector<MainWindow::ZoneInfo> MainWindow::zoneCatalogue(int page, int helpSub) {
         out.push_back(zi);
     }
     pg = sPg; helpPage = sHelp; deepEdit = sDeep; hl = sHl;
+    tourSuspended = sTourSusp;
     topicPage = sTopicPage; topicLabel = sTopic; topicZones = sTopicZ; lastTapped = sTap; lastTappedPage = sTapPage; helpSel = sSel;
     shot();
     return out;
@@ -247,6 +250,7 @@ void MainWindow::dockOpenFocus() {
 }
 
 void MainWindow::dockClose() {
+    askFocus.clear(); askPage.clear(); askVia.clear();
     dockOpen = false;
     dockFocus = false;
     dockR = QRectF();

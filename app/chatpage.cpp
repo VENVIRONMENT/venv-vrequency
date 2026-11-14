@@ -83,6 +83,14 @@ void MainWindow::chatSend() {
     if (t.isEmpty()) return;
     chatDraft.clear();
     chatScroll = 0;
+    if (!askVia.isEmpty()) { // started from a tour card: it is about that control, wherever the player is now
+        const QStringList f = askFocus;
+        askFocus.clear();
+        lastQuestion = f.value(0);
+        chatAdd("you", t, "say", true, askPage.isEmpty() ? QString(pageName(pg)) : askPage, f, askVia);
+        askPage.clear(); askVia.clear();
+        return;
+    }
     const QStringList focus = guideFocus();   // the same path from the Chat page and the dock
     lastQuestion = focus.value(0);
     chatAdd("you", t, "say", true, pageName(pg), focus, pg == PG_CHAT ? "chat" : "dock");

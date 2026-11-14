@@ -1,5 +1,6 @@
 // venv-vrequency — the control socket (see control.h and docs/CONTROL.md).
 #include "control.h"
+#include "tour.h"
 #include "mainwindow.h"
 #include "store.h"
 #include <QDateTime>
@@ -312,6 +313,7 @@ QJsonObject ControlServer::dispatch(const QString &cmd, const QJsonObject &a, QS
     if (cmd == "track") return cmdTrack(a, e);
     if (cmd == "page") return cmdPage(a, e);
     if (cmd == "highlight" || cmd == "unhighlight" || cmd == "zones") return cmdGuide(cmd, a, e);
+    if (cmd == "tour") return cmdTour(a, e);
     if (cmd == "session") return cmdSession(a, e);
     if (cmd == "screenshot") return cmdScreenshot(e);
     if (cmd == "chat_say" || cmd == "chat_poll") return cmdChat(cmd, a, e);
@@ -406,6 +408,7 @@ QJsonObject ControlServer::cmdState() {
     hf["last_question_zone"] = w.lastQuestionZone();
     hf["topic"] = w.dockTopic();
     o["help_focus"] = hf;
+    o["tour"] = w.tour().stateJson();
     return o;
 }
 
@@ -840,10 +843,29 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     int p = -1;
     for (int i = 0; i < MainWindow::PG_COUNT; ++i) if (n == pageNames[i]) p = i;
     if (p < 0) { e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; return {}; }
+    w.tour().close(); // the real page is wanted: the tour steps aside
     if (p == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
     w.goPage(p);
     QJsonObject r; r["page"] = n;
     return r;
+}
+
+// tour: open the interactive tour on a page and a control (so the copilot can say "let me show you"), or close it.
+QJsonObject ControlServer::cmdTour(const QJsonObject &a, QString &e) {
+    Args A{a, e};
+    const QString act = A.str("action", "open", 8);
+    const QString page = A.str("page", "", 24);
+    const QString element = A.str("element", "", 64);
+    const bool guided = A.boolean("guided", false);
+    if (!e.isEmpty()) return {};
+    if (act != "open" && act != "close") { e = "action must be open or close"; return {}; }
+    if (act == "close") { w.tour().close(); return w.tour().stateJson(); }
+    QString err;
+    if (!w.tour().open(page, element, guided, &err, true)) {
+        e = err + " (use track, track-chop, track-sound, track-mixer, synth, sound, sound-deep, beat, backing, tune, system, key-test, help or chat)";
+        return {};
+    }
+    return w.tour().stateJson();
 }
 
 // highlight, unhighlight, zones: pointing at the screen. See docs/CONTROL.md.
@@ -903,6 +925,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     label = label.trimmed();
     const int ms = A.integer("ms", 100, 30000, 8000);
     if (!e.isEmpty()) return {};
+    w.tour().close(); // a highlight is drawn on the real page
     if (page != w.pg || (page == MainWindow::PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
         if (page == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
         w.goPage(page);
