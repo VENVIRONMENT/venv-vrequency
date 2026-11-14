@@ -5505,7 +5505,7 @@
      "keys": [],
      "recall": "Backing page, right of Beats per chord. Default 2.",
      "tips": [
-      "The label also says pulse, but Pulse always plays once per beat."
+      "Pulse always plays once per beat, whatever this says."
      ],
      "related": [
       "back.bstyle2",

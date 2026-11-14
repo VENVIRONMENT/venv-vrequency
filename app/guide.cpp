@@ -26,7 +26,7 @@ QStringList aliasZones(const QString &n) {
     return {};
 }
 
-bool hidden(const QString &n) { return n.startsWith("dock") || n == "ticker"; }
+bool hidden(const QString &n) { return n.startsWith("dock") || n == "ticker" || n == "keytestblock"; }
 
 QRectF inflated(const QRectF &r, qreal d) { return r.adjusted(-d, -d, d, d); }
 } // namespace

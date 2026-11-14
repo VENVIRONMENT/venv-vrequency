@@ -71,8 +71,8 @@ int MainWindow::chatAdd(const QString &from, const QString &text, const QString 
 }
 
 void MainWindow::chatToggle() {
-    if (pg == PG_CHAT) pg = chatReturn == PG_CHAT ? (int)PG_PLAY : chatReturn;
-    else { chatReturn = pg; pg = PG_CHAT; }
+    if (pg == PG_CHAT) goPage(chatReturn == PG_CHAT ? (int)PG_PLAY : chatReturn);
+    else { chatReturn = pg; goPage(PG_CHAT); }
     dockFocus = false; // the page has the keyboard when it comes back
     deepEdit = false;
     update();
@@ -98,7 +98,7 @@ bool MainWindow::chatKey(int key, int plainAct, bool dock) {
     case Qt::Key_Backspace: if (!chatDraft.isEmpty()) chatDraft.chop(1); return true;
     case Qt::Key_Escape:
         if (dock) dockFocus = false;   // the dock stays; the keys play again
-        else { pg = chatReturn == PG_CHAT ? (int)PG_PLAY : chatReturn; dockFocus = false; }
+        else { goPage(chatReturn == PG_CHAT ? (int)PG_PLAY : chatReturn); dockFocus = false; }
         return true;
     case Qt::Key_Up: ++chatScroll; return true;
     case Qt::Key_Down: chatScroll = qMax(0, chatScroll - 1); return true;

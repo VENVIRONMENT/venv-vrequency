@@ -287,9 +287,11 @@ void MainWindow::undoSound() {
 }
 
 void MainWindow::saveFavourite() {
-    QString path = store::savePatch("favourites", lead);
+    bool updated = false;
+    QString path = store::savePatch("favourites", lead, true, &updated);
     refreshLists();
-    toast(path.isEmpty() ? "Could not save favourite" : QString("Favourite saved: %1").arg(lead.name));
+    toast(path.isEmpty() ? QString("Could not save favourite")
+                         : QString(updated ? "Updated %1" : "Favourite saved: %1").arg(QString::fromUtf8(lead.name)));
 }
 
 void MainWindow::setParam(int p, float v) {
@@ -461,8 +463,8 @@ void MainWindow::perform(int act, bool shift) {
         chordRow = !chordRow;
         toast(chordRow ? "Bottom row plays chords" : "Bottom row is a string again");
         break;
-    case A_PAGE_NEXT: pg = (pg + 1) % PG_COUNT; deepEdit = false; break;
-    case A_HOME: pg = PG_PLAY; keyTest = false; deepEdit = false; break;
+    case A_PAGE_NEXT: goPage((pg + 1) % PG_COUNT); break;
+    case A_HOME: goPage(PG_PLAY); keyTest = false; break;
     case A_KEY_UP: set(S_ROOT, (float)((u.set.tuning.root + (shift ? 11 : 1)) % 12)); break;
     case A_SCALE_NEXT: set(S_SCALE, (float)((u.set.tuning.scale + (shift ? SC_COUNT - 1 : 1)) % SC_COUNT)); break;
     case A_RANDOM: randomise(); break;
@@ -489,7 +491,7 @@ void MainWindow::perform(int act, bool shift) {
         else if (!dockOpen) dockOpenFocus();
         else dockFocus = !dockFocus;
         break;
-    case A_HELP: pg = pg == PG_HELP ? PG_PLAY : PG_HELP; break;
+    case A_HELP: goPage(pg == PG_HELP ? PG_PLAY : PG_HELP); break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
     default:
@@ -608,7 +610,7 @@ void MainWindow::pointer(int id, QPointF c, int phase) {
             if (zones[i].r.contains(c)) {
                 captured[id] = zones[i];
                 downNames.insert(zones[i].name);
-                if (!zones[i].name.startsWith("dock") && zones[i].name != "ticker" && !zones[i].name.startsWith("tab_")) { lastTapped = zones[i].name; lastTappedPage = pg; }
+                if (!zones[i].name.startsWith("dock") && zones[i].name != "ticker" && zones[i].name != "keytestblock" && !zones[i].name.startsWith("tab_")) { lastTapped = zones[i].name; lastTappedPage = pg; }
                 zones[i].fn(c, PH_PRESS);
                 break;
             }
@@ -895,7 +897,7 @@ void MainWindow::paintTabs() {
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
         button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
-               [this, i] { pg = i; deepEdit = false; slotSave = false; beatErase = false; removeArmed = -1; });
+               [this, i] { goPage(i); });
 }
 
 void MainWindow::paintLoopButton(QRectF r) {
@@ -988,7 +990,7 @@ void MainWindow::paintPlay() {
     } else if (u.limiter < 0.85f) {
         tag(QRectF(250, 54, 60, 17), "Limit", 12);
     }
-    zone(QRectF(16, 4, 430, 72), "hdr_sound", [this](QPointF, int ph) { if (ph == PH_PRESS) pg = PG_SOUND; });
+    zone(QRectF(16, 4, 430, 72), "hdr_sound", [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_SOUND); });
 
     g->fillRect(QRectF(444, 10, 1, 60), GRAT);
     txt(QRectF(456, 6, 60, 44), noteName(t.root), 32, INK, L, true);
@@ -1000,10 +1002,10 @@ void MainWindow::paintPlay() {
     frame(QRectF(552, 24, 9, 9), running ? INK : LOW, running && frac < 0.25 ? INK : BG); // beat lamp
     txt(QRectF(644, 6, 60, 44), QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave), 28, INK, R, true);
     txt(QRectF(644, 52, 60, 20), "oct", 13, MID, R);
-    zone(QRectF(450, 4, 254, 72), "hdr_tune", [this](QPointF, int ph) { if (ph == PH_PRESS) pg = PG_TUNE; });
+    zone(QRectF(450, 4, 254, 72), "hdr_tune", [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_TUNE); });
     // the readouts inside it, named so they can be pointed at; they open the Tune page too
     for (const auto &rd : {std::make_pair(QRectF(452, 4, 96, 72), "key_readout"), std::make_pair(QRectF(550, 4, 90, 72), "tempo_readout"), std::make_pair(QRectF(642, 4, 62, 72), "octave_readout")})
-        zone(rd.first, rd.second, [this](QPointF, int ph) { if (ph == PH_PRESS) pg = PG_TUNE; });
+        zone(rd.first, rd.second, [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_TUNE); });
 
     // output level: a row of segments
     {
@@ -1133,7 +1135,7 @@ void MainWindow::paintPlay() {
     button(QRectF(x, y, 54, h), "octave_down", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
     button(QRectF(x, y, 54, h), "octave_up", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
     button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { randomise(); }, "sound"); x += 94;
-    button(QRectF(x, y, 704 - x, h), "menu", "Menu", false, [this] { pg = PG_SOUND; }, QString::fromUtf8("≡"));
+    button(QRectF(x, y, 704 - x, h), "menu", "Menu", false, [this] { goPage(PG_SOUND); }, QString::fromUtf8("≡"));
 }
 
 void MainWindow::paintSound() {
@@ -1195,7 +1197,15 @@ void MainWindow::paintSound() {
         }, favDelete ? "tap to delete" : "recall", favDelete ? LOOK_ARMED : LOOK_PLAIN);
     }
     qreal bx = 704 - 102;
-    button(QRectF(bx, 560, 102, 30), "favprev", QString::fromUtf8("‹ %1/%2 ›").arg(favPage + 1).arg(pages), false, [this, pages] { favPage = (favPage + 1) % pages; });
+    { // the arrows say which way: the left half goes back a page, the right half forward, both wrapping
+        const QRectF r(bx, 560, 102, 30);
+        const bool inv = downNames.contains("favprev");
+        frame(r, inv ? INK : LOW, inv ? INK : BG);
+        txt(r, QString::fromUtf8("‹ %1/%2 ›").arg(favPage + 1).arg(pages), 14, inv ? BG : INK, Qt::AlignCenter, true);
+        zone(r, "favprev", [this, r, pages](QPointF p, int ph) {
+            if (ph == PH_PRESS) favPage = (favPage + (p.x() < r.center().x() ? pages - 1 : 1)) % pages;
+        });
+    }
     button(QRectF(bx, 598, 102, 102), "favdel", "Delete", favDelete, [this] { favDelete = !favDelete; }, favDelete ? "pick one" : "a favourite");
 }
 
@@ -1232,10 +1242,10 @@ void MainWindow::paintBacking() {
 
     stepper(QRectF(16, 452, 340, 60), "chordbeats", "Beats per chord", QString::number(u.set.chordBeats),
             [this] { set(S_CHORDBEATS, (float)(u.set.chordBeats - 1)); }, [this] { set(S_CHORDBEATS, (float)(u.set.chordBeats + 1)); });
-    stepper(QRectF(364, 452, 340, 60), "arprate", "Arp / pulse steps per beat", QString::number(u.set.arpRate),
+    stepper(QRectF(364, 452, 340, 60), "arprate", "Arp steps per beat", QString::number(u.set.arpRate),
             [this] { set(S_ARPRATE, (float)(u.set.arpRate - 1)); }, [this] { set(S_ARPRATE, (float)(u.set.arpRate + 1)); });
     stepper(QRectF(16, 520, 340, 60), "bpm2", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
-            [this] { set(S_BPM, std::round(u.set.bpm) - 2); }, [this] { set(S_BPM, std::round(u.set.bpm) + 2); });
+            [this] { set(S_BPM, std::round(u.set.bpm) - 1); }, [this] { set(S_BPM, std::round(u.set.bpm) + 1); });
     slider(QRectF(364, 520, 340, 60), "backvol", "Backing volume", u.set.backVol, QString("%1%").arg((int)(u.set.backVol * 100)), [this](float n) { set(S_BACKVOL, n); });
     button(QRectF(16, 590, 688, 56), "bresync", "Use the current lead sound for the backing", false, [this] { inst.cmd(EV_BACK, BC_RESYNC_SOUND); },
            QString("backing now plays: %1    lead: %2").arg(u.backName[0] ? u.backName : "(nothing yet)").arg(lead.name));
@@ -1315,7 +1325,7 @@ void MainWindow::paintBeat() {
             [this] { set(S_KIT, (float)((u.set.kit + kKits - 1) % kKits)); }, [this] { set(S_KIT, (float)((u.set.kit + 1) % kKits)); });
     slider(QRectF(16, 604, 340, 54), "beatvol", "Beat volume", u.set.beatVol, QString("%1%").arg((int)(u.set.beatVol * 100)), [this](float n) { set(S_BEATVOL, n); });
     stepper(QRectF(364, 604, 340, 54), "bpm3", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
-            [this] { set(S_BPM, std::round(u.set.bpm) - 2); }, [this] { set(S_BPM, std::round(u.set.bpm) + 2); });
+            [this] { set(S_BPM, std::round(u.set.bpm) - 1); }, [this] { set(S_BPM, std::round(u.set.bpm) + 1); });
     txt(QRectF(18, 666, 684, 20), QString("Keys: %1 play the top pads, %2 the bottom ones. Hits snap to the nearest step.")
             .arg(km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" ")).arg(km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" ")),
         12, MID, Qt::AlignLeft | Qt::AlignVCenter);
@@ -1561,7 +1571,7 @@ void MainWindow::paintHelp() {
     }
     txt(QRectF(18, 586, 680, 18), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     txt(QRectF(18, 606, 680, 18), QString("Ask Rook: tap a row, or press %1+%2. Rook answers here and can point at things.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    button(QRectF(16, 664, 688, 44), "help_back", "Back to playing", false, [this] { pg = PG_PLAY; });
+    button(QRectF(16, 664, 688, 44), "help_back", "Back to playing", false, [this] { goPage(PG_PLAY); });
 }
 
 // Ask Rook from the Help page: opens the dock with the keyboard, and starts the question with the
@@ -1576,6 +1586,7 @@ void MainWindow::helpAsk() {
 }
 
 void MainWindow::paintKeyTest() {
+    zone(QRectF(0, 0, CW, CW), "keytestblock", [](QPointF, int) {}); // the panel swallows every touch but Close
     QRectF r(40, 96, 640, 520);
     frame(r.adjusted(-3, -3, 3, 3), INK, BG);
     frame(r, INK, BG);

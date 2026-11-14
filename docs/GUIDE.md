@@ -223,7 +223,7 @@ Also on the Backing page:
 
 - **Style**: Sustain, Pulse, Arp up, Arp down, Arp up-dn.
 - **7th chords**: four-note chords instead of three.
-- **Beats per chord** and **Arp / pulse steps per beat**.
+- **Beats per chord** and **Arp steps per beat** (the arpeggio styles only; Pulse always strikes once per beat).
 - **Tempo**, **Metronome** and **Backing volume**.
 - **Use the current lead sound for the backing**. The backing keeps the sound it started with, so
   you can change the lead without changing the chords. Tap this when you do want them to match.

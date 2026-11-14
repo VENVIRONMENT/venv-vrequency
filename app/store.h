@@ -37,7 +37,9 @@ bool readJson(const QString &path, QJsonObject &o);
 
 struct NamedPatch { QString file; td::Patch patch; };
 QVector<NamedPatch> listPatches(const QString &subdir);
-QString savePatch(const QString &subdir, const td::Patch &p); // returns the file path ("" on failure)
+// Returns the file path ("" on failure). A name already taken gets "-2", "-3"...; with `overwrite` a file
+// holding a sound of exactly the same name is replaced instead, and `*replaced` says so.
+QString savePatch(const QString &subdir, const td::Patch &p, bool overwrite = false, bool *replaced = nullptr);
 QStringList listFiles(const QString &subdir, const QString &ext); // newest first
 
 } // namespace store
