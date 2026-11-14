@@ -7,7 +7,7 @@
 // The exception is the mutex `mx`: process() holds it for the whole of every block, and
 // snapshot(), restore() and setTrack() take it on the caller's thread. While one of those
 // runs, the audio thread waits. How long that is, and why it was left as it is, is in
-// docs/ARCHITECTURE.md ("The engine's one lock").
+// docs/ARCHITECTURE.md ("Audio thread and the engine lock").
 #pragma once
 #include "core/drums/drum_kit.h"
 #include "core/fx/chorus.h"

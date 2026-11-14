@@ -64,6 +64,41 @@ from the window, add a small virtual to `Shell` and implement it in `MainWindow`
 The window keeps what belongs to every page: the string keys and chord rows, the key map's actions,
 the tab row, toasts, saving state, and the table `pageOf` that lists the nine pages.
 
+## Audio thread and the engine lock
+
+One real-time thread runs `Instrument::process()`. The UI thread talks to it through the lock-free
+queues of `EventPort` (keys, settings, commands, `setPatch`) and reads `uiState()` and the scope
+buffer without locking. Next to that there is one mutex, `Instrument::mx`.
+
+**What `mx` protects.** All the engine's non-atomic state (settings, parts, backing, beat, looper
+layers, the track pointer). `process()` holds it for the whole of every callback, so the audio
+thread always sees one consistent state. Anything that touches that state from another thread must
+take it too.
+
+**Who takes it** (every use in `core/` and `app/`; the Listen page's `mx` is a different mutex):
+
+| Site | Thread | What it does under the lock | Changed |
+|---|---|---|---|
+| `Instrument::process` (`core/instrument/process.cpp`) | audio | renders the blocks of one callback, then `publish()` | no |
+| `Instrument::snapshot` (`session.cpp`) | UI (autosave, save session, track "keep", tour/self-test) | copies settings, patches, beat, and up to 6 loop layers (at most 6 x 6000 events of 24 bytes, about 0.9 MB) into the caller's `SessionData`; allocates the copy | the caller's previous `out.layers` is now freed before the lock |
+| `Instrument::restore` (`session.cpp`) | UI (start-up, load session, tour) | `panic()`, `loopClear()`, copies the session into fixed arrays, `publish()`; no allocation, no IO | no |
+| `Instrument::setTrack` (`core/track/transport.cpp`) | UI (every track edit) | swaps one `shared_ptr` and sets a flag; the new `TrackData` is built before the call and the old one is freed after it | no (already short) |
+
+All file IO and JSON work (`saveState`, `saveSession`, `loadSession`) happens outside the lock, on a
+`SessionData` copy. The offline renderer for track export uses its own `Instrument` and its own `mx`.
+
+**The rule for new code.** From the UI thread, never do IO, JSON, preset building or large
+allocation while holding `mx`. Build the result first, then swap it in under the lock (as
+`setTrack` does) or copy a bounded amount of plain data. Do not take `mx` from the audio thread
+except in `process()`. Prefer a queue event to the lock for anything small.
+
+**Known risk.** `snapshot()` still allocates and copies the loop layers under the lock, and the
+autosave calls it on the UI thread a moment after each edit. While a full loop is copied the audio
+callback waits for it; this is expected to be well below one buffer but has not been measured on the
+target (Raspberry Pi) hardware. The lock is a plain mutex, so a UI thread that is descheduled while
+holding it also stalls the audio thread (priority inversion). Both were left alone on purpose: the
+fix would be a different scheme (double-buffered state), which is a design change, not a tidy-up.
+
 ## The size rule
 
 No source file in `core/`, `audio/`, `app/`, `tests/` or `scripts/` is longer than 200 lines. A file

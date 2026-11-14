@@ -9,6 +9,7 @@
 namespace td {
 
 void Instrument::snapshot(SessionData &out) {
+    out.layers.clear(); // the caller's old copy is freed here, not while the audio thread waits
     std::lock_guard<std::mutex> lk(mx);
     out.settings = st;
     out.lead = parts[0].patch;
@@ -24,7 +25,6 @@ void Instrument::snapshot(SessionData &out) {
     }
     out.loopBeats = nLayers > 0 ? loopLen : 0;
     for (int d = 0; d < kDrums; ++d) out.beat[d] = beatPat[d];
-    out.layers.clear();
     for (int i = 0; i < nLayers; ++i) {
         LayerData ld;
         ld.ev.assign(layers[i].ev.begin(), layers[i].ev.begin() + layers[i].n);
