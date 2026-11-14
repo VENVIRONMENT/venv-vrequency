@@ -2953,7 +2953,7 @@
      ],
      "recall": "Sound page, last button; list at the bottom of the page. Ctrl+F. Remove with Delete, then the favourite.",
      "tips": [
-      "Saving the same name twice keeps both, as name and name-2."
+      "Saving under a name you already have updates that favourite; it does not add a copy."
      ],
      "related": [
       "sound.favitem0",
@@ -3194,16 +3194,16 @@
     "favprev": {
      "title": "FAVOURITES PAGE",
      "kind": "button",
-     "summary": "Turns to the next six favourites.",
-     "does": "Shows the page number and count, like 1/2. Each tap goes on to the next page and wraps back to the first after the last; it never goes backward.",
+     "summary": "Turns to the other six favourites.",
+     "does": "Shows the page number and count, like 1/2. Tap the left half to go back a page and the right half to go forward; both wrap round.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap to step through the pages."
+       "text": "Tap the right half for the next page, the left half for the previous one."
       }
      ],
      "keys": [],
-     "recall": "Sound page, above Delete. Wraps around after the last page.",
+     "recall": "Sound page, above Delete. Wraps around both ways.",
      "tips": [],
      "related": [
       "sound.favitem0",
@@ -3225,7 +3225,7 @@
      "keys": [],
      "recall": "Sound page, bottom right. A deleted dream sound returns with System > Factory sounds.",
      "tips": [
-      "Delete stays armed if you leave the page: check it before tapping favourites."
+      "Delete disarms by itself when you leave the page."
      ],
      "related": [
       "sound.favitem0",
@@ -3454,7 +3454,7 @@
      ],
      "recall": "Sound page, last button; list at the bottom of the page. Ctrl+F. Remove with Delete, then the favourite.",
      "tips": [
-      "Saving the same name twice keeps both, as name and name-2."
+      "Saving under a name you already have updates that favourite; it does not add a copy."
      ],
      "related": [
       "sound.favitem0",
@@ -4939,7 +4939,7 @@
      "title": "TEMPO",
      "kind": "stepper",
      "summary": "The tempo in beats per minute.",
-     "does": "Sets the speed of everything: beat, backing, loop and track. 40 to 240 bpm; each tap changes it by 2. It is the same setting as on the Tune and Backing pages.",
+     "does": "Sets the speed of everything: beat, backing, loop and track. 40 to 240 bpm; each tap changes it by 1. It is the same setting as on the Tune and Backing pages.",
      "use": [
       {
        "how": "Touch",
@@ -5521,7 +5521,7 @@
      "title": "TEMPO",
      "kind": "stepper",
      "summary": "The tempo in beats per minute.",
-     "does": "Sets the speed of the beat, backing, loop and track together: 40 to 240 bpm, 2 per tap. It is the same setting as on the Tune and Beat pages.",
+     "does": "Sets the speed of the beat, backing, loop and track together: 40 to 240 bpm, 1 per tap. It is the same setting as on the Tune and Beat pages.",
      "use": [
       {
        "how": "Touch",
@@ -6587,7 +6587,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap Key test to open; Close or tap again to leave."
+       "text": "Tap Key test to open; Close (or Esc) to leave."
       }
      ],
      "keys": [],

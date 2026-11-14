@@ -1,6 +1,6 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.11.0 with the
+A guide to playing the synth, page by page. Everything here describes version 0.12.1 with the
 default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
@@ -45,8 +45,9 @@ saves your setup (sounds, key, tempo, settings) and it comes back the same next 
    Let go of `F` and it slides back to `A`.
 3. Press `1` to `9` and `0` to try the ten sounds. On the Q20 the digits are on the number layer.
 4. Drag a finger across the scope at the top of the screen. That changes the tone.
-5. Tap two or three of the chord pads (Am, C, Em ...), then tap Play next to them. The chords loop
-   and you can play over them.
+5. Tap two or three of the chord pads (Am, C, Em ...). The first tap starts the backing, and the
+   chords loop as you add them, so you can play over them. (The Play button next to the pads stops
+   it, and starts it again.)
 6. Press `Backspace` if anything gets stuck. It silences everything.
 
 Every key is locked to a scale, so nothing you press is a wrong note.
@@ -78,8 +79,8 @@ The bottom row:
 - **Sus**: sustain stays on until you tap it again.
 - **− / +**: octave down or up.
 - **New**: invents a new random sound.
-- **Menu**: opens the other pages. They have tabs along the top: Track, Synth, Sound, Beat,
-  Backing, Tune, System, Help.
+- **Menu**: opens the Sound page, which has the tab strip along the top for all the other pages:
+  Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat, in that order.
 
 `Tab` steps through the pages and `Esc` returns to Synth.
 
@@ -168,7 +169,10 @@ the sound has, twelve to a page, with Prev and Next at the bottom.
 
 - **A slot.** Tap **Store**, then tap the slot to put it in. This replaces what was in that slot and cannot be undone.
 - **A favourite.** Tap **Save** (`Ctrl`+`F`). Favourites are listed at the bottom of the page, six
-  to a page. Tap one to recall it. To remove one, tap **Delete** and then the favourite.
+  to a page. Tap one to recall it. The page button shows `‹ 1/2 ›`: tap its left half to go back a page,
+  its right half to go forward; both wrap round. To remove one, tap **Delete** and then the favourite.
+  Saving under a name you already use updates that favourite (the toast says "Updated ...") instead of
+  adding a copy. Delete, Store and Erase only stay armed while you stay on their page.
 
 Factory sounds can be put back at any time: System page, **Factory sounds**. That overwrites slots
 1 to 0. It leaves your own favourites alone and puts back any of the five dream sounds you deleted.
@@ -213,8 +217,10 @@ buttons at the top of the Backing page:
 To build a progression:
 
 1. Make sure the mode is Progression.
-2. Tap chords in the order you want. They fill the strip.
-3. Tap **Play**. Tap it again to stop.
+2. Tap chords in the order you want. They fill the strip. The first chord tap already starts the
+   backing, and the loop grows as you add chords.
+3. **Play** stops the backing, and starts it again from the first chord. Tapping it while the
+   backing is already running stops it.
 
 To change one chord, tap its slot and then tap the new chord. **Remove last** and **Clear all** are
 on the Backing page.
@@ -480,8 +486,7 @@ things above while you are on this page.
 
 The track is saved a moment after every change, and inside sessions.
 
-Things it does not do yet: clips shorter than a bar or placed off the bar line, a volume for each
-lane, a different sound for each layer of one loop, more than one beat lane, and tempo or key
+Things it does not do yet: clips shorter than a bar or placed off the bar line, a different sound for each layer of one loop, more than one beat lane, and tempo or key
 changes inside a track. Chords clips follow the key and scale you are in now, and every clip follows the
 current tempo.
 
