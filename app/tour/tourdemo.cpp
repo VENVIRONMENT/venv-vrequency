@@ -50,7 +50,7 @@ bool hiddenZone(const QString &n) { return n.startsWith("dock") || n == "ticker"
 struct TourDemo {
 // the controls of whatever the scratch window shows now
 static void capture(Rig &rig, int page, TourView::Pic &pic) {
-    rig.w.tickerUntil = 0; rig.w.toastUntil = 0;
+    rig.w.chat.hideTicker(); rig.w.toastUntil = 0;
     rig.settle(3);
     pic.img = rig.w.shot();
     pic.small = pic.img.scaled(380, 380, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
@@ -161,19 +161,19 @@ static void build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     capture(rig, 9, P("tune"));
     w.setPage(PG_SYS); rig.settle(2);
     capture(rig, 10, P("system"));
-    w.keyTest = true;
+    w.keys.testOpen = true;
     rig.key(Qt::Key_Z, true); rig.key(Qt::Key_S, true); rig.key(Qt::Key_E, true);
     pump(inst, 60);
     capture(rig, 11, P("key-test"));
     rig.key(Qt::Key_E, false); rig.key(Qt::Key_S, false); rig.key(Qt::Key_Z, false);
-    w.keyTest = false;
+    w.keys.testOpen = false;
     w.setPage(PG_HELP); rig.settle(2);
     capture(rig, 12, P("help"));
-    w.chatAdd("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
-    w.chatAdd("you", "yes, something slow with a soft pad", "say", true);
-    w.chatAdd("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
-    w.chatSeen();
-    w.setPage(PG_CHAT); w.chatDraft.clear(); rig.settle(2);
+    w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
+    w.chat.add("you", "yes, something slow with a soft pad", "say", true);
+    w.chat.add("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
+    w.chat.seen();
+    w.setPage(PG_CHAT); w.chat.draft.clear(); rig.settle(2);
     capture(rig, 13, P("chat"));
     inst.cmd(EV_LOOP, LC_PLAYSTOP);
 

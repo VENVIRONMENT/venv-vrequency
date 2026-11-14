@@ -83,6 +83,9 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     setFocusPolicy(Qt::StrongFocus);
     resize(720, 720);
     clock.start();
+    chat.attach(guide);
+    chat.onUserMessage = [this] { emit userChatArrived(); };
+    guide.rowLabels = &helpDesc;
 
     if (!scratch) store::ensureDirs();
     km = scratch ? KeyMap::defaults() : KeyMap::loadOrCreate(store::baseDir() + "/keymap.json");
@@ -94,19 +97,9 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         keys.chordRow = st["chordRow"].toBool(false);
         store::beatFromJson(st["beat"].toArray(), sd.beat);
         if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
-        for (const QJsonValue &v : st["chat"].toArray()) {
-            const QJsonObject o = v.toObject();
-            ChatMsg m;
-            m.seq = o["seq"].toInt(); m.from = o["from"].toString(); m.text = o["text"].toString();
-            m.kind = o["kind"].toString("say"); m.ts = (qint64)o["ts"].toDouble(); m.user = o["user"].toBool();
-            m.page = o["page"].toString(); m.via = o["via"].toString();
-            for (const QJsonValue &f : o["focus"].toArray()) m.focus << f.toString();
-            if (m.seq > 0 && !m.text.isEmpty()) chat.push_back(m);
-        }
-        chatSeq = st["chatSeq"].toInt(0);
+        chat.load(st);
         tourSeenFlag = st["tourSeen"].toBool(false);
         tourLastPage = st["tourPage"].toString();
-        if (!chat.empty()) chatSeq = qMax(chatSeq, chat.back().seq);
     }
     beatsLoad(st, sd);
     sd.lead = sounds.lead; sd.backing = sounds.lead;
@@ -129,7 +122,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listener.state == 1 || recorder.recording() || !keys.held.isEmpty() ||
-                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
+                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -158,17 +151,7 @@ void MainWindow::saveState() {
     o["beat"] = store::beatToJson(sd.beat);
     o["track"] = store::trackToJson(track);
     beatsSave(o);
-    QJsonArray ca;
-    for (const ChatMsg &m : chat) {
-        QJsonObject c;
-        c["seq"] = m.seq; c["from"] = m.from; c["text"] = m.text; c["kind"] = m.kind; c["ts"] = (double)m.ts; c["user"] = m.user;
-        if (!m.page.isEmpty()) c["page"] = m.page;
-        if (!m.via.isEmpty()) c["via"] = m.via;
-        if (!m.focus.isEmpty()) c["focus"] = QJsonArray::fromStringList(m.focus);
-        ca.append(c);
-    }
-    o["chat"] = ca;
-    o["chatSeq"] = chatSeq;
+    chat.save(o);
     o["tourSeen"] = tourSeenFlag;
     if (!tourLastPage.isEmpty()) o["tourPage"] = tourLastPage;
     store::writeJson(store::baseDir() + "/state.json", o);
@@ -256,7 +239,7 @@ void MainWindow::perform(int act, bool shift) {
         toast(keys.chordRow ? "Bottom row plays chords" : "Bottom row is a string again");
         break;
     case A_PAGE_NEXT: goPage((pg + 1) % PG_COUNT); break;
-    case A_HOME: goPage(PG_PLAY); keyTest = false; break;
+    case A_HOME: goPage(PG_PLAY); keys.testOpen = false; break;
     case A_KEY_UP: set(S_ROOT, (float)((u.set.tuning.root + (shift ? 11 : 1)) % 12)); break;
     case A_SCALE_NEXT: set(S_SCALE, (float)((u.set.tuning.scale + (shift ? SC_COUNT - 1 : 1)) % SC_COUNT)); break;
     case A_RANDOM: sounds.randomise(); break;
@@ -279,9 +262,9 @@ void MainWindow::perform(int act, bool shift) {
     case A_PLAY_LAST: recorder.togglePlayback(); break;
     case A_TRACK_PLAY: trackPlayStop(); break;
     case A_CHAT: // Ctrl+Y: the chat dock on this page; with Shift (or on the Chat page itself) the full Chat page
-        if (shift || pg == PG_CHAT) chatToggle();
-        else if (!dockOpen) dockOpenFocus();
-        else dockFocus = !dockFocus;
+        if (shift || pg == PG_CHAT) chat.toggle();
+        else if (!guide.dockOpen) guide.dockOpenFocus();
+        else guide.dockFocus = !guide.dockFocus;
         break;
     case A_HELP: goPage(pg == PG_HELP ? PG_PLAY : PG_HELP); break;
     case A_TOUR: if (tourView) { if (tourView->isOpen()) tourView->close(); else tourView->open(QString(), QString(), false, nullptr, true); } break;
@@ -339,19 +322,19 @@ void MainWindow::handleKey(int key, bool down) {
         keys.held[key] = {HK_NONE, 0, 0};
         return;
     }
-    if (dockOpen && pg != PG_CHAT && !keyTest && !keys.command) { // the chat dock
-        if (dockFocus && chatKey(key, plainAct, true)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
-        if (!dockFocus && plainAct == A_HOME) { dockClose(); keys.held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
+    if (guide.dockOpen && pg != PG_CHAT && !keys.testOpen && !keys.command) { // the chat dock
+        if (guide.dockFocus && chat.key(key, plainAct, true)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+        if (!guide.dockFocus && plainAct == A_HOME) { guide.dockClose(); keys.held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
     }
-    if (pg == PG_TRACK && !keyTest && trackKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
-    if (pg == PG_CHAT && !keyTest && chatKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+    if (pg == PG_TRACK && !keys.testOpen && trackKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+    if (pg == PG_CHAT && !keys.testOpen && chat.key(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
     if (keys.command) {
         perform(km.command.value(key, A_NONE), keys.chromatic);
         keys.held[key] = {HK_NONE, 0, 0};
         return;
     }
     int row, col;
-    if (pg == PG_BEAT && !keyTest) { // on the Beat page the two upper rows are the pads
+    if (pg == PG_BEAT && !keys.testOpen) { // on the Beat page the two upper rows are the pads
         int drum;
         if (km.drumKey(key, drum)) { hitPad(drum); keys.held[key] = {HK_NONE, 0, 0}; return; }
         if (km.stringKey(key, row, col) && row != 0) { keys.held[key] = {HK_NONE, 0, 0}; return; } // between the pad keys: nothing
@@ -406,7 +389,7 @@ QPointF MainWindow::toCanvas(QPointF p) const {
 
 void MainWindow::pointer(int id, QPointF c, int phase) {
     const bool taken = ui.touch(id, c, phase, [this](const QString &name) {
-        if (!tourOpen() && !name.startsWith("dock") && name != "ticker" && name != "keytestblock" && !name.startsWith("tab_")) { lastTapped = name; lastTappedPage = pg; }
+        if (!tourOpen()) guide.noteTap(name);
     });
     if (taken) update();
 }
@@ -488,10 +471,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setRenderHint(QPainter::TextAntialiasing, false);
     ui.recordTexts(true);
-    if (hl.page != pg) { hl.zones.clear(); hl.until = 0; }            // highlights belong to the page they were made on
-    if (topicPage != pg) { topicLabel.clear(); topicZones.clear(); }
-    if (lastTappedPage != pg) lastTapped.clear();
-    if (pg == PG_CHAT) dockFocus = false;
+    guide.beginFrame();
     pollExport();
     hearWatch();
     beatWatch();
@@ -506,15 +486,15 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     case PG_TUNE: paintTabs(); paintTune(); break;
     case PG_SYS: paintTabs(); paintSystem(); break;
     case PG_HELP: paintTabs(); paintHelp(); break;
-    case PG_CHAT: paintTabs(); paintChat(); break;
+    case PG_CHAT: paintTabs(); chatPage.paint(); break;
     }
     ui.recordTexts(false);
     if (!tourOpen()) {
-        layoutDock();
-        paintHighlights();
-        paintTicker();
-        paintDock();
-        if (keyTest) paintKeyTest();
+        guide.layoutDock();
+        guide.paintHighlights();
+        chat.paintTicker();
+        guide.paintDock();
+        if (keys.testOpen) paintKeyTest();
         if (tourView) tourView->paintPrompt();
     }
 
@@ -546,7 +526,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
 void MainWindow::paintTabs() {
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
-        ui.button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(pageTitle(i))), pg == i,
+        ui.button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chat.unread > 0 ? QString("Chat %1").arg(qMin(chat.unread, 9)) : QString(pageTitle(i))), pg == i,
                [this, i] { goPage(i); });
 }
 
@@ -1072,7 +1052,7 @@ void MainWindow::paintSystem() {
         QString path = store::baseDir() + "/sessions/" + store::timestampName("session", "json");
         toast(saveSession(path) ? QString("Saved %1").arg(QFileInfo(path).fileName()) : QString("Could not save session"), 2200);
     }, "sounds and loops");
-    ui.button(c5(4), "keytest", "Key test", keyTest, [this] { keyTest = !keyTest; keys.maxHeld = 0; }, "check the keys");
+    ui.button(c5(4), "keytest", "Key test", keys.testOpen, [this] { keys.testOpen = !keys.testOpen; keys.maxHeld = 0; }, "check the keys");
 
     ui.section(284, QString("Saved sessions  %1  tap to load").arg(sessions.size()));
     for (int k = 0; k < 4; ++k) {
@@ -1230,11 +1210,11 @@ void MainWindow::paintHelp() {
 // row that was tapped (or the part of the guide being read).
 void MainWindow::helpAsk() {
     static const char *parts[4] = {"the playing keys", "the command keys", "the beat keys", "the track keys"};
-    if (chatDraft.trimmed().isEmpty() || chatDraft == helpPrefill) {
+    if (chat.draft.trimmed().isEmpty() || chat.draft == helpPrefill) {
         helpPrefill = helpSel.isEmpty() ? QString("About %1: ").arg(parts[helpPage]) : QString("What does \"%1\" do? ").arg(helpDesc.value(helpSel));
-        chatDraft = helpPrefill.left(380);
+        chat.draft = helpPrefill.left(380);
     }
-    dockOpenFocus();
+    guide.dockOpenFocus();
 }
 
 void MainWindow::paintKeyTest() {
@@ -1255,5 +1235,5 @@ void MainWindow::paintKeyTest() {
     ui.g->drawText(QRectF(60, 506, 600, 80), Qt::AlignLeft | Qt::TextWordWrap,
                 "Hold one key on each row, then add more. Every key should show DOWN once and stay in Held until you let go. "
                 "A key you did not press appearing here, or a pressed key missing, is a keyboard-matrix limit.");
-    ui.button(QRectF(516, 100, 160, 44), "keytestclose", "Close", false, [this] { keyTest = false; });
+    ui.button(QRectF(516, 100, 160, 44), "keytestclose", "Close", false, [this] { keys.testOpen = false; });
 }

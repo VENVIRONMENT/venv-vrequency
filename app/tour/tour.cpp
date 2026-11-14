@@ -16,7 +16,6 @@
 
 using namespace pal;
 
-QStringList chatWrap(const QString &s, int cols, int first); // chatpage.cpp
 
 namespace {
 const TourView::PageInfo kPages[] = {
@@ -131,7 +130,7 @@ bool TourView::open(const QString &page, const QString &element, bool guide, QSt
         const int last = pageIndex(w.tourLastPage);
         idx = last >= 0 ? last : pageIndex("synth");
     }
-    if (!opened) w.dockClose();
+    if (!opened) w.guide.dockClose();
     opened = true;
     promptOn = false; promptDone = true;
     if (!built && defer) { // drawing the pictures takes a moment: say so, then do it
@@ -390,19 +389,11 @@ void MainWindow::tourAsk(const QString &tourPage, const QString &zone, const QSt
     const int idx = TourView::pageIndex(tourPage);
     if (idx >= 0) {
         const int real = TourView::pageInfo(idx).realPage;
-        if (real == PG_CHAT && pg != PG_CHAT) chatReturn = pg;
+        if (real == PG_CHAT && pg != PG_CHAT) chat.returnPage = pg;
         goPage(real);
     }
-    chatDraft = text.left(380);
-    askFocus = zone.isEmpty() ? QStringList() : QStringList{zone};
-    askPage = pageName(pg);
-    askVia = "tour";
-    if (pg == PG_CHAT) { dockFocus = false; }
-    else {
-        topicLabel = QString(zone.isEmpty() ? tourPage : zone).replace('_', ' ').left(28);
-        topicZones = askFocus; topicPage = pg;
-        dockOpenFocus();
-    }
+    chat.draft = text.left(380);
+    guide.askFromTour(tourPage, zone);
     update();
 }
 

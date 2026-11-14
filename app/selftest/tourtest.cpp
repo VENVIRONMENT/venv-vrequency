@@ -67,7 +67,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
     auto result = [](const QJsonObject &o) { return o["result"].toObject(); };
     auto tourState = [&] { return result(call(R"({"cmd":"state"})"))["tour"].toObject(); };
     inst.cmd(EV_PANIC); wait(100);
-    w.dockClose(); w.clearHighlight(); w.setPage(PG_PLAY); w.shot();
+    w.guide.dockClose(); w.guide.clearHighlight(); w.setPage(PG_PLAY); w.shot();
     t.close();
 
     // ---- the cards ----
@@ -286,43 +286,43 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
 
     // ---- Ask Rook ----
     {
-        w.dockClose(); w.setPage(PG_PLAY); w.shot();
+        w.guide.dockClose(); w.setPage(PG_PLAY); w.shot();
         t.open("synth", "octave_up"); settleTour(w);
         const HelpCard *oct = db.find("synth", "octave_up");
         press(w, Qt::Key_Return);
-        check(!t.isOpen() && w.dockIsOpen(), "Enter (Ask Rook) leaves the tour and opens the chat dock");
-        check(oct && w.chatDraftText() == oct->ask, "the dock's question is the card's own: " + w.chatDraftText().left(50));
-        check(w.page() == PG_PLAY && w.dockTopic().toLower().contains("octave"), "the dock names what is being asked about");
-        const int seq0 = w.chatLastSeq();
+        check(!t.isOpen() && w.guide.dockIsOpen(), "Enter (Ask Rook) leaves the tour and opens the chat dock");
+        check(oct && w.chat.draft == oct->ask, "the dock's question is the card's own: " + w.chat.draft.left(50));
+        check(w.page() == PG_PLAY && w.guide.dockTopic().toLower().contains("octave"), "the dock names what is being asked about");
+        const int seq0 = w.chat.seq;
         press(w, Qt::Key_Return); // the dock has the keyboard: Enter sends
-        check(w.chatLastSeq() == seq0 + 1, "Enter in the dock sends it");
-        const ChatMsg &m = w.chatLog().back();
+        check(w.chat.seq == seq0 + 1, "Enter in the dock sends it");
+        const ChatMsg &m = w.chat.log.back();
         check(m.user && m.via == "tour" && m.focus == QStringList{"octave_up"} && m.page == "synth",
               QString("the message carries via \"tour\", focus [octave_up] and the page (%1 %2)").arg(m.via, m.focus.join(",")));
-        check(w.lastQuestionZone() == "octave_up", "and the question's focus is that zone");
+        check(w.guide.lastQuestionZone() == "octave_up", "and the question's focus is that zone");
         const QJsonObject poll = result(call(R"({"cmd":"chat_poll","since":0,"limit":200})"));
         bool carried = false;
         for (const QJsonValue &v : poll["messages"].toArray()) { const QJsonObject o = v.toObject(); if (o["via"].toString() == "tour" && o["focus"].toArray().size() == 1) carried = true; }
         check(carried, "chat_poll returns via and focus to the copilot");
-        w.dockClose();
+        w.guide.dockClose();
         // from the Ask button by touch, on a different page, and for a concept
         t.open("beat", "beatrec"); settleTour(w);
         tapZone(w, "tour_ask");
-        check(!t.isOpen() && w.page() == PG_BEAT && w.dockIsOpen(), "the Ask Rook button works by touch and puts the player on the page the control lives on");
-        w.dockClose(); w.setPage(PG_PLAY); w.shot();
+        check(!t.isOpen() && w.page() == PG_BEAT && w.guide.dockIsOpen(), "the Ask Rook button works by touch and puts the player on the page the control lives on");
+        w.guide.dockClose(); w.setPage(PG_PLAY); w.shot();
         t.open("synth", "concepts.recall"); settleTour(w);
         press(w, Qt::Key_Return);
-        check(w.dockIsOpen() && w.chatDraftText().size() > 5, "a concept card can be asked about too");
-        w.chatDraftText();
+        check(w.guide.dockIsOpen() && w.chat.draft.size() > 5, "a concept card can be asked about too");
+        w.chat.draft;
         press(w, Qt::Key_Return);
-        check(w.chatLog().back().focus == QStringList{"concepts.recall"} && w.chatLog().back().via == "tour", "with the concept as its focus");
-        w.dockClose();
+        check(w.chat.log.back().focus == QStringList{"concepts.recall"} && w.chat.log.back().via == "tour", "with the concept as its focus");
+        w.guide.dockClose();
         // a plain dock question afterwards is not marked as from the tour
-        w.dockOpenFocus();
+        w.guide.dockOpenFocus();
         for (QChar ch : QString("hello")) press(w, ch.toUpper().unicode());
         press(w, Qt::Key_Return);
-        check(w.chatLog().back().via == "dock", "an ordinary dock message afterwards is still via \"dock\"");
-        w.dockClose(); w.setPage(PG_PLAY);
+        check(w.chat.log.back().via == "dock", "an ordinary dock message afterwards is still via \"dock\"");
+        w.guide.dockClose(); w.setPage(PG_PLAY);
     }
 
     // ---- concepts ----
@@ -383,7 +383,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
 
     // ---- the first-run offer ----
     {
-        w.setPage(PG_PLAY); w.dockClose(); t.close(); w.shot();
+        w.setPage(PG_PLAY); w.guide.dockClose(); t.close(); w.shot();
         t.forgetSeen(); t.armFirstRunPrompt(0); w.shot();
         check(t.promptShowing() && w.zoneNames().contains("tour_prompt_yes") && w.zoneNames().contains("tour_prompt_later"), "on a first run the offer appears (Take the tour / Later)");
         const QImage with = w.shot();
@@ -463,7 +463,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         check(c && c->title == "Help unavailable" && !c->does.isEmpty(), "with a damaged file every control shows an error card instead of help");
         const QImage err = w.shot();
         check(!err.isNull() && t.isOpen(), "and the tour still draws");
-        tapZone(w, "tour_ask"); w.dockClose();
+        tapZone(w, "tour_ask"); w.guide.dockClose();
         check(!t.isOpen(), "(Ask Rook still works from the error card)");
         t.resetCards();
         w.setPage(PG_PLAY); w.shot();
@@ -552,7 +552,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         t.close();
         check(inst.uiState().droppedEvents == 0, "none of it dropped an audio event");
     }
-    w.setPage(PG_PLAY); w.dockClose(); t.close();
+    w.setPage(PG_PLAY); w.guide.dockClose(); t.close();
     inst.cmd(EV_PANIC);
     wait(150);
 }

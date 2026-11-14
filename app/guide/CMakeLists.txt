@@ -1,3 +1,7 @@
 # app/guide
 target_sources(vrequency PRIVATE
-  guide.cpp)
+  dock.cpp
+  guide.h
+  highlight.cpp
+  zone_labels.cpp
+  zone_names.h)

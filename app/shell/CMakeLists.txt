@@ -11,4 +11,5 @@ target_sources(vrequency PRIVATE
   recorder.h
   shell.h
   sink_probe.cpp
-  sink_probe.h)
+  sink_probe.h
+  zone_catalogue.cpp)

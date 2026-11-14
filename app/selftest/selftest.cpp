@@ -928,15 +928,15 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
 
         // ---- chat ----
         w.setPage(PG_PLAY); wait(100);
-        const int before = w.chatLastSeq();
+        const int before = w.chat.seq;
         r = c.call(B(R"({"cmd":"chat_say","from":"rook","text":"Try a minor third up on the high string.","kind":"tip"})"));
         wait(100);
-        check(okOf(r) && w.chatLastSeq() == before + 1 && w.chatUnreadCount() >= 1, "chat_say adds an agent message and counts it as unread");
-        check(w.chatTickerShowing(), "on another page the message shows in the ticker");
+        check(okOf(r) && w.chat.seq == before + 1 && w.chat.unread >= 1, "chat_say adds an agent message and counts it as unread");
+        check(w.chat.tickerShowing(), "on another page the message shows in the ticker");
         const QImage withTicker = w.shot();
         w.setPage(PG_CHAT); wait(100);
         const QImage chatShot = w.shot();
-        check(w.chatUnreadCount() == 0 && w.chatLog().back().text.startsWith("Try a minor third") && chatShot != withTicker, "the Chat page shows it and clears the unread count");
+        check(w.chat.unread == 0 && w.chat.log.back().text.startsWith("Try a minor third") && chatShot != withTicker, "the Chat page shows it and clears the unread count");
         r = c.call(B(R"({"cmd":"state"})"));
         check(r["result"].toObject()["chat_tail"].toArray().last().toObject()["text"].toString().startsWith("Try a minor third"), "and state's chat tail holds it");
         r = c2.call(B(R"({"cmd":"chat_poll","since":0})"));
@@ -944,7 +944,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(r["result"].toObject()["chat"].toObject()["listening"].toBool(), "state says the copilot is listening after a poll");
 
         // a waiting copilot is woken by the player's message, typed on the keyboard
-        const int seq0 = w.chatLastSeq();
+        const int seq0 = w.chat.seq;
         c2.send(QByteArray(R"({"id":"w1","cmd":"chat_wait","since":)") + QByteArray::number(seq0) + R"(,"timeout_ms":8000})");
         wait(100);
         check(c2.line(50).isEmpty(), "chat_wait holds its reply while nobody has typed");
@@ -952,9 +952,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(okOf(r), "and other clients are answered meanwhile");
         const int voices0 = inst.uiState().voices;
         for (int k : {Qt::Key_H, Qt::Key_I, Qt::Key_Space, Qt::Key_O, Qt::Key_K, Qt::Key_Z}) press(k);
-        check(w.chatDraftText() == "hi okz" && inst.uiState().voices == voices0 && inst.uiState().voices == 0, "on the Chat page letters type and no string plays");
+        check(w.chat.draft == "hi okz" && inst.uiState().voices == voices0 && inst.uiState().voices == 0, "on the Chat page letters type and no string plays");
         press(Qt::Key_Backspace);
-        check(w.chatDraftText() == "hi ok" && inst.uiState().droppedEvents == 0, "Backspace edits the line instead of silencing");
+        check(w.chat.draft == "hi ok" && inst.uiState().droppedEvents == 0, "Backspace edits the line instead of silencing");
         QElapsedTimer wt; wt.start();
         press(Qt::Key_Return);
         const QByteArray got = c2.line(2000);
@@ -963,15 +963,15 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(wr["id"].toString() == "w1" && wr["ok"].toBool() && !wm.isEmpty() && wm.last().toObject()["text"].toString() == "hi ok" &&
               wm.last().toObject()["user"].toBool() && wm.last().toObject()["seq"].toInt() == seq0 + 1 && !wr["result"].toObject()["timed_out"].toBool() && wt.elapsed() < 1500,
               QString("Enter sends it: the waiting chat_wait is answered at once (%1 ms) with the message").arg(wt.elapsed()));
-        check(w.chatDraftText().isEmpty(), "the input line empties after sending");
+        check(w.chat.draft.isEmpty(), "the input line empties after sending");
         r = c.call(B((QByteArray(R"({"cmd":"chat_poll","since":)") + QByteArray::number(seq0 - 1) + "}").constData()));
         check(r["result"].toObject()["messages"].toArray().size() == 2, "chat_poll returns messages from both directions");
         // touch: type, then tap Send
         for (int k : {Qt::Key_Y, Qt::Key_E, Qt::Key_S}) press(k);
         tap(w, "chat_send"); wait(60);
-        check(w.chatLog().back().text == "yes" && w.chatLog().back().user, "the Send button sends too");
+        check(w.chat.log.back().text == "yes" && w.chat.log.back().user, "the Send button sends too");
         // timeout answer
-        c2.send(QByteArray(R"({"id":"w2","cmd":"chat_wait","since":)") + QByteArray::number(w.chatLastSeq()) + R"(,"timeout_ms":300})");
+        c2.send(QByteArray(R"({"id":"w2","cmd":"chat_wait","since":)") + QByteArray::number(w.chat.seq) + R"(,"timeout_ms":300})");
         const QJsonObject to = QJsonDocument::fromJson(c2.line(2000)).object();
         check(to["ok"].toBool() && to["result"].toObject()["messages"].toArray().isEmpty() && to["result"].toObject()["timed_out"].toBool(), "chat_wait times out with an empty list");
         // an already-waiting message answers immediately
@@ -990,10 +990,10 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         QJsonObject sj; store::readJson(store::baseDir() + "/state.json", sj);
         bool kept = false;
         for (const QJsonValue &v : sj["chat"].toArray()) kept = kept || v.toObject()["text"].toString() == "hi ok";
-        check(kept && sj["chatSeq"].toInt() == w.chatLastSeq(), "the chat history is in the state file");
+        check(kept && sj["chatSeq"].toInt() == w.chat.seq, "the chat history is in the state file");
         // more than 200 messages: only the newest are kept
-        for (int i = 0; i < 230; ++i) w.chatAdd("rook", QString("filler %1").arg(i), "say", false);
-        check((int)w.chatLog().size() == 200 && w.chatLog().back().text == "filler 229", "only the last 200 messages are kept");
+        for (int i = 0; i < 230; ++i) w.chat.add("rook", QString("filler %1").arg(i), "say", false);
+        check((int)w.chat.log.size() == 200 && w.chat.log.back().text == "filler 229", "only the last 200 messages are kept");
         w.setPage(PG_CHAT);
         QImage full; for (int i = 0; i < 3; ++i) full = w.shot();
         check(full.width() == 720, "a full history draws");
@@ -1078,8 +1078,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         auto state = [&] { return res(c.call(B(R"({"cmd":"state"})"))); };
         auto hf = [&] { return state()["help_focus"].toObject(); };
         inst.cmd(EV_PANIC);
-        w.dockClose();
-        w.clearHighlight();
+        w.guide.dockClose();
+        w.guide.clearHighlight();
         w.setPage(PG_PLAY); wait(150); w.shot();
 
         { // zones: every page, and the listing agrees with what is drawn
@@ -1134,14 +1134,14 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
                   "highlight accepts an alias (octave) and reports the zones it ringed, with a caption");
             const QJsonObject st = hf();
             check(st["page"].toString() == "synth" && strs(st["highlighted"].toArray()).size() == 2, "state.help_focus lists the highlighted zones and the page");
-            const QRectF up = w.zoneRect("octave_up"), cap = w.highlightCaptionRect();
+            const QRectF up = w.zoneRect("octave_up"), cap = w.guide.highlightCaptionRect();
             check(!cap.isNull() && !cap.intersects(up) && !cap.intersects(w.zoneRect("octave_down")) && QRectF(0, 0, 720, 720).contains(cap), "the caption tag stays on screen and does not cover the highlighted zones");
             QImage a = w.shot();
             bool ring = false;
             for (int dx = 3; dx <= 3; ++dx) ring = ring || qGray(a.pixel((int)up.center().x(), (int)up.top() - dx)) > 170;
             check(ring, "a bright rule is drawn around the highlighted zone");
             wait(900);
-            check(hf()["highlighted"].toArray().isEmpty() && w.highlightCaptionRect().isNull(), "a highlight clears itself when its time is up");
+            check(hf()["highlighted"].toArray().isEmpty() && w.guide.highlightCaptionRect().isNull(), "a highlight clears itself when its time is up");
             r = c.call(B(R"({"cmd":"highlight","zones":["octave_up","no_such_zone","  "],"ms":5000})"));
             check(okOf(r) && strs(res(r)["highlighted"].toArray()) == QStringList({"octave_up"}) && strs(res(r)["unknown"].toArray()).contains("no_such_zone"),
                   "unknown names are reported in the reply and the known ones still highlight");
@@ -1179,14 +1179,14 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
                 ++total;
                 if (!rr.contains("ok")) ++malformed; else if (!rr["ok"].toBool()) ++refused;
             }
-            w.setPage(PG_PLAY); w.clearHighlight();
+            w.setPage(PG_PLAY); w.guide.clearHighlight();
             for (const char *p : pv) for (const char *s : {"null", "\"beat\"", "7", "[]", "\"x\""}) {
                 const QByteArray req = QByteArray("{\"cmd\":\"zones\",\"page\":") + p + ",\"sub\":" + s + "}";
                 const QJsonObject rr = gctl.handle(QJsonDocument::fromJson(req).object());
                 ++total;
                 if (!rr.contains("ok")) ++malformed; else if (!rr["ok"].toBool()) ++refused;
             }
-            w.setPage(PG_PLAY); w.clearHighlight(); w.shot();
+            w.setPage(PG_PLAY); w.guide.clearHighlight(); w.shot();
             check(malformed == 0 && refused > total / 3, QString("%1 highlight and zones requests with wrongly typed arguments: all answered, none crashed (%2 refused)").arg(total).arg(refused));
             QJsonArray many; for (int i = 0; i < 40; ++i) many.append(QString("z%1").arg(i));
             QJsonObject big; big["cmd"] = "highlight"; big["zones"] = many;
@@ -1196,60 +1196,60 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             QJsonObject longLabel; longLabel["cmd"] = "highlight"; longLabel["zones"] = QJsonArray{"octave_up"}; longLabel["label"] = QString(41, 'a');
             check(!gctl.handle(longLabel)["ok"].toBool(true), "a label longer than 40 characters is refused");
             QJsonObject ctl; ctl["cmd"] = "highlight"; ctl["zones"] = QJsonArray{"octave_up"}; ctl["label"] = "a\nb\x01 c"; ctl["ms"] = 200;
-            check(gctl.handle(ctl)["ok"].toBool() && !w.highlightLabel().contains('\n') && !w.highlightLabel().contains(QChar(1)), "control characters in a label are turned into spaces");
+            check(gctl.handle(ctl)["ok"].toBool() && !w.guide.highlightLabel().contains('\n') && !w.guide.highlightLabel().contains(QChar(1)), "control characters in a label are turned into spaces");
             wait(300);
-            w.clearHighlight();
+            w.guide.clearHighlight();
         }
 
         { // the dock: opening, focus, Esc, close
             w.setPage(PG_PLAY); w.shot();
-            check(!w.dockIsOpen() && !w.dockHasFocus(), "the dock starts closed");
+            check(!w.guide.dockIsOpen() && !w.guide.dockHasFocus(), "the dock starts closed");
             ctrl(Qt::Key_Y); w.shot();
-            check(w.dockIsOpen() && w.dockHasFocus() && w.page() == PG_PLAY, "Ctrl+Y opens the dock with the keyboard, without leaving the page");
-            const QRectF d = w.dockRect();
+            check(w.guide.dockIsOpen() && w.guide.dockHasFocus() && w.page() == PG_PLAY, "Ctrl+Y opens the dock with the keyboard, without leaving the page");
+            const QRectF d = w.guide.dockRect();
             check(d.height() >= 120 && d.height() <= 150 && d.bottom() > 700 && w.zoneNames().contains("dock_input") && w.zoneNames().contains("dock_send"), QString("the dock is %1 px tall at the bottom, with an input and Send").arg(d.height()));
             const QJsonObject st = hf();
             check(st["dock_open"].toBool() && st["dock_focus"].toBool(), "state.help_focus reports the dock open and focused");
             // letters type, they do not play
             press(Qt::Key_Z); press(Qt::Key_Q); press(Qt::Key_A); wait(120);
             const UiState us = inst.uiState();
-            check(w.chatDraftText() == "zqa" && !us.str[0].gate && !us.str[1].gate && !us.str[2].gate, "letters type into the dock and do not play the strings");
+            check(w.chat.draft == "zqa" && !us.str[0].gate && !us.str[1].gate && !us.str[2].gate, "letters type into the dock and do not play the strings");
             // Enter sends with the same numbering, and wakes a waiting agent
-            const int seq0 = w.chatLastSeq();
+            const int seq0 = w.chat.seq;
             c2.send(QByteArray(R"({"id":"w","cmd":"chat_wait","since":)") + QByteArray::number(seq0) + R"(,"timeout_ms":3000})");
             wait(50);
-            w.dockHasFocus();
+            w.guide.dockHasFocus();
             press(Qt::Key_Return); wait(50);
             QJsonObject wr = QJsonDocument::fromJson(c2.line(1500)).object();
             const QJsonArray wm = res(wr)["messages"].toArray();
             check(okOf(wr) && !res(wr)["timed_out"].toBool(true) && wm.size() == 1 && wm[0].toObject()["text"].toString() == "zqa" && wm[0].toObject()["seq"].toInt() == seq0 + 1,
                   "Enter in the dock sends through the same path: the next seq, and a waiting chat_wait wakes");
             check(wm[0].toObject()["page"].toString() == "synth" && wm[0].toObject().contains("focus") && wm[0].toObject()["via"].toString() == "dock", "the message carries page and focus metadata");
-            check(w.chatDraftText().isEmpty() && w.dockHasFocus(), "the input clears and keeps the keyboard");
+            check(w.chat.draft.isEmpty() && w.guide.dockHasFocus(), "the input clears and keeps the keyboard");
             // Esc: the keys play again, the dock stays
             press(Qt::Key_Escape);
-            check(w.dockIsOpen() && !w.dockHasFocus() && w.page() == PG_PLAY, "Esc moves the keyboard back to the page and keeps the dock");
+            check(w.guide.dockIsOpen() && !w.guide.dockHasFocus() && w.page() == PG_PLAY, "Esc moves the keyboard back to the page and keeps the dock");
             key(w, Qt::Key_Z, true); wait(120);
-            check(inst.uiState().str[0].gate && w.chatDraftText().isEmpty(), "and the keys play again");
+            check(inst.uiState().str[0].gate && w.chat.draft.isEmpty(), "and the keys play again");
             key(w, Qt::Key_Z, false); wait(100);
             press(Qt::Key_Escape); w.shot();
-            check(!w.dockIsOpen() && w.page() == PG_PLAY, "Esc again closes the dock");
+            check(!w.guide.dockIsOpen() && w.page() == PG_PLAY, "Esc again closes the dock");
             press(Qt::Key_Escape);
-            check(w.page() == PG_PLAY && !w.dockIsOpen(), "and Esc after that is the old Esc (back to Synth)");
+            check(w.page() == PG_PLAY && !w.guide.dockIsOpen(), "and Esc after that is the old Esc (back to Synth)");
             // Ctrl+Y toggles focus while the dock is open
             ctrl(Qt::Key_Y); ctrl(Qt::Key_Y);
-            check(w.dockIsOpen() && !w.dockHasFocus(), "Ctrl+Y on the dock gives the keyboard back to the page");
+            check(w.guide.dockIsOpen() && !w.guide.dockHasFocus(), "Ctrl+Y on the dock gives the keyboard back to the page");
             ctrl(Qt::Key_Y);
-            check(w.dockIsOpen() && w.dockHasFocus(), "and again takes it");
+            check(w.guide.dockIsOpen() && w.guide.dockHasFocus(), "and again takes it");
             // touch
             w.shot(); tap(w, "dock_close");
-            check(!w.dockIsOpen(), "Hide closes the dock");
+            check(!w.guide.dockIsOpen(), "Hide closes the dock");
             ctrl(Qt::Key_Y); press(Qt::Key_Escape); w.shot();
             tap(w, "dock_input");
-            check(w.dockHasFocus(), "touching the input line gives it the keyboard");
+            check(w.guide.dockHasFocus(), "touching the input line gives it the keyboard");
             press(Qt::Key_H); press(Qt::Key_I); w.shot();
             tap(w, "dock_send"); wait(40);
-            check(w.chatLog().back().text == "hi" && w.chatLog().back().user, "touching Send sends");
+            check(w.chat.log.back().text == "hi" && w.chat.log.back().user, "touching Send sends");
             // the page behind stays usable above the dock; the dock swallows touches on itself
             const int oct0 = inst.uiState().set.tuning.octave;
             tap(w, "dock_close"); w.shot();
@@ -1258,9 +1258,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             tap(w, "octave_down"); wait(60);
             // Ctrl+Shift+Y is the full page, Ctrl+Y on it goes back
             key(w, Qt::Key_Control, true); key(w, Qt::Key_Shift, true); press(Qt::Key_Y); key(w, Qt::Key_Shift, false); key(w, Qt::Key_Control, false);
-            check(w.page() == PG_CHAT && w.dockRect().isNull(), "Ctrl+Shift+Y opens the full Chat page, where there is no dock");
+            check(w.page() == PG_CHAT && w.guide.dockRect().isNull(), "Ctrl+Shift+Y opens the full Chat page, where there is no dock");
             press(Qt::Key_A);
-            check(w.chatDraftText() == "a", "and letters still type on the Chat page");
+            check(w.chat.draft == "a", "and letters still type on the Chat page");
             press(Qt::Key_Backspace);
             ctrl(Qt::Key_Y);
             check(w.page() == PG_PLAY, "Ctrl+Y on the Chat page goes back");
@@ -1268,122 +1268,122 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             ctrl(Qt::Key_Y); w.shot(); tap(w, "dock_full");
             check(w.page() == PG_CHAT, "the dock's Full button opens the Chat page");
             press(Qt::Key_Escape);
-            w.dockClose();
+            w.guide.dockClose();
         }
 
         { // the ticker opens the dock
-            w.setPage(PG_PLAY); w.dockClose(); w.shot();
-            w.chatAdd("rook", "A new message while you play.", "say", false);
+            w.setPage(PG_PLAY); w.guide.dockClose(); w.shot();
+            w.chat.add("rook", "A new message while you play.", "say", false);
             w.shot();
-            check(w.chatTickerShowing() && w.zoneNames().contains("ticker"), "a new agent message shows the ticker with a touch target");
+            check(w.chat.tickerShowing() && w.zoneNames().contains("ticker"), "a new agent message shows the ticker with a touch target");
             tap(w, "ticker"); w.shot();
-            check(w.dockIsOpen() && w.dockHasFocus(), "touching the ticker opens the dock with the keyboard");
-            const int unread = w.chatUnreadCount();
-            w.chatAdd("rook", "And another one.", "say", false);
-            check(w.chatUnreadCount() == unread && !w.chatTickerShowing(), "with the dock open there is no ticker and nothing counts as unread");
-            w.dockClose();
+            check(w.guide.dockIsOpen() && w.guide.dockHasFocus(), "touching the ticker opens the dock with the keyboard");
+            const int unread = w.chat.unread;
+            w.chat.add("rook", "And another one.", "say", false);
+            check(w.chat.unread == unread && !w.chat.tickerShowing(), "with the dock open there is no ticker and nothing counts as unread");
+            w.guide.dockClose();
             { // the ticker does not cover a highlight: it moves to the top
-                QStringList unk; w.refreshZones(); w.setHighlight({"loop_pedal"}, QString(), 20000, unk);
-                w.chatAdd("rook", "Look at the loop pedal.", "say", false); w.shot();
+                QStringList unk; w.refreshZones(); w.guide.setHighlight({"loop_pedal"}, QString(), 20000, unk);
+                w.chat.add("rook", "Look at the loop pedal.", "say", false); w.shot();
                 check(w.zoneRect("ticker").top() < 100 && !w.zoneRect("ticker").intersects(w.zoneRect("loop_pedal")), "when a highlight is at the bottom the ticker moves to the top");
-                w.clearHighlight(); w.shot();
+                w.guide.clearHighlight(); w.shot();
                 check(w.zoneRect("ticker").top() > 600, "and is back at the bottom without one");
             }
-            w.chatAdd("rook", "Ticker again.", "say", false); w.shot();
+            w.chat.add("rook", "Ticker again.", "say", false); w.shot();
             ctrl(Qt::Key_Y);
-            check(w.dockIsOpen() && w.dockHasFocus(), "Ctrl+Y while the ticker shows also opens the dock");
-            w.dockClose();
+            check(w.guide.dockIsOpen() && w.guide.dockHasFocus(), "Ctrl+Y while the ticker shows also opens the dock");
+            w.guide.dockClose();
         }
 
         { // the dock never covers what is highlighted; what is discussed is tagged; focus travels with the message
-            w.setPage(PG_PLAY); w.dockClose(); w.shot();
+            w.setPage(PG_PLAY); w.guide.dockClose(); w.shot();
             ctrl(Qt::Key_Y); press(Qt::Key_Escape);
             QJsonObject r = c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE","ms":20000})"));
-            const QRectF d = w.dockRect(), o1 = w.zoneRect("octave_down"), o2 = w.zoneRect("octave_up");
-            check(okOf(r) && w.dockIsOpen() && !d.intersects(o1) && !d.intersects(o2) && d.top() < 100, "octave is at the bottom of Synth: the dock moves to the top rather than cover it");
-            check(w.dockTopic() == "OCTAVE" && res(r)["dock"].toObject()["position"].toString() == "top", "the dock is tagged with what is being discussed (OCTAVE)");
+            const QRectF d = w.guide.dockRect(), o1 = w.zoneRect("octave_down"), o2 = w.zoneRect("octave_up");
+            check(okOf(r) && w.guide.dockIsOpen() && !d.intersects(o1) && !d.intersects(o2) && d.top() < 100, "octave is at the bottom of Synth: the dock moves to the top rather than cover it");
+            check(w.guide.dockTopic() == "OCTAVE" && res(r)["dock"].toObject()["position"].toString() == "top", "the dock is tagged with what is being discussed (OCTAVE)");
             QImage im = w.shot();
             if (!shotsDir.isEmpty()) im.save(shotsDir + "/16-dock-synth.png");
             r = c.call(B(R"({"cmd":"highlight","zones":["hdr_sound"],"label":"the sound name"})"));
-            check(okOf(r) && !w.dockRect().intersects(w.zoneRect("hdr_sound")) && w.dockRect().top() > 500, "a highlight at the top leaves the dock at the bottom");
+            check(okOf(r) && !w.guide.dockRect().intersects(w.zoneRect("hdr_sound")) && w.guide.dockRect().top() > 500, "a highlight at the top leaves the dock at the bottom");
             r = c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE","ms":20000})"));
             ctrl(Qt::Key_Y); // focus the dock
             press(Qt::Key_W); press(Qt::Key_H); press(Qt::Key_Y); press(Qt::Key_Return); wait(40);
-            const ChatMsg &m = w.chatLog().back();
+            const ChatMsg &m = w.chat.log.back();
             check(m.user && m.page == "synth" && m.focus == QStringList({"octave_down", "octave_up"}) && m.via == "dock", "a question sent from the dock says it was asked on Synth with OCTAVE highlighted");
             check(hf()["last_question_zone"].toString() == "octave_down", "state.help_focus.last_question_zone is the first focused zone");
             QJsonObject pr = c.call(QByteArray(R"({"cmd":"chat_poll","since":)") + QByteArray::number(m.seq - 1) + "}");
             const QJsonObject pm = res(pr)["messages"].toArray().last().toObject();
             check(pm["page"].toString() == "synth" && strs(pm["focus"].toArray()) == QStringList({"octave_down", "octave_up"}), "chat_poll returns the page and focus with the player's message");
             // the topic carries to a message that comes with the highlight, and goes after one that does not
-            w.chatAdd("rook", "Octave shifts every string up or down twelve notes.", "say", false);
-            check(w.dockTopic() == "OCTAVE", "an agent message just after a highlight keeps the topic tag");
+            w.chat.add("rook", "Octave shifts every string up or down twelve notes.", "say", false);
+            check(w.guide.dockTopic() == "OCTAVE", "an agent message just after a highlight keeps the topic tag");
             wait(5300);
-            w.chatAdd("rook", "Anything else?", "say", false);
-            check(w.dockTopic().isEmpty(), "a later message with no highlight clears it");
+            w.chat.add("rook", "Anything else?", "say", false);
+            check(w.guide.dockTopic().isEmpty(), "a later message with no highlight clears it");
             // page change closes the topic; the dock stays
             c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE"})"));
             w.setPage(PG_TUNE); w.shot();
-            check(w.dockIsOpen() && w.dockTopic().isEmpty() && hf()["highlighted"].toArray().isEmpty(), "changing page keeps the dock but drops the highlight and the tag");
-            w.dockClose();
+            check(w.guide.dockIsOpen() && w.guide.dockTopic().isEmpty() && hf()["highlighted"].toArray().isEmpty(), "changing page keeps the dock but drops the highlight and the tag");
+            w.guide.dockClose();
         }
 
         { // the dock never covers a highlighted zone, on any page
             int tested = 0, clashes = 0; QStringList bad;
             for (int p = 0; p < PG_COUNT; ++p) {
                 if (p == PG_CHAT) continue;
-                w.setPage(p); w.dockClose(); w.clearHighlight(); w.shot();
+                w.setPage(p); w.guide.dockClose(); w.guide.clearHighlight(); w.shot();
                 const QStringList names = w.zoneNames();
                 for (const QString &n : names) {
                     if (n.startsWith("dock") || n == "ticker" || n.startsWith("tab_")) continue;
                     const QRectF zr = w.zoneRect(n);
                     if (zr.height() > 330) continue; // taller than any dock could leave room beside
-                    w.dockOpenFocus();
-                    QStringList unk; w.setHighlight({n}, "x", 20000, unk); w.shot();
+                    w.guide.dockOpenFocus();
+                    QStringList unk; w.guide.setHighlight({n}, "x", 20000, unk); w.shot();
                     ++tested;
-                    if (w.dockRect().intersects(zr) || w.dockRect().isNull()) { ++clashes; if (bad.size() < 4) bad << QString("%1/%2").arg(pageName(p), n); }
-                    const QRectF cp = w.highlightCaptionRect();
-                    if (!cp.isNull() && (cp.intersects(zr) || cp.intersects(w.dockRect()) || !QRectF(0, 0, 720, 720).contains(cp))) { ++clashes; if (bad.size() < 4) bad << QString("caption %1/%2").arg(pageName(p), n); }
-                    w.clearHighlight();
+                    if (w.guide.dockRect().intersects(zr) || w.guide.dockRect().isNull()) { ++clashes; if (bad.size() < 4) bad << QString("%1/%2").arg(pageName(p), n); }
+                    const QRectF cp = w.guide.highlightCaptionRect();
+                    if (!cp.isNull() && (cp.intersects(zr) || cp.intersects(w.guide.dockRect()) || !QRectF(0, 0, 720, 720).contains(cp))) { ++clashes; if (bad.size() < 4) bad << QString("caption %1/%2").arg(pageName(p), n); }
+                    w.guide.clearHighlight();
                 }
-                w.dockClose();
+                w.guide.dockClose();
             }
             check(clashes == 0 && tested > 150, QString("across every page the dock and the caption stay clear of what is highlighted (%1 zones tried%2)").arg(tested).arg(bad.isEmpty() ? QString() : ", clashes: " + bad.join(" ")));
             // two zones far apart: still no overlap, when there is room
-            w.setPage(PG_PLAY); w.dockOpenFocus();
-            QStringList unk; w.setHighlight({"octave_up", "hdr_sound"}, "both ends", 20000, unk); w.shot();
-            check(w.dockRect().isNull() || !(w.dockRect().intersects(w.zoneRect("octave_up")) && w.dockRect().intersects(w.zoneRect("hdr_sound"))), "with a highlight at both ends the dock gives way to at least one of them");
-            w.clearHighlight(); w.dockClose();
+            w.setPage(PG_PLAY); w.guide.dockOpenFocus();
+            QStringList unk; w.guide.setHighlight({"octave_up", "hdr_sound"}, "both ends", 20000, unk); w.shot();
+            check(w.guide.dockRect().isNull() || !(w.guide.dockRect().intersects(w.zoneRect("octave_up")) && w.guide.dockRect().intersects(w.zoneRect("hdr_sound"))), "with a highlight at both ends the dock gives way to at least one of them");
+            w.guide.clearHighlight(); w.guide.dockClose();
         }
 
         { // the Help page: ask from the guide without going to the Chat page
-            w.setPage(PG_HELP); w.dockClose(); w.setHelpSubPage(0); w.shot();
+            w.setPage(PG_HELP); w.guide.dockClose(); w.setHelpSubPage(0); w.shot();
             tap(w, "help_ask"); w.shot();
-            check(w.dockIsOpen() && w.dockHasFocus() && w.page() == PG_HELP && !w.chatDraftText().isEmpty(), "Ask Rook on the Help page opens the dock with the keyboard and a starting question");
+            check(w.guide.dockIsOpen() && w.guide.dockHasFocus() && w.page() == PG_HELP && !w.chat.draft.isEmpty(), "Ask Rook on the Help page opens the dock with the keyboard and a starting question");
             QStringList hrows; for (const QString &n : w.zoneNames()) if (n.startsWith("help_row_")) hrows << n;
             bool visible = true;
-            for (const QString &n : hrows) visible = visible && !w.dockRect().intersects(w.zoneRect(n));
+            for (const QString &n : hrows) visible = visible && !w.guide.dockRect().intersects(w.zoneRect(n));
             check(hrows.size() == 16 && visible, "with the dock open every Help row is still visible above it");
             for (int i = 0; i < 80; ++i) press(Qt::Key_Backspace);
-            w.dockClose(); w.shot();
+            w.guide.dockClose(); w.shot();
             tap(w, hrows.value(8)); w.shot();
-            check(w.dockHasFocus() && w.chatDraftText().startsWith("What does"), QString("tapping a Help row asks about it in the dock (draft: %1)").arg(w.chatDraftText()));
-            const int before = w.chatLastSeq();
+            check(w.guide.dockHasFocus() && w.chat.draft.startsWith("What does"), QString("tapping a Help row asks about it in the dock (draft: %1)").arg(w.chat.draft));
+            const int before = w.chat.seq;
             press(Qt::Key_Return); wait(40);
-            const ChatMsg &hm = w.chatLog().back();
-            check(w.chatLastSeq() == before + 1 && hm.page == "help" && hm.focus == QStringList({hrows.value(8)}) && w.page() == PG_HELP,
+            const ChatMsg &hm = w.chat.log.back();
+            check(w.chat.seq == before + 1 && hm.page == "help" && hm.focus == QStringList({hrows.value(8)}) && w.page() == PG_HELP,
                   QString("and the question goes out with the row as its focus, still on the Help page (%1 %2)").arg(hm.page, hm.focus.join(",")));
             QJsonObject r = c.call(QByteArray(R"({"cmd":"highlight","zones":[")") + hrows.value(3).toUtf8() + R"("],"label":"this one"})");
-            check(okOf(r) && strs(res(r)["highlighted"].toArray()) == QStringList({hrows.value(3)}) && !w.dockRect().intersects(w.zoneRect(hrows.value(3))), "Rook can highlight a single Help row");
+            check(okOf(r) && strs(res(r)["highlighted"].toArray()) == QStringList({hrows.value(3)}) && !w.guide.dockRect().intersects(w.zoneRect(hrows.value(3))), "Rook can highlight a single Help row");
             QImage im = w.shot();
             if (!shotsDir.isEmpty()) im.save(shotsDir + "/17-dock-help.png");
             const int sub0 = w.helpSubPage();
             tap(w, "help_next");
             check(w.helpSubPage() == (sub0 + 1) % 4, "the Help sections are still reachable with the next button");
-            w.clearHighlight(); w.dockClose(); w.setPage(PG_PLAY);
+            w.guide.clearHighlight(); w.guide.dockClose(); w.setPage(PG_PLAY);
         }
         gctl.stop();
-        w.dockClose(); w.clearHighlight(); w.setPage(PG_PLAY);
+        w.guide.dockClose(); w.guide.clearHighlight(); w.setPage(PG_PLAY);
         inst.cmd(EV_PANIC);
         wait(200);
     }
@@ -1399,7 +1399,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         auto B = [](const QString &s) { return s.toUtf8(); };
         auto press = [&](int k) { key(w, k, true); key(w, k, false); };
         auto ctrl = [&](int k) { key(w, Qt::Key_Control, true); press(k); key(w, Qt::Key_Control, false); };
-        w.dockClose(); w.clearHighlight(); w.setPage(PG_PLAY); w.shot();
+        w.guide.dockClose(); w.guide.clearHighlight(); w.setPage(PG_PLAY); w.shot();
 
         { // every armed mode is dropped whenever the page changes, by any route
             struct Route { const char *name; std::function<void()> go; };
@@ -1418,7 +1418,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
                 check(w.armedModes() == "delete,store,erase,remove", "all four modes can be armed");
                 r.go(); w.shot();
                 check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store, Erase and the remove confirmation").arg(r.name));
-                w.clearHighlight(); w.dockClose();
+                w.guide.clearHighlight(); w.guide.dockClose();
             }
             w.setPage(PG_SOUND); w.shot();
             const int favN = QDir(store::baseDir() + "/favourites").entryList({"*.json"}).size();
@@ -1443,12 +1443,12 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             w.pointer(5, m, PH_PRESS); w.pointer(5, m, PH_RELEASE);
             check(w.page() == PG_PLAY, "a tap on Menu under the key test panel does nothing");
             w.setKeyTest(false);
-            w.setPage(PG_SYS); w.dockClose(); w.shot();
-            w.chatAdd("rook", "Ticker over the bottom row.", "say", false); w.shot();
-            check(w.chatTickerShowing() && w.zoneAt(q) == "ticker" && w.zoneAt(fs) == "ticker", "the ticker takes the touches over Quit and Factory sounds");
+            w.setPage(PG_SYS); w.guide.dockClose(); w.shot();
+            w.chat.add("rook", "Ticker over the bottom row.", "say", false); w.shot();
+            check(w.chat.tickerShowing() && w.zoneAt(q) == "ticker" && w.zoneAt(fs) == "ticker", "the ticker takes the touches over Quit and Factory sounds");
             tap(w, "ticker"); w.shot();
-            check(w.dockIsOpen() && w.zoneAt(w.dockRect().center()).startsWith("dock"), "and the chat dock takes every touch inside it");
-            w.dockClose(); w.setPage(PG_PLAY);
+            check(w.guide.dockIsOpen() && w.zoneAt(w.guide.dockRect().center()).startsWith("dock"), "and the chat dock takes every touch inside it");
+            w.guide.dockClose(); w.setPage(PG_PLAY);
         }
 
         { // favourites: overwrite by name; the paging button goes both ways
@@ -1522,12 +1522,12 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
             inst.beatDo(BT_PLAYSTOP);
         }
         if (p == PG_CHAT) { // a conversation, so the page has something to show
-            w.chatAdd("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
-            w.chatAdd("you", "yes, something slow with a soft pad", "say", true);
-            w.chatAdd("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
-            w.chatAdd("rook", "Tip: hold Space and slide between the top row keys for long glides.", "tip", false);
-            w.chatSeen();
-            w.chatToggle(); w.chatToggle(); w.setPage(PG_CHAT); // leaves the draft empty, unread cleared
+            w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
+            w.chat.add("you", "yes, something slow with a soft pad", "say", true);
+            w.chat.add("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
+            w.chat.add("rook", "Tip: hold Space and slide between the top row keys for long glides.", "tip", false);
+            w.chat.seen();
+            w.chat.toggle(); w.chat.toggle(); w.setPage(PG_CHAT); // leaves the draft empty, unread cleared
         }
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
         if (p != PG_TRACK) w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
@@ -1536,7 +1536,7 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
     (void)names;
     {   // a new message from the copilot while playing: the ticker at the bottom
         w.setPage(PG_PLAY);
-        w.chatAdd("rook", "Nice slide. Try ending the phrase on the fifth: hold Z, press N.", "tip", false);
+        w.chat.add("rook", "Nice slide. Try ending the phrase on the fifth: hold Z, press N.", "tip", false);
         for (int i = 0; i < 8; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/15-ticker.png").arg(dir));
     }
@@ -1544,25 +1544,25 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         QStringList unk;
         w.setPage(PG_PLAY);
         wait(7300); w.refreshZones();   // the ticker has gone
-        w.setHighlight({"loop_pedal"}, "LOOP PEDAL", 20000, unk);
+        w.guide.setHighlight({"loop_pedal"}, "LOOP PEDAL", 20000, unk);
         for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/18-caption.png").arg(dir));
-        w.clearHighlight();
-        w.dockOpenFocus(); w.shot();
-        w.chatAdd("you", "what does octave do?", "say", true, "synth", {});
-        w.chatAdd("rook", "It moves every string up or down twelve notes. Tap + and play the same key again.", "say", false);
-        w.setHighlight({"octave"}, "OCTAVE", 20000, unk);
+        w.guide.clearHighlight();
+        w.guide.dockOpenFocus(); w.shot();
+        w.chat.add("you", "what does octave do?", "say", true, "synth", {});
+        w.chat.add("rook", "It moves every string up or down twelve notes. Tap + and play the same key again.", "say", false);
+        w.guide.setHighlight({"octave"}, "OCTAVE", 20000, unk);
         for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/16-dock-synth.png").arg(dir));
-        w.clearHighlight(); w.dockClose();
+        w.guide.clearHighlight(); w.guide.dockClose();
         w.setPage(PG_HELP); w.shot();
-        w.dockOpenFocus();
-        w.chatAdd("rook", "Here is the Loop pedal row: Enter starts a count-in, records, then plays and overdubs.", "say", false);
+        w.guide.dockOpenFocus();
+        w.chat.add("rook", "Here is the Loop pedal row: Enter starts a count-in, records, then plays and overdubs.", "say", false);
         w.shot();
-        w.setHighlight({"help_row_loop_pedal_count_in_record_play_ov"}, "LOOP PEDAL", 20000, unk);
+        w.guide.setHighlight({"help_row_loop_pedal_count_in_record_play_ov"}, "LOOP PEDAL", 20000, unk);
         for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/17-dock-help.png").arg(dir));
-        w.clearHighlight(); w.dockClose();
+        w.guide.clearHighlight(); w.guide.dockClose();
         w.setPage(PG_PLAY);
     }
     {   // the Glitch mapping with a finger on the pad

@@ -7,6 +7,9 @@
 #include "core/analysis/analysis.h"
 #include "core/presets/presets.h"
 #include "app/store/store.h"
+#include "app/chat/chat.h"
+#include "app/guide/guide.h"
+#include "app/pages/chat/chat_page.h"
 #include "app/pages/tune/listener.h"
 #include "app/shell/recorder.h"
 #include "app/shell/shell.h"
@@ -32,18 +35,6 @@ class QPainter;
 class ControlServer;
 class TourView;
 
-// One line of the copilot chat.
-struct ChatMsg {
-    int seq = 0;
-    QString from, text, kind; // kind: say, tip, ask (agents) or say (the user)
-    qint64 ts = 0;            // ms since the epoch
-    bool user = false;
-    // what the player was looking at when they sent it (user messages only)
-    QString page;             // page name: "synth", "help"...
-    QStringList focus;        // zone names being discussed (highlighted, or last tapped)
-    QString via;              // "dock" or "chat"
-};
-
 class MainWindow : public QWidget, public Shell {
     Q_OBJECT
     friend class ControlServer;
@@ -58,6 +49,9 @@ public:
     Recorder recorder{*this};
     Sounds sounds{*this};
     Listener listener{*this};
+    Chat chat{*this};
+    Guide guide{*this, chat};
+    ChatPage chatPage{*this, chat};
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
@@ -80,7 +74,7 @@ public:
     bool loadSession(const QString &path);
     void saveState() override;
     void perform(int act, bool shift = false) override;
-    void setKeyTest(bool on) { keyTest = on; }
+    void setKeyTest(bool on) { keys.testOpen = on; }
     int favouritesPage() const { return favPage; }
     QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
     void armAllModes() { favDelete = sounds.slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
@@ -104,38 +98,10 @@ public:
     int mixLaneShown() const { return mixLane; }
     int playLineBar() const { return playBar; }
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
-    // --- the copilot chat ---
-    int chatAdd(const QString &from, const QString &text, const QString &kind, bool user,
-                const QString &page = QString(), const QStringList &focus = QStringList(), const QString &via = QString()); // returns its seq
-    const std::deque<ChatMsg> &chatLog() const { return chat; }
-    int chatLastSeq() const { return chatSeq; }
-    int chatUnreadCount() const { return chatUnread; }
-    QString chatDraftText() const { return chatDraft; }
-    void chatSeen() { copilotSeenAt = clock.elapsed(); update(); }   // a control client polled or is waiting
-    void chatWaiting(int n) { copilotWaiters = n; update(); }
-    bool chatTickerShowing() const { return clock.elapsed() < tickerUntil; }
-    void chatToggle();
-
-    // --- guided help: the highlight overlay and the chat dock (app/guide.cpp) ---
+    // --- the catalogue of zones (app/shell/zone_catalogue.cpp) ---
     struct ZoneInfo { QString name; QRectF r; QString label; bool covered = false; };
-    QStringList highlightedZones();                            // active highlights on this page
-    // Highlights the named zones of the current page (names may be aliases or `prefix*`); returns the ones
-    // that exist and puts the others in `unknown`. The zones must have been drawn: call refreshZones() first.
-    QStringList setHighlight(const QStringList &names, const QString &label, int ms, QStringList &unknown);
-    void clearHighlight();
-    QRectF highlightCaptionRect() const { return hlCaption; }
-    QString highlightLabel() const { return hl.label; }
     void refreshZones() { shot(); }                            // draw once so zoneRect/zoneNames are current
     QVector<ZoneInfo> zoneCatalogue(int page, int helpSub = -1); // every zone of a page (draws it off-screen, then puts things back)
-    QString zoneLabel(const QString &name) const;
-    bool dockIsOpen() const { return dockOpen; }
-    bool dockHasFocus() const { return dockOpen && dockFocus && pg != PG_CHAT; }
-    QRectF dockRect() const { return dockOpen && pg != PG_CHAT ? dockR : QRectF(); }
-    void dockOpenFocus();
-    void dockClose();
-    QString dockTopic() const { return topicLabel; }
-    QString lastQuestionZone() const { return lastQuestion; }
-    QStringList guideFocus();                                  // what a message sent now would carry as `focus`
     int helpSubPage() const { return helpPage; }
     void setHelpSubPage(int i) { helpPage = qBound(0, i, 3); update(); }
 
@@ -173,30 +139,13 @@ private:
     bool deepEdit = false;
     int deepPage = 0;
     int helpPage = 0;
-    bool keyTest = false;
     int touchCol[td::kStrings] = {-1, -1, -1};
     std::deque<float> trail[td::kStrings];
     QString toastText; qint64 toastUntil = 0;
-    // chat
-    std::deque<ChatMsg> chat;
-    int chatSeq = 0, chatUnread = 0, chatScroll = 0, chatReturn = PG_PLAY;
-    QString chatDraft;
-    qint64 copilotSeenAt = -100000, tickerUntil = 0;
-    int copilotWaiters = 0;
-    ChatMsg ticker;
-    // guided help
-    struct Hl { QStringList zones; QString label; qint64 until = 0, issued = -100000; int page = -1; };
-    Hl hl;
-    QString topicLabel; QStringList topicZones; int topicPage = -1;  // what the last agent message was about
-    QString lastTapped, lastQuestion; int lastTappedPage = -1;
-    QRectF hlCaption, dockR;
-    bool dockOpen = false, dockFocus = false;
-    int dockLines = 0;
     bool scratchWindow = false;
     bool tourSeenFlag = false;                               // the player has answered the first-run offer
     QString tourLastPage;                                    // the tour page last looked at (saved)
     std::unique_ptr<TourView> tourView;
-    QStringList askFocus; QString askPage, askVia;                   // a question started from the tour: sent with via "tour"
     QString helpPrefill;
     QString helpSel;                                         // the Help row last tapped
     QHash<QString, QString> helpDesc;                        // Help row zone -> its description
@@ -285,15 +234,7 @@ private:
     void paintTune();
     void paintSystem();
     void paintHelp();
-    void paintChat();
-    void paintTicker();
-    void paintHighlights();
-    void paintDock();
-    void layoutDock();
     void helpAsk();
-    QStringList expandZoneNames(const QStringList &names, QStringList &unknown) const;
-    bool chatKey(int key, int plainAct, bool dock = false);
-    void chatSend();
     void paintTabs();
     void paintTrack();
     void paintTrackTools();

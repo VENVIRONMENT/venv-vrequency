@@ -17,4 +17,5 @@ struct KeyState {
     bool bendUp = false, bendDown = false;
     bool susKey = false, susLatch = false;    // sustain: held by a key, latched by the soft key
     bool chordRow = false;                    // the bottom letter row plays chords
+    bool testOpen = false;                    // the key test panel is over the page
 };

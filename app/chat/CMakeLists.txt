@@ -1,3 +1,5 @@
 # app/chat
 target_sources(vrequency PRIVATE
-  chat_page.cpp)
+  chat.cpp
+  chat.h
+  ticker.cpp)

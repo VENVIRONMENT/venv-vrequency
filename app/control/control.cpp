@@ -131,7 +131,7 @@ bool ControlServer::start(const QString &p) {
 void ControlServer::stop() {
     for (Waiter &wt : waiters) delete wt.timer;
     waiters.clear();
-    w.chatWaiting(0);
+    w.chat.waiting(0);
     for (Conn *c : conns) {
         if (c->sock) { c->sock->disconnect(this); c->sock->disconnectFromServer(); c->sock->deleteLater(); }
         delete c;
@@ -220,11 +220,11 @@ void ControlServer::line(Conn *c, const QByteArray &ln) {
         const int since = a.integer("since", 0, 2000000000, 0);
         const int ms = a.integer("timeout_ms", 0, 30000, 25000);
         if (!e.isEmpty()) { reply(c->sock, id, false, QJsonObject(), e); return; }
-        w.chatSeen();
+        w.chat.seen();
         bool ready = false;
-        for (const ChatMsg &m : w.chat) ready = ready || (m.user && m.seq > since);
+        for (const ChatMsg &m : w.chat.log) ready = ready || (m.user && m.seq > since);
         if (ready || ms == 0) {
-            QJsonObject r; r["messages"] = chatJson(since, 200); r["last_seq"] = w.chatSeq; r["timed_out"] = !ready;
+            QJsonObject r; r["messages"] = chatJson(since, 200); r["last_seq"] = w.chat.seq; r["timed_out"] = !ready;
             reply(c->sock, id, true, r, QString());
             return;
         }
@@ -246,7 +246,7 @@ void ControlServer::line(Conn *c, const QByteArray &ln) {
     reply(c->sock, id, res["ok"].toBool(), res["result"].toObject(), res["error"].toString());
 }
 
-void ControlServer::updateWaiters() { w.chatWaiting((int)waiters.size()); }
+void ControlServer::updateWaiters() { w.chat.waiting((int)waiters.size()); }
 
 void ControlServer::finishWaiter(size_t i, bool timedOut) {
     Waiter wt = waiters[i];
@@ -254,7 +254,7 @@ void ControlServer::finishWaiter(size_t i, bool timedOut) {
     updateWaiters();
     QJsonObject r;
     r["messages"] = chatJson(wt.since, 200);
-    r["last_seq"] = w.chatSeq;
+    r["last_seq"] = w.chat.seq;
     r["timed_out"] = timedOut;
     reply(wt.sock, wt.id, true, r, QString());
     delete wt.timer;
@@ -263,14 +263,14 @@ void ControlServer::finishWaiter(size_t i, bool timedOut) {
 void ControlServer::onUserChat() {
     for (size_t i = waiters.size(); i-- > 0;) {
         bool user = false;
-        for (const ChatMsg &m : w.chat) user = user || (m.user && m.seq > waiters[i].since);
+        for (const ChatMsg &m : w.chat.log) user = user || (m.user && m.seq > waiters[i].since);
         if (user) finishWaiter(i, false);
     }
 }
 
 QJsonArray ControlServer::chatJson(int since, int limit) const {
     QJsonArray a;
-    for (const ChatMsg &m : w.chat) if (m.seq > since) a.append(msgJson(m));
+    for (const ChatMsg &m : w.chat.log) if (m.seq > since) a.append(msgJson(m));
     while (a.size() > limit) a.removeFirst();
     return a;
 }
@@ -394,18 +394,18 @@ QJsonObject ControlServer::cmdState() {
     o["voices"] = u.voices;
     o["toast"] = w.toastText;
     QJsonObject cp;
-    cp["listening"] = w.copilotWaiters > 0 || w.clock.elapsed() - w.copilotSeenAt < kListenSecs;
-    cp["last_seq"] = w.chatSeq;
-    cp["unread"] = w.chatUnread;
+    cp["listening"] = w.chat.listening();
+    cp["last_seq"] = w.chat.seq;
+    cp["unread"] = w.chat.unread;
     o["chat"] = cp;
-    o["chat_tail"] = chatJson(qMax(0, w.chatSeq - 10), 10);
+    o["chat_tail"] = chatJson(qMax(0, w.chat.seq - 10), 10);
     QJsonObject hf;
     hf["page"] = pageName(w.pg);
-    hf["highlighted"] = QJsonArray::fromStringList(w.highlightedZones());
-    hf["dock_open"] = w.dockIsOpen() && w.pg != PG_CHAT;
-    hf["dock_focus"] = w.dockHasFocus();
-    hf["last_question_zone"] = w.lastQuestionZone();
-    hf["topic"] = w.dockTopic();
+    hf["highlighted"] = QJsonArray::fromStringList(w.guide.highlightedZones());
+    hf["dock_open"] = w.guide.dockIsOpen() && w.pg != PG_CHAT;
+    hf["dock_focus"] = w.guide.dockHasFocus();
+    hf["last_question_zone"] = w.guide.lastQuestionZone();
+    hf["topic"] = w.guide.dockTopic();
     o["help_focus"] = hf;
     o["tour"] = w.tour().stateJson();
     return o;
@@ -841,7 +841,7 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     for (int i = 0; i < PG_COUNT; ++i) if (n == pageName(i)) p = i;
     if (p < 0) { e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; return {}; }
     w.tour().close(); // the real page is wanted: the tour steps aside
-    if (p == PG_CHAT && w.pg != PG_CHAT) w.chatReturn = w.pg;
+    if (p == PG_CHAT && w.pg != PG_CHAT) w.chat.returnPage = w.pg;
     w.goPage(p);
     QJsonObject r; r["page"] = n;
     return r;
@@ -870,8 +870,8 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     Args A{a, e};
     QJsonObject r;
     if (cmd == "unhighlight") {
-        const int n = w.highlightedZones().size();
-        w.clearHighlight();
+        const int n = w.guide.highlightedZones().size();
+        w.guide.clearHighlight();
         r["cleared"] = n;
         return r;
     }
@@ -902,7 +902,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
         r["page"] = pageName(page);
         if (page == PG_HELP) { static const char *subs[] = {"playing", "commands", "beat", "track"}; r["sub"] = subs[sub >= 0 ? sub : w.helpPage]; }
         r["zones"] = zs;
-        r["dock_open"] = w.dockIsOpen() && page != PG_CHAT;
+        r["dock_open"] = w.guide.dockIsOpen() && page != PG_CHAT;
         return r;
     }
     // highlight
@@ -924,22 +924,22 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     if (!e.isEmpty()) return {};
     w.tour().close(); // a highlight is drawn on the real page
     if (page != w.pg || (page == PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
-        if (page == PG_CHAT && w.pg != PG_CHAT) w.chatReturn = w.pg;
+        if (page == PG_CHAT && w.pg != PG_CHAT) w.chat.returnPage = w.pg;
         w.goPage(page);
         if (page == PG_HELP && sub >= 0) w.helpPage = sub;
     }
     w.refreshZones();
     QStringList unknown;
-    const QStringList known = w.setHighlight(names, label, ms, unknown);
+    const QStringList known = w.guide.setHighlight(names, label, ms, unknown);
     w.refreshZones();   // the dock may have moved out of the way
     r["page"] = pageName(w.pg);
     r["highlighted"] = QJsonArray::fromStringList(known);
     r["unknown"] = QJsonArray::fromStringList(unknown);
     r["ms"] = ms;
-    r["caption"] = !w.highlightCaptionRect().isNull();
+    r["caption"] = !w.guide.highlightCaptionRect().isNull();
     QJsonObject dock;
-    dock["open"] = w.dockIsOpen() && w.pg != PG_CHAT;
-    if (!w.dockRect().isNull()) { const QRectF d = w.dockRect(); dock["y"] = qRound(d.y()); dock["h"] = qRound(d.height()); dock["position"] = d.y() < 100 ? "top" : "bottom"; }
+    dock["open"] = w.guide.dockIsOpen() && w.pg != PG_CHAT;
+    if (!w.guide.dockRect().isNull()) { const QRectF d = w.guide.dockRect(); dock["y"] = qRound(d.y()); dock["h"] = qRound(d.height()); dock["position"] = d.y() < 100 ? "top" : "bottom"; }
     r["dock"] = dock;
     return r;
 }
@@ -985,15 +985,15 @@ QJsonObject ControlServer::cmdChat(const QString &cmd, const QJsonObject &a, QSt
         if (e.isEmpty() && kind != "say" && kind != "tip" && kind != "ask") e = "kind must be say, tip or ask";
         if (e.isEmpty() && from.compare("you", Qt::CaseInsensitive) == 0) e = "'you' is the player's name";
         if (!e.isEmpty()) return {};
-        r["seq"] = w.chatAdd(from, text, kind, false);
-        w.chatSeen();
+        r["seq"] = w.chat.add(from, text, kind, false);
+        w.chat.seen();
         return r;
     }
     const int since = A.integer("since", 0, 2000000000, 0);
     const int limit = A.integer("limit", 1, 200, 200);
     if (!e.isEmpty()) return {};
-    w.chatSeen();
+    w.chat.seen();
     r["messages"] = chatJson(since, limit);
-    r["last_seq"] = w.chatSeq;
+    r["last_seq"] = w.chat.seq;
     return r;
 }
