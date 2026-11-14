@@ -1,7 +1,7 @@
 // venv-vrequency — recording what you hear to a WAV file, and playing the newest recording back.
 #pragma once
 #include "app/shell/part.h"
-#include "app/store/store.h"
+#include "app/store/wav_writer.h"
 #include <QTimer>
 #include <array>
 #include <memory>

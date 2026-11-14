@@ -1,4 +1,4 @@
-// venv-vrequency — files on disk: patches, favourites, sessions, recordings.
+// venv-vrequency — files on disk: patches, favourites, sessions, recordings (written by wav_writer.h).
 //
 //   ~/vrequency/                 (or $VREQUENCY_HOME)
 //     state.json               last settings, the ten sound slots, current sound
@@ -10,7 +10,6 @@
 #include "core/instrument/instrument.h"
 #include "core/instrument/session.h"
 #include "core/track/track.h"
-#include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QString>
@@ -31,6 +30,8 @@ QJsonObject sessionToJson(const td::SessionData &s);
 bool sessionFromJson(const QJsonObject &o, td::SessionData &s);
 QJsonArray beatToJson(const uint16_t *beat);
 void beatFromJson(const QJsonArray &a, uint16_t *beat);
+QJsonArray layersToJson(const std::vector<td::LayerData> &src);          // recorded layers: a loop's, a clip's
+std::vector<td::LayerData> layersFromJson(const QJsonArray &src);
 QJsonObject trackToJson(const td::TrackData &t);
 void trackFromJson(const QJsonObject &o, td::TrackData &t); // anything damaged is left out
 
@@ -45,19 +46,3 @@ QString savePatch(const QString &subdir, const td::Patch &p, bool overwrite = fa
 QStringList listFiles(const QString &subdir, const QString &ext); // newest first
 
 } // namespace store
-
-// Streaming 16-bit stereo WAV writer.
-class WavWriter {
-public:
-    bool open(const QString &path, int rate);
-    void write(const float *interleaved, int frames);
-    void close();
-    bool isOpen() const { return f.isOpen(); }
-    qint64 frames() const { return nFrames; }
-    QString path() const { return f.fileName(); }
-private:
-    QFile f;
-    qint64 nFrames = 0;
-    int rate = 48000;
-    void header();
-};

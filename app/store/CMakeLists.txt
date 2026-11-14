@@ -1,4 +1,8 @@
 # app/store
 target_sources(vrequency PRIVATE
-  store.cpp
-  store.h)
+  files.cpp
+  session_json.cpp
+  store.h
+  track_json.cpp
+  wav_writer.cpp
+  wav_writer.h)

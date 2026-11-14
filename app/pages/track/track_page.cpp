@@ -4,6 +4,7 @@
 // step, tidies the lanes and hands the engine a fresh immutable copy. Clips themselves are
 // shared and never change, so a copy of the track costs almost nothing.
 #include "app/shell/mainwindow.h"
+#include "app/store/wav_writer.h"
 #include "app/ui/palette.h"
 #include "core/presets/sound_shelf.h"
 #include <QFileInfo>

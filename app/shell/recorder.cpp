@@ -1,5 +1,6 @@
 // venv-vrequency — recording and listening back (see recorder.h).
 #include "app/shell/recorder.h"
+#include "app/store/store.h"
 #include "audio/audio.h"
 #include <QFile>
 #include <QFileInfo>

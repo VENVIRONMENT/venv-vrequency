@@ -5,6 +5,7 @@
 #include <QCloseEvent>
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QRegularExpression>
