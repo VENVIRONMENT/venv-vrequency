@@ -3,8 +3,9 @@
 // their touch zones, so drawing and hit-testing can never disagree.
 #pragma once
 #include "audio/audio.h"
-#include "analysis.h"
-#include "presets.h"
+#include "audio/capture.h"
+#include "core/analysis/analysis.h"
+#include "core/presets/presets.h"
 #include "app/store/store.h"
 #include "app/shell/shell.h"
 #include <QElapsedTimer>

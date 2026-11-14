@@ -130,9 +130,4 @@ struct Svf {
     }
 };
 
-struct Smooth {
-    float v = 0;
-    inline float to(float target, float coef) { v += coef * (target - v); return v; }
-};
-
 } // namespace td

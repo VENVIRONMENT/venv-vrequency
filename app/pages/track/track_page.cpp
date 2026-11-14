@@ -5,7 +5,7 @@
 // shared and never change, so a copy of the track costs almost nothing.
 #include "app/shell/mainwindow.h"
 #include "app/ui/palette.h"
-#include "sounds.h"
+#include "core/presets/sound_shelf.h"
 #include <QFileInfo>
 #include <QPainter>
 #include <QPainterPath>

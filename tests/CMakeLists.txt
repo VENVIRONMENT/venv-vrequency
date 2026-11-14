@@ -1,4 +1,21 @@
-# Engine tests and benchmark (offline rendering, no Qt).
-add_executable(vrequency_tests core_tests.cpp)
+# Engine tests and benchmark (offline rendering, no Qt). main.cpp runs the areas in a fixed order.
+add_executable(vrequency_tests
+  main.cpp
+  bench.cpp
+  scale_tests.cpp
+  keys_tests.cpp
+  sound_tests.cpp
+  drum_tests.cpp
+  beat_tests.cpp
+  track_clip_tests.cpp
+  track_play_tests.cpp
+  track_transport_tests.cpp
+  track_pick_tests.cpp
+  track_mix_tests.cpp
+  fx_tests.cpp
+  backing_tests.cpp
+  looper_tests.cpp
+  session_tests.cpp
+  analysis_tests.cpp)
 target_link_libraries(vrequency_tests PRIVATE vreqcore)
 add_test(NAME core COMMAND vrequency_tests)

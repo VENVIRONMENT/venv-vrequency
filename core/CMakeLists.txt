@@ -1,10 +1,28 @@
 # The engine: no GUI and no audio-device dependencies.
+# Includes are written from the repository root: #include "core/instrument/instrument.h".
 add_library(vreqcore STATIC
-  instrument.cpp
-  presets.cpp
-  drums.cpp
-  track.cpp
-  sounds.cpp
-  analysis.cpp)
-target_include_directories(vreqcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+  analysis/analysis.cpp
+  drums/drum_kit.cpp
+  drums/kit_sounds.cpp
+  instrument/backing.cpp
+  instrument/beat.cpp
+  instrument/events.cpp
+  instrument/instrument.cpp
+  instrument/lead.cpp
+  instrument/loop_record.cpp
+  instrument/looper.cpp
+  instrument/process.cpp
+  instrument/session.cpp
+  instrument/ui_state.cpp
+  instrument/voices.cpp
+  presets/factory.cpp
+  presets/normalise.cpp
+  presets/random.cpp
+  presets/sound_shelf.cpp
+  track/arrange.cpp
+  track/chop.cpp
+  track/clip.cpp
+  track/playback.cpp
+  track/transport.cpp)
+target_include_directories(vreqcore PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(vreqcore PUBLIC Threads::Threads)

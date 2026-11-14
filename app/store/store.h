@@ -7,7 +7,9 @@
 //     sessions/*.json          saved sessions (settings, sounds, backing, loops)
 //     recordings/*.wav         exported audio
 #pragma once
-#include "instrument.h"
+#include "core/instrument/instrument.h"
+#include "core/instrument/session.h"
+#include "core/track/track.h"
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>

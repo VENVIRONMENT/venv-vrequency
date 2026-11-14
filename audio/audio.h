@@ -24,8 +24,7 @@ public:
     int quantum() const { return quant; }
     bool streaming() const;
     float load() const { return loadAvg.load(); }      // render time / real time, smoothed
-    float peakLoad() const { return loadPeak.load(); } // worst block since last resetPeak()
-    void resetPeak() { loadPeak.store(0); }
+    float peakLoad() const { return loadPeak.load(); } // worst block so far
     unsigned overruns() const { return over.load(); }  // blocks slower than real time
 
     void renderInterleaved(float *dst, int frames);    // used by the backends
@@ -47,7 +46,3 @@ private:
     void alsaLoop();
     void nullLoop();
 };
-
-// Record mono audio from the default input for the "listen" feature.
-// Returns frames captured; 0 with `err` set when nothing could be recorded.
-int captureMono(std::vector<float> &dst, int rate, double seconds, std::string &err);

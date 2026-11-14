@@ -1,7 +1,7 @@
 // venv-vrequency — self-test of the tour (called from the main self-test, which supplies `check`).
 #include "audio/audio.h"
 #include "app/control/control.h"
-#include "instrument.h"
+#include "core/instrument/instrument.h"
 #include "app/shell/mainwindow.h"
 #include "app/store/store.h"
 #include "app/tour/tour.h"

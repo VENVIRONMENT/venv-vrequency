@@ -4,10 +4,10 @@
 // those two checks need a human.)
 #include "audio/audio.h"
 #include "app/control/control.h"
-#include "instrument.h"
+#include "core/instrument/instrument.h"
 #include "app/shell/mainwindow.h"
-#include "presets.h"
-#include "sounds.h"
+#include "core/presets/presets.h"
+#include "core/presets/sound_shelf.h"
 #include <QApplication>
 #include <QDir>
 #include <QElapsedTimer>

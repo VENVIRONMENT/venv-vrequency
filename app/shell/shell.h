@@ -5,7 +5,7 @@
 #include "app/shell/key_state.h"
 #include "app/shell/keymap.h"
 #include "app/ui/ui.h"
-#include "instrument.h"
+#include "core/instrument/instrument.h"
 #include <QElapsedTimer>
 
 class AudioOut;

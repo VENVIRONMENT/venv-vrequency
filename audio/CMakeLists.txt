@@ -8,8 +8,8 @@ find_path(ALSA_INC alsa/asoundlib.h PATHS /usr/include ${SYSROOT}/include NO_DEF
 find_library(PW_LIB NAMES pipewire-0.3 libpipewire-0.3.so.0 PATHS /usr/lib/aarch64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib)
 find_library(ALSA_LIB NAMES asound libasound.so.2 PATHS /usr/lib/aarch64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib)
 
-add_library(vreqaudio STATIC audio.cpp)
-target_include_directories(vreqaudio PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${CMAKE_SOURCE_DIR}/core)
+add_library(vreqaudio STATIC audio.cpp capture.cpp)
+target_include_directories(vreqaudio PUBLIC ${CMAKE_SOURCE_DIR})   # includes are written from the repository root
 target_link_libraries(vreqaudio PUBLIC Threads::Threads)
 if(PW_INC AND SPA_INC AND PW_LIB)
   message(STATUS "PipeWire backend: ON (${PW_INC})")

@@ -3,10 +3,10 @@
 // named hotspots for things that are on screen but are not controls (the level strip, the scope readouts...).
 #include "app/tour/tour.h"
 #include "audio/audio.h"
-#include "instrument.h"
+#include "core/instrument/instrument.h"
 #include "app/shell/mainwindow.h"
-#include "presets.h"
-#include "sounds.h"
+#include "core/presets/presets.h"
+#include "core/presets/sound_shelf.h"
 #include <QApplication>
 #include <QDir>
 #include <QThread>
