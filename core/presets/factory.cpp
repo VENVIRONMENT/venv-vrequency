@@ -1,4 +1,5 @@
 // venv-vrequency — the ten factory sounds and the five extra "dream" sounds.
+#include "core/presets/patch_values.h"
 #include "core/presets/presets.h"
 #include <initializer_list>
 
@@ -6,16 +7,7 @@ namespace td {
 
 namespace {
 
-struct PV { int id; float v; };
-
-Patch make(const char *name, std::initializer_list<PV> vals) {
-    Patch p;
-    p.setName(name);
-    for (const PV &x : vals) p.p[x.id] = x.v;
-    p.clamp();
-    normalisePatch(p);
-    return p;
-}
+Patch make(const char *name, std::initializer_list<PV> vals) { return withValues(Patch(), name, vals.begin(), vals.size()); }
 
 } // namespace
 

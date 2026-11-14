@@ -78,9 +78,7 @@ void Instrument::tickBeat(double, double b1) {
     for (int d = 0; d < kDrums; ++d) {
         if (!(beatPat[d] & (1u << s))) continue;
         if (skipStep[d] == step) { skipStep[d] = -1; continue; }
-        // straight sixteenths played by a machine sound stiff: off-beat hats a little quieter
-        float vel = (d == D_HAT && (s & 3) != 0) ? 0.7f : 1.0f;
-        drums.trigger(st.kit, d, vel);
+        drums.trigger(st.kit, d, stepVelocity(d, s));
         ++drumHits[d];
     }
 }

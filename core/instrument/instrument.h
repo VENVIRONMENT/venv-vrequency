@@ -1,10 +1,13 @@
 // venv-vrequency — the instrument: string keyboard, scale lock, backing sequencer,
 // event looper, voice pool and master effects.
 //
-// Threading model: one real-time thread calls process(). Any other thread
-// talks to it only through the lock-free queues (push / setPatch), reads state
-// through uiState()/scope, or — for rare bulk operations (session save/load) —
-// through snapshot()/restore(), which take a short mutex.
+// Threading model: one real-time thread calls process(). One other thread (the app's GUI
+// thread: the queues take a single writer) talks to it through the lock-free queues
+// (push / setPatch) and reads state through uiState()/readScope().
+// The exception is the mutex `mx`: process() holds it for the whole of every block, and
+// snapshot(), restore() and setTrack() take it on the caller's thread. While one of those
+// runs, the audio thread waits. How long that is, and why it was left as it is, is in
+// docs/ARCHITECTURE.md ("The engine's one lock").
 #pragma once
 #include "core/drums/drum_kit.h"
 #include "core/fx/chorus.h"
@@ -39,7 +42,7 @@ public:
     explicit Instrument(float sampleRate = 48000.0f);
     ~Instrument();
 
-    // ---- any thread ----
+    // ---- the control thread (one writer; see the top of this file) ----
     bool push(const Event &e) { if (evq.push(e)) return true; ++dropped; return false; }
     void key(int string, int col, bool down, bool chromatic = false) {
         Event e; e.type = EV_KEY; e.a = (int16_t)string; e.b = (int16_t)col; e.c = down; e.d = chromatic; push(e);
@@ -56,7 +59,7 @@ public:
         Event e; e.type = EV_BEAT; e.a = (int16_t)cmd; e.b = (int16_t)drum; e.c = (int16_t)step; e.d = (int16_t)arg; push(e);
     }
     void setPatch(int part, const Patch &p); // lock-free hand-off
-    void setTrack(std::shared_ptr<const TrackData> t); // short mutex; the old track is freed on the caller's thread
+    void setTrack(std::shared_ptr<const TrackData> t); // takes mx; the old track is freed on the caller's thread
     UiState uiState() const;
     void readScope(float *dst, int n) const; // most recent n mono samples
 
@@ -65,7 +68,7 @@ public:
     int readRecorded(float *dst, int maxFrames);
     uint32_t recOverruns() const { return recDrops.load(); }
 
-    // bulk state (short mutex)
+    // bulk state (both take mx: the audio thread waits while they copy)
     void snapshot(SessionData &out);
     void restore(const SessionData &in);
 
@@ -197,7 +200,8 @@ private:
     void opOff(int part, int slot);
     void partOff(int part, bool hard);
     void leadOp(uint8_t op, int slot, float a, float b = 0);
-    void applyOp(int part, Layer &ly, const LoopEv &e);
+    // One recorded event played on a part. `keepSound`: the sound changes recorded with it are passed over.
+    void applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches, bool keepSound = false);
 
     void chordTap(int degree);
     bool backingActive() const { return backPlaying && (progLen > 0 || holdChord >= 0 || droneMask != 0); }
@@ -213,6 +217,7 @@ private:
     void tickLoop(double b0, double b1);
     void playLayers(double p0, double p1);
     void resetLayerPart(int li);
+    void quietPart(int p);                   // its notes end, its crusher, modulation and bend are let go
     void trigClick(bool accent);
     void drumHit(int drum, float vel);
     void beatCmd(int cmd, int drum, int step, int arg);
@@ -224,7 +229,6 @@ private:
     void runLanes(const TrackData &t, double a, double b, double globalBeat);
     void runLane(const TrackData &t, int lane, double a, double b, double globalBeat);
     void laneOff(int lane);
-    void applyTrackOp(int part, const LayerData &ld, const LoopEv &e, bool keepSound);
 
     void block(float *l, float *r, int n);
     void publish();

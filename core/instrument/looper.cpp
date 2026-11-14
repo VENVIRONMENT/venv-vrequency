@@ -11,13 +11,17 @@ void Instrument::trigClick(bool accent) {
     clickFreq = accent ? 2200.0f : 1500.0f;
 }
 
-void Instrument::resetLayerPart(int li) {
-    int p = 2 + li;
+void Instrument::quietPart(int p) {
     if (glitchOwner == p) { crush.set(false, 0, 0); glitchOwner = -1; }
     partOff(p, false);
-    parts[p].patch = layers[li].patches[0];
     parts[p].clearMod();
     bendTarget[p] = 0;
+}
+
+void Instrument::resetLayerPart(int li) {
+    int p = 2 + li;
+    quietPart(p);
+    parts[p].patch = layers[li].patches[0];
     layers[li].cursor = 0;
 }
 
@@ -95,15 +99,15 @@ void Instrument::loopPlayStop() {
     }
 }
 
-void Instrument::applyOp(int part, Layer &ly, const LoopEv &e) {
+void Instrument::applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches, bool keepSound) {
     switch (e.op) {
     case OP_ON: opOn(part, e.slot, e.a, e.b); break;
     case OP_GLIDE: opGlide(part, e.slot, e.a); break;
     case OP_OFF: opOff(part, e.slot); break;
     case OP_BEND: bendTarget[part] = e.a; break;
     case OP_XY: applyXY(part, e.slot & 0x0f, e.a, e.b, (e.slot & 0x80) != 0, (e.slot & 0x40) != 0); break;
-    case OP_PATCH: if (e.slot < ly.nPatches) parts[part].patch = ly.patches[e.slot]; break;
-    case OP_PARAM: if (e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
+    case OP_PATCH: if (!keepSound && e.slot < nPatches) parts[part].patch = patches[e.slot]; break;
+    case OP_PARAM: if (!keepSound && e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
     }
 }
 
@@ -112,7 +116,7 @@ void Instrument::playLayers(double p0, double p1) {
         Layer &ly = layers[li];
         parts[2 + li].gain = st.loopVol;
         while (ly.cursor < ly.n && ly.ev[ly.cursor].beat < p1) {
-            if (ly.ev[ly.cursor].beat >= p0 - 1e-9) applyOp(2 + li, ly, ly.ev[ly.cursor]);
+            if (ly.ev[ly.cursor].beat >= p0 - 1e-9) applyOp(2 + li, ly.ev[ly.cursor], ly.patches, (size_t)ly.nPatches);
             ++ly.cursor;
         }
     }

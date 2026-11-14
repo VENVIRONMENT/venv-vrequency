@@ -1,4 +1,5 @@
 #include "core/presets/sound_shelf.h"
+#include "core/presets/patch_values.h"
 #include "core/presets/presets.h"
 #include <cstring>
 
@@ -6,19 +7,14 @@ namespace td {
 
 namespace {
 
-struct PV { int id = -1; float v = 0; };          // -1 ends an entry's list
 struct Entry { const char *name, *hint; PV v[24]; };
 
 // Every sound starts from the same dry, steady base, so each entry only lists what makes it itself.
 Patch build(const Entry &e) {
     Patch p;
-    p.setName(e.name);
     p.p[P_VIBDEPTH] = 0; p.p[P_GLIDE] = 0; p.p[P_DLYMIX] = 0; p.p[P_REVMIX] = 0.1f;
     p.p[P_FMODE] = F_LP; p.p[P_FATK] = 0.001f;
-    for (const PV &x : e.v) { if (x.id < 0) break; p.p[x.id] = x.v; }
-    p.clamp();
-    normalisePatch(p);
-    return p;
+    return withValues(p, e.name, e.v, sizeof e.v / sizeof e.v[0]);
 }
 
 const Entry kLib[kLibKinds][kLibSounds] = {
