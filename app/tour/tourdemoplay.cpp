@@ -23,10 +23,10 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     capture(rig, 4, P("synth"));
     w.setPage(PG_SOUND); rig.settle(3);
     capture(rig, 5, P("sound"));
-    w.deepEdit = true; w.deepPage = 0; rig.settle(2);
+    w.soundPage.deepEdit = true; w.soundPage.deepPage = 0; rig.settle(2);
     capture(rig, 6, P("sound-deep"));
-    for (int dp = 1; dp < 4; ++dp) { w.deepPage = dp; rig.settle(2); capture(rig, 13 + dp, pics[13 + dp]); } // the other parameters
-    w.deepEdit = false;
+    for (int dp = 1; dp < 4; ++dp) { w.soundPage.deepPage = dp; rig.settle(2); capture(rig, 13 + dp, pics[13 + dp]); } // the other parameters
+    w.soundPage.deepEdit = false;
     rig.key(Qt::Key_F, false); rig.key(Qt::Key_A, false);
     w.setPage(PG_BEAT); rig.settle(2);
     for (int i = 0; i < 7; ++i) { // eight kept beats: the row pages, with More

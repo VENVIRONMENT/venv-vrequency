@@ -86,14 +86,14 @@ void favouritesOverwriteAndPage(Context &ctx, Client &c) {
     w.setPage(PG_SOUND); w.shot();
     const QRectF fr = w.zoneRect(zn::favprev);
     auto at = [&](double fx) { const QPointF p(fr.left() + fr.width() * fx, fr.center().y()); w.pointer(6, p, PH_PRESS); w.pointer(6, p, PH_RELEASE); w.shot(); };
-    const int p0 = w.favouritesPage();
-    at(0.8); const int p1 = w.favouritesPage();
-    at(0.2); const int p2 = w.favouritesPage();
-    at(0.2); const int p3 = w.favouritesPage();
-    at(0.8); const int p4 = w.favouritesPage();
+    const int p0 = w.soundPage.favouritesPage();
+    at(0.8); const int p1 = w.soundPage.favouritesPage();
+    at(0.2); const int p2 = w.soundPage.favouritesPage();
+    at(0.2); const int p3 = w.soundPage.favouritesPage();
+    at(0.8); const int p4 = w.soundPage.favouritesPage();
     check(p0 == 0 && p1 == 1 && p2 == 0 && p3 == pages - 1 && p4 == 0, "right half pages forward, left half pages back, both wrapping");
     tap(w, zn::favprev); w.shot();
-    check(w.favouritesPage() == 1, "a tap in the middle (the control socket) still goes forward");
+    check(w.soundPage.favouritesPage() == 1, "a tap in the middle (the control socket) still goes forward");
     w.setPage(PG_PLAY); w.shot();
 }
 

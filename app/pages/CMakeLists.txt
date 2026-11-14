@@ -4,7 +4,21 @@ target_sources(vrequency PRIVATE
   beat/kept_beats.cpp
   chat/chat_page.cpp
   chat/chat_page.h
+  sound/sound_favourites.cpp
+  sound/sound_page.cpp
+  sound/sound_page.h
+  sound/sound_params.cpp
+  synth/chord_pads.cpp
+  synth/chord_pads.h
   synth/scope.cpp
+  synth/scope.h
+  synth/scope_measure.cpp
+  synth/scope_trace.cpp
+  synth/synth_header.cpp
+  synth/synth_page.cpp
+  synth/synth_page.h
+  synth/synth_softkeys.cpp
+  synth/synth_strings.cpp
   track/track_arrange.cpp
   track/track_chop.cpp
   track/track_clips.cpp

@@ -10,6 +10,9 @@
 #include "app/chat/chat.h"
 #include "app/guide/guide.h"
 #include "app/pages/chat/chat_page.h"
+#include "app/pages/sound/sound_page.h"
+#include "app/pages/synth/chord_pads.h"
+#include "app/pages/synth/synth_page.h"
 #include "app/pages/track/track_page.h"
 #include "app/pages/tune/listener.h"
 #include "app/shell/recorder.h"
@@ -54,20 +57,25 @@ public:
     Guide guide{*this, chat};
     ChatPage chatPage{*this, chat};
     TrackPage trackPage{*this};
+    ChordPads chordPads{*this};              // shared by the Synth and Backing pages
+    SynthPage synthPage{*this, chordPads};
+    SoundPage soundPage{*this};
     Page *pageOf[PG_COUNT] = {};             // the pages that are classes, by PageId (the rest are still methods here)
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
     void goPage(int p) override {
         if (p == pg) return;
-        pg = p; deepEdit = false; favDelete = false; sounds.slotSave = false; beatErase = false;
+        pg = p; sounds.slotSave = false; beatErase = false;
         for (Page *q : pageOf) if (q) q->disarm();
         update();
     }
     void toast(const QString &s, int ms = 1800) override;
     void redraw() override { update(); }
     void refreshLists() override;
-    const Sounds &soundShelf() const override { return sounds; }
+    Sounds &soundShelf() override { return sounds; }
+    const Recorder &recorderNow() const override { return recorder; }
+    bool noAudioDevice() const override { return sink.dummy; }
     void setLastRecording(const QString &path) override { recorder.setLastPath(path); }
     void saveSoon() override { saveTimer.start(2500); }
     int page() const override { return pg; }
@@ -81,9 +89,8 @@ public:
     void saveState() override;
     void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keys.testOpen = on; }
-    int favouritesPage() const { return favPage; }
-    QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatErase) l << "erase"; if (trackPage.armed()) l << "remove"; return l.join(","); }
-    void armAllModes() { favDelete = sounds.slotSave = beatErase = true; trackPage.armAll(); }
+    QString armedModes() const { QStringList l; if (soundPage.favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatErase) l << "erase"; if (trackPage.armed()) l << "remove"; return l.join(","); }
+    void armAllModes() { soundPage.favDelete = sounds.slotSave = beatErase = true; trackPage.armAll(); }
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }
@@ -123,16 +130,9 @@ private:
 
     QTimer frameTimer;
 
-    int favPage = 0;
-    bool favDelete = false;
-
     // ui state
     int pg = PG_PLAY;
-    bool deepEdit = false;
-    int deepPage = 0;
     int helpPage = 0;
-    int touchCol[td::kStrings] = {-1, -1, -1};
-    std::deque<float> trail[td::kStrings];
     QString toastText; qint64 toastUntil = 0;
     bool scratchWindow = false;
     bool tourSeenFlag = false;                               // the player has answered the first-run offer
@@ -165,25 +165,12 @@ private:
 
 
 
-    // the scope on the play page
-    int tbIdx = 4, vdIdx = 1, rangeT = 0, rangeV = 0; // time/div and volts/div steps, auto-ranged
-    float measFreq = 0, measPk = 0;
-    bool trigd = false;
-    QImage phos;      // fading trace
-    float glitchVis = 0, glitchHue = 0; // colour streaks while the crusher is on
-    QPixmap gratPix;  // graticule
     QPixmap facePix;  // scan lines and corner shading over the whole screen
 
     QPointF toCanvas(QPointF widgetPos) const;
 
-    // drawing helpers
-    void paramSlider(QRectF r, int param);
-
     // pages
     void drawAll(QPainter &p, qreal W, qreal H);
-    void paintPlay();
-    void drawScope(QRectF xy);
-    void paintSound();
     void paintBacking();
     void paintBeat();
     void hitPad(int drum);
@@ -199,15 +186,9 @@ private:
     void helpAsk();
     void paintTabs();
     void paintKeyTest();
-    void paintChordPads(QRectF area, bool withSlots);
-    void paintLoopButton(QRectF r);
 
     // actions
     void tapTempo();
     void updateBend();
     void releaseAllKeys();
 };
-
-QString paramText(int param, float v);
-float paramToNorm(int param, float v);
-float normToParam(int param, float n);

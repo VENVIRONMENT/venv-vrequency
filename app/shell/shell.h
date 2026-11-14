@@ -9,6 +9,7 @@
 #include <QElapsedTimer>
 
 class AudioOut;
+class Recorder;
 class Sounds;
 
 // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
@@ -38,7 +39,9 @@ public:
     virtual void saveState() = 0;
     virtual void saveSoon() = 0;             // an edit is on disk a moment later
     virtual void refreshLists() = 0;         // read the favourites and sessions on disk again
-    virtual const Sounds &soundShelf() const = 0;              // the ten slots and the favourites
+    virtual Sounds &soundShelf() = 0;                          // the lead sound, the ten slots and the favourites
+    virtual const Recorder &recorderNow() const = 0;           // is it recording, and for how long
+    virtual bool noAudioDevice() const = 0;                    // the output is the dummy device: nothing can be heard
     virtual void setLastRecording(const QString &path) = 0;    // an exported track is the newest recording
     void set(int setting, float v) { inst.set(setting, v); }
 
