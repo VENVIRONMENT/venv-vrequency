@@ -13,7 +13,7 @@ namespace selftest {
 // the saved state and a session both bring the same track back
 void trackSaveAndLoad(Context &ctx, TrackState &tr) {
     MainWindow &w = ctx.w;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     w.saveState();
     QJsonObject tj; store::readJson(store::baseDir() + "/state.json", tj);
     TrackData rt; store::trackFromJson(tj["track"].toObject(), rt);

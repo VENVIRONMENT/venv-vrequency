@@ -85,6 +85,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     resize(720, 720);
     clock.start();
     pageOf[PG_CHAT] = &chatPage;
+    pageOf[PG_TRACK] = &trackPage;
     chat.attach(guide);
     chat.onUserMessage = [this] { emit userChatArrived(); };
     guide.rowLabels = &helpDesc;
@@ -98,7 +99,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         sounds.load(st);
         keys.chordRow = st["chordRow"].toBool(false);
         store::beatFromJson(st["beat"].toArray(), sd.beat);
-        if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
+        if (st.contains("track")) store::trackFromJson(st["track"].toObject(), trackPage.track);
         chat.load(st);
         tourSeenFlag = st["tourSeen"].toBool(false);
         tourLastPage = st["tourPage"].toString();
@@ -106,7 +107,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     beatsLoad(st, sd);
     sd.lead = sounds.lead; sd.backing = sounds.lead;
     inst.restore(sd);
-    inst.setTrack(std::make_shared<const TrackData>(track));
+    inst.setTrack(std::make_shared<const TrackData>(trackPage.track));
     saveTimer.setSingleShot(true);
     connect(&saveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
     if (scratch) {
@@ -124,7 +125,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listener.state == 1 || recorder.recording() || !keys.held.isEmpty() ||
-                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
+                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || s.trackPlaying || trackPage.exportStatus() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -133,7 +134,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
 
 MainWindow::~MainWindow() {
     recorder.shutdown();
-    if (exportThread.joinable()) exportThread.join();
+    trackPage.stopExport();
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -151,7 +152,7 @@ void MainWindow::saveState() {
     sounds.save(o);
     o["chordRow"] = keys.chordRow;
     o["beat"] = store::beatToJson(sd.beat);
-    o["track"] = store::trackToJson(track);
+    o["track"] = store::trackToJson(trackPage.track);
     beatsSave(o);
     chat.save(o);
     o["tourSeen"] = tourSeenFlag;
@@ -186,7 +187,7 @@ bool MainWindow::saveSession(const QString &path) {
     SessionData sd;
     inst.snapshot(sd);
     QJsonObject o = store::sessionToJson(sd);
-    o["track"] = store::trackToJson(track);
+    o["track"] = store::trackToJson(trackPage.track);
     bool ok = store::writeJson(path, o);
     refreshLists();
     return ok;
@@ -200,12 +201,7 @@ bool MainWindow::loadSession(const QString &path) {
     inst.restore(sd);
     sounds.lead = sd.lead; sounds.curSlot = -1;
     if (o.contains("track")) { // sessions saved before the track existed leave the track alone
-        trackUndo.push_back(track);
-        trackRedo.clear();
-        store::trackFromJson(o["track"].toObject(), track);
-        selLane = selIdx = -1; handOn = false; chopOpen = false; dashCache.clear();
-        playBar = viewBar = 0;
-        trackSync();
+        trackPage.loadJson(o["track"].toObject());
     }
     return true;
 }
@@ -262,7 +258,7 @@ void MainWindow::perform(int act, bool shift) {
     case A_BEAT_PLAY: inst.beatDo(BT_PLAYSTOP); toast(u.beatPlaying ? "Beat stopped" : "Beat playing", 900); break;
     case A_BEAT_REC: inst.beatDo(BT_REC); toast(u.beatRec ? "Beat recording off" : "Beat recording: pads write hits", 1200); break;
     case A_PLAY_LAST: recorder.togglePlayback(); break;
-    case A_TRACK_PLAY: trackPlayStop(); break;
+    case A_TRACK_PLAY: trackPage.trackPlayStop(); break;
     case A_CHAT: // Ctrl+Y: the chat dock on this page; with Shift (or on the Chat page itself) the full Chat page
         if (shift || pg == PG_CHAT) chat.toggle();
         else if (!guide.dockOpen) guide.dockOpenFocus();
@@ -328,7 +324,6 @@ void MainWindow::handleKey(int key, bool down) {
         if (guide.dockFocus && chat.key(key, plainAct, true)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
         if (!guide.dockFocus && plainAct == A_HOME) { guide.dockClose(); keys.held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
     }
-    if (pg == PG_TRACK && !keys.testOpen && trackKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
     if (pageOf[pg] && !keys.testOpen && pageOf[pg]->key(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
     if (keys.command) {
         perform(km.command.value(key, A_NONE), keys.chromatic);
@@ -474,8 +469,6 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     painter.setRenderHint(QPainter::TextAntialiasing, false);
     ui.recordTexts(true);
     guide.beginFrame();
-    pollExport();
-    hearWatch();
     beatWatch();
 
     for (Page *p : pageOf) if (p) p->tick();
@@ -483,7 +476,6 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     if (tourOpen()) tourView->paint(); // the tour draws a picture instead of the page: nothing on it is live
     else if (Page *p = pageOf[pg]) { if (p->tabs()) paintTabs(); p->paint(); }
     else switch (pg) {
-    case PG_TRACK: paintTabs(); paintTrack(); break;
     case PG_PLAY: paintPlay(); break;
     case PG_SOUND: paintTabs(); paintSound(); break;
     case PG_BACK: paintTabs(); paintBacking(); break;

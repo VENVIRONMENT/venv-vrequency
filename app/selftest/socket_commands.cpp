@@ -148,7 +148,7 @@ void socketEveryCommand(Context &ctx, Link &link) {
         QFile::remove(shotPath);
     }
     {
-        for (int i = 0; i < 100 && w.exportStatus() == 1; ++i) wait(100);
+        for (int i = 0; i < 100 && w.trackPage.exportStatus() == 1; ++i) wait(100);
         wait(150);
         QFile ef(exportPath);
         check(!exportPath.isEmpty() && ef.exists() && ef.size() > 44 + 48000, "track export (async) writes a WAV and gives its path");

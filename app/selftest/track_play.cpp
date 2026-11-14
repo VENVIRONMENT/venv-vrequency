@@ -40,11 +40,11 @@ void trackPlay(Context &ctx) {
 // Export writes the track as a WAV file in the background
 void trackExport(Context &ctx) {
     MainWindow &w = ctx.w; Instrument &inst = ctx.inst; AudioOut &audio = ctx.audio;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     tap(w, zn::track_export);
-    check(w.exportStatus() == 1, "Export starts writing in the background");
+    check(w.trackPage.exportStatus() == 1, "Export starts writing in the background");
     QElapsedTimer et; et.start();
-    while (w.exportStatus() != 0 && et.elapsed() < 60000) { wait(100); w.shot(); }
+    while (w.trackPage.exportStatus() != 0 && et.elapsed() < 60000) { wait(100); w.shot(); }
     QFile ef(w.recorder.lastPath());
     const bool eok = ef.open(QIODevice::ReadOnly);
     const QByteArray ed = eok ? ef.readAll() : QByteArray();
@@ -59,7 +59,7 @@ void trackExport(Context &ctx) {
 // Backspace deletes a placed clip, Remove a shelf clip and every copy of it
 void trackRemove(Context &ctx, TrackState &tr) {
     MainWindow &w = ctx.w;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     touch(w, tr.lanes.cell(LN_BEAT, 0));
     press(w, Qt::Key_Backspace); wait(60);
     check(T.lane[LN_BEAT].size() == 1, "Backspace deletes the chosen clip");

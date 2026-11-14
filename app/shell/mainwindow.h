@@ -10,6 +10,7 @@
 #include "app/chat/chat.h"
 #include "app/guide/guide.h"
 #include "app/pages/chat/chat_page.h"
+#include "app/pages/track/track_page.h"
 #include "app/pages/tune/listener.h"
 #include "app/shell/recorder.h"
 #include "app/shell/shell.h"
@@ -52,19 +53,22 @@ public:
     Chat chat{*this};
     Guide guide{*this, chat};
     ChatPage chatPage{*this, chat};
+    TrackPage trackPage{*this};
     Page *pageOf[PG_COUNT] = {};             // the pages that are classes, by PageId (the rest are still methods here)
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
     void goPage(int p) override {
         if (p == pg) return;
-        pg = p; deepEdit = false; favDelete = false; sounds.slotSave = false; beatErase = false; removeArmed = -1;
+        pg = p; deepEdit = false; favDelete = false; sounds.slotSave = false; beatErase = false;
         for (Page *q : pageOf) if (q) q->disarm();
         update();
     }
     void toast(const QString &s, int ms = 1800) override;
     void redraw() override { update(); }
     void refreshLists() override;
+    const Sounds &soundShelf() const override { return sounds; }
+    void setLastRecording(const QString &path) override { recorder.setLastPath(path); }
     void saveSoon() override { saveTimer.start(2500); }
     int page() const override { return pg; }
     void handleKey(int qtKey, bool down);
@@ -78,28 +82,20 @@ public:
     void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keys.testOpen = on; }
     int favouritesPage() const { return favPage; }
-    QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
-    void armAllModes() { favDelete = sounds.slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
+    QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatErase) l << "erase"; if (trackPage.armed()) l << "remove"; return l.join(","); }
+    void armAllModes() { favDelete = sounds.slotSave = beatErase = true; trackPage.armAll(); }
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }
-    const td::TrackData &trackData() const { return track; }
-    int trackUndoDepth() const { return (int)trackUndo.size(); }
-    bool clipInHand() const { return handOn; }
-    int chosenLane() const { return selLane; }
-    int chosenIndex() const { return selIdx; }
-    enum PickKind { PK_KEYS, PK_SYNTH, PK_GUITAR, PK_BASS, PK_DRUMS, PK_COUNT }; // the sound picker's kinds
-    bool chopping() const { return chopOpen; }
-    bool pickingSound() const { return soundOpen; }
-    int soundKindShown() const { return soundKind; }
-    bool hearingAlone() const { return hearOn; }
-    bool mixing() const { return mixOpen; }
+    // the Track page's state is in trackPage; the tour and the control socket still ask the window
+    bool clipInHand() const { return trackPage.clipInHand(); }
+    bool chopping() const { return trackPage.chopping(); }
+    bool pickingSound() const { return trackPage.pickingSound(); }
+    bool mixing() const { return trackPage.mixing(); }
+    int exportStatus() const { return trackPage.exportStatus(); } // 0 idle, 1 working
     int keptBeats() const { return (int)beatSlots.size(); }
     int keptBeatShown() const { return beatCur; }
     QString keptBeatName(int i) const { return i >= 0 && i < (int)beatSlots.size() ? beatSlots[i].name : QString(); }
-    int mixLaneShown() const { return mixLane; }
-    int playLineBar() const { return playBar; }
-    int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
     // --- the catalogue of zones (app/shell/zone_catalogue.cpp) ---
     struct ZoneInfo { QString name; QRectF r; QString label; bool covered = false; };
     void refreshZones() { shot(); }                            // draw once so zoneRect/zoneNames are current
@@ -171,37 +167,18 @@ private:
     uint32_t seenHits[td::kDrums] = {0};
     qint64 padLit[td::kDrums] = {0}; // when each pad last sounded
 
-    // track page
-    struct Dash { float a, b, pitch; };
-    struct ClipDash { std::vector<Dash> d; float lo = 60, hi = 60; };
-    td::TrackData track;                    // the master copy; the engine gets its own after every edit
-    std::vector<td::TrackData> trackUndo, trackRedo;
-    int selLane = -1, selIdx = -1;          // the chosen placed clip
-    bool handOn = false, handFromShelf = false; // a clip in hand: tap a bar, or Place, puts it down
-    td::Placement hand;
-    int shelfPage = 0, viewBar = 0, playBar = 0;
-    bool chopOpen = false;
-    int chopPiece = 0;
-    // the sound picker: kinds of sound across the top, six cells below, for the chosen placed clip
-    bool soundOpen = false;
-    int soundKind = PK_SYNTH, soundPage = 0;
-    int soundForLane = -1, soundForIdx = -1; // the placement the kind and page were last set up for
-    bool hearOn = false, hearSeen = false;   // the chosen clip is playing alone, round and round
-    int hearLane = -1, hearIdx = -1;
-    qint64 hearAt = 0;
-    // the lane mixer: a strip for each lane in place of the tools
-    bool mixOpen = false, mixDragged = false;
-    int mixLane = 0;
-    td::TrackData mixBefore;                // the track before a fader drag: the whole drag is one undo step
-    int removeArmed = -1; qint64 removeArmedAt = 0;
-    bool dragOn = false, dragMoved = false;
-    int dragGrab = 0;
-    td::TrackData dragBefore;
+    // until app/control reaches the page itself: the names it still uses on the window
+    td::TrackData &track = trackPage.track;
+    bool &handOn = trackPage.handOn;
+    QString &exportFile = trackPage.exportFile;
+    bool trackApply(const std::function<bool(td::TrackData &)> &fn) { return trackPage.trackApply(fn); }
+    void trackPlayStop() { trackPage.trackPlayStop(); }
+    int &shelfPage = trackPage.shelfPage;
+    void trackTake(int ci) { trackPage.trackTake(ci); }
+    void trackKeep() { trackPage.trackKeep(); }
+    bool trackPlace(int lane, int bar) { return trackPage.trackPlace(lane, bar); }
+    void trackExport() { trackPage.trackExport(); }
     QTimer saveTimer;                       // an edit is on disk a moment later
-    std::thread exportThread;
-    std::atomic<int> exportState{0}, exportPct{0}, exportSecs{0}; // state: 0 idle, 1 working, 2 done, 3 failed
-    QString exportFile;
-    QHash<const td::Clip *, ClipDash> dashCache;
 
 
 
@@ -238,15 +215,6 @@ private:
     void paintHelp();
     void helpAsk();
     void paintTabs();
-    void paintTrack();
-    void paintTrackTools();
-    void paintChop();
-    void paintClipSound();
-    void paintMixer();
-    void drawPlacement(int lane, int idx);
-    void drawClipBody(const td::Clip &c, double srcA, double srcB, QRectF r, QColor ink);
-    void hatch(QRectF r, QColor c);
-    const ClipDash &dashes(const td::Clip &c);
     void paintKeyTest();
     void paintChordPads(QRectF area, bool withSlots);
     void paintLoopButton(QRectF r);
@@ -255,56 +223,6 @@ private:
     void tapTempo();
     void updateBend();
     void releaseAllKeys();
-
-    // the track
-    td::Placement *chosen();
-    void trackSync();
-    bool trackApply(const std::function<bool(td::TrackData &)> &fn); // one undoable edit
-    void chooseAt(int lane, int bar);
-    void showBar(int bar);
-    int maxViewBar() const;
-    bool placeSpot(int &lane, int &bar) const;
-    void trackTake(int clip);
-    void trackKeep();
-    bool trackPlace(int lane, int bar);
-    void trackPlaceAtLine();
-    void trackRemove();
-    void trackRepeat();
-    void trackSplit();
-    void trackJoin();
-    void trackMute();
-    void trackCycle();
-    void trackCopy(bool cut);
-    void trackUndoDo();
-    void trackRedoDo();
-    void trackPlayStop();
-    void trackLine(int dbar);
-    void trackSelect(int dx, int dy);
-    void trackMove(int dbar, int dlane);
-    void trackChop();
-    void trackSound();
-    void trackMixer();
-    void mixApply(int lane, const std::function<bool(td::LaneMix &)> &fn);
-    void mixReset();
-    void mixFader(int lane, qreal y, qreal top, qreal bottom, int phase);
-    void soundSetup();
-    int soundCount(int kind) const;
-    td::Patch soundPatch(int kind, int i) const;
-    void soundApply(const std::function<void(td::SoundPick &)> &fn);
-    void soundPickAt(int cell);
-    void soundKindStep(int d);
-    void soundScope();
-    td::TrackData hearTrack();
-    void hearStart();
-    void hearEnd(bool stop);
-    void hearToggle();
-    void hearWatch();
-    void trackExport();
-    void pollExport();
-    void laneTouch(QPointF p, int phase);
-    void chopTap(double frac, double stripWidth);
-    void chopEdit(const std::function<bool(td::Placement &)> &fn);
-    bool trackKey(int key, int plainAct);
 };
 
 QString paramText(int param, float v);

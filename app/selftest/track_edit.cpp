@@ -11,10 +11,10 @@ namespace selftest {
 // Chop by touch: the buttons and the strip
 void trackChopByTouch(Context &ctx, TrackState &tr) {
     MainWindow &w = ctx.w;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     touch(w, tr.lanes.cell(LN_LOOPA, 0));
     press(w, Qt::Key_E); wait(60);
-    check(w.chopping() && w.chosenLane() == LN_LOOPA, "E opens Chop for the chosen clip");
+    check(w.trackPage.chopping() && w.trackPage.chosenLane() == LN_LOOPA, "E opens Chop for the chosen clip");
     const double Lc = T.clips[2]->beats();
     tap(w, zn::chop_halves); wait(40);
     check(T.lane[LN_LOOPA][0].pieces.size() == 2, "Halves cuts it in two");
@@ -31,33 +31,33 @@ void trackChopByTouch(Context &ctx, TrackState &tr) {
     touch(w, quarter); wait(40);
     check(T.lane[LN_LOOPA][0].pieces.size() == 1, "tapping the cut mends it");
     tap(w, zn::chop_done); wait(40);
-    check(!w.chopping(), "Done closes Chop");
+    check(!w.trackPage.chopping(), "Done closes Chop");
 }
 
 // the arrow keys choose a clip, the play line moves, copy, paste and cut
 void trackChooseCopyPaste(Context &ctx) {
     MainWindow &w = ctx.w;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     press(w, Qt::Key_Up); press(w, Qt::Key_Up);
-    check(w.chosenLane() == LN_BEAT && w.chosenIndex() == 0, "Up chooses a clip on the lane above");
+    check(w.trackPage.chosenLane() == LN_BEAT && w.trackPage.chosenIndex() == 0, "Up chooses a clip on the lane above");
     press(w, Qt::Key_Right);
-    check(w.chosenLane() == LN_BEAT && w.chosenIndex() == 1, "Right chooses the clip after");
+    check(w.trackPage.chosenLane() == LN_BEAT && w.trackPage.chosenIndex() == 1, "Right chooses the clip after");
     press(w, Qt::Key_Down);
-    check(w.chosenLane() == LN_CHORDS, "Down chooses a clip on the lane below");
+    check(w.trackPage.chosenLane() == LN_CHORDS, "Down chooses a clip on the lane below");
     press(w, Qt::Key_Up);
-    const int line0 = w.playLineBar();
+    const int line0 = w.trackPage.playLineBar();
     press(w, Qt::Key_Period);
-    const int line1 = w.playLineBar();
+    const int line1 = w.trackPage.playLineBar();
     press(w, Qt::Key_Comma);
     key(w, Qt::Key_Shift, true); press(w, Qt::Key_Left); key(w, Qt::Key_Shift, false);
-    check(line1 == line0 + 1 && w.playLineBar() == line0 - 1, ". and , (and Shift+Left) move the play line");
+    check(line1 == line0 + 1 && w.trackPage.playLineBar() == line0 - 1, ". and , (and Shift+Left) move the play line");
     press(w, Qt::Key_Period);
     ctrl(w, Qt::Key_C);
-    check(w.clipInHand() && T.lane[LN_BEAT].size() == 2, "Ctrl+C takes a copy of the chosen clip in hand");
+    check(w.trackPage.clipInHand() && T.lane[LN_BEAT].size() == 2, "Ctrl+C takes a copy of the chosen clip in hand");
     ctrl(w, Qt::Key_V);
     check(T.lane[LN_BEAT].size() == 3 && T.lane[LN_BEAT][2].bar == 8 && T.bars == 10, "Ctrl+V puts it on the first free bars after the line, and the track grows to fit");
     ctrl(w, Qt::Key_X);
-    check(T.lane[LN_BEAT].size() == 2 && w.clipInHand(), "Ctrl+X takes the chosen clip off the track and into your hand");
+    check(T.lane[LN_BEAT].size() == 2 && w.trackPage.clipInHand(), "Ctrl+X takes the chosen clip off the track and into your hand");
     press(w, Qt::Key_Escape);
     ctrl(w, Qt::Key_Z); ctrl(w, Qt::Key_Z);
     check(T.lane[LN_BEAT].size() == 2 && T.bars == 8, "two undos take the paste back, and the track's length with it");
@@ -68,12 +68,12 @@ void trackChooseCopyPaste(Context &ctx) {
 // Chop by keys
 void trackChopByKeys(Context &ctx, TrackState &tr) {
     MainWindow &w = ctx.w;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     press(w, Qt::Key_Return); w.shot(); // the paste scrolled the bars: back to bar 1
     touch(w, tr.lanes.cell(LN_LOOPA, 0));
     press(w, Qt::Key_E);
     ctrl(w, Qt::Key_T);
-    check(w.chopping() && T.lane[LN_LOOPA][0].pieces.size() == 2, "in Chop, Ctrl+T cuts the chosen piece in half");
+    check(w.trackPage.chopping() && T.lane[LN_LOOPA][0].pieces.size() == 2, "in Chop, Ctrl+T cuts the chosen piece in half");
     press(w, Qt::Key_Right); press(w, Qt::Key_M);
     check(T.lane[LN_LOOPA][0].pieces[1].mute && !T.lane[LN_LOOPA][0].pieces[0].mute, "Right chooses the next piece, M mutes it");
     key(w, Qt::Key_Alt, true); press(w, Qt::Key_Left); key(w, Qt::Key_Alt, false);
@@ -87,14 +87,14 @@ void trackChopByKeys(Context &ctx, TrackState &tr) {
     check(T.lane[LN_LOOPA][0].pieces.size() == 2 && T.lane[LN_LOOPA][0].pieces[1].src == 0, "Ctrl+R makes the next piece repeat it");
     ctrl(w, Qt::Key_Z); ctrl(w, Qt::Key_Z);
     press(w, Qt::Key_E);
-    check(!w.chopping() && T.lane[LN_LOOPA][0].pieces.size() == 1, "E closes Chop again");
+    check(!w.trackPage.chopping() && T.lane[LN_LOOPA][0].pieces.size() == 1, "E closes Chop again");
     touch(w, tr.lanes.cell(LN_LOOPA, 0));
 }
 
 // the cycle
 void trackCycle(Context &ctx) {
     MainWindow &w = ctx.w;
-    const TrackData &T = w.trackData();
+    const TrackData &T = w.trackPage.trackData();
     press(w, Qt::Key_C);
     check(T.cycleTo > T.cycleFrom && T.cycleFrom == 0, "C cycles round the chosen clip");
     press(w, Qt::Key_C);
