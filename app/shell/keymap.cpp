@@ -1,5 +1,5 @@
-#include "keymap.h"
-#include "store.h"
+#include "app/shell/keymap.h"
+#include "app/store/store.h"
 #include <QFile>
 #include <QJsonObject>
 #include <Qt>

@@ -1,6 +1,6 @@
-#include "mainwindow.h"
-#include "tour.h"
-#include "palette.h"
+#include "app/shell/mainwindow.h"
+#include "app/tour/tour.h"
+#include "app/ui/palette.h"
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDateTime>

@@ -6,9 +6,9 @@
 // the others; tapping another switches to it (on the next bar line while the beat plays).
 // They are written to the state file with everything else.
 
-#include "mainwindow.h"
-#include "palette.h"
-#include "store.h"
+#include "app/shell/mainwindow.h"
+#include "app/ui/palette.h"
+#include "app/store/store.h"
 
 #include <QJsonArray>
 #include <QJsonObject>

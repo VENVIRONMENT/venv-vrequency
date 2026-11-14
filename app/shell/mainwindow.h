@@ -2,12 +2,12 @@
 // small immediate-mode layer: every frame draws the controls and registers
 // their touch zones, so drawing and hit-testing can never disagree.
 #pragma once
-#include "audio.h"
+#include "audio/audio.h"
 #include "analysis.h"
 #include "instrument.h"
-#include "keymap.h"
+#include "app/shell/keymap.h"
 #include "presets.h"
-#include "store.h"
+#include "app/store/store.h"
 #include <QElapsedTimer>
 #include <QFont>
 #include <QHash>

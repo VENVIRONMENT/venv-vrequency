@@ -1,9 +1,9 @@
 // venv-vrequency — pocket string synthesiser for the Hackberry Pi.
-#include "audio.h"
+#include "audio/audio.h"
 #include "instrument.h"
-#include "control.h"
-#include "mainwindow.h"
-#include "tour.h"
+#include "app/control/control.h"
+#include "app/shell/mainwindow.h"
+#include "app/tour/tour.h"
 #include <QApplication>
 #include <QDir>
 #include <QTemporaryDir>

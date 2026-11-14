@@ -1,8 +1,8 @@
 // venv-vrequency — the Chat page: a terminal-style conversation with the copilot (an AI agent
 // that reaches the app through the control socket, see control.cpp), plus the ticker that shows
 // a new agent message on any other page for a few seconds without taking the keyboard.
-#include "mainwindow.h"
-#include "palette.h"
+#include "app/shell/mainwindow.h"
+#include "app/ui/palette.h"
 #include <QDateTime>
 #include <QPainter>
 #include <cmath>

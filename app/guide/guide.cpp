@@ -1,8 +1,8 @@
 // venv-vrequency — guided help. Three things that let the copilot (Rook) teach on the real
 // screen: a highlight overlay that rings the controls being talked about, a chat dock that lets
 // the player answer on whatever page they are on, and a catalogue of every named touch zone.
-#include "mainwindow.h"
-#include "palette.h"
+#include "app/shell/mainwindow.h"
+#include "app/ui/palette.h"
 #include <QPainter>
 #include <QRegularExpression>
 #include <QSet>

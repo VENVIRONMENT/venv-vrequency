@@ -3,8 +3,8 @@
 // scales (they follow the signal automatically and never affect the pitch),
 // measured frequency and level, and a fading white-phosphor trace. Touching it
 // is the X-Y sound control.
-#include "mainwindow.h"
-#include "palette.h"
+#include "app/shell/mainwindow.h"
+#include "app/ui/palette.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <cmath>

@@ -1,10 +1,10 @@
 // venv-vrequency — the tour's pictures. A scratch copy of the window (no files, no timers) is given a
 // demo state and drawn page by page; each page's real zones become hotspots, with a few extra
 // named hotspots for things that are on screen but are not controls (the level strip, the scope readouts...).
-#include "tour.h"
-#include "audio.h"
+#include "app/tour/tour.h"
+#include "audio/audio.h"
 #include "instrument.h"
-#include "mainwindow.h"
+#include "app/shell/mainwindow.h"
 #include "presets.h"
 #include "sounds.h"
 #include <QApplication>

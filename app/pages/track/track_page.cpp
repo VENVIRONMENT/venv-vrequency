@@ -3,8 +3,8 @@
 // The window owns the track. Every edit goes through trackApply(), which keeps an undo
 // step, tidies the lanes and hands the engine a fresh immutable copy. Clips themselves are
 // shared and never change, so a copy of the track costs almost nothing.
-#include "mainwindow.h"
-#include "palette.h"
+#include "app/shell/mainwindow.h"
+#include "app/ui/palette.h"
 #include "sounds.h"
 #include <QFileInfo>
 #include <QPainter>

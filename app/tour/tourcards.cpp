@@ -1,6 +1,6 @@
 // venv-vrequency — the tour's help cards: docs/helpcards.json, built into the program as a Qt resource.
 // A damaged file never crashes anything: the tour then shows an error card instead of help.
-#include "tour.h"
+#include "app/tour/tour.h"
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>

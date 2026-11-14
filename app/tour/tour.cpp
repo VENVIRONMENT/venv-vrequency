@@ -5,9 +5,9 @@
 //   upper right   the card: kind, title, summary, what it does, RECALL
 //   lower left    USE (touch / keys) and the key caps
 //   lower right   tips, related controls, and the ASK ROOK button
-#include "tour.h"
-#include "mainwindow.h"
-#include "palette.h"
+#include "app/tour/tour.h"
+#include "app/shell/mainwindow.h"
+#include "app/ui/palette.h"
 #include <QPainter>
 #include <QTimer>
 #include <algorithm>

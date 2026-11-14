@@ -2,10 +2,10 @@
 // pointer events while the real audio thread runs, then checks what the
 // engine did. (It cannot press the physical keys or listen to the speaker:
 // those two checks need a human.)
-#include "audio.h"
-#include "control.h"
+#include "audio/audio.h"
+#include "app/control/control.h"
 #include "instrument.h"
-#include "mainwindow.h"
+#include "app/shell/mainwindow.h"
 #include "presets.h"
 #include "sounds.h"
 #include <QApplication>

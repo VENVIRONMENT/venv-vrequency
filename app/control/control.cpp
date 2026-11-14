@@ -1,8 +1,8 @@
 // venv-vrequency — the control socket (see control.h and docs/CONTROL.md).
-#include "control.h"
-#include "tour.h"
-#include "mainwindow.h"
-#include "store.h"
+#include "app/control/control.h"
+#include "app/tour/tour.h"
+#include "app/shell/mainwindow.h"
+#include "app/store/store.h"
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
