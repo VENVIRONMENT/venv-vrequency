@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(vrequency VERSION 0.11.0 LANGUAGES C CXX)
+project(vrequency VERSION 0.12.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,6 +49,7 @@ if(VREQUENCY_BUILD_APP)
     app/control.cpp
     app/control.h
     app/scope.cpp
+    app/guide.cpp
     app/palette.h
     app/mainwindow.h
     app/store.cpp

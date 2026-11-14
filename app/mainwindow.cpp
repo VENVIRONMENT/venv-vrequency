@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonArray>
+#include <QRegularExpression>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
@@ -107,6 +108,8 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
             ChatMsg m;
             m.seq = o["seq"].toInt(); m.from = o["from"].toString(); m.text = o["text"].toString();
             m.kind = o["kind"].toString("say"); m.ts = (qint64)o["ts"].toDouble(); m.user = o["user"].toBool();
+            m.page = o["page"].toString(); m.via = o["via"].toString();
+            for (const QJsonValue &f : o["focus"].toArray()) m.focus << f.toString();
             if (m.seq > 0 && !m.text.isEmpty()) chat.push_back(m);
         }
         chatSeq = st["chatSeq"].toInt(0);
@@ -128,7 +131,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || !captured.isEmpty() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !held.isEmpty() ||
-                    s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || s.trackPlaying || exportState.load() != 0;
+                    s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0;
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -192,6 +195,9 @@ void MainWindow::saveState() {
     for (const ChatMsg &m : chat) {
         QJsonObject c;
         c["seq"] = m.seq; c["from"] = m.from; c["text"] = m.text; c["kind"] = m.kind; c["ts"] = (double)m.ts; c["user"] = m.user;
+        if (!m.page.isEmpty()) c["page"] = m.page;
+        if (!m.via.isEmpty()) c["via"] = m.via;
+        if (!m.focus.isEmpty()) c["focus"] = QJsonArray::fromStringList(m.focus);
         ca.append(c);
     }
     o["chat"] = ca;
@@ -478,7 +484,11 @@ void MainWindow::perform(int act, bool shift) {
     case A_BEAT_REC: inst.beatDo(BT_REC); toast(u.beatRec ? "Beat recording off" : "Beat recording: pads write hits", 1200); break;
     case A_PLAY_LAST: togglePlayback(); break;
     case A_TRACK_PLAY: trackPlayStop(); break;
-    case A_CHAT: chatToggle(); break;
+    case A_CHAT: // Ctrl+Y: the chat dock on this page; with Shift (or on the Chat page itself) the full Chat page
+        if (shift || pg == PG_CHAT) chatToggle();
+        else if (!dockOpen) dockOpenFocus();
+        else dockFocus = !dockFocus;
+        break;
     case A_HELP: pg = pg == PG_HELP ? PG_PLAY : PG_HELP; break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
@@ -527,6 +537,10 @@ void MainWindow::handleKey(int key, bool down) {
     if (plainAct == A_CHORD_LAYER) { modChord = true; held[key] = {HK_ACT, A_CHORD_LAYER, 0}; return; }
     if (plainAct == A_COMMAND) { modCommand = true; held[key] = {HK_ACT, A_COMMAND, 0}; return; }
 
+    if (dockOpen && pg != PG_CHAT && !keyTest && !modCommand) { // the chat dock
+        if (dockFocus && chatKey(key, plainAct, true)) { held[key] = {HK_NONE, 0, 0}; return; }
+        if (!dockFocus && plainAct == A_HOME) { dockClose(); held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
+    }
     if (pg == PG_TRACK && !keyTest && trackKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
     if (pg == PG_CHAT && !keyTest && chatKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
     if (modCommand) {
@@ -594,6 +608,7 @@ void MainWindow::pointer(int id, QPointF c, int phase) {
             if (zones[i].r.contains(c)) {
                 captured[id] = zones[i];
                 downNames.insert(zones[i].name);
+                if (!zones[i].name.startsWith("dock") && zones[i].name != "ticker" && !zones[i].name.startsWith("tab_")) { lastTapped = zones[i].name; lastTappedPage = pg; }
                 zones[i].fn(c, PH_PRESS);
                 break;
             }
@@ -689,6 +704,7 @@ void MainWindow::txt(QRectF r, const QString &s, int px, QColor c, int align, bo
     g->setFont(font(px, bold));
     g->setPen(c);
     g->drawText(r, align | Qt::TextSingleLine, s);
+    if (recordText && !s.trimmed().isEmpty()) drawnText.push_back({r, s});
 }
 
 // a one-pixel frame on the pixel grid, optionally filled
@@ -821,6 +837,12 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setRenderHint(QPainter::TextAntialiasing, false);
     zones.clear();
+    drawnText.clear();
+    recordText = true;
+    if (hl.page != pg) { hl.zones.clear(); hl.until = 0; }            // highlights belong to the page they were made on
+    if (topicPage != pg) { topicLabel.clear(); topicZones.clear(); }
+    if (lastTappedPage != pg) lastTapped.clear();
+    if (pg == PG_CHAT) dockFocus = false;
     pollExport();
     hearWatch();
     beatWatch();
@@ -836,7 +858,11 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     case PG_HELP: paintTabs(); paintHelp(); break;
     case PG_CHAT: paintTabs(); paintChat(); break;
     }
+    recordText = false;
+    layoutDock();
+    paintHighlights();
     paintTicker();
+    paintDock();
     if (keyTest) paintKeyTest();
 
     if (clock.elapsed() < toastUntil && !toastText.isEmpty()) { // a message box, as the scope reports "Auto-scale"
@@ -868,12 +894,12 @@ void MainWindow::paintTabs() {
     static const char *N[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
-        button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab%1").arg(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
+        button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
                [this, i] { pg = i; deepEdit = false; slotSave = false; beatErase = false; removeArmed = -1; });
 }
 
 void MainWindow::paintLoopButton(QRectF r) {
-    bool dn = downNames.contains("loop");
+    bool dn = downNames.contains("loop_pedal");
     QString label = "Loop", sub = "tap to record";
     bool inv = dn, armed = false;
     float prog = 0;
@@ -899,7 +925,7 @@ void MainWindow::paintLoopButton(QRectF r) {
         frame(b, inv ? BG : MID);
         g->fillRect(QRectF(b.x(), b.y(), b.width() * qMin(1.0f, prog), b.height()), tc);
     }
-    zone(r, "loop", [this](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_LOOP, LC_PEDAL); });
+    zone(r, "loop_pedal", [this](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_LOOP, LC_PEDAL); });
 }
 
 void MainWindow::paintChordPads(QRectF area, bool withSlots) {
@@ -975,6 +1001,9 @@ void MainWindow::paintPlay() {
     txt(QRectF(644, 6, 60, 44), QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave), 28, INK, R, true);
     txt(QRectF(644, 52, 60, 20), "oct", 13, MID, R);
     zone(QRectF(450, 4, 254, 72), "hdr_tune", [this](QPointF, int ph) { if (ph == PH_PRESS) pg = PG_TUNE; });
+    // the readouts inside it, named so they can be pointed at; they open the Tune page too
+    for (const auto &rd : {std::make_pair(QRectF(452, 4, 96, 72), "key_readout"), std::make_pair(QRectF(550, 4, 90, 72), "tempo_readout"), std::make_pair(QRectF(642, 4, 62, 72), "octave_readout")})
+        zone(rd.first, rd.second, [this](QPointF, int ph) { if (ph == PH_PRESS) pg = PG_TUNE; });
 
     // output level: a row of segments
     {
@@ -1097,13 +1126,13 @@ void MainWindow::paintPlay() {
     // ---------------- bottom bar: the soft keys ----------------
     qreal x = 16, y = 628, h = 80;
     paintLoopButton(QRectF(x, y, 150, h)); x += 158;
-    button(QRectF(x, y, 66, h), "loopundo", "Undo", false, [this] { inst.cmd(EV_LOOP, LC_UNDO); }, "layer"); x += 74;
+    button(QRectF(x, y, 66, h), "loop_undo", "Undo", false, [this] { inst.cmd(EV_LOOP, LC_UNDO); }, "layer"); x += 74;
     bool lp = u.loopState == L_PLAY || u.loopState == L_OVERDUB;
-    button(QRectF(x, y, 66, h), "loopstop", lp ? QString::fromUtf8("■") : QString::fromUtf8("▶"), false, [this] { inst.cmd(EV_LOOP, LC_PLAYSTOP); }, "loop"); x += 74;
-    button(QRectF(x, y, 66, h), "sus", "Sus", u.sustain, [this] { susLatch = !susLatch; inst.cmd(EV_SUSTAIN, susLatch || susKey ? 1 : 0); }, "sustain"); x += 74;
-    button(QRectF(x, y, 54, h), "octdn", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
-    button(QRectF(x, y, 54, h), "octup", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
-    button(QRectF(x, y, 86, h), "dice", "New", false, [this] { randomise(); }, "sound"); x += 94;
+    button(QRectF(x, y, 66, h), "loop_playstop", lp ? QString::fromUtf8("■") : QString::fromUtf8("▶"), false, [this] { inst.cmd(EV_LOOP, LC_PLAYSTOP); }, "loop"); x += 74;
+    button(QRectF(x, y, 66, h), "sustain", "Sus", u.sustain, [this] { susLatch = !susLatch; inst.cmd(EV_SUSTAIN, susLatch || susKey ? 1 : 0); }, "sustain"); x += 74;
+    button(QRectF(x, y, 54, h), "octave_down", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
+    button(QRectF(x, y, 54, h), "octave_up", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
+    button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { randomise(); }, "sound"); x += 94;
     button(QRectF(x, y, 704 - x, h), "menu", "Menu", false, [this] { pg = PG_SOUND; }, QString::fromUtf8("≡"));
 }
 
@@ -1501,20 +1530,49 @@ void MainWindow::paintHelp() {
             {K(A_LOOP_PLAY, true) + " " + K(A_LOOP_CLEAR, true), "loop start-stop / clear the loop"},
             {K(A_XYMAP, true), "next touch-pad mapping"},
             {K(A_RECORD, true), "record what you hear to a WAV file"},
-            {K(A_HELP, true) + " " + K(A_CHAT, true) + " " + K(A_QUIT, true), "this guide / chat with the copilot (and back) / quit"},
+            {K(A_HELP, true) + " " + K(A_CHAT, true) + " " + K(A_QUIT, true), "this guide / chat dock (with Shift: Chat page) / quit"},
         };
     }
-    tag(QRectF(16, 64, 688, 22), helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters are commands on the Track page") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false)))), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    const QString title = helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters are commands here") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false))));
+    // header: what this page of the guide is, the next page, and the way to ask
+    tag(QRectF(16, 62, 372, 30), fit(title, 14, 360), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    zone(QRectF(16, 62, 372, 30), "help_section", [](QPointF, int) {});
+    button(QRectF(394, 62, 160, 30), "help_next", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; helpSel.clear(); });
+    button(QRectF(560, 62, 144, 30), "help_ask", "Ask Rook", false, [this] { helpAsk(); });
+    // every row is a zone with a stable name built from its description, so Rook can point at it and a tap asks about it
+    helpDesc.clear();
+    QSet<QString> used;
+    const qreal pitch = 29.5;
     for (size_t i = 0; i < rows.size(); ++i) {
-        qreal y = 96 + i * 33.5;
-        QRectF kr(16, std::floor(y), 176, 28);
-        frame(kr, LOW, BG);
-        txt(kr, fit(rows[i].k, 13, 172), 13, INK, Qt::AlignCenter, true);
-        txt(QRectF(204, std::floor(y), 500, 28), fit(rows[i].d, 13, 500), 13, i % 2 ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
+        qreal y = 100 + i * pitch;
+        QString slug = rows[i].d.toLower();
+        slug.replace(QRegularExpression("[^a-z0-9]+"), "_");
+        slug = slug.left(34); while (slug.endsWith('_')) slug.chop(1);
+        QString nm = QString("help_row_%1").arg(slug), base = nm;
+        for (int n = 2; used.contains(nm); ++n) nm = QString("%1_%2").arg(base).arg(n);
+        used.insert(nm);
+        helpDesc[nm] = QString("%1: %2").arg(rows[i].k, rows[i].d);
+        const bool sel = helpSel == nm;
+        QRectF kr(16, std::floor(y), 176, 25);
+        frame(kr, sel ? INK : LOW, sel ? INK : BG);
+        txt(kr, fit(rows[i].k, 13, 172), 13, sel ? BG : INK, Qt::AlignCenter, true);
+        txt(QRectF(204, std::floor(y), 500, 25), fit(rows[i].d, 13, 500), 13, sel || i % 2 == 0 ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, sel);
+        zone(QRectF(16, std::floor(y), 688, 25), nm, [this, nm](QPointF, int ph) { if (ph == PH_PRESS) { helpSel = nm; helpAsk(); } });
     }
-    txt(QRectF(18, 638, 680, 20), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    button(QRectF(16, 664, 340, 44), "helppage", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; });
-    button(QRectF(364, 664, 340, 44), "helpplay", "Back to playing", false, [this] { pg = PG_PLAY; });
+    txt(QRectF(18, 586, 680, 18), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    txt(QRectF(18, 606, 680, 18), QString("Ask Rook: tap a row, or press %1+%2. Rook answers here and can point at things.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    button(QRectF(16, 664, 688, 44), "help_back", "Back to playing", false, [this] { pg = PG_PLAY; });
+}
+
+// Ask Rook from the Help page: opens the dock with the keyboard, and starts the question with the
+// row that was tapped (or the part of the guide being read).
+void MainWindow::helpAsk() {
+    static const char *parts[4] = {"the playing keys", "the command keys", "the beat keys", "the track keys"};
+    if (chatDraft.trimmed().isEmpty() || chatDraft == helpPrefill) {
+        helpPrefill = helpSel.isEmpty() ? QString("About %1: ").arg(parts[helpPage]) : QString("What does \"%1\" do? ").arg(helpDesc.value(helpSel));
+        chatDraft = helpPrefill.left(380);
+    }
+    dockOpenFocus();
 }
 
 void MainWindow::paintKeyTest() {

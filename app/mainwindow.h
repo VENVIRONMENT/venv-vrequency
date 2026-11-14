@@ -33,6 +33,10 @@ struct ChatMsg {
     QString from, text, kind; // kind: say, tip, ask (agents) or say (the user)
     qint64 ts = 0;            // ms since the epoch
     bool user = false;
+    // what the player was looking at when they sent it (user messages only)
+    QString page;             // page name: "synth", "help"...
+    QStringList focus;        // zone names being discussed (highlighted, or last tapped)
+    QString via;              // "dock" or "chat"
 };
 
 class MainWindow : public QWidget {
@@ -87,7 +91,8 @@ public:
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
     QString lastRecordingPath() const { return lastRecording; }
     // --- the copilot chat ---
-    int chatAdd(const QString &from, const QString &text, const QString &kind, bool user); // returns its seq
+    int chatAdd(const QString &from, const QString &text, const QString &kind, bool user,
+                const QString &page = QString(), const QStringList &focus = QStringList(), const QString &via = QString()); // returns its seq
     const std::deque<ChatMsg> &chatLog() const { return chat; }
     int chatLastSeq() const { return chatSeq; }
     int chatUnreadCount() const { return chatUnread; }
@@ -96,6 +101,31 @@ public:
     void chatWaiting(int n) { copilotWaiters = n; update(); }
     bool chatTickerShowing() const { return clock.elapsed() < tickerUntil; }
     void chatToggle();
+
+    // --- guided help: the highlight overlay and the chat dock (app/guide.cpp) ---
+    struct ZoneInfo { QString name; QRectF r; QString label; bool covered = false; };
+    static const char *pageName(int p);
+    static int pageFromName(const QString &n);                 // -1 when unknown; "play" is the Synth page
+    QStringList highlightedZones();                            // active highlights on this page
+    // Highlights the named zones of the current page (names may be aliases or `prefix*`); returns the ones
+    // that exist and puts the others in `unknown`. The zones must have been drawn: call refreshZones() first.
+    QStringList setHighlight(const QStringList &names, const QString &label, int ms, QStringList &unknown);
+    void clearHighlight();
+    QRectF highlightCaptionRect() const { return hlCaption; }
+    QString highlightLabel() const { return hl.label; }
+    void refreshZones() { shot(); }                            // draw once so zoneRect/zoneNames are current
+    QVector<ZoneInfo> zoneCatalogue(int page, int helpSub = -1); // every zone of a page (draws it off-screen, then puts things back)
+    QString zoneLabel(const QString &name) const;
+    bool dockIsOpen() const { return dockOpen; }
+    bool dockHasFocus() const { return dockOpen && dockFocus && pg != PG_CHAT; }
+    QRectF dockRect() const { return dockOpen && pg != PG_CHAT ? dockR : QRectF(); }
+    void dockOpenFocus();
+    void dockClose();
+    QString dockTopic() const { return topicLabel; }
+    QString lastQuestionZone() const { return lastQuestion; }
+    QStringList guideFocus();                                  // what a message sent now would carry as `focus`
+    int helpSubPage() const { return helpPage; }
+    void setHelpSubPage(int i) { helpPage = qBound(0, i, 3); update(); }
 
 signals:
     void userChatArrived();
@@ -155,6 +185,20 @@ private:
     qint64 copilotSeenAt = -100000, tickerUntil = 0;
     int copilotWaiters = 0;
     ChatMsg ticker;
+    // guided help
+    struct Hl { QStringList zones; QString label; qint64 until = 0, issued = -100000; int page = -1; };
+    Hl hl;
+    QString topicLabel; QStringList topicZones; int topicPage = -1;  // what the last agent message was about
+    QString lastTapped, lastQuestion; int lastTappedPage = -1;
+    QRectF hlCaption, dockR;
+    bool dockOpen = false, dockFocus = false;
+    int dockLines = 0;
+    bool recordText = false;
+    std::vector<std::pair<QRectF, QString>> drawnText;       // text drawn this frame, for zone labels
+    QString helpPrefill;
+    QString helpSel;                                         // the Help row last tapped
+    QHash<QString, QString> helpDesc;                        // Help row zone -> its description
+    qint64 helpAskAt = 0;
     // synthetic notes from the control socket: string -> ids held
     int nextNoteId = 0x400;
     std::vector<qint64> taps;
@@ -272,7 +316,12 @@ private:
     void paintHelp();
     void paintChat();
     void paintTicker();
-    bool chatKey(int key, int plainAct);
+    void paintHighlights();
+    void paintDock();
+    void layoutDock();
+    void helpAsk();
+    QStringList expandZoneNames(const QStringList &names, QStringList &unknown) const;
+    bool chatKey(int key, int plainAct, bool dock = false);
     void chatSend();
     void paintTabs();
     void paintTrack();

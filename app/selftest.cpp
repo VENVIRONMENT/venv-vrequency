@@ -389,16 +389,16 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(T().clips.empty(), "the track starts empty");
         press(Qt::Key_Space); wait(80);
         check(!inst.uiState().trackPlaying, "Space on an empty track plays nothing");
-        tap(w, "keep"); wait(80);
+        tap(w, "track_keep"); wait(80);
         check(T().clips.size() == 3 && T().clips[0]->kind == CK_BEAT && T().clips[1]->kind == CK_CHORDS && T().clips[2]->kind == CK_LOOP,
               "+ Keep copies the beat, the chords and the loop onto the shelf");
         check(w.clipInHand(), "and the newest clip is in hand, ready to place");
         wait(3200);
         QJsonObject aj; store::readJson(store::baseDir() + "/state.json", aj);
         check(aj["track"].toObject()["clips"].toArray().size() == 3, "a moment after an edit the track is in the state file without being asked");
-        tap(w, "keep"); wait(60);
+        tap(w, "track_keep"); wait(60);
         check(T().clips.size() == 3, "keeping the same things again adds nothing");
-        QRectF lanes = w.zoneRect("lanes");
+        QRectF lanes = w.zoneRect("track_lanes");
         auto cell = [&](int lane, double bar) { return QPointF(lanes.left() + (bar + 0.5) * lanes.width() / 8.0, lanes.top() + 2 + lane * 70 + 33); };
         auto touch = [&](QPointF a) { w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); };
         if (!w.clipInHand()) press(Qt::Key_3);
@@ -437,7 +437,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         key(w, Qt::Key_Alt, true); press(Qt::Key_Right); key(w, Qt::Key_Alt, false);
         check(!T().lane[LN_BEAT][1].mute && T().lane[LN_BEAT][1].bar == 6, "Alt+Right moves it a bar");
         press(Qt::Key_2);
-        tap(w, "tplace"); wait(60);
+        tap(w, "track_place"); wait(60);
         check(T().lane[LN_CHORDS].size() == 1 && T().lane[LN_CHORDS][0].bar == 1 && T().lane[LN_CHORDS][0].bars == T().clips[1]->bars, "Place puts the chords clip on the Chords lane at the play line");
         press(Qt::Key_Escape);
         check(w.page() == MainWindow::PG_TRACK && !w.clipInHand(), "Esc puts the clip in hand down (and stays on the page)");
@@ -446,21 +446,21 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         press(Qt::Key_E); wait(60);
         check(w.chopping() && w.chosenLane() == LN_LOOPA, "E opens Chop for the chosen clip");
         const double Lc = T().clips[2]->beats();
-        tap(w, "chalves"); wait(40);
+        tap(w, "chop_halves"); wait(40);
         check(T().lane[LN_LOOPA][0].pieces.size() == 2, "Halves cuts it in two");
-        tap(w, "cright"); wait(40);
+        tap(w, "chop_move_right"); wait(40);
         check(T().lane[LN_LOOPA][0].pieces[0].src == Lc / 2 && T().lane[LN_LOOPA][0].pieces[1].src == 0, "Move swaps the halves");
-        tap(w, "cmute"); wait(40);
+        tap(w, "chop_mute_piece"); wait(40);
         check(T().lane[LN_LOOPA][0].pieces[1].mute, "Mute piece silences the chosen piece");
-        tap(w, "creset"); wait(40);
+        tap(w, "chop_reset"); wait(40);
         check(T().lane[LN_LOOPA][0].pieces.size() == 1 && !T().lane[LN_LOOPA][0].pieces[0].mute, "Reset undoes every cut");
-        QRectF strip = w.zoneRect("chopstrip");
+        QRectF strip = w.zoneRect("chop_strip");
         const QPointF quarter(strip.left() + strip.width() / 4 + 3, strip.center().y());
         touch(quarter); wait(40);
         check(T().lane[LN_LOOPA][0].pieces.size() == 2 && T().lane[LN_LOOPA][0].pieces[0].len == Lc / 4, "tapping a dotted line cuts there");
         touch(quarter); wait(40);
         check(T().lane[LN_LOOPA][0].pieces.size() == 1, "tapping the cut mends it");
-        tap(w, "cdone"); wait(40);
+        tap(w, "chop_done"); wait(40);
         check(!w.chopping(), "Done closes Chop");
 
         press(Qt::Key_Up); press(Qt::Key_Up);
@@ -536,7 +536,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(!inst.uiState().trackPlaying, "Ctrl+Space stops the track from any page");
         w.setPage(MainWindow::PG_TRACK); wait(60);
 
-        tap(w, "texport");
+        tap(w, "track_export");
         check(w.exportStatus() == 1, "Export starts writing in the background");
         QElapsedTimer et; et.start();
         while (w.exportStatus() != 0 && et.elapsed() < 60000) { wait(100); w.shot(); }
@@ -554,9 +554,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         press(Qt::Key_Backspace); wait(60);
         check(T().lane[LN_BEAT].size() == 1, "Backspace deletes the chosen clip");
         press(Qt::Key_1);
-        tap(w, "tremove"); wait(40);
+        tap(w, "track_remove"); wait(40);
         check(T().clips.size() == 3, "Remove on a shelf clip asks twice");
-        tap(w, "tremove"); wait(40);
+        tap(w, "track_remove"); wait(40);
         check(T().clips.size() == 2 && T().lane[LN_BEAT].empty() && T().lane[LN_CHORDS][0].clip == 0 && T().lane[LN_LOOPA][0].clip == 1,
               "the second tap deletes the clip and every copy of it; the others keep pointing at the right clips");
         ctrl(Qt::Key_Z);
@@ -589,17 +589,17 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(QString(lc().pick.patch.name) == "Sub" && lc().pick.octave == -1, "a bass sound puts the clip an octave down");
         press(Qt::Key_Up); w.shot();
         check(lc().pick.octave == 0, "up arrow lifts it an octave");
-        tap(w, "soct-"); tap(w, "soct-"); tap(w, "soct-"); w.shot();
+        tap(w, "sound_octave-"); tap(w, "sound_octave-"); tap(w, "sound_octave-"); w.shot();
         check(lc().pick.octave == -2, "the Octave stepper stops two octaves down");
-        tap(w, "soct+"); tap(w, "soct+"); w.shot();
-        tap(w, "sscope"); w.shot();
+        tap(w, "sound_octave+"); tap(w, "sound_octave+"); w.shot();
+        tap(w, "sound_scope"); w.shot();
         check(lp().pick.own && QString(lp().pick.patch.name) == "Sub" && QString(lc().pick.patch.name) == "Sub", "Only this one: the placement takes the sound as its own");
-        tap(w, "skind0"); w.shot(); tap(w, "scell2"); w.shot();
+        tap(w, "sound_kind0"); w.shot(); tap(w, "sound_cell2"); w.shot();
         check(QString(lp().pick.patch.name) == "Organ" && QString(lc().pick.patch.name) == "Sub", "now a pick changes this placement and leaves the clip's other copies alone");
         press(Qt::Key_Backspace); w.shot();
         check(lp().pick.own && !lp().pick.any() && QString(soundName(lc(), pickFor(lc(), lp()))) == QString(recordedSoundName(lc())),
               "Backspace: this one plays as recorded again, the others keep Sub");
-        tap(w, "skind2"); w.shot(); tap(w, "scell0"); w.shot();
+        tap(w, "sound_kind2"); w.shot(); tap(w, "sound_cell0"); w.shot();
         check(w.hearingAlone() && inst.uiState().trackPlaying, "all the while the clip keeps going round alone");
         press(Qt::Key_Space); wait(200); w.shot();
         check(!w.hearingAlone() && !inst.uiState().trackPlaying, "Space stops it");
@@ -608,17 +608,17 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
 
         touch(cell(LN_BEAT, T().lane[LN_BEAT][0].bar)); w.shot();
         const int bci = T().lane[LN_BEAT][0].clip;
-        tap(w, "tsound"); w.shot();
+        tap(w, "track_sound"); w.shot();
         check(w.pickingSound() && w.soundKindShown() == MainWindow::PK_DRUMS, "the Sound button on a beat clip offers the kits");
         const int otherKit = (T().clips[bci]->kit + 1) % kKits;
         press(Qt::Key_1 + otherKit); w.shot();
         check(T().clips[bci]->pick.kit == otherKit && !T().clips[bci]->pick.on, "a number picks another kit for the beat");
         press(Qt::Key_Up); press(Qt::Key_Right); w.shot();
         check(T().clips[bci]->pick.octave == 0 && w.soundKindShown() == MainWindow::PK_DRUMS, "a beat has no octave and no other kinds");
-        tap(w, "srec"); w.shot();
+        tap(w, "sound_as_recorded"); w.shot();
         check(!T().clips[bci]->pick.any(), "As recorded gives the beat its own kit back");
         press(Qt::Key_1 + otherKit); w.shot();
-        tap(w, "sdone"); wait(250); w.shot();
+        tap(w, "sound_done"); wait(250); w.shot();
         check(!w.pickingSound() && !w.hearingAlone() && !inst.uiState().trackPlaying, "Done closes the picker and stops the clip");
         ctrl(Qt::Key_Z);
         check(!T().clips[bci]->pick.any(), "undo takes the kit back");
@@ -634,7 +634,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(w.mixLaneShown() == LN_LOOPA && T().mix[LN_LOOPA].level == 90, "Right moves to Loop A and Up twice raises it to 90");
         press(Qt::Key_0);
         check(T().mix[LN_LOOPA].level == kLaneLevelNormal, "0 puts it back to 80");
-        tap(w, "mxmute3"); w.shot();
+        tap(w, "mixer_mute3"); w.shot();
         check(T().mix[LN_LOOPB].mute && !laneHeard(T(), LN_LOOPB) && w.mixLaneShown() == LN_LOOPB, "tapping M on Loop B mutes it");
         ctrl(Qt::Key_Z);
         check(!T().mix[LN_LOOPB].mute, "undo unmutes it");
@@ -644,7 +644,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(T().mix[LN_BEAT].solo && !laneHeard(T(), LN_CHORDS) && laneHeard(T(), LN_BEAT), "1 then S solos the beat: the other lanes go quiet");
         press(Qt::Key_S);
         {
-            QRectF fr = w.zoneRect("mxfader1");
+            QRectF fr = w.zoneRect("mixer_fader1");
             const int mixBeforeDrag = T().mix[LN_CHORDS].level;
             w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30), MainWindow::PH_PRESS);
             for (int i = 1; i <= 8; ++i) w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30 - i * 6), MainWindow::PH_MOVE);
@@ -657,7 +657,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             key(w, Qt::Key_Shift, true); ctrl(Qt::Key_Z); key(w, Qt::Key_Shift, false);
             check(undone == before && T().mix[LN_CHORDS].level == lv, QString("the whole drag is one undo step (%1 back to %2)").arg(lv).arg(undone));
         }
-        tap(w, "mxreset"); w.shot();
+        tap(w, "mixer_reset"); w.shot();
         bool flat = true;
         for (int ln = 0; ln < kLanes; ++ln) flat = flat && sameMix(T().mix[ln], LaneMix());
         check(flat, "Reset puts every lane back to 80, unmuted");
@@ -688,7 +688,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         QString sp2 = store::baseDir() + "/sessions/selftest-track.json";
         check(w.saveSession(sp2), "a session saves the track with it");
         const int bars0 = T().bars;
-        tap(w, "tlen+"); wait(40);
+        tap(w, "track_length+"); wait(40);
         check(T().bars == bars0 + 1, "the Length stepper makes the track longer");
         check(w.loadSession(sp2) && T().bars == bars0 && T().clips.size() == 3, "loading the session brings the track back");
         inst.set(S_VOLUME, 0.06f);
@@ -965,7 +965,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(r["result"].toObject()["messages"].toArray().size() == 2, "chat_poll returns messages from both directions");
         // touch: type, then tap Send
         for (int k : {Qt::Key_Y, Qt::Key_E, Qt::Key_S}) press(k);
-        tap(w, "chatsend"); wait(60);
+        tap(w, "chat_send"); wait(60);
         check(w.chatLog().back().text == "yes" && w.chatLog().back().user, "the Send button sends too");
         // timeout answer
         c2.send(QByteArray(R"({"id":"w2","cmd":"chat_wait","since":)") + QByteArray::number(w.chatLastSeq()) + R"(,"timeout_ms":300})");
@@ -978,8 +978,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         key(w, Qt::Key_Escape, true); key(w, Qt::Key_Escape, false);
         check(w.page() != MainWindow::PG_CHAT, "Esc leaves the Chat page");
         w.setPage(MainWindow::PG_BEAT);
-        key(w, Qt::Key_Control, true); press(Qt::Key_Y); key(w, Qt::Key_Control, false);
-        check(w.page() == MainWindow::PG_CHAT, "Ctrl+Y jumps to Chat");
+        key(w, Qt::Key_Control, true); key(w, Qt::Key_Shift, true); press(Qt::Key_Y); key(w, Qt::Key_Shift, false); key(w, Qt::Key_Control, false);
+        check(w.page() == MainWindow::PG_CHAT, "Ctrl+Shift+Y jumps to the Chat page");
         key(w, Qt::Key_Control, true); press(Qt::Key_Y); key(w, Qt::Key_Control, false);
         check(w.page() == MainWindow::PG_BEAT, "and Ctrl+Y again goes back to where you were");
         // history survives a restart
@@ -1024,9 +1024,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(c.open(sock) && okOf(c.call(B(R"({"cmd":"state"})"))), "a client that vanishes mid-line does not disturb the server");
         // every command with every argument set to the wrong kind of value
         static const char *cmds[] = {"note", "notes", "chord", "slide", "release", "set_param", "sound", "save_favourite", "scale", "tempo", "octave", "bend", "sustain",
-                                     "loop", "backing", "beat", "track", "page", "session", "chat_say", "chat_poll"};
+                                     "loop", "backing", "beat", "track", "page", "session", "chat_say", "chat_poll", "highlight", "unhighlight", "zones"};
         static const char *argk[] = {"string", "degree", "midi", "dur_ms", "velocity", "from", "to", "ms", "name", "value", "slot", "action", "chords", "kit", "set_step", "hit",
-                                     "clip", "bar", "lane", "text", "since", "notes", "degrees", "midis", "bpm", "root", "on", "delta", "style", "seventh", "beats", "kind", "limit"};
+                                     "clip", "bar", "lane", "text", "since", "notes", "degrees", "midis", "bpm", "root", "on", "delta", "style", "seventh", "beats", "kind", "limit", "zones", "label", "sub", "page"};
         static const char *argv[] = {"null", "\"x\"", "1e99", "-1e99", "[]", "{}", "true", "[[1]]", "{\"a\":1}", "0.5", "-1"};
         int refused = 0, total = 0, malformed = 0;
         for (const char *cm : cmds)
@@ -1056,6 +1056,333 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         w.setPage(MainWindow::PG_PLAY);
         inst.set(S_VOLUME, 0.06f);
         wait(300);
+    }
+
+    std::printf("- guided help: highlights, zones and the chat dock\n");
+    {
+        QTemporaryDir gdir;
+        const QString gsock = gdir.path() + "/vrequency.sock";
+        ControlServer gctl(w, inst);
+        check(gctl.start(gsock), "a control socket for the guided-help checks");
+        Client c, c2;
+        check(c.open(gsock) && c2.open(gsock), "two clients connect");
+        auto B = [](const char *s) { return QByteArray(s); };
+        auto okOf = [](const QJsonObject &o) { return o["ok"].toBool(); };
+        auto res = [](const QJsonObject &o) { return o["result"].toObject(); };
+        auto strs = [](const QJsonArray &a) { QStringList l; for (const QJsonValue &v : a) l << v.toString(); return l; };
+        auto press = [&](int k) { key(w, k, true); key(w, k, false); };
+        auto ctrl = [&](int k) { key(w, Qt::Key_Control, true); press(k); key(w, Qt::Key_Control, false); };
+        auto state = [&] { return res(c.call(B(R"({"cmd":"state"})"))); };
+        auto hf = [&] { return state()["help_focus"].toObject(); };
+        inst.cmd(EV_PANIC);
+        w.dockClose();
+        w.clearHighlight();
+        w.setPage(MainWindow::PG_PLAY); wait(150); w.shot();
+
+        { // zones: every page, and the listing agrees with what is drawn
+            bool allSame = true; int total = 0; QStringList bad;
+            static const char *pn[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
+            for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
+                w.setPage(p); w.shot();
+                QSet<QString> drawn; for (const QString &n : w.zoneNames()) if (n != "ticker") drawn.insert(n);
+                const QJsonObject r = c.call(QByteArray(R"({"cmd":"zones","page":")") + pn[p] + "\"}");
+                QSet<QString> listed; bool shaped = okOf(r);
+                for (const QJsonValue &v : res(r)["zones"].toArray()) {
+                    const QJsonObject z = v.toObject();
+                    if (z["name"].toString() != "ticker") listed.insert(z["name"].toString());
+                    shaped = shaped && z["w"].toInt() > 0 && z["h"].toInt() > 0 && !z["label"].toString().isEmpty() && z["label"].toString().size() <= 60;
+                }
+                total += listed.size();
+                if (!shaped || listed != drawn) { allSame = false; bad << pn[p]; }
+            }
+            check(allSame && total > 150, QString("zones lists every named zone of every page, with a rectangle and a label (%1 in all%2)").arg(total).arg(bad.isEmpty() ? QString() : " - differs on " + bad.join(",")));
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+            // another page is listed without leaving this one
+            const QJsonObject r = c.call(B(R"({"cmd":"zones","page":"beat"})"));
+            check(okOf(r) && w.page() == MainWindow::PG_PLAY && w.zoneNames().contains("octave_up"), "listing another page does not move the player off the page they are on");
+            QStringList names; QHash<QString, QString> labels;
+            for (const QJsonValue &v : res(r)["zones"].toArray()) { names << v.toObject()["name"].toString(); labels[v.toObject()["name"].toString()] = v.toObject()["label"].toString(); }
+            check(names.contains("pad0") && names.contains("beatrec") && labels["beatrec"].contains("Rec"), "labels come from the text drawn on the control (Rec)");
+            QStringList synth = strs(QJsonArray::fromStringList(w.zoneNames()));
+            check(synth.contains("octave_down") && synth.contains("octave_up") && synth.contains("loop_pedal") && synth.contains("xy") && synth.contains("octave_readout") && synth.contains("hdr_tune"),
+                  "the Synth page names its octave buttons, loop pedal, pad and tabs readably");
+            check(!c.call(B(R"({"cmd":"zones","page":"nowhere"})"))["ok"].toBool(true) && !c.call(B(R"({"cmd":"zones","page":"help","sub":"x"})"))["ok"].toBool(true), "zones refuses an unknown page or help section");
+            // Help: every row is a zone, all four sections stay reachable
+            int rowsPer[4]; bool unique = true; QSet<QString> seen;
+            for (int sub = 0; sub < 4; ++sub) {
+                const QJsonObject hr = c.call(QByteArray(R"({"cmd":"zones","page":"help","sub":)") + QByteArray::number(sub) + "}");
+                int n = 0;
+                for (const QJsonValue &v : res(hr)["zones"].toArray()) {
+                    const QString nm = v.toObject()["name"].toString();
+                    if (nm.startsWith("help_row_")) { ++n; unique = unique && !seen.contains(nm + QString::number(sub)); seen.insert(nm + QString::number(sub)); }
+                }
+                rowsPer[sub] = n;
+            }
+            check(rowsPer[0] == 16 && rowsPer[1] == 16 && rowsPer[2] == 14 && rowsPer[3] == 16 && unique, QString("every help row on all four sections is a named zone (%1/%2/%3/%4)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]).arg(rowsPer[3]));
+            w.setPage(MainWindow::PG_HELP); w.shot();
+            QStringList hz = w.zoneNames();
+            check(hz.contains("help_ask") && hz.contains("help_next") && hz.contains("help_back") && hz.contains("help_section"), "the Help page has Ask Rook, next section, back and its section title as zones");
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+        }
+
+        { // highlight: lifecycle
+            QJsonObject r = c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE","ms":700})"));
+            check(okOf(r) && strs(res(r)["highlighted"].toArray()) == QStringList({"octave_down", "octave_up"}) && res(r)["unknown"].toArray().isEmpty() && res(r)["caption"].toBool(),
+                  "highlight accepts an alias (octave) and reports the zones it ringed, with a caption");
+            const QJsonObject st = hf();
+            check(st["page"].toString() == "synth" && strs(st["highlighted"].toArray()).size() == 2, "state.help_focus lists the highlighted zones and the page");
+            const QRectF up = w.zoneRect("octave_up"), cap = w.highlightCaptionRect();
+            check(!cap.isNull() && !cap.intersects(up) && !cap.intersects(w.zoneRect("octave_down")) && QRectF(0, 0, 720, 720).contains(cap), "the caption tag stays on screen and does not cover the highlighted zones");
+            QImage a = w.shot();
+            bool ring = false;
+            for (int dx = 3; dx <= 3; ++dx) ring = ring || qGray(a.pixel((int)up.center().x(), (int)up.top() - dx)) > 170;
+            check(ring, "a bright rule is drawn around the highlighted zone");
+            wait(900);
+            check(hf()["highlighted"].toArray().isEmpty() && w.highlightCaptionRect().isNull(), "a highlight clears itself when its time is up");
+            r = c.call(B(R"({"cmd":"highlight","zones":["octave_up","no_such_zone","  "],"ms":5000})"));
+            check(okOf(r) && strs(res(r)["highlighted"].toArray()) == QStringList({"octave_up"}) && strs(res(r)["unknown"].toArray()).contains("no_such_zone"),
+                  "unknown names are reported in the reply and the known ones still highlight");
+            r = c.call(B(R"({"cmd":"highlight","zones":["nope"]})"));
+            check(okOf(r) && res(r)["highlighted"].toArray().isEmpty() && strs(res(r)["unknown"].toArray()) == QStringList({"nope"}), "all-unknown names highlight nothing and say so");
+            r = c.call(B(R"({"cmd":"highlight","zones":["chord*"]})"));
+            check(okOf(r) && res(r)["highlighted"].toArray().size() == 7, "a name ending in * stands for every zone with that prefix (chord*)");
+            w.setPage(MainWindow::PG_SOUND); wait(60); w.shot();
+            check(hf()["highlighted"].toArray().isEmpty(), "changing page clears the highlight");
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+            check(hf()["highlighted"].toArray().isEmpty(), "and it does not come back when the page does");
+            r = c.call(B(R"({"cmd":"highlight","zones":["help_ask"],"page":"help","label":"ask me","ms":3000})"));
+            check(okOf(r) && w.page() == MainWindow::PG_HELP && strs(res(r)["highlighted"].toArray()) == QStringList({"help_ask"}) && strs(hf()["highlighted"].toArray()) == QStringList({"help_ask"}),
+                  "highlight with page switches page and highlights in the same step");
+            r = c.call(B(R"({"cmd":"highlight","zones":["help_row_loop_pedal_count_in_record_play_over"],"page":"help","sub":"playing"})"));
+            const QStringList got = strs(res(r)["highlighted"].toArray());
+            check(okOf(r) && (!got.isEmpty() || !res(r)["unknown"].toArray().isEmpty()), "highlight takes a help section (sub) with the page");
+            r = c.call(B(R"({"cmd":"unhighlight"})"));
+            check(okOf(r) && hf()["highlighted"].toArray().isEmpty() && res(r)["cleared"].toInt() >= 0, "unhighlight clears at once");
+            check(okOf(c.call(B(R"({"cmd":"unhighlight"})"))), "and is harmless when there is nothing to clear");
+            r = c.call(B(R"({"cmd":"highlight","zones":["octave_up"],"page":"synth","ms":9000})"));
+            check(w.page() == MainWindow::PG_PLAY && !hf()["highlighted"].toArray().isEmpty(), "a highlight can be re-issued after a page change");
+            c.call(B(R"({"cmd":"unhighlight"})"));
+        }
+
+        { // hostile arguments
+            int refused = 0, total = 0, malformed = 0;
+            static const char *zv[] = {"null", "\"x\"", "[]", "{}", "[1]", "[null]", "[[\"a\"]]", "true", "1e99", "[\"a\",\"b\"]", "[\"\"]"};
+            static const char *lv[] = {"null", "1", "[]", "{}", "true", "\"ok\"", "\"line\\nbreak\\u0000x\""};
+            static const char *mv[] = {"null", "-5", "0", "99", "1e99", "\"x\"", "250", "9000", "30000", "30001", "0.5"};
+            static const char *pv[] = {"null", "\"x\"", "1", "\"help\"", "\"\"", "[]", "\"CHAT\"", "\"play\""};
+            for (const char *z : zv) for (const char *l : lv) for (const char *m : mv) for (const char *p : pv) {
+                const QByteArray req = QByteArray("{\"cmd\":\"highlight\",\"zones\":") + z + ",\"label\":" + l + ",\"ms\":" + m + ",\"page\":" + p + "}";
+                const QJsonObject rr = gctl.handle(QJsonDocument::fromJson(req).object());
+                ++total;
+                if (!rr.contains("ok")) ++malformed; else if (!rr["ok"].toBool()) ++refused;
+            }
+            w.setPage(MainWindow::PG_PLAY); w.clearHighlight();
+            for (const char *p : pv) for (const char *s : {"null", "\"beat\"", "7", "[]", "\"x\""}) {
+                const QByteArray req = QByteArray("{\"cmd\":\"zones\",\"page\":") + p + ",\"sub\":" + s + "}";
+                const QJsonObject rr = gctl.handle(QJsonDocument::fromJson(req).object());
+                ++total;
+                if (!rr.contains("ok")) ++malformed; else if (!rr["ok"].toBool()) ++refused;
+            }
+            w.setPage(MainWindow::PG_PLAY); w.clearHighlight(); w.shot();
+            check(malformed == 0 && refused > total / 3, QString("%1 highlight and zones requests with wrongly typed arguments: all answered, none crashed (%2 refused)").arg(total).arg(refused));
+            QJsonArray many; for (int i = 0; i < 40; ++i) many.append(QString("z%1").arg(i));
+            QJsonObject big; big["cmd"] = "highlight"; big["zones"] = many;
+            check(!gctl.handle(big)["ok"].toBool(true), "more than 16 names is refused");
+            QJsonObject longName; longName["cmd"] = "highlight"; longName["zones"] = QJsonArray{QString(500, 'a')};
+            check(!gctl.handle(longName)["ok"].toBool(true), "a name longer than 48 characters is refused");
+            QJsonObject longLabel; longLabel["cmd"] = "highlight"; longLabel["zones"] = QJsonArray{"octave_up"}; longLabel["label"] = QString(41, 'a');
+            check(!gctl.handle(longLabel)["ok"].toBool(true), "a label longer than 40 characters is refused");
+            QJsonObject ctl; ctl["cmd"] = "highlight"; ctl["zones"] = QJsonArray{"octave_up"}; ctl["label"] = "a\nb\x01 c"; ctl["ms"] = 200;
+            check(gctl.handle(ctl)["ok"].toBool() && !w.highlightLabel().contains('\n') && !w.highlightLabel().contains(QChar(1)), "control characters in a label are turned into spaces");
+            wait(300);
+            w.clearHighlight();
+        }
+
+        { // the dock: opening, focus, Esc, close
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+            check(!w.dockIsOpen() && !w.dockHasFocus(), "the dock starts closed");
+            ctrl(Qt::Key_Y); w.shot();
+            check(w.dockIsOpen() && w.dockHasFocus() && w.page() == MainWindow::PG_PLAY, "Ctrl+Y opens the dock with the keyboard, without leaving the page");
+            const QRectF d = w.dockRect();
+            check(d.height() >= 120 && d.height() <= 150 && d.bottom() > 700 && w.zoneNames().contains("dock_input") && w.zoneNames().contains("dock_send"), QString("the dock is %1 px tall at the bottom, with an input and Send").arg(d.height()));
+            const QJsonObject st = hf();
+            check(st["dock_open"].toBool() && st["dock_focus"].toBool(), "state.help_focus reports the dock open and focused");
+            // letters type, they do not play
+            press(Qt::Key_Z); press(Qt::Key_Q); press(Qt::Key_A); wait(120);
+            const UiState us = inst.uiState();
+            check(w.chatDraftText() == "zqa" && !us.str[0].gate && !us.str[1].gate && !us.str[2].gate, "letters type into the dock and do not play the strings");
+            // Enter sends with the same numbering, and wakes a waiting agent
+            const int seq0 = w.chatLastSeq();
+            c2.send(QByteArray(R"({"id":"w","cmd":"chat_wait","since":)") + QByteArray::number(seq0) + R"(,"timeout_ms":3000})");
+            wait(50);
+            w.dockHasFocus();
+            press(Qt::Key_Return); wait(50);
+            QJsonObject wr = QJsonDocument::fromJson(c2.line(1500)).object();
+            const QJsonArray wm = res(wr)["messages"].toArray();
+            check(okOf(wr) && !res(wr)["timed_out"].toBool(true) && wm.size() == 1 && wm[0].toObject()["text"].toString() == "zqa" && wm[0].toObject()["seq"].toInt() == seq0 + 1,
+                  "Enter in the dock sends through the same path: the next seq, and a waiting chat_wait wakes");
+            check(wm[0].toObject()["page"].toString() == "synth" && wm[0].toObject().contains("focus") && wm[0].toObject()["via"].toString() == "dock", "the message carries page and focus metadata");
+            check(w.chatDraftText().isEmpty() && w.dockHasFocus(), "the input clears and keeps the keyboard");
+            // Esc: the keys play again, the dock stays
+            press(Qt::Key_Escape);
+            check(w.dockIsOpen() && !w.dockHasFocus() && w.page() == MainWindow::PG_PLAY, "Esc moves the keyboard back to the page and keeps the dock");
+            key(w, Qt::Key_Z, true); wait(120);
+            check(inst.uiState().str[0].gate && w.chatDraftText().isEmpty(), "and the keys play again");
+            key(w, Qt::Key_Z, false); wait(100);
+            press(Qt::Key_Escape); w.shot();
+            check(!w.dockIsOpen() && w.page() == MainWindow::PG_PLAY, "Esc again closes the dock");
+            press(Qt::Key_Escape);
+            check(w.page() == MainWindow::PG_PLAY && !w.dockIsOpen(), "and Esc after that is the old Esc (back to Synth)");
+            // Ctrl+Y toggles focus while the dock is open
+            ctrl(Qt::Key_Y); ctrl(Qt::Key_Y);
+            check(w.dockIsOpen() && !w.dockHasFocus(), "Ctrl+Y on the dock gives the keyboard back to the page");
+            ctrl(Qt::Key_Y);
+            check(w.dockIsOpen() && w.dockHasFocus(), "and again takes it");
+            // touch
+            w.shot(); tap(w, "dock_close");
+            check(!w.dockIsOpen(), "Hide closes the dock");
+            ctrl(Qt::Key_Y); press(Qt::Key_Escape); w.shot();
+            tap(w, "dock_input");
+            check(w.dockHasFocus(), "touching the input line gives it the keyboard");
+            press(Qt::Key_H); press(Qt::Key_I); w.shot();
+            tap(w, "dock_send"); wait(40);
+            check(w.chatLog().back().text == "hi" && w.chatLog().back().user, "touching Send sends");
+            // the page behind stays usable above the dock; the dock swallows touches on itself
+            const int oct0 = inst.uiState().set.tuning.octave;
+            tap(w, "dock_close"); w.shot();
+            tap(w, "octave_up"); wait(80);
+            check(inst.uiState().set.tuning.octave == oct0 + 1, "with the dock closed the page's own buttons work");
+            tap(w, "octave_down"); wait(60);
+            // Ctrl+Shift+Y is the full page, Ctrl+Y on it goes back
+            key(w, Qt::Key_Control, true); key(w, Qt::Key_Shift, true); press(Qt::Key_Y); key(w, Qt::Key_Shift, false); key(w, Qt::Key_Control, false);
+            check(w.page() == MainWindow::PG_CHAT && w.dockRect().isNull(), "Ctrl+Shift+Y opens the full Chat page, where there is no dock");
+            press(Qt::Key_A);
+            check(w.chatDraftText() == "a", "and letters still type on the Chat page");
+            press(Qt::Key_Backspace);
+            ctrl(Qt::Key_Y);
+            check(w.page() == MainWindow::PG_PLAY, "Ctrl+Y on the Chat page goes back");
+            // the Full button
+            ctrl(Qt::Key_Y); w.shot(); tap(w, "dock_full");
+            check(w.page() == MainWindow::PG_CHAT, "the dock's Full button opens the Chat page");
+            press(Qt::Key_Escape);
+            w.dockClose();
+        }
+
+        { // the ticker opens the dock
+            w.setPage(MainWindow::PG_PLAY); w.dockClose(); w.shot();
+            w.chatAdd("rook", "A new message while you play.", "say", false);
+            w.shot();
+            check(w.chatTickerShowing() && w.zoneNames().contains("ticker"), "a new agent message shows the ticker with a touch target");
+            tap(w, "ticker"); w.shot();
+            check(w.dockIsOpen() && w.dockHasFocus(), "touching the ticker opens the dock with the keyboard");
+            const int unread = w.chatUnreadCount();
+            w.chatAdd("rook", "And another one.", "say", false);
+            check(w.chatUnreadCount() == unread && !w.chatTickerShowing(), "with the dock open there is no ticker and nothing counts as unread");
+            w.dockClose();
+            { // the ticker does not cover a highlight: it moves to the top
+                QStringList unk; w.refreshZones(); w.setHighlight({"loop_pedal"}, QString(), 20000, unk);
+                w.chatAdd("rook", "Look at the loop pedal.", "say", false); w.shot();
+                check(w.zoneRect("ticker").top() < 100 && !w.zoneRect("ticker").intersects(w.zoneRect("loop_pedal")), "when a highlight is at the bottom the ticker moves to the top");
+                w.clearHighlight(); w.shot();
+                check(w.zoneRect("ticker").top() > 600, "and is back at the bottom without one");
+            }
+            w.chatAdd("rook", "Ticker again.", "say", false); w.shot();
+            ctrl(Qt::Key_Y);
+            check(w.dockIsOpen() && w.dockHasFocus(), "Ctrl+Y while the ticker shows also opens the dock");
+            w.dockClose();
+        }
+
+        { // the dock never covers what is highlighted; what is discussed is tagged; focus travels with the message
+            w.setPage(MainWindow::PG_PLAY); w.dockClose(); w.shot();
+            ctrl(Qt::Key_Y); press(Qt::Key_Escape);
+            QJsonObject r = c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE","ms":20000})"));
+            const QRectF d = w.dockRect(), o1 = w.zoneRect("octave_down"), o2 = w.zoneRect("octave_up");
+            check(okOf(r) && w.dockIsOpen() && !d.intersects(o1) && !d.intersects(o2) && d.top() < 100, "octave is at the bottom of Synth: the dock moves to the top rather than cover it");
+            check(w.dockTopic() == "OCTAVE" && res(r)["dock"].toObject()["position"].toString() == "top", "the dock is tagged with what is being discussed (OCTAVE)");
+            QImage im = w.shot();
+            if (!shotsDir.isEmpty()) im.save(shotsDir + "/16-dock-synth.png");
+            r = c.call(B(R"({"cmd":"highlight","zones":["hdr_sound"],"label":"the sound name"})"));
+            check(okOf(r) && !w.dockRect().intersects(w.zoneRect("hdr_sound")) && w.dockRect().top() > 500, "a highlight at the top leaves the dock at the bottom");
+            r = c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE","ms":20000})"));
+            ctrl(Qt::Key_Y); // focus the dock
+            press(Qt::Key_W); press(Qt::Key_H); press(Qt::Key_Y); press(Qt::Key_Return); wait(40);
+            const ChatMsg &m = w.chatLog().back();
+            check(m.user && m.page == "synth" && m.focus == QStringList({"octave_down", "octave_up"}) && m.via == "dock", "a question sent from the dock says it was asked on Synth with OCTAVE highlighted");
+            check(hf()["last_question_zone"].toString() == "octave_down", "state.help_focus.last_question_zone is the first focused zone");
+            QJsonObject pr = c.call(QByteArray(R"({"cmd":"chat_poll","since":)") + QByteArray::number(m.seq - 1) + "}");
+            const QJsonObject pm = res(pr)["messages"].toArray().last().toObject();
+            check(pm["page"].toString() == "synth" && strs(pm["focus"].toArray()) == QStringList({"octave_down", "octave_up"}), "chat_poll returns the page and focus with the player's message");
+            // the topic carries to a message that comes with the highlight, and goes after one that does not
+            w.chatAdd("rook", "Octave shifts every string up or down twelve notes.", "say", false);
+            check(w.dockTopic() == "OCTAVE", "an agent message just after a highlight keeps the topic tag");
+            wait(5300);
+            w.chatAdd("rook", "Anything else?", "say", false);
+            check(w.dockTopic().isEmpty(), "a later message with no highlight clears it");
+            // page change closes the topic; the dock stays
+            c.call(B(R"({"cmd":"highlight","zones":["octave"],"label":"OCTAVE"})"));
+            w.setPage(MainWindow::PG_TUNE); w.shot();
+            check(w.dockIsOpen() && w.dockTopic().isEmpty() && hf()["highlighted"].toArray().isEmpty(), "changing page keeps the dock but drops the highlight and the tag");
+            w.dockClose();
+        }
+
+        { // the dock never covers a highlighted zone, on any page
+            int tested = 0, clashes = 0; QStringList bad;
+            for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
+                if (p == MainWindow::PG_CHAT) continue;
+                w.setPage(p); w.dockClose(); w.clearHighlight(); w.shot();
+                const QStringList names = w.zoneNames();
+                for (const QString &n : names) {
+                    if (n.startsWith("dock") || n == "ticker" || n.startsWith("tab_")) continue;
+                    const QRectF zr = w.zoneRect(n);
+                    if (zr.height() > 330) continue; // taller than any dock could leave room beside
+                    w.dockOpenFocus();
+                    QStringList unk; w.setHighlight({n}, "x", 20000, unk); w.shot();
+                    ++tested;
+                    if (w.dockRect().intersects(zr) || w.dockRect().isNull()) { ++clashes; if (bad.size() < 4) bad << QString("%1/%2").arg(MainWindow::pageName(p), n); }
+                    const QRectF cp = w.highlightCaptionRect();
+                    if (!cp.isNull() && (cp.intersects(zr) || cp.intersects(w.dockRect()) || !QRectF(0, 0, 720, 720).contains(cp))) { ++clashes; if (bad.size() < 4) bad << QString("caption %1/%2").arg(MainWindow::pageName(p), n); }
+                    w.clearHighlight();
+                }
+                w.dockClose();
+            }
+            check(clashes == 0 && tested > 150, QString("across every page the dock and the caption stay clear of what is highlighted (%1 zones tried%2)").arg(tested).arg(bad.isEmpty() ? QString() : ", clashes: " + bad.join(" ")));
+            // two zones far apart: still no overlap, when there is room
+            w.setPage(MainWindow::PG_PLAY); w.dockOpenFocus();
+            QStringList unk; w.setHighlight({"octave_up", "hdr_sound"}, "both ends", 20000, unk); w.shot();
+            check(w.dockRect().isNull() || !(w.dockRect().intersects(w.zoneRect("octave_up")) && w.dockRect().intersects(w.zoneRect("hdr_sound"))), "with a highlight at both ends the dock gives way to at least one of them");
+            w.clearHighlight(); w.dockClose();
+        }
+
+        { // the Help page: ask from the guide without going to the Chat page
+            w.setPage(MainWindow::PG_HELP); w.dockClose(); w.setHelpSubPage(0); w.shot();
+            tap(w, "help_ask"); w.shot();
+            check(w.dockIsOpen() && w.dockHasFocus() && w.page() == MainWindow::PG_HELP && !w.chatDraftText().isEmpty(), "Ask Rook on the Help page opens the dock with the keyboard and a starting question");
+            QStringList hrows; for (const QString &n : w.zoneNames()) if (n.startsWith("help_row_")) hrows << n;
+            bool visible = true;
+            for (const QString &n : hrows) visible = visible && !w.dockRect().intersects(w.zoneRect(n));
+            check(hrows.size() == 16 && visible, "with the dock open every Help row is still visible above it");
+            for (int i = 0; i < 80; ++i) press(Qt::Key_Backspace);
+            w.dockClose(); w.shot();
+            tap(w, hrows.value(8)); w.shot();
+            check(w.dockHasFocus() && w.chatDraftText().startsWith("What does"), QString("tapping a Help row asks about it in the dock (draft: %1)").arg(w.chatDraftText()));
+            const int before = w.chatLastSeq();
+            press(Qt::Key_Return); wait(40);
+            const ChatMsg &hm = w.chatLog().back();
+            check(w.chatLastSeq() == before + 1 && hm.page == "help" && hm.focus == QStringList({hrows.value(8)}) && w.page() == MainWindow::PG_HELP,
+                  QString("and the question goes out with the row as its focus, still on the Help page (%1 %2)").arg(hm.page, hm.focus.join(",")));
+            QJsonObject r = c.call(QByteArray(R"({"cmd":"highlight","zones":[")") + hrows.value(3).toUtf8() + R"("],"label":"this one"})");
+            check(okOf(r) && strs(res(r)["highlighted"].toArray()) == QStringList({hrows.value(3)}) && !w.dockRect().intersects(w.zoneRect(hrows.value(3))), "Rook can highlight a single Help row");
+            QImage im = w.shot();
+            if (!shotsDir.isEmpty()) im.save(shotsDir + "/17-dock-help.png");
+            const int sub0 = w.helpSubPage();
+            tap(w, "help_next");
+            check(w.helpSubPage() == (sub0 + 1) % 4, "the Help sections are still reachable with the next button");
+            w.clearHighlight(); w.dockClose(); w.setPage(MainWindow::PG_PLAY);
+        }
+        gctl.stop();
+        w.dockClose(); w.clearHighlight(); w.setPage(MainWindow::PG_PLAY);
+        inst.cmd(EV_PANIC);
+        wait(200);
     }
 
     std::printf("- panic / health\n");
@@ -1109,6 +1436,31 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         for (int i = 0; i < 8; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/15-ticker.png").arg(dir));
     }
+    {   // guided help: the dock on Synth with the octave buttons highlighted, a caption without the dock, the dock on Help
+        QStringList unk;
+        w.setPage(MainWindow::PG_PLAY);
+        wait(7300); w.refreshZones();   // the ticker has gone
+        w.setHighlight({"loop_pedal"}, "LOOP PEDAL", 20000, unk);
+        for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/18-caption.png").arg(dir));
+        w.clearHighlight();
+        w.dockOpenFocus(); w.shot();
+        w.chatAdd("you", "what does octave do?", "say", true, "synth", {});
+        w.chatAdd("rook", "It moves every string up or down twelve notes. Tap + and play the same key again.", "say", false);
+        w.setHighlight({"octave"}, "OCTAVE", 20000, unk);
+        for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/16-dock-synth.png").arg(dir));
+        w.clearHighlight(); w.dockClose();
+        w.setPage(MainWindow::PG_HELP); w.shot();
+        w.dockOpenFocus();
+        w.chatAdd("rook", "Here is the Loop pedal row: Enter starts a count-in, records, then plays and overdubs.", "say", false);
+        w.shot();
+        w.setHighlight({"help_row_loop_pedal_count_in_record_play_ov"}, "LOOP PEDAL", 20000, unk);
+        for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/17-dock-help.png").arg(dir));
+        w.clearHighlight(); w.dockClose();
+        w.setPage(MainWindow::PG_PLAY);
+    }
     {   // the Glitch mapping with a finger on the pad
         w.setPage(MainWindow::PG_PLAY);
         inst.set(S_XYMAP, XY_GLITCH); wait(60);
@@ -1140,21 +1492,21 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         sd.layers = {melody(extraPatch(0), {{0, 1.5, 64}, {1.5, 1.5, 67}, {3.5, 0.5, 69}, {4, 2, 72}, {6, 1, 71}, {7, 0.9, 67}})};
         inst.restore(sd); wait(80);
         w.setPage(MainWindow::PG_TRACK); wait(60);
-        tap(w, "keep"); wait(60);                       // Beat 1, Chords 1, Loop 1
+        tap(w, "track_keep"); wait(60);                       // Beat 1, Chords 1, Loop 1
         inst.beatDo(BT_ERASE, D_HAT); inst.beatDo(BT_STEP, D_CLAP, 4, 1); inst.beatDo(BT_STEP, D_TOM, 13, 1); wait(80);
         inst.snapshot(sd);
         sd.loopBeats = 16;
         sd.layers = {melody(extraPatch(1), {{0, 3, 52}, {4, 2, 55}, {6, 2, 57}, {8, 3.5, 60}, {12, 1, 59}, {13, 1, 57}, {14, 1.9, 55}}),
                      melody(extraPatch(1), {{2, 1, 76}, {7, 0.5, 79}, {10, 2, 81}, {15, 0.5, 79}})};
         inst.restore(sd); wait(80);
-        tap(w, "keep"); wait(60);                       // Beat 2, Loop 2
+        tap(w, "track_keep"); wait(60);                       // Beat 2, Loop 2
         press(Qt::Key_Escape);
         press(Qt::Key_Return);
         press(Qt::Key_1); for (int i = 0; i < 4; ++i) ctrl(Qt::Key_V);                 // Beat 1 on bars 1-4
         press(Qt::Key_4); ctrl(Qt::Key_V);                                              // Beat 2 on bar 5
         press(Qt::Key_1); for (int i = 0; i < 3; ++i) ctrl(Qt::Key_V);                 // Beat 1 on bars 6-8
         press(Qt::Key_Return); press(Qt::Key_2); ctrl(Qt::Key_V); ctrl(Qt::Key_V);     // Chords 1 twice
-        QRectF lanes = w.zoneRect("lanes");
+        QRectF lanes = w.zoneRect("track_lanes");
         auto cell = [&](int lane, double bar) { return QPointF(lanes.left() + (bar + 0.5) * lanes.width() / 8.0, lanes.top() + 2 + lane * 70 + 33); };
         auto touch = [&](QPointF a) { w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); };
         press(Qt::Key_3); touch(cell(LN_LOOPA, 2)); touch(cell(LN_LOOPA, 6));          // Loop 1 on bars 3-4 and 7-8
@@ -1174,14 +1526,14 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         press(Qt::Key_C);
         press(Qt::Key_E);
         w.shot();
-        QRectF strip = w.zoneRect("chopstrip");
+        QRectF strip = w.zoneRect("chop_strip");
         for (double f : {0.25, 0.5, 0.75}) { touch(QPointF(strip.left() + strip.width() * f + 2, strip.center().y())); w.shot(); }
         touch(QPointF(strip.left() + strip.width() * 0.6, strip.center().y())); w.shot(); // choose piece C
-        tap(w, "cleft"); w.shot();
+        tap(w, "chop_move_left"); w.shot();
         wait(1700);
         for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/11-chop.png").arg(dir));
-        tap(w, "cdone");
+        tap(w, "chop_done");
         w.shot();
         press(Qt::Key_I); w.shot();                                                     // the sound picker for the chosen loop
         press(Qt::Key_Right); w.shot();
@@ -1197,16 +1549,16 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         press(Qt::Key_2); for (int i = 0; i < 3; ++i) press(Qt::Key_Down);              // Chords at 65
         press(Qt::Key_3); press(Qt::Key_Up); press(Qt::Key_Up);                         // Loop A at 90
         press(Qt::Key_1);
-        tap(w, "mxplay");
+        tap(w, "mixer_play");
         wait(2600);
         for (int i = 0; i < 5; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/13-mixer.png").arg(dir));
-        tap(w, "mxplay");
+        tap(w, "mixer_play");
         inst.cmd(EV_PANIC); wait(60);
     }
     if (qEnvironmentVariableIsSet("VREQUENCY_HELP_SHOTS")) { // every page of the built-in guide, for proof-reading
         w.setPage(MainWindow::PG_HELP);
-        for (int i = 0; i < 4; ++i) { w.shot(); w.shot().save(QString("%1/help-%2.png").arg(dir).arg(i)); tap(w, "helppage"); }
+        for (int i = 0; i < 4; ++i) { w.shot(); w.shot().save(QString("%1/help-%2.png").arg(dir).arg(i)); tap(w, "help_next"); }
     }
     w.setPage(MainWindow::PG_SYS);
     w.setKeyTest(true);
