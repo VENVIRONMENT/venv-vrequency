@@ -827,8 +827,8 @@ void TourView::paintCardRegions() {
     draw(1, aB1, scrollB, hB1);
     draw(2, aB2, scrollB, hB2);
     // what the keys do, always in the same place
-    w.txt(QRectF(16, 678, 410, 14), guided ? "Arrows move   Tab cycles   Enter asks   , . = back / next step" : "Arrows move   Tab cycles   Enter asks   C concepts", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
-    w.txt(QRectF(16, 694, 410, 14), guided ? "Esc closes a card, then leaves" : ", . change page   Space scrolls   Esc closes a card, then leaves", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    w.txt(QRectF(16, 678, 410, 14), guided ? "Arrows move   Tab cycles   Enter asks   , . steps" : "Arrows move   Tab cycles   Enter asks   C concepts", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    w.txt(QRectF(16, 694, 410, 14), guided ? "Esc backs out" : ", . page   Space scrolls   Esc backs out", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
     // ASK ROOK: always in the same place
     w.button(kAskRect, "tour_ask", "ASK ROOK  (Enter)", true, [this] { ask(); });
 }
