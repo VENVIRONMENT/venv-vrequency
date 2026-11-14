@@ -20,20 +20,20 @@ QStringList chatWrap(const QString &s, int cols, int first); // chatpage.cpp
 
 namespace {
 const TourView::PageInfo kPages[] = {
-    {"track", "Track", "Track", MainWindow::PG_TRACK},
-    {"track-chop", "Track: Chop", "Chop", MainWindow::PG_TRACK},
-    {"track-sound", "Track: Sound picker", "Clip", MainWindow::PG_TRACK},
-    {"track-mixer", "Track: Mixer", "Mix", MainWindow::PG_TRACK},
-    {"synth", "Synth", "Synth", MainWindow::PG_PLAY},
-    {"sound", "Sound", "Sound", MainWindow::PG_SOUND},
-    {"sound-deep", "Sound: All parameters", "Edit", MainWindow::PG_SOUND},
-    {"beat", "Beat", "Beat", MainWindow::PG_BEAT},
-    {"backing", "Backing", "Bkng", MainWindow::PG_BACK},
-    {"tune", "Tune", "Tune", MainWindow::PG_TUNE},
-    {"system", "System", "Sys", MainWindow::PG_SYS},
-    {"key-test", "System: Key test", "Keys", MainWindow::PG_SYS},
-    {"help", "Help", "Help", MainWindow::PG_HELP},
-    {"chat", "Chat", "Chat", MainWindow::PG_CHAT},
+    {"track", "Track", "Track", PG_TRACK},
+    {"track-chop", "Track: Chop", "Chop", PG_TRACK},
+    {"track-sound", "Track: Sound picker", "Clip", PG_TRACK},
+    {"track-mixer", "Track: Mixer", "Mix", PG_TRACK},
+    {"synth", "Synth", "Synth", PG_PLAY},
+    {"sound", "Sound", "Sound", PG_SOUND},
+    {"sound-deep", "Sound: All parameters", "Edit", PG_SOUND},
+    {"beat", "Beat", "Beat", PG_BEAT},
+    {"backing", "Backing", "Bkng", PG_BACK},
+    {"tune", "Tune", "Tune", PG_TUNE},
+    {"system", "System", "Sys", PG_SYS},
+    {"key-test", "System: Key test", "Keys", PG_SYS},
+    {"help", "Help", "Help", PG_HELP},
+    {"chat", "Chat", "Chat", PG_CHAT},
 };
 const int kPageCount = (int)(sizeof(kPages) / sizeof(kPages[0]));
 // "Start here": the pages in the order a new player needs them
@@ -919,7 +919,7 @@ int renderTourShots(MainWindow &w, const QString &dir) {
         for (int i = 0; i < 6; ++i) { w.shot(); }
         w.shot().save(QString("%1/%2.png").arg(dir, name));
     };
-    w.setPage(MainWindow::PG_PLAY);
+    w.setPage(PG_PLAY);
     t.open("synth", "octave_up");           save("20-tour-synth");
     t.open("beat", "beatrec");              save("21-tour-beat");
     t.open("track-mixer", "mixer_fader1");  save("22-tour-mixer");
@@ -927,7 +927,7 @@ int renderTourShots(MainWindow &w, const QString &dir) {
     t.open("synth", QString(), true);       save("24-tour-start-here");
     t.open("sound-deep", "param17");        save("25-tour-parameter");
     t.close();
-    w.setPage(MainWindow::PG_PLAY);
+    w.setPage(PG_PLAY);
     t.forgetSeen(); t.armFirstRunPrompt(0);
     save("26-tour-first-run");
     t.answerPrompt(false);

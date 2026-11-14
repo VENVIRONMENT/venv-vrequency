@@ -4,11 +4,9 @@
 #pragma once
 #include "audio/audio.h"
 #include "analysis.h"
-#include "instrument.h"
-#include "app/shell/keymap.h"
 #include "presets.h"
 #include "app/store/store.h"
-#include "app/ui/ui.h"
+#include "app/shell/shell.h"
 #include <QElapsedTimer>
 #include <QFont>
 #include <QHash>
@@ -42,14 +40,12 @@ struct ChatMsg {
     QString via;              // "dock" or "chat"
 };
 
-class MainWindow : public QWidget {
+class MainWindow : public QWidget, public Shell {
     Q_OBJECT
     friend class ControlServer;
     friend class TourView;
     friend struct TourDemo;
 public:
-    // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
-    enum Page { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
 
     // `scratch`: an off-screen copy used only to draw the tour's pictures: it reads and writes no files
     MainWindow(td::Instrument &inst, AudioOut &audio, bool scratch = false);
@@ -57,7 +53,15 @@ public:
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
-    int page() const { return pg; }
+    void goPage(int p) override {
+        if (p == pg) return;
+        pg = p; deepEdit = false; favDelete = false; slotSave = false; beatErase = false; removeArmed = -1;
+        update();
+    }
+    void toast(const QString &s, int ms = 1800) override;
+    void redraw() override { update(); }
+    void saveSoon() override { saveTimer.start(2500); }
+    int page() const override { return pg; }
     void handleKey(int qtKey, bool down);
     void pointer(int id, QPointF canvasPos, int phase);
     QRectF zoneRect(const QString &name) const { return ui.zoneRect(name); }
@@ -67,19 +71,19 @@ public:
     int undoDepth() const { return (int)undo.size(); }
     bool saveSession(const QString &path);
     bool loadSession(const QString &path);
-    void saveState();
+    void saveState() override;
     int addExtraSounds(int from = 0); // engine's extra sounds -> favourites; returns files written
     QString startRecording();
     QString stopRecording();
     bool togglePlayback();            // play the newest recording back, or stop it; false = nothing to play
     bool playingBack() const;
-    void perform(int act, bool shift = false);
+    void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keyTest = on; }
     int favouritesPage() const { return favPage; }
     QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
     void armAllModes() { favDelete = slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
-    int maxKeysHeld() const { return maxHeld; }
+    int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }
     const td::TrackData &trackData() const { return track; }
     int trackUndoDepth() const { return (int)trackUndo.size(); }
@@ -113,8 +117,6 @@ public:
 
     // --- guided help: the highlight overlay and the chat dock (app/guide.cpp) ---
     struct ZoneInfo { QString name; QRectF r; QString label; bool covered = false; };
-    static const char *pageName(int p);
-    static int pageFromName(const QString &n);                 // -1 when unknown; "play" is the Synth page
     QStringList highlightedZones();                            // active highlights on this page
     // Highlights the named zones of the current page (names may be aliases or `prefix*`); returns the ones
     // that exist and puts the others in `unknown`. The zones must have been drawn: call refreshZones() first.
@@ -159,13 +161,8 @@ protected:
     void closeEvent(QCloseEvent *) override;
 
 private:
-    struct Held { int kind; int a, b; }; // what a physical key did when pressed
 
-    td::Instrument &inst;
-    AudioOut &audio;
-    KeyMap km;
     QTimer frameTimer, recTimer;
-    QElapsedTimer clock;
 
     // sounds
     td::Patch lead;
@@ -180,29 +177,17 @@ private:
 
     // ui state
     int pg = PG_PLAY;
-    // The one way to change page: every armed mode (Delete, Store, Erase, track remove, deep edit) is
-    // dropped whenever the page really changes, whatever the route (tab, Tab, Esc, control socket, highlight).
-    void goPage(int p) {
-        if (p == pg) return;
-        pg = p; deepEdit = false; favDelete = false; slotSave = false; beatErase = false; removeArmed = -1;
-        update();
-    }
     bool deepEdit = false;
     int deepPage = 0;
     int helpPage = 0;
     bool keyTest = false;
-    bool chordRow = false;
-    bool modChromatic = false, modChord = false, modCommand = false, bendUp = false, bendDown = false, susKey = false, susLatch = false;
-    QHash<int, Held> held;
-    int maxHeld = 0;
-    QStringList keyLog;
     int touchCol[td::kStrings] = {-1, -1, -1};
     std::deque<float> trail[td::kStrings];
     QString toastText; qint64 toastUntil = 0;
     // chat
     std::deque<ChatMsg> chat;
     int chatSeq = 0, chatUnread = 0, chatScroll = 0, chatReturn = PG_PLAY;
-    QString chatDraft, pendingText;
+    QString chatDraft;
     qint64 copilotSeenAt = -100000, tickerUntil = 0;
     int copilotWaiters = 0;
     ChatMsg ticker;
@@ -227,7 +212,6 @@ private:
     int nextNoteId = 0x400;
     std::vector<qint64> taps;
     QStringList sessions;
-    td::UiState u;
     int seenSinkGeneration = -1;
 
     // recording
@@ -270,7 +254,7 @@ private:
     bool dragOn = false, dragMoved = false;
     int dragGrab = 0;
     td::TrackData dragBefore;
-    QTimer trackSaveTimer;
+    QTimer saveTimer;                       // an edit is on disk a moment later
     std::thread exportThread;
     std::atomic<int> exportState{0}, exportPct{0}, exportSecs{0}; // state: 0 idle, 1 working, 2 done, 3 failed
     QString exportFile;
@@ -285,7 +269,6 @@ private:
     int listenGuess = 0;
     qint64 listenStarted = 0;
 
-    Ui ui;                              // the drawing and touch toolkit the pages share
 
     // the scope on the play page
     int tbIdx = 4, vdIdx = 1, rangeT = 0, rangeV = 0; // time/div and volts/div steps, auto-ranged
@@ -297,7 +280,6 @@ private:
     QPixmap facePix;  // scan lines and corner shading over the whole screen
 
     QPointF toCanvas(QPointF widgetPos) const;
-    void toast(const QString &s, int ms = 1800);
 
     // drawing helpers
     void paramSlider(QRectF r, int param);
@@ -351,7 +333,6 @@ private:
     void undoSound();
     void saveFavourite();
     void setParam(int p, float v);
-    void set(int setting, float v) { inst.set(setting, v); }
     void tapTempo();
     void toggleRecord();
     void startListen();

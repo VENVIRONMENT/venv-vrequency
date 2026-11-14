@@ -67,7 +67,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
     auto result = [](const QJsonObject &o) { return o["result"].toObject(); };
     auto tourState = [&] { return result(call(R"({"cmd":"state"})"))["tour"].toObject(); };
     inst.cmd(EV_PANIC); wait(100);
-    w.dockClose(); w.clearHighlight(); w.setPage(MainWindow::PG_PLAY); w.shot();
+    w.dockClose(); w.clearHighlight(); w.setPage(PG_PLAY); w.shot();
     t.close();
 
     // ---- the cards ----
@@ -85,17 +85,17 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
 
     // ---- every way in ----
     check(!t.isOpen() && !tourState()["open"].toBool(), "the tour starts closed");
-    w.setPage(MainWindow::PG_HELP); w.shot();
+    w.setPage(PG_HELP); w.shot();
     check(w.zoneNames().contains("help_tour"), "the Help page has a Tour button");
     tapZone(w, "help_tour");
     settleTour(w);
-    check(t.isOpen() && w.page() == MainWindow::PG_HELP, "the Help page's Tour button opens the tour (the real page stays where it was)");
+    check(t.isOpen() && w.page() == PG_HELP, "the Help page's Tour button opens the tour (the real page stays where it was)");
     press(w, Qt::Key_Escape);
-    check(!t.isOpen() && w.page() == MainWindow::PG_HELP, "Esc leaves the tour and the Help page is still there");
-    w.setPage(MainWindow::PG_PLAY); w.shot();
+    check(!t.isOpen() && w.page() == PG_HELP, "Esc leaves the tour and the Help page is still there");
+    w.setPage(PG_PLAY); w.shot();
     ctrl(w, Qt::Key_O);
     settleTour(w);
-    check(t.isOpen() && w.page() == MainWindow::PG_PLAY, "Ctrl+O opens the tour from any page");
+    check(t.isOpen() && w.page() == PG_PLAY, "Ctrl+O opens the tour from any page");
     tapZone(w, "tour_close");
     check(!t.isOpen(), "Leave tour closes it by touch");
     {
@@ -104,7 +104,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         const QJsonObject st = tourState();
         check(r["ok"].toBool() && st["open"].toBool() && st["page"].toString() == "beat" && st["selected"].toString() == "beatrec",
               "the control socket opens the tour on a page and a control (Rook: let me show you)");
-        check(w.page() == MainWindow::PG_PLAY, "and the real page did not change");
+        check(w.page() == PG_PLAY, "and the real page did not change");
         r = call(R"({"cmd":"tour","action":"close"})");
         check(r["ok"].toBool() && !t.isOpen() && !tourState()["open"].toBool(), "the control socket closes it");
         r = call(R"({"cmd":"tour","page":"play","element":"octave_up"})");
@@ -114,8 +114,8 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         settleTour(w);
         check(tourState()["concept"].toString() == "recall", "a concept can be opened the same way (state.tour.concept)");
         r = call(R"({"cmd":"page","name":"sound"})");
-        check(!t.isOpen() && w.page() == MainWindow::PG_SOUND, "the page command makes the tour step aside");
-        w.setPage(MainWindow::PG_PLAY);
+        check(!t.isOpen() && w.page() == PG_SOUND, "the page command makes the tour step aside");
+        w.setPage(PG_PLAY);
     }
 
     // ---- every page and panel: hotspots, and every hotspot has a card ----
@@ -144,24 +144,24 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
     }
     {   // the tour's pictures show the same controls the real pages have
         int missing = 0; QStringList bad;
-        for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
-            const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(p, p == MainWindow::PG_HELP ? 0 : -1);
+        for (int p = 0; p < PG_COUNT; ++p) {
+            const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(p, p == PG_HELP ? 0 : -1);
             int pi = -1;
             for (int k = 0; k < TourView::pageCount(); ++k) if (TourView::pageInfo(k).realPage == p) { pi = k; break; }
             QSet<QString> have;
             for (const TourView::Hot &h : t.picture(pi).hot) have.insert(h.name);
             for (const MainWindow::ZoneInfo &z : cat) {
                 if (z.name.startsWith("dock") || z.name == "ticker" || z.name.startsWith("help_row_")) continue;
-                if (!have.contains(z.name) && !(p == MainWindow::PG_SOUND && z.name.startsWith("param"))) { ++missing; bad << QString("%1:%2").arg(p).arg(z.name); }
+                if (!have.contains(z.name) && !(p == PG_SOUND && z.name.startsWith("param"))) { ++missing; bad << QString("%1:%2").arg(p).arg(z.name); }
             }
         }
         check(missing < 40, QString("the pictures cover the controls of the live pages (%1 live-only zones, from different demo state)").arg(missing));
     }
     {   // a picture is a faithful picture: the same size and the same look as the real thing
-        w.setPage(MainWindow::PG_TUNE); w.shot();
+        w.setPage(PG_TUNE); w.shot();
         const QImage a = w.shot(), b = t.picture(TourView::pageIndex("tune")).img;
         check(a.size() == b.size(), "the picture of a page is drawn by the real page code at full size");
-        w.setPage(MainWindow::PG_PLAY); w.shot();
+        w.setPage(PG_PLAY); w.shot();
     }
 
     // ---- touch and keyboard selection ----
@@ -211,7 +211,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         check(t.pageId() == "beat", "touching a page chip changes the tour page");
         press(w, Qt::Key_Period); check(t.pageId() == "backing", "the period key goes to the next page");
         press(w, Qt::Key_Comma); press(w, Qt::Key_Comma); check(t.pageId() == "sound-deep", "the comma key goes to the previous page");
-        check(w.page() == MainWindow::PG_PLAY, "and the real app never left the Synth page");
+        check(w.page() == PG_PLAY, "and the real app never left the Synth page");
         check(t.variantsOnPage() == 4, "the All-parameters editor has four pictures (twelve parameters each)");
         w.shot(); tapZone(w, "tour_hot_deepnext"); w.shot();
         check(t.variantShown() == 1 && t.selectedName() == "deepnext", "tapping Next in the editor picture turns it to the next parameters");
@@ -224,7 +224,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
     // ---- nothing in the tour reaches the synth ----
     {
         inst.cmd(EV_PANIC); wait(150);
-        w.setPage(MainWindow::PG_SOUND); w.shot();
+        w.setPage(PG_SOUND); w.shot();
         const QByteArray before = synthBytes(w, inst);
         QJsonObject sb = result(call(R"({"cmd":"state"})")); sb.remove("tour"); sb.remove("help_focus");
         const QByteArray stateBefore = QJsonDocument(sb).toJson(QJsonDocument::Compact);
@@ -271,7 +271,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         key(w, Qt::Key_Z, true); wait(80); const int heldInTour = inst.uiState().voices; key(w, Qt::Key_Z, false);
         wait(250); w.shot();
         t.close();
-        w.setPage(MainWindow::PG_SOUND); w.shot();
+        w.setPage(PG_SOUND); w.shot();
         wait(300);
         const QByteArray after = synthBytes(w, inst);
         QJsonObject sa = result(call(R"({"cmd":"state"})")); sa.remove("tour"); sa.remove("help_focus");
@@ -280,19 +280,19 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         check(before == after, "the synth's state (settings, sounds, backing, loop, beat, page, armed modes) is byte-identical before and after");
         check(QJsonDocument(sa).toJson(QJsonDocument::Compact) == stateBefore, "and so is the state the copilot reads");
         check(QJsonDocument(result(call(R"({"cmd":"get_params"})"))).toJson(QJsonDocument::Compact) == paramsBefore, "and the sound parameters");
-        check(inst.uiState().droppedEvents == dropped0 && w.armedModes().isEmpty() && w.page() == MainWindow::PG_SOUND, "no event was dropped, nothing was armed, the page is the one it was");
-        w.setPage(MainWindow::PG_PLAY); w.shot();
+        check(inst.uiState().droppedEvents == dropped0 && w.armedModes().isEmpty() && w.page() == PG_SOUND, "no event was dropped, nothing was armed, the page is the one it was");
+        w.setPage(PG_PLAY); w.shot();
     }
 
     // ---- Ask Rook ----
     {
-        w.dockClose(); w.setPage(MainWindow::PG_PLAY); w.shot();
+        w.dockClose(); w.setPage(PG_PLAY); w.shot();
         t.open("synth", "octave_up"); settleTour(w);
         const HelpCard *oct = db.find("synth", "octave_up");
         press(w, Qt::Key_Return);
         check(!t.isOpen() && w.dockIsOpen(), "Enter (Ask Rook) leaves the tour and opens the chat dock");
         check(oct && w.chatDraftText() == oct->ask, "the dock's question is the card's own: " + w.chatDraftText().left(50));
-        check(w.page() == MainWindow::PG_PLAY && w.dockTopic().toLower().contains("octave"), "the dock names what is being asked about");
+        check(w.page() == PG_PLAY && w.dockTopic().toLower().contains("octave"), "the dock names what is being asked about");
         const int seq0 = w.chatLastSeq();
         press(w, Qt::Key_Return); // the dock has the keyboard: Enter sends
         check(w.chatLastSeq() == seq0 + 1, "Enter in the dock sends it");
@@ -308,8 +308,8 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         // from the Ask button by touch, on a different page, and for a concept
         t.open("beat", "beatrec"); settleTour(w);
         tapZone(w, "tour_ask");
-        check(!t.isOpen() && w.page() == MainWindow::PG_BEAT && w.dockIsOpen(), "the Ask Rook button works by touch and puts the player on the page the control lives on");
-        w.dockClose(); w.setPage(MainWindow::PG_PLAY); w.shot();
+        check(!t.isOpen() && w.page() == PG_BEAT && w.dockIsOpen(), "the Ask Rook button works by touch and puts the player on the page the control lives on");
+        w.dockClose(); w.setPage(PG_PLAY); w.shot();
         t.open("synth", "concepts.recall"); settleTour(w);
         press(w, Qt::Key_Return);
         check(w.dockIsOpen() && w.chatDraftText().size() > 5, "a concept card can be asked about too");
@@ -322,7 +322,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         for (QChar ch : QString("hello")) press(w, ch.toUpper().unicode());
         press(w, Qt::Key_Return);
         check(w.chatLog().back().via == "dock", "an ordinary dock message afterwards is still via \"dock\"");
-        w.dockClose(); w.setPage(MainWindow::PG_PLAY);
+        w.dockClose(); w.setPage(PG_PLAY);
     }
 
     // ---- concepts ----
@@ -383,18 +383,18 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
 
     // ---- the first-run offer ----
     {
-        w.setPage(MainWindow::PG_PLAY); w.dockClose(); t.close(); w.shot();
+        w.setPage(PG_PLAY); w.dockClose(); t.close(); w.shot();
         t.forgetSeen(); t.armFirstRunPrompt(0); w.shot();
         check(t.promptShowing() && w.zoneNames().contains("tour_prompt_yes") && w.zoneNames().contains("tour_prompt_later"), "on a first run the offer appears (Take the tour / Later)");
         const QImage with = w.shot();
-        check(w.page() == MainWindow::PG_PLAY, "and it does not move the player anywhere");
+        check(w.page() == PG_PLAY, "and it does not move the player anywhere");
         // it does not block playing: a string touch under the page still sounds
         key(w, Qt::Key_A, true); wait(120);
         check(inst.uiState().voices > 0, "keys still play while the offer is up");
         key(w, Qt::Key_A, false); wait(150);
         press(w, Qt::Key_Escape);
         check(!t.promptShowing() && t.seen() && !t.isOpen(), "Esc = later: it goes away and the tour does not open");
-        check(w.page() == MainWindow::PG_PLAY, "(the Esc was spent on the answer, not on leaving the page)");
+        check(w.page() == PG_PLAY, "(the Esc was spent on the answer, not on leaving the page)");
         w.saveState();
         QJsonObject st; store::readJson(store::baseDir() + "/state.json", st);
         check(st["tourSeen"].toBool(), "tourSeen is saved in state.json");
@@ -466,7 +466,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         tapZone(w, "tour_ask"); w.dockClose();
         check(!t.isOpen(), "(Ask Rook still works from the error card)");
         t.resetCards();
-        w.setPage(MainWindow::PG_PLAY); w.shot();
+        w.setPage(PG_PLAY); w.shot();
         t.open("synth", "octave_up"); settleTour(w);
         check(t.selectedName() == "octave_up" && t.cardFor(*hot)->title != "Help unavailable", "the real cards come back when the file is fine");
         t.close();
@@ -552,7 +552,7 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
         t.close();
         check(inst.uiState().droppedEvents == 0, "none of it dropped an audio event");
     }
-    w.setPage(MainWindow::PG_PLAY); w.dockClose(); t.close();
+    w.setPage(PG_PLAY); w.dockClose(); t.close();
     inst.cmd(EV_PANIC);
     wait(150);
 }

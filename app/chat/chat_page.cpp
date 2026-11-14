@@ -65,7 +65,7 @@ int MainWindow::chatAdd(const QString &from, const QString &text, const QString 
             tickerUntil = clock.elapsed() + 7000;
         }
     }
-    trackSaveTimer.start(2500); // saved a moment later, like the track
+    saveSoon(); // saved a moment later, like the track
     update();
     return m.seq;
 }
@@ -98,9 +98,9 @@ void MainWindow::chatSend() {
 
 // Letters type on this page. The command layer (hold Ctrl) and Tab still work.
 bool MainWindow::chatKey(int key, int plainAct, bool dock) {
-    if (modCommand || plainAct == A_PAGE_NEXT) return false;
-    const QString typed = pendingText;
-    pendingText.clear();
+    if (keys.command || plainAct == A_PAGE_NEXT) return false;
+    const QString typed = keys.text;
+    keys.text.clear();
     switch (key) {
     case Qt::Key_Return: case Qt::Key_Enter: chatSend(); return true;
     case Qt::Key_Backspace: if (!chatDraft.isEmpty()) chatDraft.chop(1); return true;
@@ -117,7 +117,7 @@ bool MainWindow::chatKey(int key, int plainAct, bool dock) {
     QString ch;
     if (!typed.isEmpty() && typed[0].isPrint()) ch = typed;
     else if (key == Qt::Key_Space) ch = " ";
-    else if (key >= 0x21 && key <= 0x7e) ch = QString(modChromatic ? QChar(key) : QChar(key).toLower());
+    else if (key >= 0x21 && key <= 0x7e) ch = QString(keys.chromatic ? QChar(key) : QChar(key).toLower());
     if (!ch.isEmpty() && chatDraft.size() + ch.size() <= kDraftMax) chatDraft += ch;
     return true; // everything else is swallowed: no string plays while you type
 }

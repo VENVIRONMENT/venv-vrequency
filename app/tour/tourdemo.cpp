@@ -128,19 +128,19 @@ static void build(std::vector<TourView::Pic> &pics) {
     pump(inst, 80);
 
     // ---- the playing pages, with two notes held (a slide) so the scope and the strings are lit ----
-    w.setPage(MainWindow::PG_PLAY);
+    w.setPage(PG_PLAY);
     rig.key(Qt::Key_A, true); pump(inst, 250);
     rig.key(Qt::Key_F, true);
     rig.settle(30);
     capture(rig, 4, P("synth"));
-    w.setPage(MainWindow::PG_SOUND); rig.settle(3);
+    w.setPage(PG_SOUND); rig.settle(3);
     capture(rig, 5, P("sound"));
     w.deepEdit = true; w.deepPage = 0; rig.settle(2);
     capture(rig, 6, P("sound-deep"));
     for (int dp = 1; dp < 4; ++dp) { w.deepPage = dp; rig.settle(2); capture(rig, 13 + dp, pics[13 + dp]); } // the other parameters
     w.deepEdit = false;
     rig.key(Qt::Key_F, false); rig.key(Qt::Key_A, false);
-    w.setPage(MainWindow::PG_BEAT); rig.settle(2);
+    w.setPage(PG_BEAT); rig.settle(2);
     for (int i = 0; i < 7; ++i) { // eight kept beats: the row pages, with More
         w.beatNew(); rig.settle(2);
         inst.beatDo(BT_STEP, D_KICK, 0, 1); rig.settle(2);
@@ -150,16 +150,16 @@ static void build(std::vector<TourView::Pic> &pics) {
     inst.beatDo(BT_PLAYSTOP); pump(inst, 60);
     QThread::msleep(700);                                                     // the pads that just sounded fade
     capture(rig, 7, P("beat"));
-    w.setPage(MainWindow::PG_BACK); rig.settle(2);
+    w.setPage(PG_BACK); rig.settle(2);
     capture(rig, 8, P("backing"));
-    w.setPage(MainWindow::PG_TUNE); rig.settle(2);
+    w.setPage(PG_TUNE); rig.settle(2);
     w.listenResult = td::ListenResult();
     w.listenResult.ok = true;
     w.listenResult.keys[0].root = 9; w.listenResult.keys[0].minor = true; w.listenResult.keys[0].score = 0.8f;
     w.listenResult.keyConfidence = 0.7f; w.listenResult.bpm = 100; w.listenResult.bpmConfidence = 0.7f;
     w.listenState = 2; rig.settle(2);
     capture(rig, 9, P("tune"));
-    w.setPage(MainWindow::PG_SYS); rig.settle(2);
+    w.setPage(PG_SYS); rig.settle(2);
     capture(rig, 10, P("system"));
     w.keyTest = true;
     rig.key(Qt::Key_Z, true); rig.key(Qt::Key_S, true); rig.key(Qt::Key_E, true);
@@ -167,13 +167,13 @@ static void build(std::vector<TourView::Pic> &pics) {
     capture(rig, 11, P("key-test"));
     rig.key(Qt::Key_E, false); rig.key(Qt::Key_S, false); rig.key(Qt::Key_Z, false);
     w.keyTest = false;
-    w.setPage(MainWindow::PG_HELP); rig.settle(2);
+    w.setPage(PG_HELP); rig.settle(2);
     capture(rig, 12, P("help"));
     w.chatAdd("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
     w.chatAdd("you", "yes, something slow with a soft pad", "say", true);
     w.chatAdd("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
     w.chatSeen();
-    w.setPage(MainWindow::PG_CHAT); w.chatDraft.clear(); rig.settle(2);
+    w.setPage(PG_CHAT); w.chatDraft.clear(); rig.settle(2);
     capture(rig, 13, P("chat"));
     inst.cmd(EV_LOOP, LC_PLAYSTOP);
 
@@ -184,7 +184,7 @@ static void build(std::vector<TourView::Pic> &pics) {
     sd.loopBeats = 8;
     sd.layers = {melody(extraPatch(0), {{0, 1.5, 64}, {1.5, 1.5, 67}, {3.5, 0.5, 69}, {4, 2, 72}, {6, 1, 71}, {7, 0.9, 67}})};
     inst.restore(sd); pump(inst, 80);
-    w.setPage(MainWindow::PG_TRACK); rig.settle(3);
+    w.setPage(PG_TRACK); rig.settle(3);
     rig.tap("track_keep"); pump(inst, 60);                                   // Beat 1, Chords 1, Loop 1
     inst.beatDo(BT_ERASE, D_HAT); inst.beatDo(BT_STEP, D_CLAP, 4, 1); inst.beatDo(BT_STEP, D_TOM, 13, 1); pump(inst, 80);
     inst.snapshot(sd);

@@ -79,7 +79,7 @@ void MainWindow::beatWatch() {
     if (samePattern(u.beatPat, cur.pat) && u.set.kit == cur.kit) return;
     std::copy(u.beatPat, u.beatPat + kDrums, cur.pat);
     cur.kit = u.set.kit;
-    trackSaveTimer.start(2500); // on disk a moment later, like a track edit
+    saveSoon(); // on disk a moment later, like a track edit
 }
 
 void MainWindow::beatSwitchTo(int i) {
@@ -97,7 +97,7 @@ void MainWindow::beatSwitchTo(int i) {
     inst.beatDo(BT_SWITCH, -1, 0, b.kit);
     beatErase = false;
     beatHoldUntil = clock.elapsed() + 10000;
-    trackSaveTimer.start(2500);
+    saveSoon();
     if (u.beatPlaying) toast(QString("%1 starts at the next bar").arg(b.name), 1400);
 }
 

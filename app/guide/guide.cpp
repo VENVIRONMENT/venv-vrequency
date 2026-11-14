@@ -13,7 +13,6 @@ using namespace pal;
 QStringList chatWrap(const QString &s, int cols, int first); // chatpage.cpp
 
 namespace {
-const char *kPages[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
 qreal dockDragY = 0;
 
 // Names that stand for several zones. Only used when no zone has the name itself.
@@ -30,14 +29,6 @@ bool hidden(const QString &n) { return n.startsWith("dock") || n == "ticker" || 
 
 QRectF inflated(const QRectF &r, qreal d) { return r.adjusted(-d, -d, d, d); }
 } // namespace
-
-const char *MainWindow::pageName(int p) { return p >= 0 && p < PG_COUNT ? kPages[p] : "synth"; }
-
-int MainWindow::pageFromName(const QString &n0) {
-    const QString n = n0.toLower() == "play" ? QString("synth") : n0.toLower();
-    for (int i = 0; i < PG_COUNT; ++i) if (n == kPages[i]) return i;
-    return -1;
-}
 
 // ------------------------------------------------------------------ zone catalogue
 

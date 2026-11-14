@@ -77,7 +77,7 @@ void MainWindow::trackSync() {
     playBar = qBound(0, playBar, kTrackMaxBars - 1);
     if (hearOn && !(soundOpen && chosen())) { hearOn = false; inst.trackDo(TC_STOP); }
     inst.setTrack(std::make_shared<const TrackData>(hearOn ? hearTrack() : track));
-    trackSaveTimer.start(2500);
+    saveSoon();
     update();
 }
 
@@ -718,7 +718,7 @@ void MainWindow::pollExport() {
 // Cmd): T splits, J joins, R repeats, X C V cut, copy and paste, Z undoes, B exports.
 
 bool MainWindow::trackKey(int key, int plainAct) {
-    if (soundOpen && chosen() && !modCommand) { // the picker has the arrows, the numbers, Space and Enter
+    if (soundOpen && chosen() && !keys.command) { // the picker has the arrows, the numbers, Space and Enter
         switch (plainAct) {
         case A_SUSTAIN: hearToggle(); return true;
         case A_LOOP: case A_HOME: soundOpen = false; return true;
@@ -737,7 +737,7 @@ bool MainWindow::trackKey(int key, int plainAct) {
             return true;
         }
     }
-    if (mixOpen && !modCommand) { // the mixer has the arrows, 1-4, 0, M, S and Enter
+    if (mixOpen && !keys.command) { // the mixer has the arrows, 1-4, 0, M, S and Enter
         switch (key) {
         case Qt::Key_M: mixApply(mixLane, [](LaneMix &m) { m.mute = !m.mute; return true; }); return true;
         case Qt::Key_S: mixApply(mixLane, [](LaneMix &m) { m.solo = !m.solo; return true; }); return true;
@@ -761,7 +761,7 @@ bool MainWindow::trackKey(int key, int plainAct) {
             return true;
         }
     }
-    if (modCommand) {
+    if (keys.command) {
         switch (key) {
         case Qt::Key_T:
             if (!chopOpen) trackSplit();
@@ -789,7 +789,7 @@ bool MainWindow::trackKey(int key, int plainAct) {
         case Qt::Key_X: trackCopy(true); return true;
         case Qt::Key_C: trackCopy(false); return true;
         case Qt::Key_V: trackPlaceAtLine(); return true;
-        case Qt::Key_Z: if (modChromatic) trackRedoDo(); else trackUndoDo(); return true;
+        case Qt::Key_Z: if (keys.chromatic) trackRedoDo(); else trackUndoDo(); return true;
         case Qt::Key_B: trackExport(); return true;
         }
         return false; // every other command key keeps its usual meaning
@@ -813,16 +813,16 @@ bool MainWindow::trackKey(int key, int plainAct) {
             Placement *p = chosen();
             const int to = chopPiece + d;
             if (!p || to < 0 || to >= (int)p->pieces.size()) return true;
-            if (modChord) { const int pc = chopPiece; chopEdit([pc, d](Placement &x) { return movePiece(x, pc, d); }); }
+            if (keys.chord) { const int pc = chopPiece; chopEdit([pc, d](Placement &x) { return movePiece(x, pc, d); }); }
             chopPiece = to;
-        } else if (modChromatic) trackLine(d);
-        else if (modChord) trackMove(d, 0);
+        } else if (keys.chromatic) trackLine(d);
+        else if (keys.chord) trackMove(d, 0);
         else trackSelect(d, 0);
         return true;
     }
     case A_OCT_UP: case A_OCT_DOWN: {
         const int d = plainAct == A_OCT_DOWN ? 1 : -1;
-        if (!chopOpen) { if (modChord) trackMove(0, d); else trackSelect(0, d); }
+        if (!chopOpen) { if (keys.chord) trackMove(0, d); else trackSelect(0, d); }
         return true;
     }
     default: break;

@@ -25,7 +25,6 @@ using namespace pal;
 
 namespace {
 const qreal CW = 720;
-enum { HK_STRING, HK_ACT, HK_NONE };
 
 QString sinkDescription; // refreshed asynchronously via wpctl
 bool sinkIsDummy = false, sinkIsBluetooth = false;
@@ -79,7 +78,7 @@ QString paramText(int p, float v) {
 
 // ------------------------------------------------------------- lifecycle
 
-MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : inst(i), audio(a), scratchWindow(scratch) {
+MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : Shell(i, a), scratchWindow(scratch) {
     setWindowTitle("venv-vrequency");
     setAttribute(Qt::WA_AcceptTouchEvents);
     setAttribute(Qt::WA_OpaquePaintEvent);
@@ -100,7 +99,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : inst(i), audi
         for (int k = 0; k < 10 && k < sl.size(); ++k) bank[k] = store::patchFromJson(sl[k].toObject());
         curSlot = qBound(-1, st["slot"].toInt(0), 9);
         lead = st.contains("lead") ? store::patchFromJson(st["lead"].toObject()) : bank[qMax(0, curSlot)];
-        chordRow = st["chordRow"].toBool(false);
+        keys.chordRow = st["chordRow"].toBool(false);
         store::beatFromJson(st["beat"].toArray(), sd.beat);
         extrasSeeded = st["extras"].toInt(0);
         if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
@@ -122,8 +121,8 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : inst(i), audi
     sd.lead = lead; sd.backing = lead;
     inst.restore(sd);
     inst.setTrack(std::make_shared<const TrackData>(track));
-    trackSaveTimer.setSingleShot(true);
-    connect(&trackSaveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
+    saveTimer.setSingleShot(true);
+    connect(&saveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
     if (scratch) {
         extrasSeeded = kExtraCount;
         return;                                              // a picture-drawing copy: no timers, no probes, no files
@@ -138,7 +137,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : inst(i), audi
         static int skip = 0;
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
-                    clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !held.isEmpty() ||
+                    clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !keys.held.isEmpty() ||
                     s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
@@ -195,7 +194,7 @@ void MainWindow::saveState() {
     o["slots"] = sl;
     o["slot"] = curSlot;
     o["lead"] = store::patchToJson(lead);
-    o["chordRow"] = chordRow;
+    o["chordRow"] = keys.chordRow;
     o["beat"] = store::beatToJson(sd.beat);
     o["extras"] = extrasSeeded;
     o["track"] = store::trackToJson(track);
@@ -445,34 +444,34 @@ void MainWindow::applyListen(bool key, bool tempo) {
 }
 
 void MainWindow::updateBend() {
-    Event e; e.type = EV_BEND; e.f = (bendUp ? 1.0f : 0.0f) - (bendDown ? 1.0f : 0.0f);
+    Event e; e.type = EV_BEND; e.f = (keys.bendUp ? 1.0f : 0.0f) - (keys.bendDown ? 1.0f : 0.0f);
     inst.push(e);
 }
 
 void MainWindow::releaseAllKeys() {
-    for (auto it = held.begin(); it != held.end(); ++it)
+    for (auto it = keys.held.begin(); it != keys.held.end(); ++it)
         if (it.value().kind == HK_STRING) inst.key(it.value().a, it.value().b, false);
-    held.clear();
+    keys.held.clear();
     for (int s = 0; s < kStrings; ++s)
         if (touchCol[s] >= 0) { inst.key(s, touchCol[s] | 0x100, false); touchCol[s] = -1; }
-    modChromatic = modChord = modCommand = false;
-    if (bendUp || bendDown) { bendUp = bendDown = false; updateBend(); }
-    if (susKey) { susKey = false; inst.cmd(EV_SUSTAIN, susLatch ? 1 : 0); }
+    keys.chromatic = keys.chord = keys.command = false;
+    if (keys.bendUp || keys.bendDown) { keys.bendUp = keys.bendDown = false; updateBend(); }
+    if (keys.susKey) { keys.susKey = false; inst.cmd(EV_SUSTAIN, keys.susLatch ? 1 : 0); }
 }
 
 void MainWindow::perform(int act, bool shift) {
     switch (act) {
     case A_PANIC:
         inst.cmd(EV_PANIC);
-        held.clear(); susLatch = false;
+        keys.held.clear(); keys.susLatch = false;
         toast("All notes off", 900);
         break;
     case A_LOOP: inst.cmd(EV_LOOP, LC_PEDAL); break;
     case A_OCT_DOWN: inst.cmd(EV_OCTAVE, -1); break;
     case A_OCT_UP: inst.cmd(EV_OCTAVE, 1); break;
     case A_CHORD_ROW:
-        chordRow = !chordRow;
-        toast(chordRow ? "Bottom row plays chords" : "Bottom row is a string again");
+        keys.chordRow = !keys.chordRow;
+        toast(keys.chordRow ? "Bottom row plays chords" : "Bottom row is a string again");
         break;
     case A_PAGE_NEXT: goPage((pg + 1) % PG_COUNT); break;
     case A_HOME: goPage(PG_PLAY); keyTest = false; break;
@@ -518,94 +517,94 @@ void MainWindow::handleKey(int key, bool down) {
     update();
     // bookkeeping for the key-test view
     if (down) {
-        keyLog.prepend(QString("DOWN  %1").arg(keyName(key)));
+        keys.log.prepend(QString("DOWN  %1").arg(keyName(key)));
     } else {
-        keyLog.prepend(QString("up    %1").arg(keyName(key)));
+        keys.log.prepend(QString("up    %1").arg(keyName(key)));
     }
-    while (keyLog.size() > 12) keyLog.removeLast();
+    while (keys.log.size() > 12) keys.log.removeLast();
 
     if (!down) {
-        auto it = held.find(key);
-        if (it == held.end()) return;
+        auto it = keys.held.find(key);
+        if (it == keys.held.end()) return;
         Held h = it.value();
-        held.erase(it);
+        keys.held.erase(it);
         if (h.kind == HK_STRING) inst.key(h.a, h.b, false);
         else if (h.kind == HK_ACT) {
             switch (h.a) {
-            case A_SUSTAIN: susKey = false; inst.cmd(EV_SUSTAIN, susLatch ? 1 : 0); break;
-            case A_CHROMATIC: modChromatic = false; break;
-            case A_CHORD_LAYER: modChord = false; break;
-            case A_COMMAND: modCommand = false; break;
-            case A_BEND_UP: bendUp = false; updateBend(); break;
-            case A_BEND_DOWN: bendDown = false; updateBend(); break;
+            case A_SUSTAIN: keys.susKey = false; inst.cmd(EV_SUSTAIN, keys.susLatch ? 1 : 0); break;
+            case A_CHROMATIC: keys.chromatic = false; break;
+            case A_CHORD_LAYER: keys.chord = false; break;
+            case A_COMMAND: keys.command = false; break;
+            case A_BEND_UP: keys.bendUp = false; updateBend(); break;
+            case A_BEND_DOWN: keys.bendDown = false; updateBend(); break;
             }
         }
         return;
     }
-    if (held.contains(key)) return; // already down (missed release or repeat)
-    if ((int)held.size() + 1 > maxHeld) maxHeld = held.size() + 1;
+    if (keys.held.contains(key)) return; // already down (missed release or repeat)
+    if ((int)keys.held.size() + 1 > keys.maxHeld) keys.maxHeld = keys.held.size() + 1;
 
     int plainAct = km.plain.value(key, A_NONE);
     // modifiers first, so they work in any layer
-    if (plainAct == A_CHROMATIC) { modChromatic = true; held[key] = {HK_ACT, A_CHROMATIC, 0}; return; }
-    if (plainAct == A_CHORD_LAYER) { modChord = true; held[key] = {HK_ACT, A_CHORD_LAYER, 0}; return; }
-    if (plainAct == A_COMMAND) { modCommand = true; held[key] = {HK_ACT, A_COMMAND, 0}; return; }
+    if (plainAct == A_CHROMATIC) { keys.chromatic = true; keys.held[key] = {HK_ACT, A_CHROMATIC, 0}; return; }
+    if (plainAct == A_CHORD_LAYER) { keys.chord = true; keys.held[key] = {HK_ACT, A_CHORD_LAYER, 0}; return; }
+    if (plainAct == A_COMMAND) { keys.command = true; keys.held[key] = {HK_ACT, A_COMMAND, 0}; return; }
 
-    if (tourView && tourView->promptKey(key)) { held[key] = {HK_NONE, 0, 0}; return; } // Enter / Esc answer the first-run offer
+    if (tourView && tourView->promptKey(key)) { keys.held[key] = {HK_NONE, 0, 0}; return; } // Enter / Esc answer the first-run offer
     if (tourOpen()) { // the tour is a picture: its keys never reach the synth
-        tourView->key(key, pendingText, modChromatic);
-        pendingText.clear();
-        held[key] = {HK_NONE, 0, 0};
+        tourView->key(key, keys.text, keys.chromatic);
+        keys.text.clear();
+        keys.held[key] = {HK_NONE, 0, 0};
         return;
     }
-    if (dockOpen && pg != PG_CHAT && !keyTest && !modCommand) { // the chat dock
-        if (dockFocus && chatKey(key, plainAct, true)) { held[key] = {HK_NONE, 0, 0}; return; }
-        if (!dockFocus && plainAct == A_HOME) { dockClose(); held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
+    if (dockOpen && pg != PG_CHAT && !keyTest && !keys.command) { // the chat dock
+        if (dockFocus && chatKey(key, plainAct, true)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+        if (!dockFocus && plainAct == A_HOME) { dockClose(); keys.held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
     }
-    if (pg == PG_TRACK && !keyTest && trackKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
-    if (pg == PG_CHAT && !keyTest && chatKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
-    if (modCommand) {
-        perform(km.command.value(key, A_NONE), modChromatic);
-        held[key] = {HK_NONE, 0, 0};
+    if (pg == PG_TRACK && !keyTest && trackKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+    if (pg == PG_CHAT && !keyTest && chatKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+    if (keys.command) {
+        perform(km.command.value(key, A_NONE), keys.chromatic);
+        keys.held[key] = {HK_NONE, 0, 0};
         return;
     }
     int row, col;
     if (pg == PG_BEAT && !keyTest) { // on the Beat page the two upper rows are the pads
         int drum;
-        if (km.drumKey(key, drum)) { hitPad(drum); held[key] = {HK_NONE, 0, 0}; return; }
-        if (km.stringKey(key, row, col) && row != 0) { held[key] = {HK_NONE, 0, 0}; return; } // between the pad keys: nothing
-        if (plainAct == A_SUSTAIN) { inst.beatDo(BT_PLAYSTOP); held[key] = {HK_NONE, 0, 0}; return; }
-        if (plainAct == A_LOOP) { inst.beatDo(BT_REC); held[key] = {HK_NONE, 0, 0}; return; }
+        if (km.drumKey(key, drum)) { hitPad(drum); keys.held[key] = {HK_NONE, 0, 0}; return; }
+        if (km.stringKey(key, row, col) && row != 0) { keys.held[key] = {HK_NONE, 0, 0}; return; } // between the pad keys: nothing
+        if (plainAct == A_SUSTAIN) { inst.beatDo(BT_PLAYSTOP); keys.held[key] = {HK_NONE, 0, 0}; return; }
+        if (plainAct == A_LOOP) { inst.beatDo(BT_REC); keys.held[key] = {HK_NONE, 0, 0}; return; }
         if (plainAct == A_BEND_DOWN || plainAct == A_BEND_UP) { // the beat before or after
             beatSwitchTo(qBound(0, beatCur + (plainAct == A_BEND_UP ? 1 : -1), (int)beatSlots.size() - 1));
-            held[key] = {HK_NONE, 0, 0};
+            keys.held[key] = {HK_NONE, 0, 0};
             return;
         }
     }
     if (km.stringKey(key, row, col)) {
-        if (row == 0 && (chordRow || modChord)) {
+        if (row == 0 && (keys.chordRow || keys.chord)) {
             if (col < 7) inst.cmd(EV_CHORD, col);
-            held[key] = {HK_NONE, 0, 0};
+            keys.held[key] = {HK_NONE, 0, 0};
             return;
         }
-        inst.key(row, col, true, modChromatic);
-        held[key] = {HK_STRING, row, col};
+        inst.key(row, col, true, keys.chromatic);
+        keys.held[key] = {HK_STRING, row, col};
         return;
     }
-    held[key] = {HK_ACT, plainAct, 0};
+    keys.held[key] = {HK_ACT, plainAct, 0};
     switch (plainAct) {
-    case A_SUSTAIN: susKey = true; inst.cmd(EV_SUSTAIN, 1); break;
-    case A_BEND_UP: bendUp = true; updateBend(); break;
-    case A_BEND_DOWN: bendDown = true; updateBend(); break;
-    default: perform(plainAct, modChromatic); break;
+    case A_SUSTAIN: keys.susKey = true; inst.cmd(EV_SUSTAIN, 1); break;
+    case A_BEND_UP: keys.bendUp = true; updateBend(); break;
+    case A_BEND_DOWN: keys.bendDown = true; updateBend(); break;
+    default: perform(plainAct, keys.chromatic); break;
     }
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {
     if (e->isAutoRepeat()) return; // a held key is one note, not many
-    pendingText = e->text();
+    keys.text = e->text();
     handleKey(e->key(), true);
-    pendingText.clear();
+    keys.text.clear();
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *e) {
@@ -763,10 +762,9 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
 }
 
 void MainWindow::paintTabs() {
-    static const char *N[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
-        ui.button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
+        ui.button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(pageTitle(i))), pg == i,
                [this, i] { goPage(i); });
 }
 
@@ -818,7 +816,7 @@ void MainWindow::paintChordPads(QRectF area, bool withSlots) {
         QString info;
         if (u.backPlaying && (u.progLen || u.holdChord >= 0 || u.droneMask)) info = QString::fromUtf8("♪ %1").arg(u.backName);
         else if (u.progLen) info = "stopped";
-        else info = chordRow ? QString::fromUtf8("Z‥M = chords") : QString("tap chords");
+        else info = keys.chordRow ? QString::fromUtf8("Z‥M = chords") : QString("tap chords");
         qreal ix = area.x() + 8 * (sw + 4);
         ui.txt(QRectF(ix, y, area.right() - ix, 22), ui.fit(info, 12, area.right() - ix), 12, MID, Qt::AlignRight | Qt::AlignVCenter);
         y += 28;
@@ -937,7 +935,7 @@ void MainWindow::paintPlay() {
             }
             return X(count - 1) + qMin(0.6, (double)(pbase - prev) / 6.0) * dx;
         };
-        bool chordKeys = row == 0 && (chordRow || modChord);
+        bool chordKeys = row == 0 && (keys.chordRow || keys.chord);
         for (int c = 0; c < count; ++c) {
             int n = t.noteFor(row, c, false);
             bool isHeldTop = su.held > 0 && su.topCol == c;
@@ -986,7 +984,7 @@ void MainWindow::paintPlay() {
             int &cur = touchCol[row];
             if (ph == PH_RELEASE) { if (cur >= 0) inst.key(row, cur | 0x100, false); cur = -1; return; }
             if (col == cur) return;
-            inst.key(row, col | 0x100, true, modChromatic);
+            inst.key(row, col | 0x100, true, keys.chromatic);
             if (cur >= 0) inst.key(row, cur | 0x100, false);
             cur = col;
         });
@@ -1001,7 +999,7 @@ void MainWindow::paintPlay() {
     ui.button(QRectF(x, y, 66, h), "loop_undo", "Undo", false, [this] { inst.cmd(EV_LOOP, LC_UNDO); }, "layer"); x += 74;
     bool lp = u.loopState == L_PLAY || u.loopState == L_OVERDUB;
     ui.button(QRectF(x, y, 66, h), "loop_playstop", lp ? QString::fromUtf8("■") : QString::fromUtf8("▶"), false, [this] { inst.cmd(EV_LOOP, LC_PLAYSTOP); }, "loop"); x += 74;
-    ui.button(QRectF(x, y, 66, h), "sustain", "Sus", u.sustain, [this] { susLatch = !susLatch; inst.cmd(EV_SUSTAIN, susLatch || susKey ? 1 : 0); }, "sustain"); x += 74;
+    ui.button(QRectF(x, y, 66, h), "sustain", "Sus", u.sustain, [this] { keys.susLatch = !keys.susLatch; inst.cmd(EV_SUSTAIN, keys.susLatch || keys.susKey ? 1 : 0); }, "sustain"); x += 74;
     ui.button(QRectF(x, y, 54, h), "octave_down", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
     ui.button(QRectF(x, y, 54, h), "octave_up", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
     ui.button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { randomise(); }, "sound"); x += 94;
@@ -1283,7 +1281,7 @@ void MainWindow::paintSystem() {
     auto c4 = [w4](int i, qreal y, qreal h) { return QRectF(std::floor(16 + i * (w4 + 8)), y, std::floor(w4), h); };
     qreal w5 = (688 - 4 * 6) / 5.0;
     auto c5 = [w5](int i) { return QRectF(std::floor(16 + i * (w5 + 6)), 218, std::floor(w5), 58); };
-    ui.button(c5(0), "chordrow", "Chord row", chordRow, [this] { perform(A_CHORD_ROW); }, "low row = chords");
+    ui.button(c5(0), "chordrow", "Chord row", keys.chordRow, [this] { perform(A_CHORD_ROW); }, "low row = chords");
     ui.button(c5(1), "recwav", wav.isOpen() ? QString::fromUtf8("■ Stop rec") : QString::fromUtf8("● Record"), wav.isOpen(), [this] { toggleRecord(); },
            wav.isOpen() ? QString("%1 s").arg(wav.frames() / audio.sampleRate()) : "what you hear");
     ui.button(c5(2), "playlast", playingBack() ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play last"), playingBack(), [this] { togglePlayback(); },
@@ -1292,7 +1290,7 @@ void MainWindow::paintSystem() {
         QString path = store::baseDir() + "/sessions/" + store::timestampName("session", "json");
         toast(saveSession(path) ? QString("Saved %1").arg(QFileInfo(path).fileName()) : QString("Could not save session"), 2200);
     }, "sounds and loops");
-    ui.button(c5(4), "keytest", "Key test", keyTest, [this] { keyTest = !keyTest; maxHeld = 0; }, "check the keys");
+    ui.button(c5(4), "keytest", "Key test", keyTest, [this] { keyTest = !keyTest; keys.maxHeld = 0; }, "check the keys");
 
     ui.section(284, QString("Saved sessions  %1  tap to load").arg(sessions.size()));
     for (int k = 0; k < 4; ++k) {
@@ -1464,12 +1462,12 @@ void MainWindow::paintKeyTest() {
     ui.frame(r, INK, BG);
     ui.tag(QRectF(r.x() + 1, r.y() + 1, 100, 22), "Key test", 14, Qt::AlignLeft | Qt::AlignVCenter);
     QStringList names;
-    for (auto it = held.begin(); it != held.end(); ++it) names << keyName(it.key());
+    for (auto it = keys.held.begin(); it != keys.held.end(); ++it) names << keyName(it.key());
     names.sort();
     ui.txt(QRectF(60, 150, 600, 22), ui.fit(QString("Held now (%1): %2").arg(names.size()).arg(names.join(" ")), 14, 600), 14, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    ui.tag(QRectF(60, 176, 300, 22), QString("Most keys held at once: %1").arg(maxHeld), 14, Qt::AlignLeft | Qt::AlignVCenter);
-    for (int i = 0; i < keyLog.size(); ++i)
-        ui.txt(QRectF(60, 210 + i * 24, 600, 22), keyLog[i], 14, keyLog[i].startsWith("DOWN") ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.tag(QRectF(60, 176, 300, 22), QString("Most keys held at once: %1").arg(keys.maxHeld), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    for (int i = 0; i < keys.log.size(); ++i)
+        ui.txt(QRectF(60, 210 + i * 24, 600, 22), keys.log[i], 14, keys.log[i].startsWith("DOWN") ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
     ui.g->setFont(ui.font(13, false));
     ui.g->setPen(MID);
     ui.g->drawText(QRectF(60, 506, 600, 80), Qt::AlignLeft | Qt::TextWordWrap,

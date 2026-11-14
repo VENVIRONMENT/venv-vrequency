@@ -52,7 +52,6 @@ struct Args {
     }
 };
 
-const char *pageNames[MainWindow::PG_COUNT] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
 const char *loopNames[] = {"empty", "count-in", "recording", "playing", "overdubbing", "stopped"};
 
 int parseRoot(const QJsonValue &v) {
@@ -325,7 +324,7 @@ QJsonObject ControlServer::dispatch(const QString &cmd, const QJsonObject &a, QS
 QJsonObject ControlServer::cmdState() {
     const UiState u = inst.uiState();
     QJsonObject o;
-    o["page"] = pageNames[qBound(0, w.pg, (int)MainWindow::PG_COUNT - 1)];
+    o["page"] = pageName(w.pg);
     QJsonObject snd;
     snd["name"] = QString::fromUtf8(w.lead.name);
     snd["slot"] = w.curSlot >= 0 ? QJsonValue(w.curSlot + 1) : QJsonValue();
@@ -401,9 +400,9 @@ QJsonObject ControlServer::cmdState() {
     o["chat"] = cp;
     o["chat_tail"] = chatJson(qMax(0, w.chatSeq - 10), 10);
     QJsonObject hf;
-    hf["page"] = pageNames[qBound(0, w.pg, (int)MainWindow::PG_COUNT - 1)];
+    hf["page"] = pageName(w.pg);
     hf["highlighted"] = QJsonArray::fromStringList(w.highlightedZones());
-    hf["dock_open"] = w.dockIsOpen() && w.pg != MainWindow::PG_CHAT;
+    hf["dock_open"] = w.dockIsOpen() && w.pg != PG_CHAT;
     hf["dock_focus"] = w.dockHasFocus();
     hf["last_question_zone"] = w.lastQuestionZone();
     hf["topic"] = w.dockTopic();
@@ -841,10 +840,10 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     if (!e.isEmpty()) return {};
     if (n == "play") n = "synth";
     int p = -1;
-    for (int i = 0; i < MainWindow::PG_COUNT; ++i) if (n == pageNames[i]) p = i;
+    for (int i = 0; i < PG_COUNT; ++i) if (n == pageName(i)) p = i;
     if (p < 0) { e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; return {}; }
     w.tour().close(); // the real page is wanted: the tour steps aside
-    if (p == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
+    if (p == PG_CHAT && w.pg != PG_CHAT) w.chatReturn = w.pg;
     w.goPage(p);
     QJsonObject r; r["page"] = n;
     return r;
@@ -882,7 +881,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     int page = w.pg, sub = -1;
     if (A.has("page")) {
         const QString n = A.str("page", "", 12);
-        if (e.isEmpty()) { page = MainWindow::pageFromName(n); if (page < 0) e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; }
+        if (e.isEmpty()) { page = pageFromName(n); if (page < 0) e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; }
     }
     if (A.has("sub")) {
         const QJsonValue v = a["sub"];
@@ -894,7 +893,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     if (cmd == "zones") {
         if (!e.isEmpty()) return {};
         QJsonArray zs;
-        const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(page, page == MainWindow::PG_HELP ? (sub >= 0 ? sub : w.helpPage) : -1);
+        const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(page, page == PG_HELP ? (sub >= 0 ? sub : w.helpPage) : -1);
         for (const MainWindow::ZoneInfo &z : cat) {
             QJsonObject o;
             o["name"] = z.name; o["label"] = z.label;
@@ -902,10 +901,10 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
             if (z.covered) o["covered_by_dock"] = true;
             zs.append(o);
         }
-        r["page"] = pageNames[page];
-        if (page == MainWindow::PG_HELP) { static const char *subs[] = {"playing", "commands", "beat", "track"}; r["sub"] = subs[sub >= 0 ? sub : w.helpPage]; }
+        r["page"] = pageName(page);
+        if (page == PG_HELP) { static const char *subs[] = {"playing", "commands", "beat", "track"}; r["sub"] = subs[sub >= 0 ? sub : w.helpPage]; }
         r["zones"] = zs;
-        r["dock_open"] = w.dockIsOpen() && page != MainWindow::PG_CHAT;
+        r["dock_open"] = w.dockIsOpen() && page != PG_CHAT;
         return r;
     }
     // highlight
@@ -926,22 +925,22 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     const int ms = A.integer("ms", 100, 30000, 8000);
     if (!e.isEmpty()) return {};
     w.tour().close(); // a highlight is drawn on the real page
-    if (page != w.pg || (page == MainWindow::PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
-        if (page == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
+    if (page != w.pg || (page == PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
+        if (page == PG_CHAT && w.pg != PG_CHAT) w.chatReturn = w.pg;
         w.goPage(page);
-        if (page == MainWindow::PG_HELP && sub >= 0) w.helpPage = sub;
+        if (page == PG_HELP && sub >= 0) w.helpPage = sub;
     }
     w.refreshZones();
     QStringList unknown;
     const QStringList known = w.setHighlight(names, label, ms, unknown);
     w.refreshZones();   // the dock may have moved out of the way
-    r["page"] = pageNames[w.pg];
+    r["page"] = pageName(w.pg);
     r["highlighted"] = QJsonArray::fromStringList(known);
     r["unknown"] = QJsonArray::fromStringList(unknown);
     r["ms"] = ms;
     r["caption"] = !w.highlightCaptionRect().isNull();
     QJsonObject dock;
-    dock["open"] = w.dockIsOpen() && w.pg != MainWindow::PG_CHAT;
+    dock["open"] = w.dockIsOpen() && w.pg != PG_CHAT;
     if (!w.dockRect().isNull()) { const QRectF d = w.dockRect(); dock["y"] = qRound(d.y()); dock["h"] = qRound(d.height()); dock["position"] = d.y() < 100 ? "top" : "bottom"; }
     r["dock"] = dock;
     return r;
