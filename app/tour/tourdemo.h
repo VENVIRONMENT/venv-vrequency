@@ -20,7 +20,7 @@ struct Rig {
     void key(int k, bool down) { w.handleKey(k, down); }
     void press(int k) { w.shot(); key(k, true); key(k, false); }  // the window is drawn first, as it would be on a screen: its zones and readouts are current
     // Escape drops what is in hand or closes a panel; on the Track page with nothing to drop it would leave for the Synth
-    void esc() { if (w.clipInHand() || w.chopping() || w.pickingSound() || w.mixing()) press(Qt::Key_Escape); }
+    void esc() { if (w.trackPage.clipInHand() || w.trackPage.chopping() || w.trackPage.pickingSound() || w.trackPage.mixing()) press(Qt::Key_Escape); }
     void ctrl(int k) { key(Qt::Key_Control, true); press(k); key(Qt::Key_Control, false); }
     void tap(const QString &zone) {
         w.shot();
