@@ -111,9 +111,10 @@ QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   #
 
 | Path | What |
 |---|---|
-| `core/` | The engine, no GUI or device dependencies: `voice.h` (synth voice), `fx.h`, `scale.h`, `instrument.*` (strings, backing, looper, mixer), `drums.*` (the three kits), `track.cpp` (clips, lanes, chopping, picked sounds, track playback), `sounds.*` (the Keys, Guitar and Bass shelf), `presets.*` (sounds, randomiser), `analysis.*` (key/tempo) |
+| `core/` | The engine, no GUI or device dependencies, in folders by domain: `synth`, `fx`, `instrument`, `drums`, `track`, `presets`, `analysis` |
 | `audio/` | PipeWire backend (C), ALSA fallback, silent clock |
-| `app/` | Qt 6 interface, one custom-painted widget: `mainwindow.*` (pages, input, actions), `trackpage.cpp` (the Track page), `scope.cpp` (the oscilloscope), `chatpage.cpp` (the Chat page and ticker), `guide.cpp` (highlights, the chat dock, the zone catalogue), `tour*.cpp` (the tour: views, demo pictures, card loader, its self-test), `control.*` (the control socket), `palette.h`, key map, files, self-test |
+| `app/` | Qt 6 interface, one custom-painted window: `shell` (the window and the services pages use), `pages/<name>` (one folder per page), `ui` (drawing toolkit), `control` (the control socket), `tour`, `guide`, `chat`, `store`, `sounds`, `selftest` |
+| `docs/ARCHITECTURE.md` | The layers, what lives where, and the size and layer rules (`scripts/check_sizes.sh`) |
 | `tests/` | Engine tests and benchmark |
 | `docs/CONTROL.md` | The control-socket protocol: every command with an example |
 | `docs/HARDWARE.md` | What was found on this Hackberry and what it means |

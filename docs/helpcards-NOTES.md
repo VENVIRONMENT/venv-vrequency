@@ -76,7 +76,7 @@ A tour that wants to point at these needs hotspots added in code (names below ar
   the chromatic key, which holds in code but is unproven on the device.
 - Bass picks "drop an octave" (GUIDE) was not traced to `libraryOctave`'s exact value.
 - The scope's trigger label reads "Stop" in the docs pictures only because they were rendered with null
-  audio; on a live device it reads Trig'd or Auto (code, scope.cpp).
+  audio; on a live device it reads Trig'd or Auto (code, app/pages/synth/scope_measure.cpp).
 - `Halves` is described as one cut at the middle; a second tap was not traced.
 
 ## Wrong, confusing or inconsistent things noticed
