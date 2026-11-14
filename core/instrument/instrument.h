@@ -15,21 +15,18 @@
 #include "core/fx/delay.h"
 #include "core/fx/limiter.h"
 #include "core/fx/reverb.h"
-#include "core/instrument/events.h"
+#include "core/instrument/engine_types.h"
+#include "core/instrument/event_port.h"
 #include "core/instrument/limits.h"
-#include "core/instrument/loop_event.h"
 #include "core/instrument/settings.h"
-#include "core/instrument/spsc.h"
 #include "core/instrument/ui_state.h"
 #include "core/synth/params.h"
 #include "core/synth/part.h"
 #include "core/synth/voice.h"
 #include "core/track/lanes.h"
 #include <atomic>
-#include <cstdint>
 #include <memory>
 #include <mutex>
-#include <vector>
 
 namespace td {
 
@@ -37,27 +34,13 @@ struct LayerData;
 struct SessionData;
 struct TrackData;
 
-class Instrument {
+class Instrument : public EventPort {
 public:
     explicit Instrument(float sampleRate = 48000.0f);
     ~Instrument();
 
     // ---- the control thread (one writer; see the top of this file) ----
-    bool push(const Event &e) { if (evq.push(e)) return true; ++dropped; return false; }
-    void key(int string, int col, bool down, bool chromatic = false) {
-        Event e; e.type = EV_KEY; e.a = (int16_t)string; e.b = (int16_t)col; e.c = down; e.d = chromatic; push(e);
-    }
-    void set(int setting, float v) { Event e; e.type = EV_SET; e.a = (int16_t)setting; e.f = v; push(e); }
-    void cmd(uint8_t type, int a = 0, int b = 0) { Event e; e.type = type; e.a = (int16_t)a; e.b = (int16_t)b; push(e); }
-    // a note at an exact pitch on a string, from outside the keyboard (id: any number 0x400 up, to release it again)
-    void note(int string, int id, float midi, bool down, float vel = 1.0f) {
-        Event e; e.type = EV_NOTE; e.a = (int16_t)string; e.b = (int16_t)id; e.c = down; e.f = midi; e.g = vel; push(e);
-    }
-    void hit(int drum, float vel = 1.0f) { Event e; e.type = EV_DRUM; e.a = (int16_t)drum; e.f = vel; push(e); }
-    void trackDo(int cmd, int bar = 0) { Event e; e.type = EV_TRACK; e.a = (int16_t)cmd; e.b = (int16_t)bar; push(e); }
-    void beatDo(int cmd, int drum = -1, int step = 0, int arg = 2) {
-        Event e; e.type = EV_BEAT; e.a = (int16_t)cmd; e.b = (int16_t)drum; e.c = (int16_t)step; e.d = (int16_t)arg; push(e);
-    }
+    // push, key, set, cmd, note, hit, trackDo and beatDo come from EventPort (event_port.h)
     void setPatch(int part, const Patch &p); // lock-free hand-off
     void setTrack(std::shared_ptr<const TrackData> t); // takes mx; the old track is freed on the caller's thread
     UiState uiState() const;
@@ -83,21 +66,6 @@ public:
     const DrumKit &drumKit() const { return drums; }
 
 private:
-    struct StringState {
-        int col[kMaxHeld];
-        float pitch[kMaxHeld];
-        int n = 0;
-        bool pendingOff = false;
-    };
-    struct Layer {
-        std::vector<LoopEv> ev;
-        int n = 0;
-        Patch patches[kLayerPatches];
-        int nPatches = 0;
-        int cursor = 0;
-    };
-    struct PatchMsg { int part; Patch patch; };
-
     float sr;
     Settings st;
     Part parts[kParts];
@@ -145,8 +113,6 @@ private:
     long skipStep[kDrums];             // a step just recorded by hand: do not sound it twice
     uint32_t drumHits[kDrums] = {0};
     // track
-    struct LaneState { int pl = -1, piece = -1; double lastLp = -1; };
-    struct LiveBacking { int prog[kProgMax]; int progLen, holdChord, droneMask, backStyle, chordBeats, arpRate; bool seventh; Patch patch; };
     std::shared_ptr<const TrackData> track;
     bool trackPlaying = false, trackOnce = false, trackDirty = false, liveSaved = false;
     double trackPos = 0;
@@ -164,9 +130,6 @@ private:
     float sendSm[kParts][3];
 
     // queues & shared state
-    Spsc<Event, 1024> evq;
-    Spsc<PatchMsg, 16> patchq;
-    std::atomic<uint32_t> dropped{0};
     std::mutex mx;
     mutable std::atomic<uint32_t> uiSeq{0};
     UiState ui;
