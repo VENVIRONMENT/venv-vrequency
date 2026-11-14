@@ -23,6 +23,7 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <functional>
 
 using namespace td;
 
@@ -1385,6 +1386,105 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         wait(200);
     }
 
+    std::printf("- bug fixes (0.12.1)\n");
+    {
+        QTemporaryDir bdir;
+        const QString bsock = bdir.path() + "/vrequency.sock";
+        ControlServer bctl(w, inst);
+        check(bctl.start(bsock), "a control socket for the bug-fix checks");
+        Client c;
+        check(c.open(bsock), "a client connects");
+        auto B = [](const QString &s) { return s.toUtf8(); };
+        auto press = [&](int k) { key(w, k, true); key(w, k, false); };
+        auto ctrl = [&](int k) { key(w, Qt::Key_Control, true); press(k); key(w, Qt::Key_Control, false); };
+        w.dockClose(); w.clearHighlight(); w.setPage(MainWindow::PG_PLAY); w.shot();
+
+        { // every armed mode is dropped whenever the page changes, by any route
+            struct Route { const char *name; std::function<void()> go; };
+            const Route routes[] = {
+                {"a tab tap", [&] { tap(w, "tab_beat"); }},
+                {"the Tab key", [&] { press(Qt::Key_Tab); }},
+                {"Esc", [&] { press(Qt::Key_Escape); }},
+                {"the control socket page command", [&] { c.call(B(R"({"cmd":"page","name":"tune"})")); }},
+                {"a highlight that names a page", [&] { c.call(B(R"({"cmd":"highlight","zones":["loop_pedal"],"page":"synth","ms":500})")); }},
+                {"Ctrl+Shift+Y (Chat page)", [&] { key(w, Qt::Key_Shift, true); ctrl(Qt::Key_Y); key(w, Qt::Key_Shift, false); }},
+                {"Ctrl+H (Help)", [&] { ctrl(Qt::Key_H); }},
+            };
+            for (const Route &r : routes) {
+                w.setPage(MainWindow::PG_SOUND); w.shot();
+                w.armAllModes();
+                check(w.armedModes() == "delete,store,erase,remove", "all four modes can be armed");
+                r.go(); w.shot();
+                check(w.page() != MainWindow::PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store, Erase and the remove confirmation").arg(r.name));
+                w.clearHighlight(); w.dockClose();
+            }
+            w.setPage(MainWindow::PG_SOUND); w.shot();
+            const int favN = QDir(store::baseDir() + "/favourites").entryList({"*.json"}).size();
+            tap(w, "favdel"); w.shot();
+            check(w.armedModes() == "delete", "Delete arms on the Sound page");
+            tap(w, "tab_tune"); w.shot(); tap(w, "tab_sound"); w.shot();
+            tap(w, "favitem0"); wait(60);
+            check(QDir(store::baseDir() + "/favourites").entryList({"*.json"}).size() == favN, "the favourite tapped after coming back is recalled, not deleted");
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+        }
+
+        { // the key test panel and the ticker swallow touches
+            w.setPage(MainWindow::PG_SYS); w.shot();
+            const QPointF q = w.zoneRect("quit").center(), fs = w.zoneRect("factory").center();
+            check(w.zoneAt(q) == "quit" && w.zoneAt(fs) == "factory", "(control) Quit and Factory sounds take their own touches");
+            w.setKeyTest(true); w.shot();
+            check(w.zoneAt(q) == "keytestblock" && w.zoneAt(fs) == "keytestblock" && w.zoneAt(QPointF(4, 4)) == "keytestblock", "with the key test open, touches over Quit, Factory sounds and the tabs go to the panel");
+            check(w.zoneAt(w.zoneRect("keytestclose").center()) == "keytestclose", "but Close still works");
+            w.setKeyTest(false);
+            w.setPage(MainWindow::PG_PLAY); w.setKeyTest(true); w.shot();
+            const QPointF m = w.zoneRect("menu").center();
+            w.pointer(5, m, MainWindow::PH_PRESS); w.pointer(5, m, MainWindow::PH_RELEASE);
+            check(w.page() == MainWindow::PG_PLAY, "a tap on Menu under the key test panel does nothing");
+            w.setKeyTest(false);
+            w.setPage(MainWindow::PG_SYS); w.dockClose(); w.shot();
+            w.chatAdd("rook", "Ticker over the bottom row.", "say", false); w.shot();
+            check(w.chatTickerShowing() && w.zoneAt(q) == "ticker" && w.zoneAt(fs) == "ticker", "the ticker takes the touches over Quit and Factory sounds");
+            tap(w, "ticker"); w.shot();
+            check(w.dockIsOpen() && w.zoneAt(w.dockRect().center()).startsWith("dock"), "and the chat dock takes every touch inside it");
+            w.dockClose(); w.setPage(MainWindow::PG_PLAY);
+        }
+
+        { // favourites: overwrite by name; the paging button goes both ways
+            QDir fd(store::baseDir() + "/favourites");
+            c.call(B(R"({"cmd":"save_favourite","name":"Same name"})"));
+            const int n1 = fd.entryList({"*.json"}).size();
+            const QJsonObject r2 = c.call(B(R"({"cmd":"save_favourite","name":"Same name"})"));
+            check(fd.entryList({"*.json"}).size() == n1 && r2["result"].toObject()["updated"].toBool() && !fd.exists("same-name-2.json"),
+                  "saving a favourite under an existing name updates it instead of adding a copy");
+            for (int i = 1; i <= 14; ++i) c.call(B(QString(R"({"cmd":"save_favourite","name":"Pg %1"})").arg(i)));
+            const int total = fd.entryList({"*.json"}).size(), pages = (total + 5) / 6;
+            check(pages >= 3, QString("%1 favourites make %2 pages").arg(total).arg(pages));
+            w.setPage(MainWindow::PG_SOUND); w.shot();
+            const QRectF fr = w.zoneRect("favprev");
+            auto at = [&](double fx) { const QPointF p(fr.left() + fr.width() * fx, fr.center().y()); w.pointer(6, p, MainWindow::PH_PRESS); w.pointer(6, p, MainWindow::PH_RELEASE); w.shot(); };
+            const int p0 = w.favouritesPage();
+            at(0.8); const int p1 = w.favouritesPage();
+            at(0.2); const int p2 = w.favouritesPage();
+            at(0.2); const int p3 = w.favouritesPage();
+            at(0.8); const int p4 = w.favouritesPage();
+            check(p0 == 0 && p1 == 1 && p2 == 0 && p3 == pages - 1 && p4 == 0, "right half pages forward, left half pages back, both wrapping");
+            tap(w, "favprev"); w.shot();
+            check(w.favouritesPage() == 1, "a tap in the middle (the control socket) still goes forward");
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+        }
+
+        { // one tempo step everywhere
+            inst.set(S_BPM, 100); wait(40);
+            w.setPage(MainWindow::PG_BACK); w.shot(); tap(w, "bpm2+"); wait(60);
+            check(std::lround(inst.uiState().set.bpm) == 101, "Backing page tempo steps by 1");
+            w.setPage(MainWindow::PG_BEAT); w.shot(); tap(w, "bpm3-"); wait(60); w.shot(); tap(w, "bpm3-"); wait(60);
+            check(std::lround(inst.uiState().set.bpm) == 99, "Beat page tempo steps by 1");
+            w.setPage(MainWindow::PG_TUNE); w.shot(); tap(w, "bpm+"); wait(60);
+            check(std::lround(inst.uiState().set.bpm) == 100, "Tune page tempo steps by 1");
+            w.setPage(MainWindow::PG_PLAY); w.shot();
+        }
+    }
+
     std::printf("- panic / health\n");
     key(w, Qt::Key_Q, true); key(w, Qt::Key_A, true); wait(60);
     key(w, Qt::Key_Backspace, true); key(w, Qt::Key_Backspace, false); wait(200);
@@ -1414,7 +1514,7 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
                                               "............x...", "..x......x......", "..............x.", "................"};
             for (int d = 0; d < kDrums; ++d)
                 for (int st = 0; st < kDrumSteps; ++st) inst.beatDo(BT_STEP, d, st, pat[d][st] == 'x');
-            inst.set(S_BEATVOL, 0.0f);
+            inst.set(S_BEATVOL, 0.7f);
             inst.beatDo(BT_PLAYSTOP);
         }
         if (p == MainWindow::PG_CHAT) { // a conversation, so the page has something to show

@@ -605,11 +605,12 @@ QJsonObject ControlServer::cmdFavourite(const QJsonObject &a, QString &e) {
     if (!e.isEmpty()) return {};
     Patch p = w.lead;
     p.setName(name.toUtf8().constData());
-    const QString path = store::savePatch("favourites", p);
+    bool updated = false;
+    const QString path = store::savePatch("favourites", p, true, &updated);
     w.refreshLists();
     if (path.isEmpty()) { e = "could not write the favourite"; return {}; }
-    w.toast("Favourite saved: " + name);
-    QJsonObject r; r["path"] = path; r["name"] = name;
+    w.toast((updated ? "Updated " : "Favourite saved: ") + name);
+    QJsonObject r; r["path"] = path; r["name"] = name; r["updated"] = updated;
     return r;
 }
 
@@ -840,7 +841,7 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     for (int i = 0; i < MainWindow::PG_COUNT; ++i) if (n == pageNames[i]) p = i;
     if (p < 0) { e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; return {}; }
     if (p == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
-    w.pg = p; w.deepEdit = false; w.update();
+    w.goPage(p);
     QJsonObject r; r["page"] = n;
     return r;
 }
@@ -904,7 +905,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     if (!e.isEmpty()) return {};
     if (page != w.pg || (page == MainWindow::PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
         if (page == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
-        w.pg = page; w.deepEdit = false;
+        w.goPage(page);
         if (page == MainWindow::PG_HELP && sub >= 0) w.helpPage = sub;
     }
     w.refreshZones();

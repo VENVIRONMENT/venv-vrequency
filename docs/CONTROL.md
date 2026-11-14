@@ -96,7 +96,7 @@ clamped. `get_params` lists every parameter with its value, range and default.
 ```
 
 ### save_favourite
-Saves the current sound as a favourite under `name` (1-24 characters).
+Saves the current sound as a favourite under `name` (1-24 characters). A favourite that already has exactly that name is updated in place (the reply has `"updated":true`).
 ```
 {"id":14,"cmd":"save_favourite","name":"Rook's pad"}
 ```

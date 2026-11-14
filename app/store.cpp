@@ -372,7 +372,7 @@ QVector<NamedPatch> listPatches(const QString &subdir) {
     return out;
 }
 
-QString savePatch(const QString &subdir, const td::Patch &p) {
+QString savePatch(const QString &subdir, const td::Patch &p, bool overwrite, bool *replaced) {
     ensureDirs();
     QString base = QString::fromUtf8(p.name).toLower();
     QString safe;
@@ -380,7 +380,14 @@ QString savePatch(const QString &subdir, const td::Patch &p) {
     if (safe.isEmpty()) safe = "sound";
     QString dir = baseDir() + "/" + subdir + "/";
     QString path = dir + safe + ".json";
-    for (int n = 2; QFile::exists(path); ++n) path = dir + safe + "-" + QString::number(n) + ".json";
+    if (replaced) *replaced = false;
+    for (int n = 2; QFile::exists(path); ++n) {
+        if (overwrite) { // the same name as the sound already in that file: update it in place
+            QJsonObject o;
+            if (readJson(path, o) && QString::fromUtf8(patchFromJson(o).name) == QString::fromUtf8(p.name)) { if (replaced) *replaced = true; break; }
+        }
+        path = dir + safe + "-" + QString::number(n) + ".json";
+    }
     return writeJson(path, patchToJson(p)) ? path : QString();
 }
 

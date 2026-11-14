@@ -51,7 +51,7 @@ public:
     ~MainWindow() override;
 
     // --- also used by the self-test ---
-    void setPage(int p) { pg = p; update(); }
+    void setPage(int p) { goPage(p); update(); }
     int page() const { return pg; }
     void handleKey(int qtKey, bool down);
     void pointer(int id, QPointF canvasPos, int phase);
@@ -70,6 +70,10 @@ public:
     bool playingBack() const;
     void perform(int act, bool shift = false);
     void setKeyTest(bool on) { keyTest = on; }
+    int favouritesPage() const { return favPage; }
+    QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
+    void armAllModes() { favDelete = slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
+    QString zoneAt(QPointF c) const { for (int i = (int)zones.size() - 1; i >= 0; --i) if (zones[i].r.contains(c)) return zones[i].name; return QString(); }
     int maxKeysHeld() const { return maxHeld; }
     QString lastToast() const { return toastText; }
     const td::TrackData &trackData() const { return track; }
@@ -166,6 +170,13 @@ private:
 
     // ui state
     int pg = PG_PLAY;
+    // The one way to change page: every armed mode (Delete, Store, Erase, track remove, deep edit) is
+    // dropped whenever the page really changes, whatever the route (tab, Tab, Esc, control socket, highlight).
+    void goPage(int p) {
+        if (p == pg) return;
+        pg = p; deepEdit = false; favDelete = false; slotSave = false; beatErase = false; removeArmed = -1;
+        update();
+    }
     bool deepEdit = false;
     int deepPage = 0;
     int helpPage = 0;
