@@ -36,6 +36,7 @@ public:
     virtual void redraw() = 0;
     virtual void saveState() = 0;
     virtual void saveSoon() = 0;             // an edit is on disk a moment later
+    virtual void refreshLists() = 0;         // read the favourites and sessions on disk again
     void set(int setting, float v) { inst.set(setting, v); }
 
 protected:

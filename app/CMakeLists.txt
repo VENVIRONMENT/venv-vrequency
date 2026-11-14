@@ -13,6 +13,7 @@ target_link_libraries(vrequency PRIVATE vreqcore vreqaudio Qt6::Widgets Qt6::Net
 
 add_subdirectory(ui)
 add_subdirectory(shell)
+add_subdirectory(sounds)
 add_subdirectory(store)
 add_subdirectory(pages)
 add_subdirectory(chat)

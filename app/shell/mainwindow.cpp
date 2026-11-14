@@ -82,24 +82,17 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     setAttribute(Qt::WA_OpaquePaintEvent);
     setFocusPolicy(Qt::StrongFocus);
     resize(720, 720);
-    rng.s = (uint32_t)QDateTime::currentMSecsSinceEpoch() | 1u;
     clock.start();
 
     if (!scratch) store::ensureDirs();
     km = scratch ? KeyMap::defaults() : KeyMap::loadOrCreate(store::baseDir() + "/keymap.json");
-    for (int k = 0; k < 10; ++k) bank[k] = factoryPatch(k);
-    lead = bank[0];
     SessionData sd;
     QJsonObject st;
     if (!scratch && store::readJson(store::baseDir() + "/state.json", st)) {
         sd.settings = store::settingsFromJson(st["settings"].toObject());
-        QJsonArray sl = st["slots"].toArray();
-        for (int k = 0; k < 10 && k < sl.size(); ++k) bank[k] = store::patchFromJson(sl[k].toObject());
-        curSlot = qBound(-1, st["slot"].toInt(0), 9);
-        lead = st.contains("lead") ? store::patchFromJson(st["lead"].toObject()) : bank[qMax(0, curSlot)];
+        sounds.load(st);
         keys.chordRow = st["chordRow"].toBool(false);
         store::beatFromJson(st["beat"].toArray(), sd.beat);
-        extrasSeeded = st["extras"].toInt(0);
         if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
         for (const QJsonValue &v : st["chat"].toArray()) {
             const QJsonObject o = v.toObject();
@@ -116,16 +109,16 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         if (!chat.empty()) chatSeq = qMax(chatSeq, chat.back().seq);
     }
     beatsLoad(st, sd);
-    sd.lead = lead; sd.backing = lead;
+    sd.lead = sounds.lead; sd.backing = sounds.lead;
     inst.restore(sd);
     inst.setTrack(std::make_shared<const TrackData>(track));
     saveTimer.setSingleShot(true);
     connect(&saveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
     if (scratch) {
-        extrasSeeded = kExtraCount;
+        sounds.extrasSeeded = kExtraCount;
         return;                                              // a picture-drawing copy: no timers, no probes, no files
     }
-    if (extrasSeeded < kExtraCount) addExtraSounds(extrasSeeded); // once: deleting one keeps it gone
+    if (sounds.extrasSeeded < kExtraCount) sounds.addExtraSounds(sounds.extrasSeeded); // once: deleting one keeps it gone
     refreshLists();
     tourView = std::make_unique<TourView>(*this);
 
@@ -135,7 +128,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         static int skip = 0;
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
-                    clock.elapsed() < toastUntil + 200 || listenState == 1 || recorder.recording() || !keys.held.isEmpty() ||
+                    clock.elapsed() < toastUntil + 200 || listener.state == 1 || recorder.recording() || !keys.held.isEmpty() ||
                     s.beatPlaying || recorder.playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
@@ -144,7 +137,6 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
 }
 
 MainWindow::~MainWindow() {
-    if (listenThread.joinable()) listenThread.join();
     recorder.shutdown();
     if (exportThread.joinable()) exportThread.join();
 }
@@ -161,14 +153,9 @@ void MainWindow::saveState() {
     inst.snapshot(sd);
     QJsonObject o;
     o["settings"] = store::settingsToJson(sd.settings);
-    QJsonArray sl;
-    for (const Patch &p : bank) sl.append(store::patchToJson(p));
-    o["slots"] = sl;
-    o["slot"] = curSlot;
-    o["lead"] = store::patchToJson(lead);
+    sounds.save(o);
     o["chordRow"] = keys.chordRow;
     o["beat"] = store::beatToJson(sd.beat);
-    o["extras"] = extrasSeeded;
     o["track"] = store::trackToJson(track);
     beatsSave(o);
     QJsonArray ca;
@@ -187,31 +174,8 @@ void MainWindow::saveState() {
     store::writeJson(store::baseDir() + "/state.json", o);
 }
 
-// The engine's extra sounds (the sine-based dream sounds) live in the favourites folder, so they
-// can be recalled, stored to a slot or deleted like any saved sound. A sound whose name is already
-// there is left alone. Returns how many files were written.
-int MainWindow::addExtraSounds(int from) {
-    const QVector<store::NamedPatch> have = store::listPatches("favourites");
-    const QDateTime now = QDateTime::currentDateTime();
-    int wrote = 0;
-    for (int i = qMax(0, from); i < kExtraCount; ++i) {
-        Patch p = extraPatch(i);
-        bool there = false;
-        for (const store::NamedPatch &f : have) there = there || QString::fromUtf8(f.patch.name) == QString::fromUtf8(p.name);
-        if (there) continue;
-        QString path = store::savePatch("favourites", p);
-        if (path.isEmpty()) continue;
-        // The list shows the newest file first: date them so they appear in their own order.
-        QFile f(path);
-        if (f.open(QIODevice::ReadWrite)) f.setFileTime(now.addSecs(-1 - i), QFileDevice::FileModificationTime);
-        ++wrote;
-    }
-    extrasSeeded = kExtraCount;
-    return wrote;
-}
-
 void MainWindow::refreshLists() {
-    favs = store::listPatches("favourites");
+    sounds.favs = store::listPatches("favourites");
     sessions = store::listFiles("sessions", "json");
 }
 
@@ -221,66 +185,6 @@ void MainWindow::toast(const QString &s, int ms) {
 }
 
 // --------------------------------------------------------------- actions
-
-void MainWindow::pushUndo() {
-    undo.push_back(lead);
-    if (undo.size() > 24) undo.erase(undo.begin());
-}
-
-void MainWindow::applyLead(bool resetSlot) {
-    if (resetSlot) curSlot = -1;
-    inst.setPatch(0, lead);
-}
-
-void MainWindow::selectSlot(int i) {
-    if (i < 0 || i > 9) return;
-    if (slotSave) {
-        bank[i] = lead; curSlot = i; slotSave = false;
-        toast(QString("Stored in slot %1").arg(i + 1));
-        saveState();
-        return;
-    }
-    pushUndo();
-    lead = bank[i]; curSlot = i;
-    applyLead(false);
-}
-
-void MainWindow::randomise() {
-    pushUndo();
-    lead = randomPatch(rng);
-    applyLead(true);
-    toast(QString("New sound: %1").arg(lead.name), 1400);
-}
-
-void MainWindow::mutate() {
-    pushUndo();
-    QByteArray nm(lead.name);
-    lead = mutatePatch(lead, rng, 0.3f);
-    if (!nm.endsWith("*") && nm.size() < 26) nm += "*";
-    lead.setName(nm.constData());
-    applyLead(true);
-}
-
-void MainWindow::undoSound() {
-    if (undo.empty()) { toast("Nothing to undo"); return; }
-    lead = undo.back(); undo.pop_back();
-    applyLead(true);
-    toast(QString("Back to: %1").arg(lead.name), 1200);
-}
-
-void MainWindow::saveFavourite() {
-    bool updated = false;
-    QString path = store::savePatch("favourites", lead, true, &updated);
-    refreshLists();
-    toast(path.isEmpty() ? QString("Could not save favourite")
-                         : QString(updated ? "Updated %1" : "Favourite saved: %1").arg(QString::fromUtf8(lead.name)));
-}
-
-void MainWindow::setParam(int p, float v) {
-    lead.p[p] = v;
-    Event e; e.type = EV_PATCHPARAM; e.a = (int16_t)p; e.f = v;
-    inst.push(e);
-}
 
 void MainWindow::tapTempo() {
     qint64 now = clock.elapsed();
@@ -309,7 +213,7 @@ bool MainWindow::loadSession(const QString &path) {
     if (!store::readJson(path, o) || !store::sessionFromJson(o, sd)) return false;
     releaseAllKeys();
     inst.restore(sd);
-    lead = sd.lead; curSlot = -1;
+    sounds.lead = sd.lead; sounds.curSlot = -1;
     if (o.contains("track")) { // sessions saved before the track existed leave the track alone
         trackUndo.push_back(track);
         trackRedo.clear();
@@ -319,39 +223,6 @@ bool MainWindow::loadSession(const QString &path) {
         trackSync();
     }
     return true;
-}
-
-void MainWindow::startListen() {
-    if (listenState == 1) return;
-    if (listenThread.joinable()) listenThread.join();
-    listenState = 1;
-    listenStarted = clock.elapsed();
-    listenGuess = 0;
-    int rate = audio.sampleRate();
-    listenThread = std::thread([this, rate] {
-        std::vector<float> buf;
-        std::string err;
-        int n = captureMono(buf, rate, 6.0, err);
-        ListenResult r;
-        if (n > 0) r = analyseAudio(buf.data(), n, (float)rate);
-        std::lock_guard<std::mutex> lk(listenMx);
-        if (n <= 0) { listenError = "No microphone or audio input delivered sound (" + QString::fromStdString(err) + ")"; listenState = 3; }
-        else if (!r.ok) { listenError = QString("Heard something, but it was %1").arg(r.problem); listenState = 3; }
-        else { listenResult = r; listenState = 2; }
-    });
-}
-
-void MainWindow::applyListen(bool key, bool tempo) {
-    std::lock_guard<std::mutex> lk(listenMx);
-    if (listenState != 2) return;
-    const KeyGuess &k = listenResult.keys[listenGuess % 3];
-    if (key) {
-        set(S_ROOT, (float)k.root);
-        // stay pentatonic if the player was on a pentatonic; otherwise full major/minor
-        bool pent = u.set.tuning.scale == SC_MAJPENT || u.set.tuning.scale == SC_MINPENT;
-        set(S_SCALE, (float)(k.minor ? (pent ? SC_MINPENT : SC_MINOR) : (pent ? SC_MAJPENT : SC_MAJOR)));
-    }
-    if (tempo && listenResult.bpm > 0) set(S_BPM, listenResult.bpm);
 }
 
 void MainWindow::updateBend() {
@@ -388,10 +259,10 @@ void MainWindow::perform(int act, bool shift) {
     case A_HOME: goPage(PG_PLAY); keyTest = false; break;
     case A_KEY_UP: set(S_ROOT, (float)((u.set.tuning.root + (shift ? 11 : 1)) % 12)); break;
     case A_SCALE_NEXT: set(S_SCALE, (float)((u.set.tuning.scale + (shift ? SC_COUNT - 1 : 1)) % SC_COUNT)); break;
-    case A_RANDOM: randomise(); break;
-    case A_MUTATE: mutate(); break;
-    case A_UNDO_SOUND: undoSound(); break;
-    case A_FAVOURITE: saveFavourite(); break;
+    case A_RANDOM: sounds.randomise(); break;
+    case A_MUTATE: sounds.mutate(); break;
+    case A_UNDO_SOUND: sounds.undoSound(); break;
+    case A_FAVOURITE: sounds.saveFavourite(); break;
     case A_METRO: set(S_METRO, u.set.metro ? 0 : 1); toast(u.set.metro ? "Metronome off" : "Metronome on", 900); break;
     case A_TAP: tapTempo(); break;
     case A_BACK_STYLE: set(S_BACKSTYLE, (float)((u.set.backStyle + 1) % BS_COUNT)); toast(QString("Backing: %1").arg(backStyleName((u.set.backStyle + 1) % BS_COUNT)), 1000); break;
@@ -417,7 +288,7 @@ void MainWindow::perform(int act, bool shift) {
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
     default:
-        if (act >= A_SOUND_1 && act <= A_SOUND_10) selectSlot(act - A_SOUND_1);
+        if (act >= A_SOUND_1 && act <= A_SOUND_10) sounds.selectSlot(act - A_SOUND_1);
         break;
     }
 }
@@ -574,8 +445,8 @@ QImage MainWindow::shot() {
 }
 
 void MainWindow::paramSlider(QRectF r, int p) {
-    ui.slider(r, QString("param%1").arg(p), nice(paramInfo(p).label), paramToNorm(p, lead.p[p]), paramText(p, lead.p[p]),
-           [this, p](float n) { setParam(p, normToParam(p, n)); });
+    ui.slider(r, QString("param%1").arg(p), nice(paramInfo(p).label), paramToNorm(p, sounds.lead.p[p]), paramText(p, sounds.lead.p[p]),
+           [this, p](float n) { sounds.setParam(p, normToParam(p, n)); });
 }
 
 // ------------------------------------------------------------------ paint
@@ -759,8 +630,8 @@ void MainWindow::paintPlay() {
     const Tuning &t = u.set.tuning;
     const int L = Qt::AlignLeft | Qt::AlignVCenter, R = Qt::AlignRight | Qt::AlignVCenter;
     // ---------------- header: readouts ----------------
-    ui.txt(QRectF(18, 6, 430, 44), ui.fit(lead.name, 30, 428), 30, INK, L, true);
-    QString slotTxt = curSlot >= 0 ? QString("Sound %1").arg(curSlot + 1) : QString("Unsaved sound");
+    ui.txt(QRectF(18, 6, 430, 44), ui.fit(sounds.lead.name, 30, 428), 30, INK, L, true);
+    QString slotTxt = sounds.curSlot >= 0 ? QString("Sound %1").arg(sounds.curSlot + 1) : QString("Unsaved sound");
     ui.txt(QRectF(20, 52, 230, 20), QString("%1   %2 voices").arg(slotTxt).arg(u.voices), 13, MID, L);
     if (recorder.recording()) {
         if ((clock.elapsed() / 400) % 2 == 0) ui.tag(QRectF(250, 54, 104, 17), QString("REC %1 s").arg(recorder.seconds()), 12);
@@ -913,7 +784,7 @@ void MainWindow::paintPlay() {
     ui.button(QRectF(x, y, 66, h), "sustain", "Sus", u.sustain, [this] { keys.susLatch = !keys.susLatch; inst.cmd(EV_SUSTAIN, keys.susLatch || keys.susKey ? 1 : 0); }, "sustain"); x += 74;
     ui.button(QRectF(x, y, 54, h), "octave_down", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
     ui.button(QRectF(x, y, 54, h), "octave_up", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
-    ui.button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { randomise(); }, "sound"); x += 94;
+    ui.button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { sounds.randomise(); }, "sound"); x += 94;
     ui.button(QRectF(x, y, 704 - x, h), "menu", "Menu", false, [this] { goPage(PG_SOUND); }, QString::fromUtf8("≡"));
 }
 
@@ -922,26 +793,26 @@ void MainWindow::paintSound() {
     for (int i = 0; i < 10; ++i) {
         QRectF r(std::floor(16 + (i % 5) * (w + 8)), 66 + (i / 5) * 56, std::floor(w), 50);
         QString name = QString("slot%1").arg(i);
-        bool on = curSlot == i && !slotSave;
+        bool on = sounds.curSlot == i && !sounds.slotSave;
         bool inv = on || ui.isDown(name);
-        ui.frame(r, inv || slotSave ? INK : LOW, inv ? INK : BG);
-        if (slotSave && !inv) ui.frame(r.adjusted(3, 3, -3, -3), INK);
+        ui.frame(r, inv || sounds.slotSave ? INK : LOW, inv ? INK : BG);
+        if (sounds.slotSave && !inv) ui.frame(r.adjusted(3, 3, -3, -3), INK);
         // slot number in a corner tab, name beneath: laid out like a soft-key label
         ui.g->fillRect(QRectF(r.x() + 1, r.y() + 1, 18, 16), inv ? BG : LOW);
         ui.txt(QRectF(r.x() + 1, r.y() + 1, 18, 16), QString::number((i + 1) % 10), 12, inv ? INK : BG, Qt::AlignCenter, true);
-        ui.txt(QRectF(r.x() + 4, r.y() + 20, r.width() - 8, 24), ui.fit(bank[i].name, 13, r.width() - 8), 13, inv ? BG : INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-        ui.zone(r, name, [this, i](QPointF, int ph) { if (ph == PH_PRESS) selectSlot(i); });
+        ui.txt(QRectF(r.x() + 4, r.y() + 20, r.width() - 8, 24), ui.fit(sounds.bank[i].name, 13, r.width() - 8), 13, inv ? BG : INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+        ui.zone(r, name, [this, i](QPointF, int ph) { if (ph == PH_PRESS) sounds.selectSlot(i); });
     }
     qreal y = 182;
     auto col = [w](int i) { return QRectF(std::floor(16 + i * (w + 8)), 182, std::floor(w), 54); };
     Q_UNUSED(y);
-    ui.button(col(0), "newsound", "New sound", false, [this] { randomise(); }, "randomise");
-    ui.button(col(1), "mutate", "Mutate", false, [this] { mutate(); }, "nudge it");
-    ui.button(col(2), "undosound", "Undo", false, [this] { undoSound(); }, QString("%1 step%2").arg(undo.size()).arg(undo.size() == 1 ? "" : "s"));
-    ui.button(col(3), "slotsave", "Store", slotSave, [this] { slotSave = !slotSave; }, slotSave ? "pick a slot" : "to a slot 1-0");
-    ui.button(col(4), "fav", QString::fromUtf8("♥ Save"), false, [this] { saveFavourite(); }, "favourite");
+    ui.button(col(0), "newsound", "New sound", false, [this] { sounds.randomise(); }, "randomise");
+    ui.button(col(1), "mutate", "Mutate", false, [this] { sounds.mutate(); }, "nudge it");
+    ui.button(col(2), "undosound", "Undo", false, [this] { sounds.undoSound(); }, QString("%1 step%2").arg(sounds.undo.size()).arg(sounds.undo.size() == 1 ? "" : "s"));
+    ui.button(col(3), "slotsave", "Store", sounds.slotSave, [this] { sounds.slotSave = !sounds.slotSave; }, sounds.slotSave ? "pick a slot" : "to a slot 1-0");
+    ui.button(col(4), "fav", QString::fromUtf8("♥ Save"), false, [this] { sounds.saveFavourite(); }, "favourite");
 
-    ui.txt(QRectF(18, 246, 440, 40), ui.fit(lead.name, 24, 440), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    ui.txt(QRectF(18, 246, 440, 40), ui.fit(sounds.lead.name, 24, 440), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
     ui.button(QRectF(704 - 220, 248, 220, 38), "deep", deepEdit ? QString::fromUtf8("‹ Quick controls") : QString::fromUtf8("All parameters ›"), deepEdit, [this] { deepEdit = !deepEdit; });
 
     if (deepEdit) {
@@ -961,18 +832,18 @@ void MainWindow::paintSound() {
     for (int k = 0; k < 8; ++k) paramSlider(QRectF(16 + (k % 2) * 348, 296 + (k / 2) * 58, 340, 52), macro[k]);
 
     // favourites
-    const int per = 6, pages = qMax(1, ((int)favs.size() + per - 1) / per);
+    const int per = 6, pages = qMax(1, ((int)sounds.favs.size() + per - 1) / per);
     favPage = qBound(0, favPage, pages - 1);
-    ui.section(534, QString("Favourites  %1").arg(favs.size()));
+    ui.section(534, QString("Favourites  %1").arg(sounds.favs.size()));
     qreal cw = (688 - 110 - 3 * 8) / 3.0;
     for (int k = 0; k < per; ++k) {
         int idx = favPage * per + k;
         QRectF r(std::floor(16 + (k % 3) * (cw + 8)), 560 + (k / 3) * 74, std::floor(cw), 66);
-        if (idx >= favs.size()) { ui.frame(r, GRAT); continue; }
-        ui.button(r, QString("favitem%1").arg(k), favs[idx].patch.name, false, [this, idx] {
-            if (idx >= favs.size()) return;
-            if (favDelete) { QFile::remove(favs[idx].file); refreshLists(); favDelete = false; toast("Favourite removed"); return; }
-            pushUndo(); lead = favs[idx].patch; applyLead(true);
+        if (idx >= sounds.favs.size()) { ui.frame(r, GRAT); continue; }
+        ui.button(r, QString("favitem%1").arg(k), sounds.favs[idx].patch.name, false, [this, idx] {
+            if (idx >= sounds.favs.size()) return;
+            if (favDelete) { QFile::remove(sounds.favs[idx].file); refreshLists(); favDelete = false; toast("Favourite removed"); return; }
+            sounds.recall(sounds.favs[idx].patch);
         }, favDelete ? "tap to delete" : "recall", favDelete ? LOOK_ARMED : LOOK_PLAIN);
     }
     qreal bx = 704 - 102;
@@ -1027,7 +898,7 @@ void MainWindow::paintBacking() {
             [this] { set(S_BPM, std::round(u.set.bpm) - 1); }, [this] { set(S_BPM, std::round(u.set.bpm) + 1); });
     ui.slider(QRectF(364, 520, 340, 60), "backvol", "Backing volume", u.set.backVol, QString("%1%").arg((int)(u.set.backVol * 100)), [this](float n) { set(S_BACKVOL, n); });
     ui.button(QRectF(16, 590, 688, 56), "bresync", "Use the current lead sound for the backing", false, [this] { inst.cmd(EV_BACK, BC_RESYNC_SOUND); },
-           QString("backing now plays: %1    lead: %2").arg(u.backName[0] ? u.backName : "(nothing yet)").arg(lead.name));
+           QString("backing now plays: %1    lead: %2").arg(u.backName[0] ? u.backName : "(nothing yet)").arg(sounds.lead.name));
     ui.txt(QRectF(18, 654, 684, 20), "The backing keeps the sound it started with, so the lead can change freely.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     ui.txt(QRectF(18, 676, 684, 20), QString::fromUtf8("Keyboard: hold %1 + Z‥M for chords, or press $ for a chord row.").arg(km.keyFor(A_CHORD_LAYER, false)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
 }
@@ -1145,20 +1016,20 @@ void MainWindow::paintTune() {
     ui.frame(lp, LOW, BG);
     ui.tag(QRectF(lp.x() + 1, lp.y() + 1, 62, 18), "Listen", 12);
     ui.txt(QRectF(88, 466, 600, 20), "match the key and tempo of music around you", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    int ls = listenState;
-    ui.button(QRectF(32, 506, 200, 60), "listen", ls == 1 ? QString::fromUtf8("Listening…") : QString("Listen"), ls == 1, [this] { startListen(); }, ls == 1 ? QString("%1 s").arg(qMax<qint64>(0, 6 - (clock.elapsed() - listenStarted) / 1000)) : "6 seconds, needs a mic");
+    int ls = listener.state;
+    ui.button(QRectF(32, 506, 200, 60), "listen", ls == 1 ? QString::fromUtf8("Listening…") : QString("Listen"), ls == 1, [this] { listener.start(); }, ls == 1 ? QString("%1 s").arg(qMax<qint64>(0, 6 - (clock.elapsed() - listener.started) / 1000)) : "6 seconds, needs a mic");
     if (ls == 0) {
         ui.txt(QRectF(248, 506, 440, 60), "Uses the system's default audio input, if any.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
     } else if (ls == 3) {
-        std::lock_guard<std::mutex> lk(listenMx);
+        std::lock_guard<std::mutex> lk(listener.mx);
         ui.g->setFont(ui.font(13, false));
         ui.g->setPen(INK);
-        ui.g->drawText(QRectF(248, 506, 440, 60), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap, listenError);
+        ui.g->drawText(QRectF(248, 506, 440, 60), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap, listener.error);
     } else if (ls == 2) {
-        std::lock_guard<std::mutex> lk(listenMx);
-        const ListenResult &r = listenResult;
-        const KeyGuess &k = r.keys[listenGuess % 3];
-        float kc = listenGuess == 0 ? r.keyConfidence : r.keyConfidence * 0.5f;
+        std::lock_guard<std::mutex> lk(listener.mx);
+        const ListenResult &r = listener.result;
+        const KeyGuess &k = r.keys[listener.guess % 3];
+        float kc = listener.guess == 0 ? r.keyConfidence : r.keyConfidence * 0.5f;
         QString kq = kc > 0.6f ? "likely" : (kc > 0.3f ? "a guess" : "very unsure");
         ui.txt(QRectF(248, 500, 250, 40), QString("%1 %2").arg(noteName(k.root)).arg(k.minor ? "minor" : "major"), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
         ui.txt(QRectF(248, 540, 250, 22), QString("key: %1 (%2%)").arg(kq).arg((int)(kc * 100)), 13, kc > 0.6f ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
@@ -1168,10 +1039,10 @@ void MainWindow::paintTune() {
     }
     if (ls == 2) {
         qreal bw = (656 - 3 * 8) / 4.0;
-        ui.button(QRectF(32, 580, bw, 56), "lkey", "Use key", false, [this] { applyListen(true, false); toast("Key applied"); });
-        ui.button(QRectF(32 + bw + 8, 580, bw, 56), "ltempo", "Use tempo", false, [this] { applyListen(false, true); toast("Tempo applied"); });
-        ui.button(QRectF(32 + 2 * (bw + 8), 580, bw, 56), "lboth", "Use both", false, [this] { applyListen(true, true); toast("Key and tempo applied"); });
-        ui.button(QRectF(32 + 3 * (bw + 8), 580, bw, 56), "lnext", "Other key", false, [this] { listenGuess = (listenGuess + 1) % 3; }, QString("guess %1 of 3").arg(listenGuess % 3 + 1));
+        ui.button(QRectF(32, 580, bw, 56), "lkey", "Use key", false, [this] { listener.apply(true, false); toast("Key applied"); });
+        ui.button(QRectF(32 + bw + 8, 580, bw, 56), "ltempo", "Use tempo", false, [this] { listener.apply(false, true); toast("Tempo applied"); });
+        ui.button(QRectF(32 + 2 * (bw + 8), 580, bw, 56), "lboth", "Use both", false, [this] { listener.apply(true, true); toast("Key and tempo applied"); });
+        ui.button(QRectF(32 + 3 * (bw + 8), 580, bw, 56), "lnext", "Other key", false, [this] { listener.guess = (listener.guess + 1) % 3; }, QString("guess %1 of 3").arg(listener.guess % 3 + 1));
         ui.txt(QRectF(32, 646, 656, 44), "Wrong? Pick the key and scale by hand above: detection is an estimate.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     }
 }
@@ -1234,8 +1105,8 @@ void MainWindow::paintSystem() {
     ui.stepper(c4(1, 642, 60), "latency", "Loop fix", QString("%1 ms").arg((int)u.set.latencyMs),
             [this] { set(S_LATENCY, u.set.latencyMs - 10); }, [this] { set(S_LATENCY, u.set.latencyMs + 10); });
     ui.button(c4(2, 642, 60), "factory", "Factory sounds", false, [this] {
-        for (int k = 0; k < 10; ++k) bank[k] = factoryPatch(k);
-        int back = addExtraSounds();
+        sounds.factoryReset();
+        int back = sounds.addExtraSounds();
         refreshLists();
         toast(back ? QString("Slots 1-0 restored, %1 favourite%2 put back").arg(back).arg(back == 1 ? "" : "s") : QString("Sound slots 1-0 restored"));
     }, "restore slots 1-0");

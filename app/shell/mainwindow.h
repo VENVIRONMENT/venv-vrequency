@@ -7,9 +7,11 @@
 #include "core/analysis/analysis.h"
 #include "core/presets/presets.h"
 #include "app/store/store.h"
+#include "app/pages/tune/listener.h"
 #include "app/shell/recorder.h"
 #include "app/shell/shell.h"
 #include "app/shell/sink_probe.h"
+#include "app/sounds/sounds.h"
 #include <QElapsedTimer>
 #include <QFont>
 #include <QHash>
@@ -54,16 +56,19 @@ public:
     ~MainWindow() override;
 
     Recorder recorder{*this};
+    Sounds sounds{*this};
+    Listener listener{*this};
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
     void goPage(int p) override {
         if (p == pg) return;
-        pg = p; deepEdit = false; favDelete = false; slotSave = false; beatErase = false; removeArmed = -1;
+        pg = p; deepEdit = false; favDelete = false; sounds.slotSave = false; beatErase = false; removeArmed = -1;
         update();
     }
     void toast(const QString &s, int ms = 1800) override;
     void redraw() override { update(); }
+    void refreshLists() override;
     void saveSoon() override { saveTimer.start(2500); }
     int page() const override { return pg; }
     void handleKey(int qtKey, bool down);
@@ -71,17 +76,14 @@ public:
     QRectF zoneRect(const QString &name) const { return ui.zoneRect(name); }
     QStringList zoneNames() const { return ui.zoneNames(); }
     QImage shot();
-    const td::Patch &leadPatch() const { return lead; }
-    int undoDepth() const { return (int)undo.size(); }
     bool saveSession(const QString &path);
     bool loadSession(const QString &path);
     void saveState() override;
-    int addExtraSounds(int from = 0); // engine's extra sounds -> favourites; returns files written
     void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keyTest = on; }
     int favouritesPage() const { return favPage; }
-    QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
-    void armAllModes() { favDelete = slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
+    QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
+    void armAllModes() { favDelete = sounds.slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }
@@ -163,16 +165,8 @@ private:
 
     QTimer frameTimer;
 
-    // sounds
-    td::Patch lead;
-    td::Patch bank[10];
-    int curSlot = 0;
-    std::vector<td::Patch> undo;
-    QVector<store::NamedPatch> favs;
     int favPage = 0;
-    int extrasSeeded = 0;   // how many of the engine's extra sounds have been offered as favourites
-    bool favDelete = false, slotSave = false;
-    td::Rng rng;
+    bool favDelete = false;
 
     // ui state
     int pg = PG_PLAY;
@@ -258,14 +252,6 @@ private:
     QString exportFile;
     QHash<const td::Clip *, ClipDash> dashCache;
 
-    // listen
-    std::thread listenThread;
-    std::atomic<int> listenState{0}; // 0 idle, 1 listening, 2 result, 3 failed
-    std::mutex listenMx;
-    td::ListenResult listenResult;
-    QString listenError;
-    int listenGuess = 0;
-    qint64 listenStarted = 0;
 
 
     // the scope on the play page
@@ -323,20 +309,9 @@ private:
     void paintLoopButton(QRectF r);
 
     // actions
-    void pushUndo();
-    void applyLead(bool resetSlot);
-    void selectSlot(int i);
-    void randomise();
-    void mutate();
-    void undoSound();
-    void saveFavourite();
-    void setParam(int p, float v);
     void tapTempo();
-    void startListen();
-    void applyListen(bool key, bool tempo);
     void updateBend();
     void releaseAllKeys();
-    void refreshLists();
 
     // the track
     td::Placement *chosen();

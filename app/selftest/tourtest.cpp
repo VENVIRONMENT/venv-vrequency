@@ -48,8 +48,8 @@ QByteArray synthBytes(MainWindow &w, Instrument &inst) {
     QJsonObject extra;
     extra["page"] = w.page();
     extra["armed"] = w.armedModes();
-    extra["lead"] = QString::fromUtf8(w.leadPatch().name);
-    extra["undo"] = w.undoDepth();
+    extra["lead"] = QString::fromUtf8(w.sounds.lead.name);
+    extra["undo"] = (int)w.sounds.undo.size();
     extra["trackUndo"] = w.trackUndoDepth();
     extra["clips"] = (int)w.trackData().clips.size();
     extra["favs"] = QDir(store::baseDir() + "/favourites").entryList(QDir::Files).size();

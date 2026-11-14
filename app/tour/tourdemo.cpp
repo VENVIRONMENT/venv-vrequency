@@ -105,8 +105,8 @@ static void build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     auto P = [&](const char *id) -> TourView::Pic & { return pics[TourView::pageIndex(id)]; };
 
     // demo favourites and sessions, so those lists are not empty
-    w.favs.clear();
-    for (int i = 0; i < kExtraCount; ++i) { store::NamedPatch np; np.file = "demo"; np.patch = extraPatch(i); w.favs.push_back(np); }
+    w.sounds.favs.clear();
+    for (int i = 0; i < kExtraCount; ++i) { store::NamedPatch np; np.file = "demo"; np.patch = extraPatch(i); w.sounds.favs.push_back(np); }
     w.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/beat-practice.json"};
 
     // ---- a beat, a progression and a loop ----
@@ -153,11 +153,11 @@ static void build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     w.setPage(PG_BACK); rig.settle(2);
     capture(rig, 8, P("backing"));
     w.setPage(PG_TUNE); rig.settle(2);
-    w.listenResult = td::ListenResult();
-    w.listenResult.ok = true;
-    w.listenResult.keys[0].root = 9; w.listenResult.keys[0].minor = true; w.listenResult.keys[0].score = 0.8f;
-    w.listenResult.keyConfidence = 0.7f; w.listenResult.bpm = 100; w.listenResult.bpmConfidence = 0.7f;
-    w.listenState = 2; rig.settle(2);
+    w.listener.result = td::ListenResult();
+    w.listener.result.ok = true;
+    w.listener.result.keys[0].root = 9; w.listener.result.keys[0].minor = true; w.listener.result.keys[0].score = 0.8f;
+    w.listener.result.keyConfidence = 0.7f; w.listener.result.bpm = 100; w.listener.result.bpmConfidence = 0.7f;
+    w.listener.state = 2; rig.settle(2);
     capture(rig, 9, P("tune"));
     w.setPage(PG_SYS); rig.settle(2);
     capture(rig, 10, P("system"));

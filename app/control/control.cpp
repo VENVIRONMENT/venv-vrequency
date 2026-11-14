@@ -326,14 +326,14 @@ QJsonObject ControlServer::cmdState() {
     QJsonObject o;
     o["page"] = pageName(w.pg);
     QJsonObject snd;
-    snd["name"] = QString::fromUtf8(w.lead.name);
-    snd["slot"] = w.curSlot >= 0 ? QJsonValue(w.curSlot + 1) : QJsonValue();
-    snd["slots"] = [&] { QJsonArray s; for (int k = 0; k < 10; ++k) s.append(QString::fromUtf8(w.bank[k].name)); return s; }();
+    snd["name"] = QString::fromUtf8(w.sounds.lead.name);
+    snd["slot"] = w.sounds.curSlot >= 0 ? QJsonValue(w.sounds.curSlot + 1) : QJsonValue();
+    snd["slots"] = [&] { QJsonArray s; for (int k = 0; k < 10; ++k) s.append(QString::fromUtf8(w.sounds.bank[k].name)); return s; }();
     QJsonArray fav;
-    for (const store::NamedPatch &f : w.favs) fav.append(QString::fromUtf8(f.patch.name));
+    for (const store::NamedPatch &f : w.sounds.favs) fav.append(QString::fromUtf8(f.patch.name));
     snd["favourites"] = fav;
     QJsonObject pr;
-    for (int p = 0; p < P_COUNT; ++p) pr[paramInfo(p).key] = (double)w.lead.p[p];
+    for (int p = 0; p < P_COUNT; ++p) pr[paramInfo(p).key] = (double)w.sounds.lead.p[p];
     snd["params"] = pr;
     o["sound"] = snd;
     QJsonObject sc;
@@ -546,8 +546,8 @@ QJsonObject ControlServer::cmdParams(const QJsonObject &a, QString &e, bool set)
         const ParamInfo &m = paramInfo(p);
         float x = (float)qBound((double)m.min, v, (double)m.max);
         if (m.integer) x = std::round(x);
-        w.setParam(p, x);
-        w.curSlot = -1;
+        w.sounds.setParam(p, x);
+        w.sounds.curSlot = -1;
         r["name"] = name; r["value"] = (double)x; r["clamped"] = (double)x != v;
         return r;
     }
@@ -555,11 +555,11 @@ QJsonObject ControlServer::cmdParams(const QJsonObject &a, QString &e, bool set)
     for (int p = 0; p < P_COUNT; ++p) {
         const ParamInfo &m = paramInfo(p);
         QJsonObject o;
-        o["name"] = m.key; o["label"] = m.label; o["value"] = (double)w.lead.p[p];
+        o["name"] = m.key; o["label"] = m.label; o["value"] = (double)w.sounds.lead.p[p];
         o["min"] = (double)m.min; o["max"] = (double)m.max; o["default"] = (double)m.def; o["integer"] = m.integer;
         arr.append(o);
     }
-    r["sound"] = QString::fromUtf8(w.lead.name);
+    r["sound"] = QString::fromUtf8(w.sounds.lead.name);
     r["params"] = arr;
     return r;
 }
@@ -570,24 +570,22 @@ QJsonObject ControlServer::cmdSound(const QJsonObject &a, QString &e) {
     if (v.isDouble()) {
         const double d = v.toDouble();
         if (!(d >= 1 && d <= 10) || d != std::floor(d)) { e = "'slot' must be a whole number from 1 to 10"; return {}; }
-        w.slotSave = false;
-        w.selectSlot((int)d - 1);
+        w.sounds.slotSave = false;
+        w.sounds.selectSlot((int)d - 1);
     } else if (v.isString()) {
         const QString s = v.toString().trimmed();
         if (s.size() > 40) { e = "name too long"; return {}; }
-        if (s.compare("random", Qt::CaseInsensitive) == 0) w.randomise();
-        else if (s.compare("mutate", Qt::CaseInsensitive) == 0) w.mutate();
+        if (s.compare("random", Qt::CaseInsensitive) == 0) w.sounds.randomise();
+        else if (s.compare("mutate", Qt::CaseInsensitive) == 0) w.sounds.mutate();
         else if (s.compare("undo", Qt::CaseInsensitive) == 0) {
-            if (w.undo.empty()) { e = "nothing to undo"; return {}; }
-            w.undoSound();
+            if (w.sounds.undo.empty()) { e = "nothing to undo"; return {}; }
+            w.sounds.undoSound();
         } else {
             bool found = false;
-            for (const store::NamedPatch &f : w.favs)
+            for (const store::NamedPatch &f : w.sounds.favs)
                 if (!found && QString::fromUtf8(f.patch.name).compare(s, Qt::CaseInsensitive) == 0) {
                     found = true;
-                    w.pushUndo();
-                    w.lead = f.patch;
-                    w.applyLead(true);
+                    w.sounds.recall(f.patch);
                 }
             if (!found) { e = "no favourite called '" + s + "'"; return {}; }
         }
@@ -595,8 +593,8 @@ QJsonObject ControlServer::cmdSound(const QJsonObject &a, QString &e) {
         e = "give 'slot' (1 to 10) or 'name' (a favourite, random, mutate or undo)";
         return {};
     }
-    r["name"] = QString::fromUtf8(w.lead.name);
-    r["slot"] = w.curSlot >= 0 ? QJsonValue(w.curSlot + 1) : QJsonValue();
+    r["name"] = QString::fromUtf8(w.sounds.lead.name);
+    r["slot"] = w.sounds.curSlot >= 0 ? QJsonValue(w.sounds.curSlot + 1) : QJsonValue();
     return r;
 }
 
@@ -605,7 +603,7 @@ QJsonObject ControlServer::cmdFavourite(const QJsonObject &a, QString &e) {
     const QString name = A.str("name", "", 24, true).trimmed();
     if (e.isEmpty() && (name.isEmpty() || name.contains(QRegularExpression("[\\x00-\\x1f]")))) e = "'name' must be 1 to 24 printable characters";
     if (!e.isEmpty()) return {};
-    Patch p = w.lead;
+    Patch p = w.sounds.lead;
     p.setName(name.toUtf8().constData());
     bool updated = false;
     const QString path = store::savePatch("favourites", p, true, &updated);

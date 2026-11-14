@@ -435,7 +435,7 @@ void MainWindow::trackSound() {
 
 int MainWindow::soundCount(int kind) const {
     if (kind == PK_DRUMS) return kKits;
-    if (kind == PK_SYNTH) return 10 + (int)favs.size();
+    if (kind == PK_SYNTH) return 10 + (int)sounds.favs.size();
     return kLibSounds;
 }
 
@@ -443,7 +443,7 @@ static int libKind(int pickKind) { return pickKind == 0 ? SK_KEYS : (pickKind ==
 static int cellsPerPage(int count) { return count > 6 ? 5 : 6; } // a sixth cell turns the page when there are more
 
 Patch MainWindow::soundPatch(int kind, int i) const {
-    if (kind == PK_SYNTH) return i < 10 ? bank[qBound(0, i, 9)] : favs[qBound(0, i - 10, (int)favs.size() - 1)].patch;
+    if (kind == PK_SYNTH) return i < 10 ? sounds.bank[qBound(0, i, 9)] : sounds.favs[qBound(0, i - 10, (int)sounds.favs.size() - 1)].patch;
     return librarySound(libKind(kind), i);
 }
 

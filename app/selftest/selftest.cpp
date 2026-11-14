@@ -180,7 +180,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     std::printf("- sounds\n");
     key(w, Qt::Key_2, true); key(w, Qt::Key_2, false); wait(80);
     check(QString(inst.uiState().leadName) == "Glass Bells", "key 2 selects sound 2");
-    QString before = w.leadPatch().name;
+    QString before = w.sounds.lead.name;
     key(w, Qt::Key_Control, true); key(w, Qt::Key_R, true); key(w, Qt::Key_R, false); wait(80);
     QString rnd = inst.uiState().leadName;
     check(rnd != before && !rnd.isEmpty(), QString("Ctrl+R generates a new sound (%1)").arg(rnd));
@@ -200,7 +200,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     check(QString(inst.uiState().leadName) == "Haze", "the dream sounds follow in order: Haze is next");
     tap(w, "favitem5"); wait(80);
     check(QString(inst.uiState().leadName) == "Grain", "and Grain is last on the first page");
-    check(w.addExtraSounds() == 0 && favDir.entryList({"*.json"}).size() == favBefore + 1, "they are not added twice");
+    check(w.sounds.addExtraSounds() == 0 && favDir.entryList({"*.json"}).size() == favBefore + 1, "they are not added twice");
     w.setPage(PG_PLAY); wait(100);
     key(w, Qt::Key_1, true); key(w, Qt::Key_1, false); wait(60);
 
