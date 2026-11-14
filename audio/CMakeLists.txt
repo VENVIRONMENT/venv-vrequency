@@ -1,0 +1,27 @@
+# The audio device: PipeWire (preferred), ALSA, or a silent clock. Needs only core/dsp.h.
+# Headers: the system dev packages when installed, otherwise the copies fetched by
+# scripts/fetch-deps.sh into third_party/sysroot.
+set(SYSROOT ${CMAKE_SOURCE_DIR}/third_party/sysroot/usr)
+find_path(PW_INC pipewire/pipewire.h PATHS /usr/include/pipewire-0.3 ${SYSROOT}/include/pipewire-0.3 NO_DEFAULT_PATH)
+find_path(SPA_INC spa/support/plugin.h PATHS /usr/include/spa-0.2 ${SYSROOT}/include/spa-0.2 NO_DEFAULT_PATH)
+find_path(ALSA_INC alsa/asoundlib.h PATHS /usr/include ${SYSROOT}/include NO_DEFAULT_PATH)
+find_library(PW_LIB NAMES pipewire-0.3 libpipewire-0.3.so.0 PATHS /usr/lib/aarch64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib)
+find_library(ALSA_LIB NAMES asound libasound.so.2 PATHS /usr/lib/aarch64-linux-gnu /usr/lib/x86_64-linux-gnu /usr/lib)
+
+add_library(vreqaudio STATIC audio.cpp)
+target_include_directories(vreqaudio PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${CMAKE_SOURCE_DIR}/core)
+target_link_libraries(vreqaudio PUBLIC Threads::Threads)
+if(PW_INC AND SPA_INC AND PW_LIB)
+  message(STATUS "PipeWire backend: ON (${PW_INC})")
+  target_compile_definitions(vreqaudio PRIVATE VREQUENCY_PIPEWIRE=1)
+  target_include_directories(vreqaudio SYSTEM PRIVATE ${PW_INC} ${SPA_INC})
+  target_sources(vreqaudio PRIVATE pw_backend.c)
+  set_source_files_properties(pw_backend.c PROPERTIES COMPILE_OPTIONS "-Wno-missing-field-initializers;-Wno-pedantic")
+  target_link_libraries(vreqaudio PRIVATE ${PW_LIB})
+endif()
+if(ALSA_INC AND ALSA_LIB)
+  message(STATUS "ALSA backend: ON (${ALSA_INC})")
+  target_compile_definitions(vreqaudio PRIVATE VREQUENCY_ALSA=1)
+  target_include_directories(vreqaudio SYSTEM PRIVATE ${ALSA_INC})
+  target_link_libraries(vreqaudio PRIVATE ${ALSA_LIB})
+endif()
