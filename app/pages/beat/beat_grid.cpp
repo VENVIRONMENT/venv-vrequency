@@ -12,7 +12,7 @@ void BeatPage::paintGrid() {
     const qreal ox = 104, cw = 37.5, sy = 84; const int ch = 12;
     for (int d = 0; d < kDrums; ++d) {
         qreal y = sy + d * (ch + 3);
-        ui.txt(QRectF(16, y - 3, 84, ch + 6), nice(drumName(d)), 11, u.beatPat[d] ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(16, y - 3, 84, ch + 6), nice(drumName(d)), Ui::pixelFont() ? 20 : 11, u.beatPat[d] ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
         for (int s = 0; s < kDrumSteps; ++s) {
             QRectF c(std::floor(ox + s * cw), y, std::floor(ox + (s + 1) * cw) - std::floor(ox + s * cw) - 4, ch);
             if ((u.beatPat[d] >> s) & 1) ui.g->fillRect(c, INK);

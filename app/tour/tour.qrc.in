@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file alias="fonts/MGS1 Codec.ttf">@CMAKE_SOURCE_DIR@/assets/fonts/MGS1 Codec.ttf</file>
+    <file alias="fonts/MGS1 HUD.ttf">@CMAKE_SOURCE_DIR@/assets/fonts/MGS1 HUD.ttf</file>
     <file alias="helpcards.json">@CMAKE_SOURCE_DIR@/docs/helpcards.json</file>
   </qresource>
 </RCC>

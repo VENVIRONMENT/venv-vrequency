@@ -7,6 +7,7 @@
 #include "app/tour/tour.h"
 #include <QApplication>
 #include <QDir>
+#include <QFontDatabase>
 #include <QTemporaryDir>
 #include <chrono>
 #include <cstdio>
@@ -48,6 +49,9 @@ int main(int argc, char **argv) {
         }
     }
     QApplication app(argc, argv);
+    // the bundled pixel fonts (assets/fonts, CC BY-SA 4.0, Andrew Gleeson)
+    QFontDatabase::addApplicationFont(":/fonts/MGS1 Codec.ttf");
+    QFontDatabase::addApplicationFont(":/fonts/MGS1 HUD.ttf");
     if (dumpZones) return tourDumpZones(dumpDir);   // draws off-screen in a scratch copy: no audio, no files
     app.setApplicationName("venv-vrequency");
     app.setDesktopFileName("vrequency");

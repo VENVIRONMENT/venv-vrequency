@@ -22,17 +22,29 @@ QFont Ui::font(int px, bool bold) const {
     quint32 key = (quint32)px << 1 | (bold ? 1u : 0u);
     auto it = fontCache.constFind(key);
     if (it != fontCache.constEnd()) return it.value();
-    QFont f("DejaVu Sans Mono");
+    // MOCKUP SWITCH: VREQUENCY_FONT=MGS1 draws text in two pixel faces by role (pixel_font.cpp)
+    QString family = "DejaVu Sans Mono";
+    int size = px;
+    if (pixelFont()) {
+        // the key is a role, not a size: 1000 + n = role n
+        static const char *fam[] = {"MGS1 Codec", "MGS1 Codec", "MGS1 Codec", "MGS1 HUD", "MGS1 HUD"};
+        static const int sz[] = {48, 32, 24, 32, 24};
+        int role = px >= 1000 ? qBound(0, px - 1000, 4) : pixelRole(px, bold);
+        family = fam[role];
+        size = sz[role];
+    }
+    QFont f(family);
     f.setStyleHint(QFont::Monospace);
     f.setStyleStrategy(QFont::NoAntialias); // raster text, like the tube's character generator
     f.setHintingPreference(QFont::PreferFullHinting);
-    f.setPixelSize(px);
-    f.setBold(bold);
+    f.setPixelSize(size);
+    f.setBold(bold && !pixelFont());
     fontCache.insert(key, f);
     return f;
 }
 
 int Ui::chW(int px) const {
+    if (pixelFont()) px = 1000 + pixelRole(px, true);
     auto it = widthCache.constFind(px);
     if (it != widthCache.constEnd()) return it.value();
     int v = QFontMetrics(font(px, true)).horizontalAdvance(QLatin1Char('M'));
@@ -41,11 +53,13 @@ int Ui::chW(int px) const {
 }
 
 QString Ui::fit(const QString &s, int px, qreal width) const {
+    if (pixelFont()) return s; // txt() shrinks, then shortens, by itself
     int n = qMax(1, (int)(width / chW(px)));
     return s.size() <= n ? s : s.left(n - 1) + QString::fromUtf8("…");
 }
 
 void Ui::txt(QRectF r, const QString &s, int px, QColor c, int align, bool bold) {
+    if (pixelFont()) { pixelTxt(r, s, pixelRole(px, bold), c, align); return; }
     g->setFont(font(px, bold));
     g->setPen(c);
     g->drawText(r, align | Qt::TextSingleLine, s);
