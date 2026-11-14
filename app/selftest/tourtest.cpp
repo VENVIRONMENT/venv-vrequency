@@ -31,8 +31,8 @@ void key(MainWindow &w, int k, bool down) {
 void press(MainWindow &w, int k) { key(w, k, true); key(w, k, false); }
 void ctrl(MainWindow &w, int k) { key(w, Qt::Key_Control, true); press(w, k); key(w, Qt::Key_Control, false); }
 void tapAt(MainWindow &w, QPointF p) {
-    w.pointer(9, p, MainWindow::PH_PRESS);
-    w.pointer(9, p, MainWindow::PH_RELEASE);
+    w.pointer(9, p, PH_PRESS);
+    w.pointer(9, p, PH_RELEASE);
 }
 void tapZone(MainWindow &w, const QString &zone) { tapAt(w, w.zoneRect(zone).center()); }
 // the tour opens its pictures a moment after it is asked to: let that finish
@@ -241,9 +241,9 @@ void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::f
                 for (const TourView::Hot &h : hot) {
                     const QRectF zr = w.zoneRect("tour_hot_" + h.name);
                     if (zr.isNull()) continue;
-                    w.pointer(5, zr.center(), MainWindow::PH_PRESS);
-                    w.pointer(5, zr.center() + QPointF(3, 3), MainWindow::PH_MOVE);
-                    w.pointer(5, zr.center(), MainWindow::PH_RELEASE);
+                    w.pointer(5, zr.center(), PH_PRESS);
+                    w.pointer(5, zr.center() + QPointF(3, 3), PH_MOVE);
+                    w.pointer(5, zr.center(), PH_RELEASE);
                     ++taps;
                     if (inst.uiState().voices > 0) ++sounded;
                     if (taps % 40 == 0) w.shot();

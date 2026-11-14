@@ -11,6 +11,4 @@ const QColor LOW(0x64, 0x64, 0x62);  // idle frames, key letters
 const QColor GRAT(0x34, 0x34, 0x33); // empty slots, faint rules
 } // namespace pal
 
-enum { LOOK_PLAIN, LOOK_ARMED }; // LOOK_ARMED: double frame, "waiting for a choice"
-
 QString nice(const char *label); // "ARP UP-DN" -> "Arp up-dn"

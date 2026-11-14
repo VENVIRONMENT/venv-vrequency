@@ -46,8 +46,8 @@ void key(MainWindow &w, int k, bool down, bool repeat = false) {
 }
 void tap(MainWindow &w, const QString &zone) {
     QRectF r = w.zoneRect(zone);
-    w.pointer(7, r.center(), MainWindow::PH_PRESS);
-    w.pointer(7, r.center(), MainWindow::PH_RELEASE);
+    w.pointer(7, r.center(), PH_PRESS);
+    w.pointer(7, r.center(), PH_RELEASE);
 }
 
 // ---- the control socket: a real client in this process, talking over the real socket ----
@@ -240,25 +240,25 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
 
     std::printf("- touch\n");
     QRectF xy = w.zoneRect("xy");
-    w.pointer(1, xy.center(), MainWindow::PH_PRESS); wait(60);
-    w.pointer(1, QPointF(xy.left() + xy.width() * 0.9, xy.top() + xy.height() * 0.2), MainWindow::PH_MOVE); wait(80);
+    w.pointer(1, xy.center(), PH_PRESS); wait(60);
+    w.pointer(1, QPointF(xy.left() + xy.width() * 0.9, xy.top() + xy.height() * 0.2), PH_MOVE); wait(80);
     u = inst.uiState();
     check(u.xyTouch && u.xyX > 0.85f && u.xyY > 0.75f, "dragging the pad moves the XY control");
     check(inst.part(0).modCut > 2.0f, "which modulates the filter live");
     // second finger plays a string while the first stays on the pad
     QRectF s1 = w.zoneRect("string1");
-    w.pointer(2, QPointF(s1.left() + s1.width() * 0.3, s1.center().y()), MainWindow::PH_PRESS); wait(80);
+    w.pointer(2, QPointF(s1.left() + s1.width() * 0.3, s1.center().y()), PH_PRESS); wait(80);
     check(inst.uiState().str[1].gate, "a second touch plays a string at the same time");
     float n0 = inst.uiState().str[1].target;
-    w.pointer(2, QPointF(s1.left() + s1.width() * 0.6, s1.center().y()), MainWindow::PH_MOVE); wait(80);
+    w.pointer(2, QPointF(s1.left() + s1.width() * 0.6, s1.center().y()), PH_MOVE); wait(80);
     check(inst.uiState().str[1].target > n0 && inst.uiState().str[1].gate, "dragging along the string slides the pitch");
-    w.pointer(2, s1.center(), MainWindow::PH_RELEASE);
-    w.pointer(1, xy.center(), MainWindow::PH_RELEASE); wait(80);
+    w.pointer(2, s1.center(), PH_RELEASE);
+    w.pointer(1, xy.center(), PH_RELEASE); wait(80);
     check(!inst.uiState().xyTouch && std::fabs(inst.part(0).modCut) < 0.01f, "lifting the finger returns the sound to normal");
     inst.set(S_XYMAP, XY_GLITCH); wait(60);
-    w.pointer(1, xy.center(), MainWindow::PH_PRESS); wait(80);
+    w.pointer(1, xy.center(), PH_PRESS); wait(80);
     check(inst.uiState().glitch, "the Glitch mapping crushes the sound while the pad is touched");
-    w.pointer(1, xy.center(), MainWindow::PH_RELEASE); wait(80);
+    w.pointer(1, xy.center(), PH_RELEASE); wait(80);
     check(!inst.uiState().glitch, "and stops when the finger lifts");
     inst.set(S_XYMAP, XY_FILTER); wait(60);
     tap(w, "chord4"); wait(60);
@@ -403,7 +403,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(T().clips.size() == 3, "keeping the same things again adds nothing");
         QRectF lanes = w.zoneRect("track_lanes");
         auto cell = [&](int lane, double bar) { return QPointF(lanes.left() + (bar + 0.5) * lanes.width() / 8.0, lanes.top() + 2 + lane * 70 + 33); };
-        auto touch = [&](QPointF a) { w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); };
+        auto touch = [&](QPointF a) { w.pointer(3, a, PH_PRESS); w.pointer(3, a, PH_RELEASE); };
         if (!w.clipInHand()) press(Qt::Key_3);
         touch(cell(LN_LOOPA, 0)); wait(60);
         check(T().lane[LN_LOOPA].size() == 1 && T().lane[LN_LOOPA][0].bar == 0 && w.chosenLane() == LN_LOOPA, "with a clip in hand, tapping a bar places it there");
@@ -429,10 +429,10 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(T().lane[LN_BEAT].size() == 3, "Shift+Ctrl+Z does it again");
         ctrl(Qt::Key_Z);
         depth = w.trackUndoDepth();
-        w.pointer(3, cell(LN_BEAT, 2), MainWindow::PH_PRESS);
-        w.pointer(3, cell(LN_BEAT, 3.6), MainWindow::PH_MOVE);
-        w.pointer(3, cell(LN_BEAT, 5), MainWindow::PH_MOVE);
-        w.pointer(3, cell(LN_BEAT, 5), MainWindow::PH_RELEASE);
+        w.pointer(3, cell(LN_BEAT, 2), PH_PRESS);
+        w.pointer(3, cell(LN_BEAT, 3.6), PH_MOVE);
+        w.pointer(3, cell(LN_BEAT, 5), PH_MOVE);
+        w.pointer(3, cell(LN_BEAT, 5), PH_RELEASE);
         check(T().lane[LN_BEAT].size() == 2 && T().lane[LN_BEAT][1].bar == 5 && w.trackUndoDepth() == depth + 1, "dragging a clip moves it by whole bars, as one undo step");
         press(Qt::Key_M);
         check(T().lane[LN_BEAT][1].mute, "M mutes the chosen clip");
@@ -649,9 +649,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         {
             QRectF fr = w.zoneRect("mixer_fader1");
             const int mixBeforeDrag = T().mix[LN_CHORDS].level;
-            w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30), MainWindow::PH_PRESS);
-            for (int i = 1; i <= 8; ++i) w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30 - i * 6), MainWindow::PH_MOVE);
-            w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 78), MainWindow::PH_RELEASE);
+            w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30), PH_PRESS);
+            for (int i = 1; i <= 8; ++i) w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 30 - i * 6), PH_MOVE);
+            w.pointer(3, QPointF(fr.center().x(), fr.bottom() - 78), PH_RELEASE);
             w.shot();
             const int lv = T().mix[LN_CHORDS].level, before = mixBeforeDrag;
             check(lv > 50 && lv < 75 && w.mixLaneShown() == LN_CHORDS, QString("dragging the Chords fader sets its level (%1)").arg(lv));
@@ -1440,7 +1440,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             w.setKeyTest(false);
             w.setPage(MainWindow::PG_PLAY); w.setKeyTest(true); w.shot();
             const QPointF m = w.zoneRect("menu").center();
-            w.pointer(5, m, MainWindow::PH_PRESS); w.pointer(5, m, MainWindow::PH_RELEASE);
+            w.pointer(5, m, PH_PRESS); w.pointer(5, m, PH_RELEASE);
             check(w.page() == MainWindow::PG_PLAY, "a tap on Menu under the key test panel does nothing");
             w.setKeyTest(false);
             w.setPage(MainWindow::PG_SYS); w.dockClose(); w.shot();
@@ -1463,7 +1463,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             check(pages >= 3, QString("%1 favourites make %2 pages").arg(total).arg(pages));
             w.setPage(MainWindow::PG_SOUND); w.shot();
             const QRectF fr = w.zoneRect("favprev");
-            auto at = [&](double fx) { const QPointF p(fr.left() + fr.width() * fx, fr.center().y()); w.pointer(6, p, MainWindow::PH_PRESS); w.pointer(6, p, MainWindow::PH_RELEASE); w.shot(); };
+            auto at = [&](double fx) { const QPointF p(fr.left() + fr.width() * fx, fr.center().y()); w.pointer(6, p, PH_PRESS); w.pointer(6, p, PH_RELEASE); w.shot(); };
             const int p0 = w.favouritesPage();
             at(0.8); const int p1 = w.favouritesPage();
             at(0.2); const int p2 = w.favouritesPage();
@@ -1569,10 +1569,10 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         w.setPage(MainWindow::PG_PLAY);
         inst.set(S_XYMAP, XY_GLITCH); wait(60);
         QRectF xy = w.zoneRect("xy");
-        w.pointer(1, QPointF(xy.left() + xy.width() * 0.45, xy.top() + xy.height() * 0.62), MainWindow::PH_PRESS);
+        w.pointer(1, QPointF(xy.left() + xy.width() * 0.45, xy.top() + xy.height() * 0.62), PH_PRESS);
         for (int i = 0; i < 40; ++i) { w.shot(); wait(40); }
         w.shot().save(QString("%1/7-glitch.png").arg(dir));
-        w.pointer(1, xy.center(), MainWindow::PH_RELEASE);
+        w.pointer(1, xy.center(), PH_RELEASE);
         inst.set(S_XYMAP, XY_FILTER); wait(60);
     }
     key(w, Qt::Key_F, false); key(w, Qt::Key_A, false);
@@ -1612,7 +1612,7 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
         press(Qt::Key_Return); press(Qt::Key_2); ctrl(Qt::Key_V); ctrl(Qt::Key_V);     // Chords 1 twice
         QRectF lanes = w.zoneRect("track_lanes");
         auto cell = [&](int lane, double bar) { return QPointF(lanes.left() + (bar + 0.5) * lanes.width() / 8.0, lanes.top() + 2 + lane * 70 + 33); };
-        auto touch = [&](QPointF a) { w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); };
+        auto touch = [&](QPointF a) { w.pointer(3, a, PH_PRESS); w.pointer(3, a, PH_RELEASE); };
         press(Qt::Key_3); touch(cell(LN_LOOPA, 2)); touch(cell(LN_LOOPA, 6));          // Loop 1 on bars 3-4 and 7-8
         press(Qt::Key_5); touch(cell(LN_LOOPB, 4));                                     // Loop 2 on bars 5-8
         press(Qt::Key_Escape);

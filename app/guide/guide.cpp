@@ -66,11 +66,11 @@ QString MainWindow::zoneLabel(const QString &name) const {
     }
     if (name.startsWith("tab_")) return QString("%1 tab").arg(name.mid(4));
     if (name.startsWith("help_row_")) { const QString d = helpDesc.value(name); if (!d.isEmpty()) return d.left(60); }
-    for (const Zone &z : zones) {
+    for (const Ui::Zone &z : ui.zones()) {
         if (z.name != name) continue;
         if (z.r.width() * z.r.height() > 45000) break;       // a big area has no single caption
         QStringList parts;
-        for (const auto &t : drawnText)
+        for (const auto &t : ui.texts())
             if (z.r.contains(t.first.center())) parts << t.second.trimmed();
         parts.removeAll(QString());
         if (parts.isEmpty()) break;
@@ -100,7 +100,7 @@ QVector<MainWindow::ZoneInfo> MainWindow::zoneCatalogue(int page, int helpSub) {
     shot();
     QVector<ZoneInfo> out;
     const QRectF D = dockRect();
-    for (const Zone &z : zones) {
+    for (const Ui::Zone &z : ui.zones()) {
         ZoneInfo zi;
         zi.name = z.name; zi.r = z.r; zi.label = zoneLabel(z.name);
         zi.covered = !D.isNull() && !hidden(z.name) && D.intersects(z.r);
@@ -130,7 +130,7 @@ void MainWindow::clearHighlight() {
 
 QStringList MainWindow::expandZoneNames(const QStringList &names, QStringList &unknown) const {
     QStringList have;
-    for (const Zone &z : zones) if (!hidden(z.name)) have << z.name;
+    for (const Ui::Zone &z : ui.zones()) if (!hidden(z.name)) have << z.name;
     QStringList out;
     auto add = [&](const QString &n) { if (!out.contains(n)) out << n; };
     std::function<bool(const QString &, int)> resolve = [&](const QString &n, int depth) -> bool {
@@ -196,16 +196,16 @@ void MainWindow::paintHighlights() {
         const QRectF r = zoneRect(n);
         if (r.isNull()) continue;
         rects << r;
-        frame(inflated(r, 6), BG);        // a dark gap keeps the rules readable over bright controls
-        frame(inflated(r, 5), soft);      // outer rule: pulses
-        frame(inflated(r, 4), BG);
-        frame(inflated(r, 3), INK);       // inner rule: steady (2 px of padding inside it)
+        ui.frame(inflated(r, 6), BG);        // a dark gap keeps the rules readable over bright controls
+        ui.frame(inflated(r, 5), soft);      // outer rule: pulses
+        ui.frame(inflated(r, 4), BG);
+        ui.frame(inflated(r, 3), INK);       // inner rule: steady (2 px of padding inside it)
     }
     if (rects.isEmpty() || hl.label.isEmpty()) return;
 
     // the caption: a small tag by the first zone that covers neither a highlight nor the dock
-    const QString text = fit(hl.label, 13, 40 * chW(13));
-    const qreal w = text.size() * chW(13) + 12, h = 18;
+    const QString text = ui.fit(hl.label, 13, 40 * ui.chW(13));
+    const qreal w = text.size() * ui.chW(13) + 12, h = 18;
     QVector<QRectF> avoid;
     for (const QRectF &r : rects) avoid << inflated(r, 8);
     if (!dockR.isNull()) avoid << inflated(dockR, 4);
@@ -235,8 +235,8 @@ void MainWindow::paintHighlights() {
     }
     if (pick.isNull()) return;
     hlCaption = pick;
-    frame(inflated(pick, 2), INK, BG);
-    tag(pick, text, 13);
+    ui.frame(inflated(pick, 2), INK, BG);
+    ui.tag(pick, text, 13);
 }
 
 // ------------------------------------------------------------------ chat dock
@@ -284,25 +284,25 @@ void MainWindow::paintDock() {
     if (dockR.isNull()) return;
     chatUnread = 0;
     const QRectF D = dockR;
-    frame(D.adjusted(-2, -2, 2, 2), INK, BG);
-    frame(D, dockFocus ? INK : LOW);
-    zone(D, "dock", [](QPointF, int) {}); // swallows touches so nothing under the dock is pressed by accident
+    ui.frame(D.adjusted(-2, -2, 2, 2), INK, BG);
+    ui.frame(D, dockFocus ? INK : LOW);
+    ui.zone(D, "dock", [](QPointF, int) {}); // swallows touches so nothing under the dock is pressed by accident
 
     // header: what is being discussed, who is listening, and the two ways out
     const bool listening = copilotWaiters > 0 || clock.elapsed() - copilotSeenAt < 45000;
     qreal hx = D.x() + 6;
     if (!topicLabel.isEmpty()) {
-        const QString t = QString::fromUtf8("▸ ") + fit(topicLabel.toUpper(), 13, 260);
-        const qreal tw = t.size() * chW(13) + 14;
-        tag(QRectF(hx, D.y() + 4, tw, 24), t, 13, Qt::AlignLeft | Qt::AlignVCenter);
+        const QString t = QString::fromUtf8("▸ ") + ui.fit(topicLabel.toUpper(), 13, 260);
+        const qreal tw = t.size() * ui.chW(13) + 14;
+        ui.tag(QRectF(hx, D.y() + 4, tw, 24), t, 13, Qt::AlignLeft | Qt::AlignVCenter);
         hx += tw + 8;
     }
-    txt(QRectF(hx, D.y() + 4, D.right() - 150 - hx, 24), listening ? "Rook is listening" : "Rook is not connected", 12, listening ? MID : LOW, Qt::AlignLeft | Qt::AlignVCenter);
-    button(QRectF(D.right() - 140, D.y() + 4, 64, 24), "dock_full", "Full", false, [this] { chatToggle(); });
-    button(QRectF(D.right() - 70, D.y() + 4, 64, 24), "dock_close", "Hide", false, [this] { dockClose(); });
+    ui.txt(QRectF(hx, D.y() + 4, D.right() - 150 - hx, 24), listening ? "Rook is listening" : "Rook is not connected", 12, listening ? MID : LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.button(QRectF(D.right() - 140, D.y() + 4, 64, 24), "dock_full", "Full", false, [this] { chatToggle(); });
+    ui.button(QRectF(D.right() - 70, D.y() + 4, 64, 24), "dock_close", "Hide", false, [this] { dockClose(); });
 
     // the last few lines
-    const int cw = chW(13), lh = 16;
+    const int cw = ui.chW(13), lh = 16;
     const QRectF hist(D.x() + 6, D.y() + 32, D.width() - 12, dockLines * lh + 2);
     if (dockLines > 0) {
         struct Ln { int msg; QString text; bool head; };
@@ -317,7 +317,7 @@ void MainWindow::paintDock() {
         const int total = (int)lines.size();
         chatScroll = qBound(0, chatScroll, qMax(0, total - dockLines));
         const int end = total - chatScroll, start = qMax(0, end - dockLines);
-        if (chat.empty()) txt(QRectF(hist.x() + 4, hist.y(), hist.width(), lh), "No messages yet. Type below and press Enter.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+        if (chat.empty()) ui.txt(QRectF(hist.x() + 4, hist.y(), hist.width(), lh), "No messages yet. Type below and press Enter.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
         for (int i = start; i < end; ++i) {
             const Ln &ln = lines[i];
             const ChatMsg &m = chat[ln.msg];
@@ -327,14 +327,14 @@ void MainWindow::paintDock() {
                 QString name = m.from.toUpper();
                 if (m.kind == "ask") name += "?";
                 const qreal w = (name.size() + 1) * cw + 4;
-                if (m.user) { frame(QRectF(x, y, w, lh - 1), MID); txt(QRectF(x, y, w, lh - 1), name, 12, INK, Qt::AlignCenter, true); }
-                else tag(QRectF(x, y, w, lh - 1), name, 12);
+                if (m.user) { ui.frame(QRectF(x, y, w, lh - 1), MID); ui.txt(QRectF(x, y, w, lh - 1), name, 12, INK, Qt::AlignCenter, true); }
+                else ui.tag(QRectF(x, y, w, lh - 1), name, 12);
                 x += w + cw;
             }
-            txt(QRectF(x, y, hist.right() - x, lh), ln.text, 13, m.user ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
+            ui.txt(QRectF(x, y, hist.right() - x, lh), ln.text, 13, m.user ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
         }
-        if (total > dockLines && chatScroll < total - dockLines) txt(QRectF(hist.right() - 14, hist.y(), 12, 12), QString::fromUtf8("▴"), 11, MID);
-        zone(hist, "dock_history", [this](QPointF p, int ph) { // drag to scroll
+        if (total > dockLines && chatScroll < total - dockLines) ui.txt(QRectF(hist.right() - 14, hist.y(), 12, 12), QString::fromUtf8("▴"), 11, MID);
+        ui.zone(hist, "dock_history", [this](QPointF p, int ph) { // drag to scroll
             if (ph == PH_PRESS) { dockDragY = p.y(); return; }
             const int d = (int)std::round((p.y() - dockDragY) / 16.0);
             if (d) { chatScroll += d; dockDragY = p.y(); }
@@ -343,18 +343,18 @@ void MainWindow::paintDock() {
 
     // the input line and Send
     const QRectF box(D.x() + 6, D.bottom() - 42, D.width() - 12 - 102, 36);
-    frame(box, dockFocus ? INK : LOW, BG);
-    if (dockFocus) frame(box.adjusted(2, 2, -2, -2), GRAT);
-    const int bc = (int)((box.width() - 20) / chW(15));
+    ui.frame(box, dockFocus ? INK : LOW, BG);
+    if (dockFocus) ui.frame(box.adjusted(2, 2, -2, -2), GRAT);
+    const int bc = (int)((box.width() - 20) / ui.chW(15));
     QString shown = chatDraft.size() > bc - 1 ? QString::fromUtf8("…") + chatDraft.right(bc - 2) : chatDraft;
     if (chatDraft.isEmpty()) {
         const QString hint = dockFocus ? QString("type to ask  (Esc: back to the keys)") : QString("%1+%2 or touch to type").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true));
-        txt(box.adjusted(10 + (dockFocus ? chW(15) : 0), 0, -10, 0), fit(hint, 14, box.width() - 20), 14, LOW, Qt::AlignLeft | Qt::AlignVCenter);
-    } else txt(box.adjusted(10, 0, -10, 0), shown, 15, dockFocus ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, dockFocus);
+        ui.txt(box.adjusted(10 + (dockFocus ? ui.chW(15) : 0), 0, -10, 0), ui.fit(hint, 14, box.width() - 20), 14, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    } else ui.txt(box.adjusted(10, 0, -10, 0), shown, 15, dockFocus ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, dockFocus);
     if (dockFocus && (clock.elapsed() / 500) % 2 == 0) {
-        const qreal cx = box.x() + 10 + (chatDraft.isEmpty() ? 0 : shown.size() * chW(15));
-        g->fillRect(QRectF(cx, box.y() + 8, chW(15) - 2, 20), INK);
+        const qreal cx = box.x() + 10 + (chatDraft.isEmpty() ? 0 : shown.size() * ui.chW(15));
+        ui.g->fillRect(QRectF(cx, box.y() + 8, ui.chW(15) - 2, 20), INK);
     }
-    zone(box, "dock_input", [this](QPointF, int ph) { if (ph == PH_PRESS) dockFocus = true; });
-    button(QRectF(D.right() - 102, D.bottom() - 42, 96, 36), "dock_send", "Send", false, [this] { chatSend(); });
+    ui.zone(box, "dock_input", [this](QPointF, int ph) { if (ph == PH_PRESS) dockFocus = true; });
+    ui.button(QRectF(D.right() - 102, D.bottom() - 42, 96, 36), "dock_send", "Send", false, [this] { chatSend(); });
 }

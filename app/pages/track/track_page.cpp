@@ -852,11 +852,11 @@ bool MainWindow::trackKey(int key, int plainAct) {
 // ---------------------------------------------------------------- drawing
 
 void MainWindow::hatch(QRectF r, QColor c) {
-    g->save();
-    g->setClipRect(r, Qt::IntersectClip);
-    g->setPen(QPen(c, 1));
-    for (qreal x = r.x() - r.height(); x < r.right(); x += 7) g->drawLine(QPointF(x, r.bottom()), QPointF(x + r.height(), r.y()));
-    g->restore();
+    ui.g->save();
+    ui.g->setClipRect(r, Qt::IntersectClip);
+    ui.g->setPen(QPen(c, 1));
+    for (qreal x = r.x() - r.height(); x < r.right(); x += 7) ui.g->drawLine(QPointF(x, r.bottom()), QPointF(x + r.height(), r.y()));
+    ui.g->restore();
 }
 
 const MainWindow::ClipDash &MainWindow::dashes(const Clip &c) {
@@ -892,24 +892,24 @@ void MainWindow::drawClipBody(const Clip &c, double srcA, double srcB, QRectF r,
         for (long s = (long)std::ceil(srcA * 4.0 - 1e-6); s * 0.25 < srcB - 1e-6; ++s) {
             const int step = (int)(((s % kDrumSteps) + kDrumSteps) % kDrumSteps);
             const qreal x = std::floor(X(s * 0.25));
-            if (step % 4 == 0) g->fillRect(QRectF(x, r.bottom() - 2, 1, 2), LOW);
+            if (step % 4 == 0) ui.g->fillRect(QRectF(x, r.bottom() - 2, 1, 2), LOW);
             for (int d = 0; d < kDrums; ++d)
                 if (c.beat[d] & (1u << step))
-                    g->fillRect(QRectF(x + 1, std::floor(r.y() + 1 + d * rh), qMax(2.0, std::floor(sw) - 1), qMax(2.0, std::floor(rh) - 1)), ink);
+                    ui.g->fillRect(QRectF(x + 1, std::floor(r.y() + 1 + d * rh), qMax(2.0, std::floor(sw) - 1), qMax(2.0, std::floor(rh) - 1)), ink);
         }
     } else if (c.kind == CK_CHORDS) {
         const bool held = c.holdChord >= 0 || c.progLen <= 0;
         const double cb = held ? c.beats() : qMax(1, c.chordBeats);
         for (long k = (long)std::floor(srcA / cb + 1e-9); k * cb < srcB - 1e-6; ++k) {
             const qreal x0 = qMax(r.x(), std::floor(X(k * cb))), x1 = qMin(r.right(), std::floor(X((k + 1) * cb)));
-            if (k * cb > srcA + 1e-6) g->fillRect(QRectF(x0, r.y() + 2, 1, r.height() - 4), GRAT);
+            if (k * cb > srcA + 1e-6) ui.g->fillRect(QRectF(x0, r.y() + 2, 1, r.height() - 4), GRAT);
             QString name;
             if (c.holdChord >= 0) name = buildChord(u.set.tuning, c.holdChord, c.seventh).name;
             else if (c.progLen > 0) name = buildChord(u.set.tuning, c.prog[((k % c.progLen) + c.progLen) % c.progLen], c.seventh).name;
             else name = "drone";
             const int px = x1 - x0 >= 44 ? 13 : 11;
-            if (x1 - x0 >= name.size() * chW(px) + 2) txt(QRectF(x0, r.y(), x1 - x0, r.height()), name, px, ink, Qt::AlignCenter, px == 13);
-            else g->fillRect(QRectF(x0 + 3, r.center().y(), qMax(1.0, x1 - x0 - 6), 2), ink == INK ? MID : ink);
+            if (x1 - x0 >= name.size() * ui.chW(px) + 2) ui.txt(QRectF(x0, r.y(), x1 - x0, r.height()), name, px, ink, Qt::AlignCenter, px == 13);
+            else ui.g->fillRect(QRectF(x0 + 3, r.center().y(), qMax(1.0, x1 - x0 - 6), 2), ink == INK ? MID : ink);
         }
     } else {
         const ClipDash &cd = dashes(c);
@@ -918,7 +918,7 @@ void MainWindow::drawClipBody(const Clip &c, double srcA, double srcB, QRectF r,
             if (d.b <= srcA || d.a >= srcB) continue;
             const qreal x0 = std::floor(X(std::max((double)d.a, srcA))), x1 = std::floor(X(std::min((double)d.b, srcB)));
             const qreal y = std::floor(r.y() + 2 + (cd.hi - d.pitch) / range * (r.height() - 7));
-            g->fillRect(QRectF(x0, y, qMax(2.0, x1 - x0 - 1), 3), ink);
+            ui.g->fillRect(QRectF(x0, y, qMax(2.0, x1 - x0 - 1), 3), ink);
         }
     }
 }
@@ -934,9 +934,9 @@ void MainWindow::drawPlacement(int ln, int idx) {
     const bool sel = ln == selLane && idx == selIdx;
     const QColor ink = pl.mute ? LOW : INK;
     const QRectF r(x0, lr.y(), x1 - x0 + 1, lr.height());
-    g->fillRect(r, BG);
+    ui.g->fillRect(r, BG);
     const QRectF hd(r.x() + 1, r.y() + 1, r.width() - 2, 14);
-    g->fillRect(hd, sel ? INK : GRAT);
+    ui.g->fillRect(hd, sel ? INK : GRAT);
     const SoundPick &pk = pickFor(c, pl);
     QString title = QString::fromUtf8(c.name) + (pl.mute ? " muted" : "");
     if (pk.any()) { // a picked sound is named beside the clip
@@ -944,7 +944,7 @@ void MainWindow::drawPlacement(int ln, int idx) {
         if (pk.octave) snd += QString(" %1%2").arg(pk.octave > 0 ? "+" : "").arg(pk.octave);
         title += "  " + snd;
     }
-    txt(hd.adjusted(4, 0, -2, 0), fit(title, 11, hd.width() - 6), 11,
+    ui.txt(hd.adjusted(4, 0, -2, 0), ui.fit(title, 11, hd.width() - 6), 11,
         sel ? BG : (pl.mute ? MID : INK), Qt::AlignLeft | Qt::AlignVCenter, true);
     const QRectF body(r.x() + 2, r.y() + 16, r.width() - 4, r.height() - 19);
     const double Lc = std::max(4.0, c.beats()), total = pl.bars * 4.0;
@@ -963,10 +963,10 @@ void MainWindow::drawPlacement(int ln, int idx) {
             else drawClipBody(c, pcs.src + into, pcs.src + into + len, pr, ink);
         }
         t += len;
-        if (t < total - 1e-9) g->fillRect(QRectF(b, body.y() - 1, 1, body.height() + 2), std::fmod(t, Lc) < 1e-6 ? MID : LOW);
+        if (t < total - 1e-9) ui.g->fillRect(QRectF(b, body.y() - 1, 1, body.height() + 2), std::fmod(t, Lc) < 1e-6 ? MID : LOW);
     }
-    frame(r, sel ? INK : MID);
-    if (sel) frame(r.adjusted(1, 1, -1, -1), INK);
+    ui.frame(r, sel ? INK : MID);
+    if (sel) ui.frame(r.adjusted(1, 1, -1, -1), INK);
 }
 
 void MainWindow::laneTouch(QPointF p, int ph) {
@@ -1030,11 +1030,11 @@ void MainWindow::paintTrack() {
     viewBar = qBound(0, viewBar, maxViewBar());
 
     // headings
-    txt(QRectF(18, 60, 110, 20), "Clips", 13, MID, L);
+    ui.txt(QRectF(18, 60, 110, 20), "Clips", 13, MID, L);
     QString head = QString("Track  %1 bpm  %2 bar%3").arg((int)std::round(u.set.bpm)).arg(track.bars).arg(track.bars == 1 ? "" : "s");
     if (exportState.load() == 1) head += QString("  exporting %1%").arg(exportPct.load());
     else if (u.trackPlaying) head += QString("  playing bar %1").arg((int)(u.trackPos / 4.0) + 1);
-    txt(QRectF(136, 60, 568, 20), head, 13, MID, L);
+    ui.txt(QRectF(136, 60, 568, 20), head, 13, MID, L);
 
     // the shelf of clips
     const int pages = qMax(1, (nClips + SHELF - 1) / SHELF);
@@ -1042,22 +1042,22 @@ void MainWindow::paintTrack() {
     for (int k = 0; k < SHELF; ++k) {
         const QRectF r(16, 84 + k * 54, 112, 48);
         const int ci = shelfPage * SHELF + k;
-        if (ci >= nClips) { frame(r, GRAT); continue; }
+        if (ci >= nClips) { ui.frame(r, GRAT); continue; }
         const Clip &c = *track.clips[ci];
         const QString name = QString("shelf_clip%1").arg(k);
-        const bool on = (handOn && hand.clip == ci) || downNames.contains(name);
-        frame(r, on ? INK : LOW, on ? INK : BG);
-        if (removeArmed == ci && !downNames.contains(name)) frame(r.adjusted(3, 3, -3, -3), on ? BG : INK);
-        txt(QRectF(r.x() + 4, r.y() + 3, 12, 14), QString::number((k + 1) % 10), 11, on ? BG : LOW, L);
-        txt(QRectF(r.x(), r.y() + 5, r.width(), 22), fit(QString::fromUtf8(c.name), 14, 92), 14, on ? BG : INK, Qt::AlignCenter, true);
-        txt(QRectF(r.x() + 2, r.y() + 28, r.width() - 4, 16), fit(clipSub(c), 11, 106), 11, on ? BG : MID);
-        zone(r, name, [this, ci](QPointF, int ph) { if (ph == PH_PRESS) trackTake(ci); });
+        const bool on = (handOn && hand.clip == ci) || ui.isDown(name);
+        ui.frame(r, on ? INK : LOW, on ? INK : BG);
+        if (removeArmed == ci && !ui.isDown(name)) ui.frame(r.adjusted(3, 3, -3, -3), on ? BG : INK);
+        ui.txt(QRectF(r.x() + 4, r.y() + 3, 12, 14), QString::number((k + 1) % 10), 11, on ? BG : LOW, L);
+        ui.txt(QRectF(r.x(), r.y() + 5, r.width(), 22), ui.fit(QString::fromUtf8(c.name), 14, 92), 14, on ? BG : INK, Qt::AlignCenter, true);
+        ui.txt(QRectF(r.x() + 2, r.y() + 28, r.width() - 4, 16), ui.fit(clipSub(c), 11, 106), 11, on ? BG : MID);
+        ui.zone(r, name, [this, ci](QPointF, int ph) { if (ph == PH_PRESS) trackTake(ci); });
     }
     if (pages > 1) {
-        button(QRectF(16, 354, 62, 48), "track_keep", "+ Keep", false, [this] { trackKeep(); }, "what plays");
-        button(QRectF(82, 354, 46, 48), "track_shelf_page", QString("%1/%2").arg(shelfPage + 1).arg(pages), false, [this, pages] { shelfPage = (shelfPage + 1) % pages; }, "more");
+        ui.button(QRectF(16, 354, 62, 48), "track_keep", "+ Keep", false, [this] { trackKeep(); }, "what plays");
+        ui.button(QRectF(82, 354, 46, 48), "track_shelf_page", QString("%1/%2").arg(shelfPage + 1).arg(pages), false, [this, pages] { shelfPage = (shelfPage + 1) % pages; }, "more");
     } else {
-        button(QRectF(16, 354, 112, 48), "track_keep", "+ Keep", false, [this] { trackKeep(); }, "beat chord loop");
+        ui.button(QRectF(16, 354, 112, 48), "track_keep", "+ Keep", false, [this] { trackKeep(); }, "beat chord loop");
     }
 
     // the ruler of bars
@@ -1066,10 +1066,10 @@ void MainWindow::paintTrack() {
         const qreal x = std::floor(GX + i * BW), x2 = std::floor(GX + (i + 1) * BW);
         const bool in = cyc && bar >= track.cycleFrom && bar < track.cycleTo;
         const QRectF nr(x, 86, x2 - x, 16);
-        if (in) g->fillRect(nr.adjusted(0, 0, 1, 0), INK);
-        txt(nr, QString::number(bar + 1), 12, in ? BG : (bar >= track.bars ? LOW : (bar % 4 == 0 ? INK : MID)), Qt::AlignCenter, bar % 4 == 0 || in);
+        if (in) ui.g->fillRect(nr.adjusted(0, 0, 1, 0), INK);
+        ui.txt(nr, QString::number(bar + 1), 12, in ? BG : (bar >= track.bars ? LOW : (bar % 4 == 0 ? INK : MID)), Qt::AlignCenter, bar % 4 == 0 || in);
     }
-    zone(QRectF(GX, 78, GW, 26), "track_ruler", [this](QPointF p, int ph) {
+    ui.zone(QRectF(GX, 78, GW, 26), "track_ruler", [this](QPointF p, int ph) {
         if (ph == PH_RELEASE) return;
         const int b = qBound(0, barAtX(p.x(), viewBar), qMin(track.bars, kTrackMaxBars - 1));
         if (b == playBar && ph == PH_MOVE) return;
@@ -1086,42 +1086,42 @@ void MainWindow::paintTrack() {
         const bool strong = target || selLane == ln;
         const bool heard = laneHeard(track, ln);
         const QString state = track.mix[ln].mute ? "muted" : (!heard ? "off" : (track.mix[ln].solo ? "solo" : ""));
-        if (state.isEmpty()) txt(QRectF(134, lr.y(), 44, lr.height()), laneLabel(ln), 11, strong ? INK : MID, L, strong);
+        if (state.isEmpty()) ui.txt(QRectF(134, lr.y(), 44, lr.height()), laneLabel(ln), 11, strong ? INK : MID, L, strong);
         else {
-            txt(QRectF(134, lr.y() + lr.height() / 2 - 15, 44, 15), laneLabel(ln), 11, heard ? (strong ? INK : MID) : LOW, L, strong);
-            txt(QRectF(134, lr.y() + lr.height() / 2 + 1, 44, 15), state, 11, heard ? INK : LOW, L);
+            ui.txt(QRectF(134, lr.y() + lr.height() / 2 - 15, 44, 15), laneLabel(ln), 11, heard ? (strong ? INK : MID) : LOW, L, strong);
+            ui.txt(QRectF(134, lr.y() + lr.height() / 2 + 1, 44, 15), state, 11, heard ? INK : LOW, L);
         }
-        frame(QRectF(lr.x(), lr.y(), lr.width() + 1, lr.height()), GRAT);
+        ui.frame(QRectF(lr.x(), lr.y(), lr.width() + 1, lr.height()), GRAT);
         for (int i = 1; i < VIEW; ++i)
-            if (viewBar + i < track.bars) g->fillRect(QRectF(std::floor(GX + i * BW), lr.y() + 1, 1, lr.height() - 2), GRAT);
+            if (viewBar + i < track.bars) ui.g->fillRect(QRectF(std::floor(GX + i * BW), lr.y() + 1, 1, lr.height() - 2), GRAT);
         if (endX > GX && endX < GX + GW) hatch(QRectF(endX + 1, lr.y() + 1, GX + GW - endX - 1, lr.height() - 2), QColor(0x1c, 0x1c, 0x1c));
     }
-    g->save();
-    g->setClipRect(QRectF(GX, LY - 1, GW + 1, lanesBottom - LY + 2), Qt::IntersectClip);
+    ui.g->save();
+    ui.g->setClipRect(QRectF(GX, LY - 1, GW + 1, lanesBottom - LY + 2), Qt::IntersectClip);
     for (int ln = 0; ln < kLanes; ++ln)
         for (int i = 0; i < (int)track.lane[ln].size(); ++i) drawPlacement(ln, i);
     for (int ln = 0; ln < kLanes; ++ln) // a lane the mixer silences is drawn faint
-        if (!laneHeard(track, ln)) g->fillRect(laneRect(ln).adjusted(1, 1, -1, -1), QColor(4, 4, 4, 160));
+        if (!laneHeard(track, ln)) ui.g->fillRect(laneRect(ln).adjusted(1, 1, -1, -1), QColor(4, 4, 4, 160));
     int spotLane = -1, spotBar = -1;
     if (handOn && placeSpot(spotLane, spotBar)) { // where Place would put the clip in hand
         const QRectF lr = laneRect(spotLane);
         const qreal x0 = std::floor(GX + (spotBar - viewBar) * BW), x1 = std::floor(GX + (spotBar + hand.bars - viewBar) * BW);
-        g->setPen(QPen(MID, 1, Qt::DashLine));
-        g->setBrush(Qt::NoBrush);
-        g->drawRect(QRectF(x0 + 2.5, lr.y() + 2.5, x1 - x0 - 4, lr.height() - 5));
-        txt(QRectF(x0, lr.y(), x1 - x0, lr.height()), x1 - x0 > 60 ? "place" : "+", 11, MID);
+        ui.g->setPen(QPen(MID, 1, Qt::DashLine));
+        ui.g->setBrush(Qt::NoBrush);
+        ui.g->drawRect(QRectF(x0 + 2.5, lr.y() + 2.5, x1 - x0 - 4, lr.height() - 5));
+        ui.txt(QRectF(x0, lr.y(), x1 - x0, lr.height()), x1 - x0 > 60 ? "place" : "+", 11, MID);
     }
-    if (endX > GX && endX <= GX + GW) g->fillRect(QRectF(endX, LY, 2, lanesBottom - LY), MID); // the end of the track
-    g->restore();
-    zone(QRectF(GX, LY - 2, GW, lanesBottom - LY + 4), "track_lanes", [this](QPointF p, int ph) { laneTouch(p, ph); });
+    if (endX > GX && endX <= GX + GW) ui.g->fillRect(QRectF(endX, LY, 2, lanesBottom - LY), MID); // the end of the track
+    ui.g->restore();
+    ui.zone(QRectF(GX, LY - 2, GW, lanesBottom - LY + 4), "track_lanes", [this](QPointF p, int ph) { laneTouch(p, ph); });
 
     if (nClips == 0 && placed == 0) {
         const QRectF m(GX + 40, LY + 76, GW - 80, 124);
-        frame(m, LOW, BG);
-        tag(QRectF(m.x() + 1, m.y() + 1, 118, 18), "An empty track", 12, L);
-        txt(QRectF(m.x() + 16, m.y() + 30, m.width() - 32, 20), "1  Make a beat, a loop or some chords", 13, INK, L);
-        txt(QRectF(m.x() + 16, m.y() + 56, m.width() - 32, 20), "2  Tap + Keep: they become clips", 13, INK, L);
-        txt(QRectF(m.x() + 16, m.y() + 82, m.width() - 32, 20), "3  Tap a clip, then tap a bar", 13, INK, L);
+        ui.frame(m, LOW, BG);
+        ui.tag(QRectF(m.x() + 1, m.y() + 1, 118, 18), "An empty track", 12, L);
+        ui.txt(QRectF(m.x() + 16, m.y() + 30, m.width() - 32, 20), "1  Make a beat, a loop or some chords", 13, INK, L);
+        ui.txt(QRectF(m.x() + 16, m.y() + 56, m.width() - 32, 20), "2  Tap + Keep: they become clips", 13, INK, L);
+        ui.txt(QRectF(m.x() + 16, m.y() + 82, m.width() - 32, 20), "3  Tap a clip, then tap a bar", 13, INK, L);
     }
 
     // the play line
@@ -1129,13 +1129,13 @@ void MainWindow::paintTrack() {
         const double pos = u.trackPlaying ? u.trackPos / 4.0 : (double)playBar;
         const qreal x = std::floor(GX + (pos - viewBar) * BW);
         if (x >= GX - 1 && x <= GX + GW + 1) {
-            g->fillRect(QRectF(x, 84, u.trackPlaying ? 2 : 1, lanesBottom - 84), INK);
+            ui.g->fillRect(QRectF(x, 84, u.trackPlaying ? 2 : 1, lanesBottom - 84), INK);
             QPainterPath m;
             m.moveTo(x - 5, 76); m.lineTo(x + 6, 76); m.lineTo(x + 0.5, 85); m.closeSubpath();
-            g->setRenderHint(QPainter::Antialiasing, true);
-            g->setPen(Qt::NoPen); g->setBrush(INK);
-            g->drawPath(m);
-            g->setRenderHint(QPainter::Antialiasing, false);
+            ui.g->setRenderHint(QPainter::Antialiasing, true);
+            ui.g->setPen(Qt::NoPen); ui.g->setBrush(INK);
+            ui.g->drawPath(m);
+            ui.g->setRenderHint(QPainter::Antialiasing, false);
         }
     }
 
@@ -1155,7 +1155,7 @@ void MainWindow::paintTrackTools() {
     else if (sel) s = QString("%1 chosen, %2  drag it to move").arg(QString::fromUtf8(track.clips[sel->clip]->name)).arg(barsText(sel->bar, sel->bars));
     else if (track.clips.empty()) s = "No clips yet  + Keep copies what you have made";
     else s = "Tap a clip on the left, then a bar";
-    section(414, s);
+    ui.section(414, s);
 
     const qreal pw = (688 - 3 * 8) / 4.0;
     auto c4 = [pw](int i, qreal y) { return QRectF(std::floor(16 + i * (pw + 8)), y, std::floor(pw), 60); };
@@ -1163,28 +1163,28 @@ void MainWindow::paintTrackTools() {
     const bool spot = handOn && placeSpot(spotLane, spotBar);
     const qreal fw = (688 - 4 * 8) / 5.0;
     auto r5 = [fw](int i) { return QRectF(std::floor(16 + i * (fw + 8)), 438, std::floor(fw), 60); };
-    button(r5(0), "track_place", "Place", handOn, [this] { trackPlaceAtLine(); },
+    ui.button(r5(0), "track_place", "Place", handOn, [this] { trackPlaceAtLine(); },
            handOn ? (spot ? QString("at bar %1").arg(spotBar + 1) : QString("no room")) : QString("pick a clip first"));
-    button(r5(1), "track_chop", "Chop", false, [this] { trackChop(); }, "cut and reorder");
+    ui.button(r5(1), "track_chop", "Chop", false, [this] { trackChop(); }, "cut and reorder");
     QString plays = "keys guitar bass";
     if (sel) {
         const Clip &sc = *track.clips[sel->clip];
         const char *sn = soundName(sc, pickFor(sc, *sel));
         plays = sc.kind == CK_BEAT ? nice(sn) + " kit" : QString::fromUtf8(sn);
     }
-    button(r5(2), "track_sound", "Sound", false, [this] { trackSound(); }, plays);
-    button(r5(3), "track_repeat", "Repeat", false, [this] { trackRepeat(); }, "copy to the right");
+    ui.button(r5(2), "track_sound", "Sound", false, [this] { trackSound(); }, plays);
+    ui.button(r5(3), "track_repeat", "Repeat", false, [this] { trackRepeat(); }, "copy to the right");
     const bool armed = removeArmed >= 0 && clock.elapsed() - removeArmedAt <= 4000;
-    button(r5(4), "track_remove", "Remove", false, [this] { trackRemove(); },
+    ui.button(r5(4), "track_remove", "Remove", false, [this] { trackRemove(); },
            armed ? QString("again to delete") : (!sel && handOn && handFromShelf ? QString("clip and copies") : QString("from the track")),
            armed ? LOOK_ARMED : LOOK_PLAIN);
 
     const int from = cyc && (playBar < track.cycleFrom || playBar >= track.cycleTo) ? track.cycleFrom : qMin(playBar, track.bars - 1);
-    button(c4(0, 506), "track_play", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying, [this] { trackPlayStop(); },
+    ui.button(c4(0, 506), "track_play", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying, [this] { trackPlayStop(); },
            u.trackPlaying ? QString("bar %1").arg((int)(u.trackPos / 4.0) + 1) : QString("from bar %1").arg(from + 1));
-    button(c4(1, 506), "track_cycle", "Cycle", cyc, [this] { trackCycle(); },
+    ui.button(c4(1, 506), "track_cycle", "Cycle", cyc, [this] { trackCycle(); },
            cyc ? barsText(track.cycleFrom, track.cycleTo - track.cycleFrom) : (sel ? QString("round this clip") : QString("round 4 bars")));
-    stepper(c4(2, 506), "track_length", "Length", QString("%1 bars").arg(track.bars),
+    ui.stepper(c4(2, 506), "track_length", "Length", QString("%1 bars").arg(track.bars),
             [this] {
                 int last = 1;
                 for (int ln = 0; ln < kLanes; ++ln) for (const Placement &p : track.lane[ln]) last = qMax(last, p.bar + p.bars);
@@ -1192,26 +1192,26 @@ void MainWindow::paintTrackTools() {
                 --track.bars; trackSync();
             },
             [this] { if (track.bars < kTrackMaxBars) { ++track.bars; trackSync(); } });
-    button(c4(3, 506), "track_export", exporting ? QString("%1%").arg(exportPct.load()) : QString("Export"), exporting, [this] { trackExport(); },
+    ui.button(c4(3, 506), "track_export", exporting ? QString("%1%").arg(exportPct.load()) : QString("Export"), exporting, [this] { trackExport(); },
            exporting ? "writing audio" : "save as audio");
 
     auto c5 = [](int i) { return QRectF(16 + i * 106, 574, 98, 60); };
-    button(c5(0), "track_split", "Split", false, [this] { trackSplit(); }, "at the line");
-    button(c5(1), "track_join", "Join", false, [this] { trackJoin(); }, "with the next");
-    button(c5(2), "track_mute", "Mute", sel && sel->mute, [this] { trackMute(); }, "this clip");
-    button(c5(3), "track_undo", "Undo", false, [this] { trackUndoDo(); }, trackUndo.empty() ? QString("nothing yet") : QString("%1 step%2").arg(trackUndo.size()).arg(trackUndo.size() == 1 ? "" : "s"));
+    ui.button(c5(0), "track_split", "Split", false, [this] { trackSplit(); }, "at the line");
+    ui.button(c5(1), "track_join", "Join", false, [this] { trackJoin(); }, "with the next");
+    ui.button(c5(2), "track_mute", "Mute", sel && sel->mute, [this] { trackMute(); }, "this clip");
+    ui.button(c5(3), "track_undo", "Undo", false, [this] { trackUndoDo(); }, trackUndo.empty() ? QString("nothing yet") : QString("%1 step%2").arg(trackUndo.size()).arg(trackUndo.size() == 1 ? "" : "s"));
     QString mixSub = "lane levels";
     for (int ln = 0; ln < kLanes; ++ln)
         if (!laneHeard(track, ln) || track.mix[ln].level != kLaneLevelNormal) { mixSub = "lanes changed"; break; }
-    button(c5(4), "track_mixer", "Mix", false, [this] { trackMixer(); }, mixSub);
-    stepper(QRectF(546, 574, 158, 60), "track_view", "Shown", QString("%1-%2").arg(viewBar + 1).arg(viewBar + VIEW),
+    ui.button(c5(4), "track_mixer", "Mix", false, [this] { trackMixer(); }, mixSub);
+    ui.stepper(QRectF(546, 574, 158, 60), "track_view", "Shown", QString("%1-%2").arg(viewBar + 1).arg(viewBar + VIEW),
             [this] { viewBar = qMax(0, viewBar - 4); }, [this] { viewBar = qMin(maxViewBar(), viewBar + 4); });
 
     const QString cmd = km.keyFor(A_COMMAND, false);
-    txt(QRectF(18, 644, 684, 20), QString("Keys: %1 play, %2 to bar 1, arrows choose a clip, Alt+arrows move it,")
+    ui.txt(QRectF(18, 644, 684, 20), QString("Keys: %1 play, %2 to bar 1, arrows choose a clip, Alt+arrows move it,")
             .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)), 12, MID, L);
-    txt(QRectF(18, 664, 684, 20), "Shift+arrows move the line. 1-5 pick a clip. K keep, E chop, I sound, M mute, X mix, C cycle.", 12, MID, L);
-    txt(QRectF(18, 684, 684, 20), QString("%1 + T split, J join, R repeat, X C V cut copy paste, Z undo, B export.").arg(cmd), 12, MID, L);
+    ui.txt(QRectF(18, 664, 684, 20), "Shift+arrows move the line. 1-5 pick a clip. K keep, E chop, I sound, M mute, X mix, C cycle.", 12, MID, L);
+    ui.txt(QRectF(18, 684, 684, 20), QString("%1 + T split, J join, R repeat, X C V cut copy paste, Z undo, B export.").arg(cmd), 12, MID, L);
 }
 
 void MainWindow::paintChop() {
@@ -1221,10 +1221,10 @@ void MainWindow::paintChop() {
     const double Lc = std::max(4.0, c.beats()), gr = chopGrid(c);
     const int n = (int)pl.pieces.size();
     chopPiece = qBound(0, chopPiece, n - 1);
-    section(414, QString("Chop  %1 on %2, %3").arg(QString::fromUtf8(c.name)).arg(laneLabel(selLane)).arg(barsText(pl.bar, pl.bars)));
+    ui.section(414, QString("Chop  %1 on %2, %3").arg(QString::fromUtf8(c.name)).arg(laneLabel(selLane)).arg(barsText(pl.bar, pl.bars)));
 
     const QRectF sr(16, 438, 688, 124);
-    frame(sr, LOW, BG);
+    ui.frame(sr, LOW, BG);
     auto X = [&](double b) { return std::floor(sr.x() + b / Lc * sr.width()); };
     const qreal ppb = sr.width() / Lc;
     double acc = 0;
@@ -1234,48 +1234,48 @@ void MainWindow::paintChop() {
         const QRectF pr(x0, sr.y(), x1 - x0 + (i == n - 1 ? 0 : 1), sr.height());
         const bool on = i == chopPiece;
         const QRectF hd(pr.x() + 1, pr.y() + 1, pr.width() - 2, 16);
-        g->fillRect(hd, on ? INK : GRAT);
+        ui.g->fillRect(hd, on ? INK : GRAT);
         const QString letter = i < 26 ? QString(QChar('A' + i)) : QString::number(i + 1);
-        txt(hd.adjusted(5, 0, -2, 0), fit(pc.mute ? letter + " muted" : letter, 11, hd.width() - 6), 11, on ? BG : INK, L, true);
+        ui.txt(hd.adjusted(5, 0, -2, 0), ui.fit(pc.mute ? letter + " muted" : letter, 11, hd.width() - 6), 11, on ? BG : INK, L, true);
         const QRectF body(pr.x() + 2, pr.y() + 19, pr.width() - 4, pr.height() - 38);
         for (double b = std::ceil((acc + 1e-6) / gr) * gr; b < acc + pc.len - 1e-6; b += gr) // where a cut may fall
-            for (qreal y = body.y(); y < body.bottom(); y += 4) g->fillRect(QRectF(X(b), y, 1, 2), GRAT);
+            for (qreal y = body.y(); y < body.bottom(); y += 4) ui.g->fillRect(QRectF(X(b), y, 1, 2), GRAT);
         if (pc.mute) hatch(body, LOW);
         else drawClipBody(c, pc.src, pc.src + pc.len, body, INK);
-        frame(pr, on ? INK : MID);
-        if (on) frame(pr.adjusted(1, 1, -1, -1), INK);
+        ui.frame(pr, on ? INK : MID);
+        if (on) ui.frame(pr.adjusted(1, 1, -1, -1), INK);
         acc += pc.len;
     }
     // where each moment falls on the track
     const double step = ppb >= 44 ? 1.0 : (ppb * 2 >= 44 ? 2.0 : 4.0);
     for (double b = 0; b < Lc - 1e-6; b += step)
-        txt(QRectF(X(b) + 5, sr.bottom() - 18, 60, 15), QString("%1.%2").arg(pl.bar + 1 + (int)(b / 4)).arg((int)std::fmod(b, 4.0) + 1), 11, LOW, L);
+        ui.txt(QRectF(X(b) + 5, sr.bottom() - 18, 60, 15), QString("%1.%2").arg(pl.bar + 1 + (int)(b / 4)).arg((int)std::fmod(b, 4.0) + 1), 11, LOW, L);
     if (pl.bars * 4.0 < Lc - 1e-6) { // split off: the rest of the clip is not heard here
         const QRectF un(X(pl.bars * 4.0) + 1, sr.y() + 18, sr.right() - X(pl.bars * 4.0) - 2, sr.height() - 19);
-        g->fillRect(un, QColor(4, 4, 4, 190));
-        txt(un, "not played here", 11, LOW);
+        ui.g->fillRect(un, QColor(4, 4, 4, 190));
+        ui.txt(un, "not played here", 11, LOW);
     }
     if (u.trackPlaying) {
         const double rel = u.trackPos - pl.bar * 4.0;
-        if (rel >= 0 && rel < pl.bars * 4.0) g->fillRect(QRectF(X(std::fmod(rel, Lc)), sr.y() + 1, 2, sr.height() - 2), INK);
+        if (rel >= 0 && rel < pl.bars * 4.0) ui.g->fillRect(QRectF(X(std::fmod(rel, Lc)), sr.y() + 1, 2, sr.height() - 2), INK);
     }
-    zone(sr, "chop_strip", [this, sr](QPointF p, int ph) {
+    ui.zone(sr, "chop_strip", [this, sr](QPointF p, int ph) {
         if (ph == PH_PRESS) chopTap((p.x() - sr.x()) / sr.width(), sr.width());
     });
 
     const qreal pw = (688 - 3 * 8) / 4.0;
     auto c4 = [pw](int i, qreal y) { return QRectF(std::floor(16 + i * (pw + 8)), y, std::floor(pw), 54); };
     const double every = std::max(1.0, gr);
-    button(c4(0, 570), "chop_halves", "Halves", false, [this] { chopEdit([](Placement &x) { return cutPiece(x, piecesLength(x) / 2); }); }, "cut in two");
-    button(c4(1, 570), "chop_beats", every >= 4 ? "Bars" : "Beats", false, [this] {
+    ui.button(c4(0, 570), "chop_halves", "Halves", false, [this] { chopEdit([](Placement &x) { return cutPiece(x, piecesLength(x) / 2); }); }, "cut in two");
+    ui.button(c4(1, 570), "chop_beats", every >= 4 ? "Bars" : "Beats", false, [this] {
         chopEdit([this](Placement &x) { size_t b = x.pieces.size(); cutEvery(x, std::max(1.0, chopGrid(*track.clips[x.clip]))); return x.pieces.size() != b; });
     },
            every == 1.0 ? "cut every beat" : (every == 2.0 ? "cut every 2 beats" : "cut every bar"));
-    button(c4(2, 570), "chop_reset", "Reset", false, [this] {
+    ui.button(c4(2, 570), "chop_reset", "Reset", false, [this] {
         chopEdit([this](Placement &x) { if (x.pieces.size() == 1 && !x.pieces[0].mute) return false; resetPieces(x, *track.clips[x.clip]); return true; });
         chopPiece = 0;
     }, "undo every cut");
-    button(c4(3, 570), "chop_done", "Done", false, [this] { chopOpen = false; }, "back to the track");
+    ui.button(c4(3, 570), "chop_done", "Done", false, [this] { chopOpen = false; }, "back to the track");
     const QString letter = chopPiece < 26 ? QString(QChar('A' + chopPiece)) : QString::number(chopPiece + 1);
     auto move = [this](int d) { // reads the pieces when tapped, not when drawn
         Placement *p = chosen();
@@ -1284,17 +1284,17 @@ void MainWindow::paintChop() {
         chopEdit([pc, d](Placement &x) { return movePiece(x, pc, d); });
         chopPiece = to;
     };
-    button(c4(0, 630), "chop_move_left", QString::fromUtf8("‹ Move"), false, [move] { move(-1); }, QString("piece %1 earlier").arg(letter));
-    button(c4(1, 630), "chop_move_right", QString::fromUtf8("Move ›"), false, [move] { move(1); }, QString("piece %1 later").arg(letter));
-    button(c4(2, 630), "chop_mute_piece", "Mute piece", pl.pieces[chopPiece].mute, [this] {
+    ui.button(c4(0, 630), "chop_move_left", QString::fromUtf8("‹ Move"), false, [move] { move(-1); }, QString("piece %1 earlier").arg(letter));
+    ui.button(c4(1, 630), "chop_move_right", QString::fromUtf8("Move ›"), false, [move] { move(1); }, QString("piece %1 later").arg(letter));
+    ui.button(c4(2, 630), "chop_mute_piece", "Mute piece", pl.pieces[chopPiece].mute, [this] {
         chopEdit([this](Placement &x) { if (chopPiece >= (int)x.pieces.size()) return false; x.pieces[chopPiece].mute = !x.pieces[chopPiece].mute; return true; });
     }, "leave a gap");
-    button(c4(3, 630), "chop_repeat_piece", "Repeat piece", false, [this] {
+    ui.button(c4(3, 630), "chop_repeat_piece", "Repeat piece", false, [this] {
         const int pc = chopPiece;
         chopEdit([pc](Placement &x) { return repeatPiece(x, pc); });
         if (Placement *p = chosen()) chopPiece = qMin(pc + 1, (int)p->pieces.size() - 1);
     }, "the next plays it too");
-    txt(QRectF(18, 690, 684, 20), "Tap a dotted line to cut there, a cut to mend it, a piece to choose it. Pieces stay in time.", 12, MID, L);
+    ui.txt(QRectF(18, 690, 684, 20), "Tap a dotted line to cut there, a cut to mend it, a piece to choose it. Pieces stay in time.", 12, MID, L);
 }
 
 void MainWindow::paintClipSound() {
@@ -1309,7 +1309,7 @@ void MainWindow::paintClipSound() {
     const bool only = pl.pick.own || pl.pick.any();
     auto shown = [beat](const char *s) { return beat ? nice(s) : QString::fromUtf8(s); };
     const QString name = QString::fromUtf8(c.name), now = shown(soundName(c, pk)), rec = shown(recordedSoundName(c));
-    section(414, pk.on || pk.kit >= 0 ? QString("Sound for %1, %2   plays %3, recorded as %4").arg(name).arg(barsText(pl.bar, pl.bars)).arg(now).arg(rec)
+    ui.section(414, pk.on || pk.kit >= 0 ? QString("Sound for %1, %2   plays %3, recorded as %4").arg(name).arg(barsText(pl.bar, pl.bars)).arg(now).arg(rec)
                                       : QString("Sound for %1, %2   plays %3, as recorded").arg(name).arg(barsText(pl.bar, pl.bars)).arg(rec));
 
     // kinds of sound
@@ -1320,11 +1320,11 @@ void MainWindow::paintClipSound() {
         const QRectF r(std::floor(16 + k * (kw + 6)), 438, std::floor(kw), 52);
         const bool fits = beat ? k == PK_DRUMS : k != PK_DRUMS;
         if (fits) {
-            button(r, QString("sound_kind%1").arg(k), KN[k], soundKind == k, [this, k] { if (soundKind != k) { soundKind = k; soundPage = 0; } }, KS[k]);
+            ui.button(r, QString("sound_kind%1").arg(k), KN[k], soundKind == k, [this, k] { if (soundKind != k) { soundKind = k; soundPage = 0; } }, KS[k]);
         } else { // not for this kind of clip
-            frame(r, GRAT, BG);
-            txt(QRectF(r.x(), r.y() + r.height() * 0.13, r.width(), r.height() * 0.46), KN[k], 16, LOW, Qt::AlignCenter, true);
-            txt(QRectF(r.x() + 2, r.y() + r.height() * 0.58, r.width() - 4, r.height() * 0.32), beat ? "notes only" : "beat clips only", 11, LOW);
+            ui.frame(r, GRAT, BG);
+            ui.txt(QRectF(r.x(), r.y() + r.height() * 0.13, r.width(), r.height() * 0.46), KN[k], 16, LOW, Qt::AlignCenter, true);
+            ui.txt(QRectF(r.x() + 2, r.y() + r.height() * 0.58, r.width() - 4, r.height() * 0.32), beat ? "notes only" : "beat clips only", 11, LOW);
         }
     }
 
@@ -1339,7 +1339,7 @@ void MainWindow::paintClipSound() {
         QString label, sub;
         bool on = false;
         if (n > 6 && cell == 5) { label = "More"; sub = QString("page %1 of %2").arg(soundPage + 1).arg(pages); }
-        else if (i >= n) { frame(r, GRAT, BG); continue; }
+        else if (i >= n) { ui.frame(r, GRAT, BG); continue; }
         else if (soundKind == PK_DRUMS) {
             label = nice(kitName(i)); sub = i == c.kit ? "as recorded" : "kit";
             on = i == (pk.kit >= 0 ? pk.kit : c.kit);
@@ -1352,27 +1352,27 @@ void MainWindow::paintClipSound() {
             sub = libraryHint(libKind(soundKind), i);
             on = pk.on && label == now;
         }
-        button(r, zn, label, on, [this, cell] { soundPickAt(cell); }, sub);
-        txt(QRectF(r.x() + 5, r.y() + 3, 12, 14), QString::number(cell + 1), 11, on || downNames.contains(zn) ? BG : LOW, L);
+        ui.button(r, zn, label, on, [this, cell] { soundPickAt(cell); }, sub);
+        ui.txt(QRectF(r.x() + 5, r.y() + 3, 12, 14), QString::number(cell + 1), 11, on || ui.isDown(zn) ? BG : LOW, L);
     }
 
     const qreal y = 622, h = 56;
-    button(QRectF(16, y, 130, h), "sound_hear", hearOn ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Hear"), hearOn, [this] { hearToggle(); }, "this clip alone");
+    ui.button(QRectF(16, y, 130, h), "sound_hear", hearOn ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Hear"), hearOn, [this] { hearToggle(); }, "this clip alone");
     const QRectF orr(154, y, 164, h);
     if (beat) {
-        frame(orr, GRAT, BG);
-        txt(QRectF(orr.x(), orr.y() + 6, orr.width(), 16), "Octave", 12, LOW);
-        txt(QRectF(orr.x(), orr.y() + 22, orr.width(), h - 26), "notes only", 13, LOW);
+        ui.frame(orr, GRAT, BG);
+        ui.txt(QRectF(orr.x(), orr.y() + 6, orr.width(), 16), "Octave", 12, LOW);
+        ui.txt(QRectF(orr.x(), orr.y() + 22, orr.width(), h - 26), "notes only", 13, LOW);
     } else {
-        stepper(orr, "sound_octave", "Octave", pk.octave > 0 ? QString("+%1").arg(pk.octave) : QString::number(pk.octave),
+        ui.stepper(orr, "sound_octave", "Octave", pk.octave > 0 ? QString("+%1").arg(pk.octave) : QString::number(pk.octave),
                 [this] { soundApply([](SoundPick &k) { k.octave = qMax(-2, k.octave - 1); }); },
                 [this] { soundApply([](SoundPick &k) { k.octave = qMin(2, k.octave + 1); }); });
     }
-    button(QRectF(326, y, 130, h), "sound_scope", only ? QString("Only this one") : QString("Every %1").arg(name), false, [this] { soundScope(); },
+    ui.button(QRectF(326, y, 130, h), "sound_scope", only ? QString("Only this one") : QString("Every %1").arg(name), false, [this] { soundScope(); },
            only ? QString("tap for every one") : QString("tap for only this"));
-    button(QRectF(464, y, 130, h), "sound_as_recorded", "As recorded", false, [this] { soundApply([](SoundPick &k) { k = SoundPick(); }); }, rec);
-    button(QRectF(602, y, 102, h), "sound_done", "Done", false, [this] { soundOpen = false; }, "back to tools");
-    txt(QRectF(18, 688, 684, 20), beat ? QString("Keys: 1-3 pick a kit, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false))
+    ui.button(QRectF(464, y, 130, h), "sound_as_recorded", "As recorded", false, [this] { soundApply([](SoundPick &k) { k = SoundPick(); }); }, rec);
+    ui.button(QRectF(602, y, 102, h), "sound_done", "Done", false, [this] { soundOpen = false; }, "back to tools");
+    ui.txt(QRectF(18, 688, 684, 20), beat ? QString("Keys: 1-3 pick a kit, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false))
                                        : QString("Keys: left right pick a kind, 1-6 a sound, up down the octave, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)),
         12, MID, L);
 }
@@ -1383,7 +1383,7 @@ void MainWindow::paintMixer() {
     QString solos;
     for (int ln = 0; ln < kLanes; ++ln)
         if (track.mix[ln].solo) solos += (solos.isEmpty() ? "" : ", ") + QString(laneLabel(ln));
-    section(414, solos.isEmpty() ? QString("Mixer   %1 chosen   tap or drag a fader").arg(laneLabel(mixLane))
+    ui.section(414, solos.isEmpty() ? QString("Mixer   %1 chosen   tap or drag a fader").arg(laneLabel(mixLane))
                                  : QString("Mixer   %1 chosen   only %2 heard").arg(laneLabel(mixLane)).arg(solos));
 
     const qreal W = 132, G = 7, y0 = 438, y1 = 638;
@@ -1392,55 +1392,55 @@ void MainWindow::paintMixer() {
         const bool chosenLane = ln == mixLane, heard = laneHeard(track, ln);
         const qreal x = 16 + ln * (W + G);
         const QRectF r(x, y0, W, y1 - y0);
-        frame(r, chosenLane ? INK : LOW, BG);
+        ui.frame(r, chosenLane ? INK : LOW, BG);
         const QRectF hd(x, y0, W, 24);
-        if (chosenLane) g->fillRect(hd, INK);
-        txt(hd, laneLabel(ln), 13, chosenLane ? BG : (heard ? INK : LOW), Qt::AlignCenter, true);
-        g->fillRect(QRectF(x + 1, y0 + 24, W - 2, 1), GRAT);
-        zone(hd, QString("mixer_lane%1").arg(ln), [this, ln](QPointF, int ph) { if (ph == PH_PRESS) mixLane = ln; });
+        if (chosenLane) ui.g->fillRect(hd, INK);
+        ui.txt(hd, laneLabel(ln), 13, chosenLane ? BG : (heard ? INK : LOW), Qt::AlignCenter, true);
+        ui.g->fillRect(QRectF(x + 1, y0 + 24, W - 2, 1), GRAT);
+        ui.zone(hd, QString("mixer_lane%1").arg(ln), [this, ln](QPointF, int ph) { if (ph == PH_PRESS) mixLane = ln; });
 
         // the fader: the bar is the level; the notch beside it is 80, as recorded
         const qreal top = y0 + 36, bottom = y0 + 150;
         const QRectF fr(x + 24, top, 38, bottom - top);
-        frame(fr, heard ? LOW : GRAT, BG);
+        ui.frame(fr, heard ? LOW : GRAT, BG);
         const qreal h = std::floor((fr.height() - 6) * m.level / 100.0);
-        g->fillRect(QRectF(fr.x() + 3, fr.bottom() - 3 - h, fr.width() - 6, h), heard ? INK : LOW);
+        ui.g->fillRect(QRectF(fr.x() + 3, fr.bottom() - 3 - h, fr.width() - 6, h), heard ? INK : LOW);
         const qreal ny = std::floor(fr.bottom() - 3 - (fr.height() - 6) * kLaneLevelNormal / 100.0);
-        g->fillRect(QRectF(fr.x() - 7, ny, 5, 1), MID);
-        txt(QRectF(x + 90, top, 40, 22), QString::number(m.level), 17, heard ? INK : LOW, L, true);
-        txt(QRectF(x + 90, top + 22, 40, 16), m.level == kLaneLevelNormal ? "as is" : (m.level > kLaneLevelNormal ? "louder" : "softer"), 11, MID, L);
+        ui.g->fillRect(QRectF(fr.x() - 7, ny, 5, 1), MID);
+        ui.txt(QRectF(x + 90, top, 40, 22), QString::number(m.level), 17, heard ? INK : LOW, L, true);
+        ui.txt(QRectF(x + 90, top + 22, 40, 16), m.level == kLaneLevelNormal ? "as is" : (m.level > kLaneLevelNormal ? "louder" : "softer"), 11, MID, L);
 
         // the meter: twenty steps from -48 dB to full scale, only while the track plays
         const QRectF mr(x + 72, top, 12, bottom - top);
-        frame(mr, GRAT, BG);
+        ui.frame(mr, GRAT, BG);
         const float pk = u.trackPlaying ? u.lanePeak[ln] : 0.0f;
         const float db = pk > 1e-6f ? 20.0f * std::log10(pk) : -120.0f;
         const qreal seg = (mr.height() - 4) / 20.0;
         for (int sgm = 0; sgm < 20; ++sgm) {
             const bool lit = db > -48.0f + sgm * 2.4f;
             const qreal sy = std::floor(mr.bottom() - 2 - (sgm + 1) * seg);
-            g->fillRect(QRectF(mr.x() + 2, sy + 1, mr.width() - 4, std::max<qreal>(1, std::floor(seg) - 1)), lit ? INK : GRAT);
+            ui.g->fillRect(QRectF(mr.x() + 2, sy + 1, mr.width() - 4, std::max<qreal>(1, std::floor(seg) - 1)), lit ? INK : GRAT);
         }
-        zone(QRectF(x + 4, top - 8, 82, bottom - top + 16), QString("mixer_fader%1").arg(ln),
+        ui.zone(QRectF(x + 4, top - 8, 82, bottom - top + 16), QString("mixer_fader%1").arg(ln),
              [this, ln, top, bottom](QPointF p, int ph) { mixFader(ln, p.y(), top + 3, bottom - 3, ph); });
 
         const qreal by = y0 + 160, bw = 56;
-        button(QRectF(x + 8, by, bw, 34), QString("mixer_mute%1").arg(ln), "M", m.mute,
+        ui.button(QRectF(x + 8, by, bw, 34), QString("mixer_mute%1").arg(ln), "M", m.mute,
                [this, ln] { mixApply(ln, [](LaneMix &mm) { mm.mute = !mm.mute; return true; }); });
-        button(QRectF(x + 8 + bw + 4, by, bw, 34), QString("mixer_solo%1").arg(ln), "S", m.solo,
+        ui.button(QRectF(x + 8 + bw + 4, by, bw, 34), QString("mixer_solo%1").arg(ln), "S", m.solo,
                [this, ln] { mixApply(ln, [](LaneMix &mm) { mm.solo = !mm.solo; return true; }); });
     }
 
     const qreal x = 16 + kLanes * (W + G), w = 704 - x;
     const bool cyc = track.cycleTo > track.cycleFrom;
     const int from = cyc && (playBar < track.cycleFrom || playBar >= track.cycleTo) ? track.cycleFrom : qMin(playBar, track.bars - 1);
-    button(QRectF(x, y0, w, 62), "mixer_play", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying,
+    ui.button(QRectF(x, y0, w, 62), "mixer_play", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying,
            [this] { trackPlayStop(); }, u.trackPlaying ? QString("bar %1").arg((int)(u.trackPos / 4.0) + 1) : QString("from bar %1").arg(from + 1));
-    button(QRectF(x, y0 + 68, w, 62), "mixer_reset", "Reset", false, [this] { mixReset(); }, "all back to 80");
-    button(QRectF(x, y0 + 136, w, 64), "mixer_done", "Done", false, [this] { mixOpen = false; }, "back to tools");
+    ui.button(QRectF(x, y0 + 68, w, 62), "mixer_reset", "Reset", false, [this] { mixReset(); }, "all back to 80");
+    ui.button(QRectF(x, y0 + 136, w, 64), "mixer_done", "Done", false, [this] { mixOpen = false; }, "back to tools");
 
-    txt(QRectF(18, 652, 684, 18), QString("Keys: left right choose a lane (or 1-4), up down its level, 0 back to 80,"), 12, MID, L);
-    txt(QRectF(18, 670, 684, 18), QString("M mute, S solo, %1 play, %2 or X done. %3 + Z undoes a change.")
+    ui.txt(QRectF(18, 652, 684, 18), QString("Keys: left right choose a lane (or 1-4), up down its level, 0 back to 80,"), 12, MID, L);
+    ui.txt(QRectF(18, 670, 684, 18), QString("M mute, S solo, %1 play, %2 or X done. %3 + Z undoes a change.")
             .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_HOME, false)).arg(km.keyFor(A_COMMAND, false)), 12, MID, L);
-    txt(QRectF(18, 692, 684, 18), "Levels, mutes and solos are kept with the track and heard in an export.", 12, LOW, L);
+    ui.txt(QRectF(18, 692, 684, 18), "Levels, mutes and solos are kept with the track and heard in an export.", 12, LOW, L);
 }

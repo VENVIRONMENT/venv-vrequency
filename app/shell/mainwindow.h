@@ -8,6 +8,7 @@
 #include "app/shell/keymap.h"
 #include "presets.h"
 #include "app/store/store.h"
+#include "app/ui/ui.h"
 #include <QElapsedTimer>
 #include <QFont>
 #include <QHash>
@@ -49,7 +50,6 @@ class MainWindow : public QWidget {
 public:
     // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
     enum Page { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
-    enum Phase { PH_PRESS, PH_MOVE, PH_RELEASE };
 
     // `scratch`: an off-screen copy used only to draw the tour's pictures: it reads and writes no files
     MainWindow(td::Instrument &inst, AudioOut &audio, bool scratch = false);
@@ -60,8 +60,8 @@ public:
     int page() const { return pg; }
     void handleKey(int qtKey, bool down);
     void pointer(int id, QPointF canvasPos, int phase);
-    QRectF zoneRect(const QString &name) const;
-    QStringList zoneNames() const;
+    QRectF zoneRect(const QString &name) const { return ui.zoneRect(name); }
+    QStringList zoneNames() const { return ui.zoneNames(); }
     QImage shot();
     const td::Patch &leadPatch() const { return lead; }
     int undoDepth() const { return (int)undo.size(); }
@@ -78,7 +78,7 @@ public:
     int favouritesPage() const { return favPage; }
     QString armedModes() const { QStringList l; if (favDelete) l << "delete"; if (slotSave) l << "store"; if (beatErase) l << "erase"; if (removeArmed >= 0) l << "remove"; return l.join(","); }
     void armAllModes() { favDelete = slotSave = beatErase = true; removeArmed = 0; removeArmedAt = clock.elapsed(); }
-    QString zoneAt(QPointF c) const { for (int i = (int)zones.size() - 1; i >= 0; --i) if (zones[i].r.contains(c)) return zones[i].name; return QString(); }
+    QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return maxHeld; }
     QString lastToast() const { return toastText; }
     const td::TrackData &trackData() const { return track; }
@@ -159,7 +159,6 @@ protected:
     void closeEvent(QCloseEvent *) override;
 
 private:
-    struct Zone { QRectF r; QString name; std::function<void(QPointF, int)> fn; };
     struct Held { int kind; int a, b; }; // what a physical key did when pressed
 
     td::Instrument &inst;
@@ -215,13 +214,11 @@ private:
     QRectF hlCaption, dockR;
     bool dockOpen = false, dockFocus = false;
     int dockLines = 0;
-    bool recordText = false;
     bool scratchWindow = false;
     bool tourSeenFlag = false;                               // the player has answered the first-run offer
     QString tourLastPage;                                    // the tour page last looked at (saved)
     std::unique_ptr<TourView> tourView;
     QStringList askFocus; QString askPage, askVia;                   // a question started from the tour: sent with via "tour"
-    std::vector<std::pair<QRectF, QString>> drawnText;       // text drawn this frame, for zone labels
     QString helpPrefill;
     QString helpSel;                                         // the Help row last tapped
     QHash<QString, QString> helpDesc;                        // Help row zone -> its description
@@ -288,12 +285,7 @@ private:
     int listenGuess = 0;
     qint64 listenStarted = 0;
 
-    // immediate-mode plumbing
-    QPainter *g = nullptr;
-    std::vector<Zone> zones;
-    QHash<int, Zone> captured;
-    QSet<QString> downNames;
-    mutable QHash<quint32, QFont> fontCache;
+    Ui ui;                              // the drawing and touch toolkit the pages share
 
     // the scope on the play page
     int tbIdx = 4, vdIdx = 1, rangeT = 0, rangeV = 0; // time/div and volts/div steps, auto-ranged
@@ -308,20 +300,6 @@ private:
     void toast(const QString &s, int ms = 1800);
 
     // drawing helpers
-    QFont font(int px, bool bold) const;
-    int chW(int px) const;                                  // character cell width at a size
-    QString fit(const QString &s, int px, qreal width) const; // shorten to fit
-    void txt(QRectF r, const QString &s, int px, QColor c, int align = Qt::AlignCenter, bool bold = false);
-    void frame(QRectF r, QColor line, QColor fill = QColor());
-    void tag(QRectF r, const QString &s, int px, int align = Qt::AlignCenter);
-    void section(qreal y, const QString &s);
-    void zone(QRectF r, const QString &name, std::function<void(QPointF, int)> fn);
-    void button(QRectF r, const QString &name, const QString &label, bool on, std::function<void()> fn,
-                const QString &sub = QString(), int look = 0);
-    void slider(QRectF r, const QString &name, const QString &label, float norm, const QString &value,
-                std::function<void(float)> fn);
-    void stepper(QRectF r, const QString &name, const QString &label, const QString &value,
-                 std::function<void()> minus, std::function<void()> plus);
     void paramSlider(QRectF r, int param);
 
     // pages

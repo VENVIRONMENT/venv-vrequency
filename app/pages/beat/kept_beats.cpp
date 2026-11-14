@@ -123,24 +123,24 @@ void MainWindow::paintKeptBeats(qreal y) {
     beatPage = qBound(0, beatPage, pages - 1);
     QString head = QString("Beats  %1 kept   tap one to switch, + New for a fresh one").arg(n);
     if (u.beatSwitching) head = QString("Beats  %1 starts at the next bar").arg(beatSlots[beatCur].name);
-    section(y, head);
+    ui.section(y, head);
     const qreal cw = (688 - (kCells - 1) * 6) / (qreal)kCells, top = y + 20;
     const int newCell = paged ? kCells - 1 : n; // + New sits right after the last beat
     for (int cell = 0; cell < kCells; ++cell) {
         const QRectF r(std::floor(16 + cell * (cw + 6)), top, std::floor(cw), 48);
-        if (cell == newCell) { button(r, "beatnew", "+ New", false, [this] { beatNew(); }, "empty beat"); continue; }
+        if (cell == newCell) { ui.button(r, "beatnew", "+ New", false, [this] { beatNew(); }, "empty beat"); continue; }
         if (paged && cell == kCells - 2) {
-            button(r, "beatmore", "More", false, [this, pages] { beatPage = (beatPage + 1) % pages; }, QString("page %1/%2").arg(beatPage + 1).arg(pages));
+            ui.button(r, "beatmore", "More", false, [this, pages] { beatPage = (beatPage + 1) % pages; }, QString("page %1/%2").arg(beatPage + 1).arg(pages));
             continue;
         }
         const int i = beatPage * per + cell;
-        if (cell >= per || i >= n) { frame(r, GRAT); continue; }
+        if (cell >= per || i >= n) { ui.frame(r, GRAT); continue; }
         const BeatSlot &b = beatSlots[i];
         const bool on = i == beatCur;
         const QString zn = QString("beatslot%1").arg(cell);
         const bool waiting = on && u.beatSwitching;
-        button(r, zn, b.name, on && !waiting, [this, i] { beatSwitchTo(i); },
+        ui.button(r, zn, b.name, on && !waiting, [this, i] { beatSwitchTo(i); },
                waiting ? QString("next bar") : (emptyBeat(b.pat) ? QString("empty") : nice(kitName(b.kit))), waiting ? LOOK_ARMED : LOOK_PLAIN);
-        txt(QRectF(r.x() + 4, r.y() + 2, 14, 13), QString::number(i + 1), 10, on && !waiting ? BG : LOW, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(r.x() + 4, r.y() + 2, 14, 13), QString::number(i + 1), 10, on && !waiting ? BG : LOW, Qt::AlignLeft | Qt::AlignVCenter);
     }
 }

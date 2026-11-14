@@ -35,10 +35,10 @@ struct Rig {
     void tap(const QString &zone) {
         w.shot();
         const QRectF r = w.zoneRect(zone);
-        w.pointer(7, r.center(), MainWindow::PH_PRESS);
-        w.pointer(7, r.center(), MainWindow::PH_RELEASE);
+        w.pointer(7, r.center(), PH_PRESS);
+        w.pointer(7, r.center(), PH_RELEASE);
     }
-    void touch(QPointF a) { w.shot(); w.pointer(3, a, MainWindow::PH_PRESS); w.pointer(3, a, MainWindow::PH_RELEASE); }
+    void touch(QPointF a) { w.shot(); w.pointer(3, a, PH_PRESS); w.pointer(3, a, PH_RELEASE); }
     void settle(int frames, int ms = 40) { for (int i = 0; i < frames; ++i) { pump(inst, ms); w.shot(); } }
 };
 
@@ -57,9 +57,9 @@ static void capture(Rig &rig, int page, TourView::Pic &pic) {
     std::set<QString> seen;
     size_t from = 0;
     if (page == 11) // the Key test panel swallows every touch but its own Close button
-        for (size_t i = 0; i < rig.w.zones.size(); ++i) if (rig.w.zones[i].name == "keytestblock") from = i + 1;
-    for (size_t i = from; i < rig.w.zones.size(); ++i) {
-        const auto &z = rig.w.zones[i];
+        for (size_t i = 0; i < rig.w.ui.zones().size(); ++i) if (rig.w.ui.zones()[i].name == "keytestblock") from = i + 1;
+    for (size_t i = from; i < rig.w.ui.zones().size(); ++i) {
+        const auto &z = rig.w.ui.zones()[i];
         if (hiddenZone(z.name) || seen.count(z.name) || z.r.width() < 4 || z.r.height() < 4) continue;
         seen.insert(z.name);
         TourView::Hot h;

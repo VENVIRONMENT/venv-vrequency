@@ -455,7 +455,7 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
     const qreal x0 = area.x() + 10, wid = area.width() - 20;
     qreal y = 8;
     auto Y = [&](qreal cy) { return area.y() + cy - scroll; };
-    auto cols = [&](int p, qreal wd) { return qMax(8, (int)(wd / w.chW(p))); };
+    auto cols = [&](int p, qreal wd) { return qMax(8, (int)(wd / w.ui.chW(p))); };
     auto visible = [&](qreal cy, qreal h) { return Y(cy) + h > area.top() && Y(cy) < area.bottom(); };
     const int L = Qt::AlignLeft | Qt::AlignVCenter;
 
@@ -464,16 +464,16 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
         const QStringList lines = chatWrap(s, cols(p, wd), -1);
         qreal h = 0;
         for (const QString &ln : lines) {
-            if (paint && visible(y + h, p + 4)) w.txt(QRectF(x, Y(y + h), wd, p + 4), ln, p, col, L, bold);
+            if (paint && visible(y + h, p + 4)) w.ui.txt(QRectF(x, Y(y + h), wd, p + 4), ln, p, col, L, bold);
             h += p + 4;
         }
         return h;
     };
     auto label = [&](const QString &s) {
         if (paint && visible(y, 14)) {
-            w.txt(QRectF(x0, Y(y), 200, 14), s, 11, MID, L, true);
-            const qreal lx = x0 + s.size() * w.chW(11) + 8;
-            w.g->fillRect(QRectF(lx, Y(y) + 7, area.right() - 10 - lx, 1), GRAT);
+            w.ui.txt(QRectF(x0, Y(y), 200, 14), s, 11, MID, L, true);
+            const qreal lx = x0 + s.size() * w.ui.chW(11) + 8;
+            w.ui.g->fillRect(QRectF(lx, Y(y) + 7, area.right() - 10 - lx, 1), GRAT);
         }
         y += 18;
     };
@@ -483,23 +483,23 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
         const int ch = 22;
         for (int i = 0; i < items.size(); ++i) {
             QString s = items[i];
-            qreal cwid = s.size() * w.chW(sm) + 16;
-            if (cwid > wid) { s = w.fit(s, sm, wid - 16); cwid = wid; }
+            qreal cwid = s.size() * w.ui.chW(sm) + 16;
+            if (cwid > wid) { s = w.ui.fit(s, sm, wid - 16); cwid = wid; }
             if (cx > 0 && cx + cwid > wid) { cx = 0; cy += ch + 5; }
             const QRectF r(x0 + cx, Y(y + cy), cwid, ch);
             if (paint && visible(y + cy, ch)) {
                 if (cap) { // a key cap: a frame with a heavier foot
-                    w.frame(r, MID, BG);
-                    w.g->fillRect(QRectF(r.x() + 1, r.bottom() - 3, r.width() - 2, 2), LOW);
-                    w.txt(r.adjusted(0, -1, 0, -2), s, sm, INK, Qt::AlignCenter, true);
+                    w.ui.frame(r, MID, BG);
+                    w.ui.g->fillRect(QRectF(r.x() + 1, r.bottom() - 3, r.width() - 2, 2), LOW);
+                    w.ui.txt(r.adjusted(0, -1, 0, -2), s, sm, INK, Qt::AlignCenter, true);
                 } else {
-                    const bool dn = w.downNames.contains(QString("%1%2").arg(zoneBase).arg(firstId + i));
-                    w.frame(r, dn ? INK : MID, dn ? INK : BG);
-                    w.txt(r, s, sm, dn ? BG : INK, Qt::AlignCenter, false);
+                    const bool dn = w.ui.isDown(QString("%1%2").arg(zoneBase).arg(firstId + i));
+                    w.ui.frame(r, dn ? INK : MID, dn ? INK : BG);
+                    w.ui.txt(r, s, sm, dn ? BG : INK, Qt::AlignCenter, false);
                 }
                 if (tappable && r.bottom() > area.top() && r.top() < area.bottom())
-                    w.zone(r.intersected(area), QString("%1%2").arg(zoneBase).arg(firstId + i), [this, idx = firstId + i](QPointF, int ph) {
-                        if (ph == MainWindow::PH_PRESS && idx < related.size()) goRef(related[idx]);
+                    w.ui.zone(r.intersected(area), QString("%1%2").arg(zoneBase).arg(firstId + i), [this, idx = firstId + i](QPointF, int ph) {
+                        if (ph == PH_PRESS && idx < related.size()) goRef(related[idx]);
                     });
             }
             cx += cwid + 6;
@@ -511,19 +511,19 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
         // badge row
         if (paint && visible(y, 16)) {
             const QString kind = (c.kind.isEmpty() ? QString("area") : c.kind).toUpper();
-            const qreal bw = kind.size() * w.chW(11) + 12;
-            w.tag(QRectF(x0, Y(y), bw, 16), kind, 11);
-            w.txt(QRectF(x0 + bw + 8, Y(y), wid - bw - 8, 16), w.fit(crumb.toUpper(), 11, wid - bw - 8), 11, MID, Qt::AlignRight | Qt::AlignVCenter);
+            const qreal bw = kind.size() * w.ui.chW(11) + 12;
+            w.ui.tag(QRectF(x0, Y(y), bw, 16), kind, 11);
+            w.ui.txt(QRectF(x0 + bw + 8, Y(y), wid - bw - 8, 16), w.ui.fit(crumb.toUpper(), 11, wid - bw - 8), 11, MID, Qt::AlignRight | Qt::AlignVCenter);
         }
         y += 24;
         // title: as big as fits on one line
         int tp = 22;
-        while (tp > 14 && c.title.size() * w.chW(tp) > wid) --tp;
-        if (paint && visible(y, tp + 6)) w.txt(QRectF(x0, Y(y), wid, tp + 6), w.fit(c.title, tp, wid), tp, INK, L, true);
+        while (tp > 14 && c.title.size() * w.ui.chW(tp) > wid) --tp;
+        if (paint && visible(y, tp + 6)) w.ui.txt(QRectF(x0, Y(y), wid, tp + 6), w.ui.fit(c.title, tp, wid), tp, INK, L, true);
         y += tp + 10;
         qreal h = para(c.summary, px, INK, true, x0, wid);
         y += h + 8;
-        if (paint && visible(y, 1)) w.g->fillRect(QRectF(x0, Y(y), wid, 1), LOW);
+        if (paint && visible(y, 1)) w.ui.g->fillRect(QRectF(x0, Y(y), wid, 1), LOW);
         y += 9;
         label("DOES");
         h = para(c.does, px, INK, false, x0, wid);
@@ -534,11 +534,11 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
             const qreal bh = 16 + lines.size() * (sm + 4) + 8;
             if (paint && visible(y, bh + 8)) {
                 const QRectF box(x0, Y(y) + 7, wid, bh);
-                w.frame(box, INK, BG);
-                w.frame(box.adjusted(3, 3, -3, -3), GRAT);
-                w.tag(QRectF(box.x() + 8, box.y() - 8, 56, 15), "RECALL", 11);
+                w.ui.frame(box, INK, BG);
+                w.ui.frame(box.adjusted(3, 3, -3, -3), GRAT);
+                w.ui.tag(QRectF(box.x() + 8, box.y() - 8, 56, 15), "RECALL", 11);
                 for (int i = 0; i < lines.size(); ++i)
-                    w.txt(QRectF(box.x() + 10, box.y() + 12 + i * (sm + 4), wid - 20, sm + 4), lines[i], sm, INK, L, false);
+                    w.ui.txt(QRectF(box.x() + 10, box.y() + 12 + i * (sm + 4), wid - 20, sm + 4), lines[i], sm, INK, L, false);
             }
             y += 7 + bh + 8;
         }
@@ -553,11 +553,11 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
             const qreal rh = qMax<qreal>(18, lines.size() * (sm + 4));
             if (paint && visible(y, rh)) {
                 const QRectF tg(x0, Y(y), tw, 17);
-                if (how == "TOUCH") { w.frame(tg, MID, BG); w.txt(tg, how, 10, INK, Qt::AlignCenter, true); }
-                else if (how == "KEYS") { w.g->fillRect(tg, INK); w.txt(tg, how, 10, BG, Qt::AlignCenter, true); }
-                else { w.g->fillRect(tg, INK); w.frame(tg.adjusted(2, 2, -2, -2), BG); w.txt(tg, how.isEmpty() ? QString("BOTH") : how, 10, BG, Qt::AlignCenter, true); }
+                if (how == "TOUCH") { w.ui.frame(tg, MID, BG); w.ui.txt(tg, how, 10, INK, Qt::AlignCenter, true); }
+                else if (how == "KEYS") { w.ui.g->fillRect(tg, INK); w.ui.txt(tg, how, 10, BG, Qt::AlignCenter, true); }
+                else { w.ui.g->fillRect(tg, INK); w.ui.frame(tg.adjusted(2, 2, -2, -2), BG); w.ui.txt(tg, how.isEmpty() ? QString("BOTH") : how, 10, BG, Qt::AlignCenter, true); }
                 for (int i = 0; i < lines.size(); ++i)
-                    w.txt(QRectF(x0 + tw + 10, Y(y) + i * (sm + 4) - 1, wid - tw - 10, sm + 4), lines[i], sm, INK, L, false);
+                    w.ui.txt(QRectF(x0 + tw + 10, Y(y) + i * (sm + 4) - 1, wid - tw - 10, sm + 4), lines[i], sm, INK, L, false);
             }
             y += rh + 6;
         }
@@ -573,7 +573,7 @@ qreal TourView::regionN(int which, const HelpCard &c, int px, int scroll, bool p
         label("TIPS");
         for (const QString &t : c.tips) {
             const qreal h = para(t, sm, MID, false, x0 + 14, wid - 14);
-            if (paint && visible(y, 14)) w.txt(QRectF(x0, Y(y), 14, sm + 4), "+", sm, INK, L, true);
+            if (paint && visible(y, 14)) w.ui.txt(QRectF(x0, Y(y), 14, sm + 4), "+", sm, INK, L, true);
             y += h + 6;
         }
         y += 4;
@@ -631,10 +631,10 @@ TourView::Fit TourView::measureIntro(int page) { return fitFor(introCard(page), 
 
 void TourView::paint() {
     if (!built) { // the pictures are being drawn: a moment, with a way out
-        w.tag(QRectF(8, 4, 64, 26), "TOUR", 14);
-        w.txt(QRectF(0, 300, 720, 40), "Drawing the tour pictures...", 20, INK, Qt::AlignCenter, true);
-        w.txt(QRectF(0, 340, 720, 24), "Nothing on them is live. Esc leaves.", 13, MID);
-        w.button(QRectF(554, 4, 158, 26), "tour_close", "Leave tour", false, [this] { close(); });
+        w.ui.tag(QRectF(8, 4, 64, 26), "TOUR", 14);
+        w.ui.txt(QRectF(0, 300, 720, 40), "Drawing the tour pictures...", 20, INK, Qt::AlignCenter, true);
+        w.ui.txt(QRectF(0, 340, 720, 24), "Nothing on them is live. Esc leaves.", 13, MID);
+        w.ui.button(QRectF(554, 4, 158, 26), "tour_close", "Leave tour", false, [this] { close(); });
         return;
     }
     paintHeader();
@@ -644,36 +644,36 @@ void TourView::paint() {
 }
 
 void TourView::paintHeader() {
-    w.tag(QRectF(8, 4, 64, 26), "TOUR", 14);
+    w.ui.tag(QRectF(8, 4, 64, 26), "TOUR", 14);
     QString title = conceptOn ? QString("Concepts") : QString::fromLatin1(pageInfo(pageIdx).label);
     const bool multi = !conceptOn && variantCount(pageIdx) > 1;
-    w.txt(QRectF(82, 4, multi ? 214 : 290, 26), w.fit(title.toUpper(), 16, multi ? 214 : 290), 16, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    w.ui.txt(QRectF(82, 4, multi ? 214 : 290, 26), w.ui.fit(title.toUpper(), 16, multi ? 214 : 290), 16, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
     if (multi) { // this page has more than one picture
-        w.button(QRectF(298, 4, 26, 26), "tour_var_prev", QString::fromUtf8("‹"), false, [this] { setVariant(variant - 1); });
-        w.txt(QRectF(326, 4, 36, 26), QString("%1/%2").arg(variant + 1).arg(variantCount(pageIdx)), 12, MID, Qt::AlignCenter);
-        w.button(QRectF(364, 4, 26, 26), "tour_var_next", QString::fromUtf8("›"), false, [this] { setVariant(variant + 1); });
+        w.ui.button(QRectF(298, 4, 26, 26), "tour_var_prev", QString::fromUtf8("‹"), false, [this] { setVariant(variant - 1); });
+        w.ui.txt(QRectF(326, 4, 36, 26), QString("%1/%2").arg(variant + 1).arg(variantCount(pageIdx)), 12, MID, Qt::AlignCenter);
+        w.ui.button(QRectF(364, 4, 26, 26), "tour_var_next", QString::fromUtf8("›"), false, [this] { setVariant(variant + 1); });
     }
-    w.button(QRectF(396, 4, 152, 26), "tour_concepts", conceptOn ? "Pictures" : "Concepts", conceptOn, [this] {
+    w.ui.button(QRectF(396, 4, 152, 26), "tour_concepts", conceptOn ? "Pictures" : "Concepts", conceptOn, [this] {
         conceptOn = !conceptOn; conceptId.clear(); scrollA = scrollB = 0;
     });
-    w.button(QRectF(554, 4, 158, 26), "tour_close", "Leave tour", false, [this] { close(); });
+    w.ui.button(QRectF(554, 4, 158, 26), "tour_close", "Leave tour", false, [this] { close(); });
 }
 
 void TourView::paintChips() {
     const qreal cw = 704.0 / kPageCount;
     for (int i = 0; i < kPageCount; ++i) {
         const QRectF r(std::floor(8 + i * cw), 33, std::floor(8 + (i + 1) * cw) - std::floor(8 + i * cw) + 1, 24);
-        w.button(r, QString("tour_page_%1").arg(i), kPages[i].chip, i == pageIdx && !conceptOn, [this, i] { setPage(i); });
+        w.ui.button(r, QString("tour_page_%1").arg(i), kPages[i].chip, i == pageIdx && !conceptOn, [this, i] { setPage(i); });
     }
 }
 
 void TourView::paintGuideBar() {
     const QString head = QString("START HERE  %1 of %2").arg(step + 1).arg(kPathLen);
-    w.tag(QRectF(8, 33, 190, 24), head, 13, Qt::AlignLeft | Qt::AlignVCenter);
-    w.txt(QRectF(206, 33, 190, 24), w.fit(QString::fromLatin1(pageInfo(pageIdx).label), 13, 186), 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    w.button(QRectF(392, 33, 92, 24), "tour_back", QString::fromUtf8("‹ Back"), false, [this] { nextStep(-1); });
-    w.button(QRectF(490, 33, 92, 24), "tour_next", QString::fromUtf8("Next ›"), true, [this] { nextStep(1); });
-    w.button(QRectF(588, 33, 124, 24), "tour_free", "Explore freely", false, [this] { guided = false; });
+    w.ui.tag(QRectF(8, 33, 190, 24), head, 13, Qt::AlignLeft | Qt::AlignVCenter);
+    w.ui.txt(QRectF(206, 33, 190, 24), w.ui.fit(QString::fromLatin1(pageInfo(pageIdx).label), 13, 186), 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    w.ui.button(QRectF(392, 33, 92, 24), "tour_back", QString::fromUtf8("‹ Back"), false, [this] { nextStep(-1); });
+    w.ui.button(QRectF(490, 33, 92, 24), "tour_next", QString::fromUtf8("Next ›"), true, [this] { nextStep(1); });
+    w.ui.button(QRectF(588, 33, 124, 24), "tour_free", "Explore freely", false, [this] { guided = false; });
 }
 
 void TourView::paintPicture() {
@@ -682,17 +682,17 @@ void TourView::paintPicture() {
     const qreal S = kScale;
     auto scr = [&](const QRectF &r) { return QRectF(pr.x() + r.x() * S, pr.y() + r.y() * S, r.width() * S, r.height() * S); };
     // touching empty space clears the selection; touching near a control selects it (fingers are bigger than 20 pixels)
-    w.zone(pr, "tour_picture", [this, pr](QPointF p, int ph) {
-        if (ph != MainWindow::PH_PRESS) return;
+    w.ui.zone(pr, "tour_picture", [this, pr](QPointF p, int ph) {
+        if (ph != PH_PRESS) return;
         const int i = nearestHot(QPointF((p.x() - pr.x()) / kScale, (p.y() - pr.y()) / kScale), 16 / kScale);
         if (i >= 0) tapHot(i); else choose(-1);
     });
-    w.g->drawImage(pr.topLeft(), pic.small);
+    w.ui.g->drawImage(pr.topLeft(), pic.small);
     const bool sel = selIdx >= 0 && selIdx < (int)pic.hot.size();
     if (sel) { // the rest of the screen steps back
-        w.g->fillRect(pr, QColor(4, 4, 4, 135));
+        w.ui.g->fillRect(pr, QColor(4, 4, 4, 135));
         const QRectF s = scr(pic.hot[selIdx].r).intersected(pr);
-        w.g->drawImage(s, pic.small, QRectF(s.x() - pr.x(), s.y() - pr.y(), s.width(), s.height()));
+        w.ui.g->drawImage(s, pic.small, QRectF(s.x() - pr.x(), s.y() - pr.y(), s.width(), s.height()));
     }
     // every control, as a faint outline; the real ones are touchable in the order of their size so the smallest on top wins
     std::vector<int> order(pic.hot.size());
@@ -702,33 +702,33 @@ void TourView::paintPicture() {
         const QRectF r = scr(pic.hot[i].r).intersected(pr);
         if (i != selIdx) {
             const QColor c(243, 243, 239, pic.hot[i].real ? 58 : 100);
-            if (pic.hot[i].real) w.frame(r, c);
+            if (pic.hot[i].real) w.ui.frame(r, c);
             else { // controls that are not zones are drawn with corner ticks only
                 const qreal t = 4;
-                w.g->fillRect(QRectF(r.left(), r.top(), t, 1), c); w.g->fillRect(QRectF(r.left(), r.top(), 1, t), c);
-                w.g->fillRect(QRectF(r.right() - t, r.top(), t, 1), c); w.g->fillRect(QRectF(r.right() - 1, r.top(), 1, t), c);
-                w.g->fillRect(QRectF(r.left(), r.bottom() - 1, t, 1), c); w.g->fillRect(QRectF(r.left(), r.bottom() - t, 1, t), c);
-                w.g->fillRect(QRectF(r.right() - t, r.bottom() - 1, t, 1), c); w.g->fillRect(QRectF(r.right() - 1, r.bottom() - t, 1, t), c);
+                w.ui.g->fillRect(QRectF(r.left(), r.top(), t, 1), c); w.ui.g->fillRect(QRectF(r.left(), r.top(), 1, t), c);
+                w.ui.g->fillRect(QRectF(r.right() - t, r.top(), t, 1), c); w.ui.g->fillRect(QRectF(r.right() - 1, r.top(), 1, t), c);
+                w.ui.g->fillRect(QRectF(r.left(), r.bottom() - 1, t, 1), c); w.ui.g->fillRect(QRectF(r.left(), r.bottom() - t, 1, t), c);
+                w.ui.g->fillRect(QRectF(r.right() - t, r.bottom() - 1, t, 1), c); w.ui.g->fillRect(QRectF(r.right() - 1, r.bottom() - t, 1, t), c);
             }
         }
         const QString zn = "tour_hot_" + pic.hot[i].name;
-        w.zone(grow(r, r.width() < 14 || r.height() < 14 ? 4 : 0), zn, [this, i](QPointF, int ph) { if (ph == MainWindow::PH_PRESS) tapHot(i); });
+        w.ui.zone(grow(r, r.width() < 14 || r.height() < 14 ? 4 : 0), zn, [this, i](QPointF, int ph) { if (ph == PH_PRESS) tapHot(i); });
     }
     if (sel) { // the pulsing double rule, as the highlights use
         const QRectF r = scr(pic.hot[selIdx].r).intersected(pr);
         const qreal ph = 0.5 + 0.5 * std::sin(w.clock.elapsed() / 1000.0 * 2 * M_PI / 1.6);
         QColor soft = INK; soft.setAlpha((int)(70 + 185 * ph));
-        w.frame(grow(r, 5), soft);
-        w.frame(grow(r, 4), BG);
-        w.frame(grow(r, 3), INK);
-        w.frame(grow(r, 2), BG);
+        w.ui.frame(grow(r, 5), soft);
+        w.ui.frame(grow(r, 4), BG);
+        w.ui.frame(grow(r, 3), INK);
+        w.ui.frame(grow(r, 2), BG);
     }
-    w.frame(grow(pr, 1), LOW);
+    w.ui.frame(grow(pr, 1), LOW);
     if (w.clock.elapsed() < noticeUntil) { // the walk is over
         const QString t = "That was the tour. Tap or arrow to explore any control.";
         const QRectF r(pr.x() + 8, pr.bottom() - 30, pr.width() - 16, 22);
-        w.frame(grow(r, 2), INK, BG);
-        w.tag(r, w.fit(t, 12, r.width() - 8), 12);
+        w.ui.frame(grow(r, 2), INK, BG);
+        w.ui.tag(r, w.ui.fit(t, 12, r.width() - 8), 12);
     }
 }
 
@@ -736,23 +736,23 @@ void TourView::paintConceptList() {
     const QRectF pr = pictureRect();
     const auto &cs = cards().concepts;
     const int rowH = 18, rows = (int)(pr.height() / rowH);
-    w.frame(grow(pr, 1), LOW, BG);
+    w.ui.frame(grow(pr, 1), LOW, BG);
     conceptScroll = qBound(0, conceptScroll, qMax(0, (int)cs.size() - rows));
-    if (cs.empty()) { w.txt(pr, "No concepts available.", 13, MID); return; }
+    if (cs.empty()) { w.ui.txt(pr, "No concepts available.", 13, MID); return; }
     for (int i = 0; i < rows; ++i) {
         const int ci = conceptScroll + i;
         if (ci >= (int)cs.size()) break;
         const QRectF r(pr.x() + 4, pr.y() + i * rowH + 1, pr.width() - 8, rowH - 2);
         const bool on = cs[ci].key == conceptId;
-        if (on) w.g->fillRect(r, INK);
-        w.txt(r.adjusted(6, 0, -4, 0), w.fit(cs[ci].title.toUpper(), 12, r.width() - 12), 12, on ? BG : INK, Qt::AlignLeft | Qt::AlignVCenter, on);
+        if (on) w.ui.g->fillRect(r, INK);
+        w.ui.txt(r.adjusted(6, 0, -4, 0), w.ui.fit(cs[ci].title.toUpper(), 12, r.width() - 12), 12, on ? BG : INK, Qt::AlignLeft | Qt::AlignVCenter, on);
     }
-    if (conceptScroll > 0) w.tag(QRectF(pr.right() - 58, pr.top() + 2, 54, 14), QString::fromUtf8("▴ less"), 10);
-    if (conceptScroll + rows < (int)cs.size()) w.tag(QRectF(pr.right() - 62, pr.bottom() - 16, 58, 14), QString::fromUtf8("▾ more"), 10);
-    w.zone(pr, "tour_conceptlist", [this, pr, rowH](QPointF p, int ph) {
+    if (conceptScroll > 0) w.ui.tag(QRectF(pr.right() - 58, pr.top() + 2, 54, 14), QString::fromUtf8("▴ less"), 10);
+    if (conceptScroll + rows < (int)cs.size()) w.ui.tag(QRectF(pr.right() - 62, pr.bottom() - 16, 58, 14), QString::fromUtf8("▾ more"), 10);
+    w.ui.zone(pr, "tour_conceptlist", [this, pr, rowH](QPointF p, int ph) {
         static qreal startY = 0; static int startScroll = 0; static bool dragged = false;
-        if (ph == MainWindow::PH_PRESS) { startY = p.y(); startScroll = conceptScroll; dragged = false; return; }
-        if (ph == MainWindow::PH_MOVE) {
+        if (ph == PH_PRESS) { startY = p.y(); startScroll = conceptScroll; dragged = false; return; }
+        if (ph == PH_MOVE) {
             if (std::fabs(p.y() - startY) > 6) dragged = true;
             if (dragged) conceptScroll = qMax(0, startScroll - (int)std::round((p.y() - startY) / rowH));
             return;
@@ -794,16 +794,16 @@ void TourView::paintCardRegions() {
     // the explanation of Recall, always one touch away: the concept for the card being shown
     const Fit f = fitFor(*c, false);
     const int px = f.px;
-    w.g->fillRect(QRectF(8, 447, 704, 1), GRAT);
-    w.g->fillRect(QRectF(432, 454, 1, 258), GRAT);
+    w.ui.g->fillRect(QRectF(8, 447, 704, 1), GRAT);
+    w.ui.g->fillRect(QRectF(432, 454, 1, 258), GRAT);
     const QRectF aA = kRegionA, aB1 = kRegionB1, aB2 = kRegionB2;
     const qreal hA = regionN(0, *c, px, 0, false, aA, crumb), hB1 = regionN(1, *c, px, 0, false, aB1, crumb), hB2 = regionN(2, *c, px, 0, false, aB2, crumb);
     scrollA = qBound(0, scrollA, qMax(0, (int)hA - (int)aA.height()));
     scrollB = qBound(0, scrollB, qMax(0, (int)qMax(hB1 - aB1.height(), hB2 - aB2.height())));
     auto scrollZone = [&](const QRectF &a, const char *name, bool isA) {
-        w.zone(a, name, [this, isA](QPointF p, int ph) {
-            if (ph == MainWindow::PH_PRESS) { dragY = (int)p.y(); return; }
-            if (ph == MainWindow::PH_MOVE) {
+        w.ui.zone(a, name, [this, isA](QPointF p, int ph) {
+            if (ph == PH_PRESS) { dragY = (int)p.y(); return; }
+            if (ph == PH_MOVE) {
                 const int d = dragY - (int)p.y();
                 dragY = (int)p.y();
                 if (isA) scrollA = qMax(0, scrollA + d); else scrollB = qMax(0, scrollB + d);
@@ -814,23 +814,23 @@ void TourView::paintCardRegions() {
     scrollZone(aB1, "tour_scroll_b1", false);
     scrollZone(aB2, "tour_scroll_b2", false);
     auto draw = [&](int which, const QRectF &a, int scroll, qreal total) {
-        w.g->save();
-        w.g->setClipRect(a);
+        w.ui.g->save();
+        w.ui.g->setClipRect(a);
         regionN(which, *c, px, scroll, true, a, crumb);
-        w.g->restore();
+        w.ui.g->restore();
         if (total > a.height()) { // never clip silently: say there is more, and which way
-            if (scroll > 0) w.tag(QRectF(a.right() - 70, a.top() + 2, 66, 14), QString::fromUtf8("▴ less"), 10);
-            if (scroll < total - a.height() - 1) w.tag(QRectF(a.right() - 70, a.bottom() - 16, 66, 14), QString::fromUtf8("▾ more"), 10);
+            if (scroll > 0) w.ui.tag(QRectF(a.right() - 70, a.top() + 2, 66, 14), QString::fromUtf8("▴ less"), 10);
+            if (scroll < total - a.height() - 1) w.ui.tag(QRectF(a.right() - 70, a.bottom() - 16, 66, 14), QString::fromUtf8("▾ more"), 10);
         }
     };
     draw(0, aA, scrollA, hA);
     draw(1, aB1, scrollB, hB1);
     draw(2, aB2, scrollB, hB2);
     // what the keys do, always in the same place
-    w.txt(QRectF(16, 678, 410, 14), guided ? "Arrows move   Tab cycles   Enter asks   , . steps" : "Arrows move   Tab cycles   Enter asks   C concepts", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
-    w.txt(QRectF(16, 694, 410, 14), guided ? "Esc backs out" : ", . page   Space scrolls   Esc backs out", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    w.ui.txt(QRectF(16, 678, 410, 14), guided ? "Arrows move   Tab cycles   Enter asks   , . steps" : "Arrows move   Tab cycles   Enter asks   C concepts", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    w.ui.txt(QRectF(16, 694, 410, 14), guided ? "Esc backs out" : ", . page   Space scrolls   Esc backs out", 11, LOW, Qt::AlignLeft | Qt::AlignVCenter);
     // ASK ROOK: always in the same place
-    w.button(kAskRect, "tour_ask", "ASK ROOK  (Enter)", true, [this] { ask(); });
+    w.ui.button(kAskRect, "tour_ask", "ASK ROOK  (Enter)", true, [this] { ask(); });
 }
 
 // ---------------------------------------------------------------------------------- state for Rook and the tests
@@ -888,14 +888,14 @@ void TourView::paintPrompt() {
         return;
     }
     const QRectF r(12, 6, 696, 48);
-    w.frame(grow(r, 2), INK, BG);
-    w.frame(r, LOW);
-    w.zone(r, "tour_prompt", [](QPointF, int) {}); // the offer takes touches meant for what is under it
-    w.tag(QRectF(r.x() + 6, r.y() + 6, 56, 18), "TOUR", 12);
-    w.txt(QRectF(r.x() + 70, r.y() + 4, 330, 22), "Take the 2-minute tour?", 15, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    w.txt(QRectF(r.x() + 8, r.y() + 27, 380, 18), "Enter = yes    Esc = later    keep playing meanwhile", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    w.button(QRectF(r.right() - 270, r.y() + 6, 150, 36), "tour_prompt_yes", "Take the tour", true, [this] { answerPrompt(true); });
-    w.button(QRectF(r.right() - 114, r.y() + 6, 106, 36), "tour_prompt_later", "Later", false, [this] { answerPrompt(false); });
+    w.ui.frame(grow(r, 2), INK, BG);
+    w.ui.frame(r, LOW);
+    w.ui.zone(r, "tour_prompt", [](QPointF, int) {}); // the offer takes touches meant for what is under it
+    w.ui.tag(QRectF(r.x() + 6, r.y() + 6, 56, 18), "TOUR", 12);
+    w.ui.txt(QRectF(r.x() + 70, r.y() + 4, 330, 22), "Take the 2-minute tour?", 15, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    w.ui.txt(QRectF(r.x() + 8, r.y() + 27, 380, 18), "Enter = yes    Esc = later    keep playing meanwhile", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    w.ui.button(QRectF(r.right() - 270, r.y() + 6, 150, 36), "tour_prompt_yes", "Take the tour", true, [this] { answerPrompt(true); });
+    w.ui.button(QRectF(r.right() - 114, r.y() + 6, 106, 36), "tour_prompt_later", "Later", false, [this] { answerPrompt(false); });
 }
 
 // ---------------------------------------------------------------------------------- pictures for the documentation

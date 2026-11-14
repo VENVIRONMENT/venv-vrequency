@@ -137,7 +137,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : inst(i), audi
         // Key and touch input call update() themselves, so response stays instant.
         static int skip = 0;
         UiState s = inst.uiState();
-        bool busy = s.voices > 0 || !captured.isEmpty() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
+        bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !held.isEmpty() ||
                     s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
@@ -624,23 +624,10 @@ QPointF MainWindow::toCanvas(QPointF p) const {
 }
 
 void MainWindow::pointer(int id, QPointF c, int phase) {
-    if (phase == PH_PRESS) {
-        for (int i = (int)zones.size() - 1; i >= 0; --i)
-            if (zones[i].r.contains(c)) {
-                captured[id] = zones[i];
-                downNames.insert(zones[i].name);
-                if (!tourOpen() && !zones[i].name.startsWith("dock") && zones[i].name != "ticker" && zones[i].name != "keytestblock" && !zones[i].name.startsWith("tab_")) { lastTapped = zones[i].name; lastTappedPage = pg; }
-                zones[i].fn(c, PH_PRESS);
-                break;
-            }
-    } else {
-        auto it = captured.find(id);
-        if (it == captured.end()) return;
-        Zone z = it.value();
-        if (phase == PH_RELEASE) { captured.erase(it); downNames.remove(z.name); }
-        z.fn(c, phase);
-    }
-    update();
+    const bool taken = ui.touch(id, c, phase, [this](const QString &name) {
+        if (!tourOpen() && !name.startsWith("dock") && name != "ticker" && name != "keytestblock" && !name.startsWith("tab_")) { lastTapped = name; lastTappedPage = pg; }
+    });
+    if (taken) update();
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *e) { pointer(-1, toCanvas(e->position()), PH_PRESS); }
@@ -669,17 +656,6 @@ bool MainWindow::event(QEvent *ev) {
     }
 }
 
-QRectF MainWindow::zoneRect(const QString &name) const {
-    for (const Zone &z : zones) if (z.name == name) return z.r;
-    return QRectF();
-}
-
-QStringList MainWindow::zoneNames() const {
-    QStringList n;
-    for (const Zone &z : zones) n << z.name;
-    return n;
-}
-
 QImage MainWindow::shot() {
     QImage img(720, 720, QImage::Format_RGB32); // the instrument's native canvas, whatever the window size
     QPainter p(&img);
@@ -687,137 +663,8 @@ QImage MainWindow::shot() {
     return img;
 }
 
-// ------------------------------------------------------- drawing helpers
-//
-// The whole screen is drawn the way a bench oscilloscope draws its own display:
-// white phosphor on black, one-pixel rules, raster type, and inverse video for
-// whatever is selected. There is no colour; state is shown by inversion, by a
-// double frame, or by blinking.
-
-QFont MainWindow::font(int px, bool bold) const {
-    // building a QFont is surprisingly costly; every label reuses a cached one
-    quint32 key = (quint32)px << 1 | (bold ? 1u : 0u);
-    auto it = fontCache.constFind(key);
-    if (it != fontCache.constEnd()) return it.value();
-    QFont f("DejaVu Sans Mono");
-    f.setStyleHint(QFont::Monospace);
-    f.setStyleStrategy(QFont::NoAntialias); // raster text, like the tube's character generator
-    f.setHintingPreference(QFont::PreferFullHinting);
-    f.setPixelSize(px);
-    f.setBold(bold);
-    fontCache.insert(key, f);
-    return f;
-}
-
-int MainWindow::chW(int px) const {
-    static QHash<int, int> w;
-    auto it = w.constFind(px);
-    if (it != w.constEnd()) return it.value();
-    int v = QFontMetrics(font(px, true)).horizontalAdvance(QLatin1Char('M'));
-    w.insert(px, v);
-    return v;
-}
-
-QString MainWindow::fit(const QString &s, int px, qreal width) const {
-    int n = qMax(1, (int)(width / chW(px)));
-    return s.size() <= n ? s : s.left(n - 1) + QString::fromUtf8("…");
-}
-
-void MainWindow::txt(QRectF r, const QString &s, int px, QColor c, int align, bool bold) {
-    g->setFont(font(px, bold));
-    g->setPen(c);
-    g->drawText(r, align | Qt::TextSingleLine, s);
-    if (recordText && !s.trimmed().isEmpty()) drawnText.push_back({r, s});
-}
-
-// a one-pixel frame on the pixel grid, optionally filled
-void MainWindow::frame(QRectF r, QColor line, QColor fill) {
-    if (fill.isValid()) g->fillRect(r, fill);
-    if (!line.isValid()) return;
-    g->fillRect(QRectF(r.x(), r.y(), r.width(), 1), line);
-    g->fillRect(QRectF(r.x(), r.bottom() - 1, r.width(), 1), line);
-    g->fillRect(QRectF(r.x(), r.y(), 1, r.height()), line);
-    g->fillRect(QRectF(r.right() - 1, r.y(), 1, r.height()), line);
-}
-
-// inverse-video label: a white block with black text
-void MainWindow::tag(QRectF r, const QString &s, int px, int align) {
-    g->fillRect(r, INK);
-    txt(r.adjusted(4, 0, -4, 0), s, px, BG, align, true);
-}
-
-// small heading with a rule running to the right edge
-void MainWindow::section(qreal y, const QString &s) {
-    txt(QRectF(18, y, 680, 20), s, 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    qreal x = 18 + s.size() * chW(13) + 10;
-    if (x < 700) g->fillRect(QRectF(x, y + 10, 704 - x, 1), GRAT);
-}
-
-void MainWindow::zone(QRectF r, const QString &name, std::function<void(QPointF, int)> fn) {
-    zones.push_back({r, name, std::move(fn)});
-}
-
-void MainWindow::button(QRectF r, const QString &name, const QString &label, bool on, std::function<void()> fn,
-                        const QString &sub, int look) {
-    bool inv = on || downNames.contains(name);
-    frame(r, inv || look == LOOK_ARMED ? INK : LOW, inv ? INK : BG);
-    if (look == LOOK_ARMED && !inv) frame(r.adjusted(3, 3, -3, -3), INK);
-    QColor tc = inv ? BG : INK;
-    int px = r.height() >= 50 ? 16 : 14;
-    while (px > 11 && label.size() * chW(px) > r.width() - 6) --px;
-    if (sub.isEmpty()) {
-        txt(r, fit(label, px, r.width() - 4), px, tc, Qt::AlignCenter, true);
-    } else {
-        txt(QRectF(r.x(), r.y() + r.height() * 0.13, r.width(), r.height() * 0.46), fit(label, px, r.width() - 4), px, tc, Qt::AlignCenter, true);
-        txt(QRectF(r.x() + 2, r.y() + r.height() * 0.58, r.width() - 4, r.height() * 0.32), fit(sub, 11, r.width() - 6), 11, inv ? BG : MID);
-    }
-    zone(r, name, [fn](QPointF, int ph) { if (ph == PH_PRESS && fn) fn(); });
-}
-
-// a level readout: value bar over a printed tick scale, with a marker
-void MainWindow::slider(QRectF r, const QString &name, const QString &label, float norm, const QString &value,
-                        std::function<void(float)> fn) {
-    bool dn = downNames.contains(name);
-    frame(r, dn ? INK : LOW, BG);
-    norm = norm < 0 ? 0 : (norm > 1 ? 1 : norm);
-    QRectF bar(r.x() + 10, r.bottom() - 19, r.width() - 20, 6);
-    for (int i = 0; i <= 20; ++i) {
-        qreal x = std::floor(bar.x() + (bar.width() - 1) * i / 20.0);
-        bool major = i % 5 == 0;
-        g->fillRect(QRectF(x, bar.bottom() + 2, 1, major ? 6 : 3), major ? MID : LOW);
-    }
-    g->fillRect(QRectF(bar.x(), bar.bottom() - 1, bar.width(), 1), LOW);
-    qreal vx = std::floor(bar.x() + (bar.width() - 1) * norm);
-    g->fillRect(QRectF(bar.x(), bar.y(), vx - bar.x(), bar.height()), INK);
-    g->fillRect(QRectF(vx - 1, bar.y() - 4, 3, bar.height() + 8), INK);
-    txt(QRectF(r.x() + 10, r.y() + 5, r.width() * 0.6, 18), label, 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(r.x() + r.width() * 0.4, r.y() + 5, r.width() * 0.6 - 10, 18), value, 13, INK, Qt::AlignRight | Qt::AlignVCenter, true);
-    zone(r, name, [fn, bar](QPointF p, int ph) {
-        if (ph == PH_RELEASE) return;
-        fn((float)((p.x() - bar.x()) / bar.width()));
-    });
-}
-
-void MainWindow::stepper(QRectF r, const QString &name, const QString &label, const QString &value,
-                         std::function<void()> minus, std::function<void()> plus) {
-    frame(r, LOW, BG);
-    qreal bw = r.width() < 200 ? 44 : 56;
-    QRectF lm(r.x(), r.y(), bw, r.height()), rp(r.right() - bw, r.y(), bw, r.height());
-    bool dm = downNames.contains(name + "-"), dp = downNames.contains(name + "+");
-    if (dm) g->fillRect(lm, INK);
-    if (dp) g->fillRect(rp, INK);
-    g->fillRect(QRectF(lm.right() - 1, r.y() + 1, 1, r.height() - 2), LOW);
-    g->fillRect(QRectF(rp.x(), r.y() + 1, 1, r.height() - 2), LOW);
-    txt(lm, QString::fromUtf8("−"), 24, dm ? BG : INK, Qt::AlignCenter, true);
-    txt(rp, "+", 24, dp ? BG : INK, Qt::AlignCenter, true);
-    txt(QRectF(r.x() + bw, r.y() + 6, r.width() - 2 * bw, 16), fit(label, 12, r.width() - 2 * bw - 4), 12, MID);
-    txt(QRectF(r.x() + bw, r.y() + 22, r.width() - 2 * bw, r.height() - 26), value, 18, INK, Qt::AlignCenter, true);
-    zone(lm, name + "-", [minus](QPointF, int ph) { if (ph == PH_PRESS) minus(); });
-    zone(rp, name + "+", [plus](QPointF, int ph) { if (ph == PH_PRESS) plus(); });
-}
-
 void MainWindow::paramSlider(QRectF r, int p) {
-    slider(r, QString("param%1").arg(p), nice(paramInfo(p).label), paramToNorm(p, lead.p[p]), paramText(p, lead.p[p]),
+    ui.slider(r, QString("param%1").arg(p), nice(paramInfo(p).label), paramToNorm(p, lead.p[p]), paramText(p, lead.p[p]),
            [this, p](float n) { setParam(p, normToParam(p, n)); });
 }
 
@@ -852,16 +699,14 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
         seenSinkGeneration = sinkGeneration;
         set(S_LATENCY, sinkIsBluetooth ? 200.0f : 0.0f);
     }
-    g = &painter;
+    ui.beginFrame(painter);
     painter.fillRect(QRectF(0, 0, W, H), BG);
     qreal s = qMin(W, H) / CW;
     painter.translate((W - CW * s) / 2, (H - CW * s) / 2);
     painter.scale(s, s);
     painter.setRenderHint(QPainter::Antialiasing, false);
     painter.setRenderHint(QPainter::TextAntialiasing, false);
-    zones.clear();
-    drawnText.clear();
-    recordText = true;
+    ui.recordTexts(true);
     if (hl.page != pg) { hl.zones.clear(); hl.until = 0; }            // highlights belong to the page they were made on
     if (topicPage != pg) { topicLabel.clear(); topicZones.clear(); }
     if (lastTappedPage != pg) lastTapped.clear();
@@ -882,7 +727,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     case PG_HELP: paintTabs(); paintHelp(); break;
     case PG_CHAT: paintTabs(); paintChat(); break;
     }
-    recordText = false;
+    ui.recordTexts(false);
     if (!tourOpen()) {
         layoutDock();
         paintHighlights();
@@ -893,11 +738,11 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     }
 
     if (clock.elapsed() < toastUntil && !toastText.isEmpty()) { // a message box, as the scope reports "Auto-scale"
-        QString t = fit(toastText, 14, 640);
-        int w = t.size() * chW(14) + 28;
+        QString t = ui.fit(toastText, 14, 640);
+        int w = t.size() * ui.chW(14) + 28;
         QRectF r(std::floor((CW - w) / 2), pg == PG_TRACK ? 398 : 86, w, 30); // on the Track page, clear of the bars
-        frame(r.adjusted(-4, -4, 4, 4), INK, BG);
-        tag(r, t, 14);
+        ui.frame(r.adjusted(-4, -4, 4, 4), INK, BG);
+        ui.tag(r, t, 14);
     }
 
     // tube face: faint scan lines and darker corners over everything
@@ -914,19 +759,19 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
         facePix = QPixmap::fromImage(im);
     }
     painter.drawPixmap(0, 0, facePix);
-    g = nullptr;
+    ui.endFrame();
 }
 
 void MainWindow::paintTabs() {
     static const char *N[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
-        button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
+        ui.button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab_") + pageName(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
                [this, i] { goPage(i); });
 }
 
 void MainWindow::paintLoopButton(QRectF r) {
-    bool dn = downNames.contains("loop_pedal");
+    bool dn = ui.isDown("loop_pedal");
     QString label = "Loop", sub = "tap to record";
     bool inv = dn, armed = false;
     float prog = 0;
@@ -942,17 +787,17 @@ void MainWindow::paintLoopButton(QRectF r) {
     case L_STOPPED: label = "Loop"; sub = "stopped, tap = play"; break;
     default: break;
     }
-    frame(r, inv || armed ? INK : LOW, inv ? INK : BG);
-    if (armed && !inv) frame(r.adjusted(3, 3, -3, -3), INK);
+    ui.frame(r, inv || armed ? INK : LOW, inv ? INK : BG);
+    if (armed && !inv) ui.frame(r.adjusted(3, 3, -3, -3), INK);
     QColor tc = inv ? BG : INK;
-    txt(QRectF(r.x(), r.y() + 9, r.width(), 32), label, 24, u.loopState == L_STOPPED ? MID : tc, Qt::AlignCenter, true);
-    txt(QRectF(r.x(), r.y() + 45, r.width(), 16), fit(sub, 11, r.width() - 10), 11, inv ? BG : MID);
+    ui.txt(QRectF(r.x(), r.y() + 9, r.width(), 32), label, 24, u.loopState == L_STOPPED ? MID : tc, Qt::AlignCenter, true);
+    ui.txt(QRectF(r.x(), r.y() + 45, r.width(), 16), ui.fit(sub, 11, r.width() - 10), 11, inv ? BG : MID);
     if (prog > 0) { // position in the loop
         QRectF b(r.x() + 9, r.bottom() - 14, r.width() - 18, 5);
-        frame(b, inv ? BG : MID);
-        g->fillRect(QRectF(b.x(), b.y(), b.width() * qMin(1.0f, prog), b.height()), tc);
+        ui.frame(b, inv ? BG : MID);
+        ui.g->fillRect(QRectF(b.x(), b.y(), b.width() * qMin(1.0f, prog), b.height()), tc);
     }
-    zone(r, "loop_pedal", [this](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_LOOP, LC_PEDAL); });
+    ui.zone(r, "loop_pedal", [this](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_LOOP, LC_PEDAL); });
 }
 
 void MainWindow::paintChordPads(QRectF area, bool withSlots) {
@@ -964,18 +809,18 @@ void MainWindow::paintChordPads(QRectF area, bool withSlots) {
         for (int i = 0; i < kProgMax; ++i) {
             QRectF r(area.x() + i * (sw + 4), y, sw, 22);
             bool has = i < u.progLen, cur = has && i == u.progPos && u.backPlaying, sel = i == u.selSlot;
-            frame(r, sel || cur ? INK : (has ? MID : GRAT), cur ? INK : BG);
-            if (sel && !cur) frame(r.adjusted(2, 2, -2, -2), INK);
-            if (has) txt(r, buildChord(t, u.prog[i], u.set.seventh).name, 13, cur ? BG : INK, Qt::AlignCenter, true);
-            else txt(r, QString::number(i + 1), 11, GRAT);
-            if (has) zone(r.adjusted(0, -6, 0, 6), QString("pslot%1").arg(i), [this, i](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_BACK, BC_SELECT_SLOT, i); });
+            ui.frame(r, sel || cur ? INK : (has ? MID : GRAT), cur ? INK : BG);
+            if (sel && !cur) ui.frame(r.adjusted(2, 2, -2, -2), INK);
+            if (has) ui.txt(r, buildChord(t, u.prog[i], u.set.seventh).name, 13, cur ? BG : INK, Qt::AlignCenter, true);
+            else ui.txt(r, QString::number(i + 1), 11, GRAT);
+            if (has) ui.zone(r.adjusted(0, -6, 0, 6), QString("pslot%1").arg(i), [this, i](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_BACK, BC_SELECT_SLOT, i); });
         }
         QString info;
         if (u.backPlaying && (u.progLen || u.holdChord >= 0 || u.droneMask)) info = QString::fromUtf8("♪ %1").arg(u.backName);
         else if (u.progLen) info = "stopped";
         else info = chordRow ? QString::fromUtf8("Z‥M = chords") : QString("tap chords");
         qreal ix = area.x() + 8 * (sw + 4);
-        txt(QRectF(ix, y, area.right() - ix, 22), fit(info, 12, area.right() - ix), 12, MID, Qt::AlignRight | Qt::AlignVCenter);
+        ui.txt(QRectF(ix, y, area.right() - ix, 22), ui.fit(info, 12, area.right() - ix), 12, MID, Qt::AlignRight | Qt::AlignVCenter);
         y += 28;
     }
     qreal h = area.bottom() - y;
@@ -983,21 +828,21 @@ void MainWindow::paintChordPads(QRectF area, bool withSlots) {
     for (int d = 0; d < 7; ++d) {
         QRectF r(std::floor(area.x() + d * (pw + 6)), y, std::floor(pw), h);
         QString name = QString("chord%1").arg(d);
-        bool cur = u.curChord == d, dn = downNames.contains(name);
+        bool cur = u.curChord == d, dn = ui.isDown(name);
         bool drone = (u.droneMask >> d) & 1;
         bool inv = cur || dn;
-        frame(r, inv || drone ? INK : LOW, inv ? INK : BG);
-        if (drone && !inv) frame(r.adjusted(3, 3, -3, -3), INK);
+        ui.frame(r, inv || drone ? INK : LOW, inv ? INK : BG);
+        if (drone && !inv) ui.frame(r.adjusted(3, 3, -3, -3), INK);
         Chord c = buildChord(t, d, u.set.seventh);
-        txt(QRectF(r.x(), r.y() + h * 0.10, r.width(), h * 0.52), c.name, c.name[3] ? 16 : 20, inv ? BG : INK, Qt::AlignCenter, true);
+        ui.txt(QRectF(r.x(), r.y() + h * 0.10, r.width(), h * 0.52), c.name, c.name[3] ? 16 : 20, inv ? BG : INK, Qt::AlignCenter, true);
         bool small = std::strchr(c.name + 1, 'm') && !std::strstr(c.name, "maj");
-        txt(QRectF(r.x(), r.y() + h * 0.62, r.width(), h * 0.30), romanNumeral(d, small), 12, inv ? BG : MID);
-        zone(r, name, [this, d](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_CHORD, d); });
+        ui.txt(QRectF(r.x(), r.y() + h * 0.62, r.width(), h * 0.30), romanNumeral(d, small), 12, inv ? BG : MID);
+        ui.zone(r, name, [this, d](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_CHORD, d); });
     }
     QRectF c1(area.right() - ctl, y, ctl, h / 2 - 3), c2(area.right() - ctl, y + h / 2 + 3, ctl, h / 2 - 3);
     static const char *MN[BM_COUNT] = {"Prog", "Hold", "Drone"};
-    button(c1, "backmode", MN[u.set.backMode], false, [this] { perform(A_BACK_MODE); });
-    button(c2, "backplay", u.backPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.backPlaying,
+    ui.button(c1, "backmode", MN[u.set.backMode], false, [this] { perform(A_BACK_MODE); });
+    ui.button(c2, "backplay", u.backPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.backPlaying,
            [this] { inst.cmd(EV_BACK, BC_PLAYSTOP); });
 }
 
@@ -1005,54 +850,54 @@ void MainWindow::paintPlay() {
     const Tuning &t = u.set.tuning;
     const int L = Qt::AlignLeft | Qt::AlignVCenter, R = Qt::AlignRight | Qt::AlignVCenter;
     // ---------------- header: readouts ----------------
-    txt(QRectF(18, 6, 430, 44), fit(lead.name, 30, 428), 30, INK, L, true);
+    ui.txt(QRectF(18, 6, 430, 44), ui.fit(lead.name, 30, 428), 30, INK, L, true);
     QString slotTxt = curSlot >= 0 ? QString("Sound %1").arg(curSlot + 1) : QString("Unsaved sound");
-    txt(QRectF(20, 52, 230, 20), QString("%1   %2 voices").arg(slotTxt).arg(u.voices), 13, MID, L);
+    ui.txt(QRectF(20, 52, 230, 20), QString("%1   %2 voices").arg(slotTxt).arg(u.voices), 13, MID, L);
     if (wav.isOpen()) {
-        if ((clock.elapsed() / 400) % 2 == 0) tag(QRectF(250, 54, 104, 17), QString("REC %1 s").arg(wav.frames() / audio.sampleRate()), 12);
+        if ((clock.elapsed() / 400) % 2 == 0) ui.tag(QRectF(250, 54, 104, 17), QString("REC %1 s").arg(wav.frames() / audio.sampleRate()), 12);
     } else if (sinkIsDummy) {
-        tag(QRectF(250, 54, 150, 17), "No audio device", 12);
+        ui.tag(QRectF(250, 54, 150, 17), "No audio device", 12);
     } else if (u.limiter < 0.85f) {
-        tag(QRectF(250, 54, 60, 17), "Limit", 12);
+        ui.tag(QRectF(250, 54, 60, 17), "Limit", 12);
     }
-    zone(QRectF(16, 4, 430, 72), "hdr_sound", [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_SOUND); });
+    ui.zone(QRectF(16, 4, 430, 72), "hdr_sound", [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_SOUND); });
 
-    g->fillRect(QRectF(444, 10, 1, 60), GRAT);
-    txt(QRectF(456, 6, 60, 44), noteName(t.root), 32, INK, L, true);
-    txt(QRectF(456, 52, 110, 20), QString(scaleDef(t.scale).shortName).toLower(), 13, MID, L);
-    txt(QRectF(552, 6, 86, 44), QString::number((int)std::round(u.set.bpm)), 28, INK, R, true);
-    txt(QRectF(552, 52, 86, 20), "bpm", 13, MID, R);
+    ui.g->fillRect(QRectF(444, 10, 1, 60), GRAT);
+    ui.txt(QRectF(456, 6, 60, 44), noteName(t.root), 32, INK, L, true);
+    ui.txt(QRectF(456, 52, 110, 20), QString(scaleDef(t.scale).shortName).toLower(), 13, MID, L);
+    ui.txt(QRectF(552, 6, 86, 44), QString::number((int)std::round(u.set.bpm)), 28, INK, R, true);
+    ui.txt(QRectF(552, 52, 86, 20), "bpm", 13, MID, R);
     double frac = u.beat - std::floor(u.beat);
     bool running = u.backPlaying || u.loopState != L_EMPTY || u.beatPlaying || u.trackPlaying;
-    frame(QRectF(552, 24, 9, 9), running ? INK : LOW, running && frac < 0.25 ? INK : BG); // beat lamp
-    txt(QRectF(644, 6, 60, 44), QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave), 28, INK, R, true);
-    txt(QRectF(644, 52, 60, 20), "oct", 13, MID, R);
-    zone(QRectF(450, 4, 254, 72), "hdr_tune", [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_TUNE); });
+    ui.frame(QRectF(552, 24, 9, 9), running ? INK : LOW, running && frac < 0.25 ? INK : BG); // beat lamp
+    ui.txt(QRectF(644, 6, 60, 44), QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave), 28, INK, R, true);
+    ui.txt(QRectF(644, 52, 60, 20), "oct", 13, MID, R);
+    ui.zone(QRectF(450, 4, 254, 72), "hdr_tune", [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_TUNE); });
     // the readouts inside it, named so they can be pointed at; they open the Tune page too
     for (const auto &rd : {std::make_pair(QRectF(452, 4, 96, 72), "key_readout"), std::make_pair(QRectF(550, 4, 90, 72), "tempo_readout"), std::make_pair(QRectF(642, 4, 62, 72), "octave_readout")})
-        zone(rd.first, rd.second, [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_TUNE); });
+        ui.zone(rd.first, rd.second, [this](QPointF, int ph) { if (ph == PH_PRESS) goPage(PG_TUNE); });
 
     // output level: a row of segments
     {
         int lit = (int)std::ceil(qMin(1.0f, u.peak) * 86);
-        for (int i = 0; i < 86; ++i) g->fillRect(QRectF(16 + i * 8, 80, 6, 4), i < lit ? INK : GRAT);
+        for (int i = 0; i < 86; ++i) ui.g->fillRect(QRectF(16 + i * 8, 80, 6, 4), i < lit ? INK : GRAT);
     }
 
     // ---------------- scope + X-Y pad ----------------
     QRectF xy(16, 92, 688, 226);
     drawScope(xy);
-    zone(xy, "xy", [this, xy](QPointF p, int ph) {
+    ui.zone(xy, "xy", [this, xy](QPointF p, int ph) {
         Event e; e.type = EV_XY; e.a = ph != PH_RELEASE;
         e.f = (float)qBound(0.0, (p.x() - xy.x()) / xy.width(), 1.0);
         e.g = (float)qBound(0.0, (xy.bottom() - p.y()) / xy.height(), 1.0);
         inst.push(e);
     });
-    button(QRectF(xy.right() - 196, xy.y() + 8, 118, 40), "xymap", nice(xyMapName(u.set.xyMap)), false, [this] { perform(A_XYMAP); });
-    button(QRectF(xy.right() - 72, xy.y() + 8, 64, 40), "xyhold", "Hold", u.set.xyHold, [this] { set(S_XYHOLD, u.set.xyHold ? 0 : 1); });
+    ui.button(QRectF(xy.right() - 196, xy.y() + 8, 118, 40), "xymap", nice(xyMapName(u.set.xyMap)), false, [this] { perform(A_XYMAP); });
+    ui.button(QRectF(xy.right() - 72, xy.y() + 8, 64, 40), "xyhold", "Hold", u.set.xyHold, [this] { set(S_XYHOLD, u.set.xyHold ? 0 : 1); });
 
     // ---------------- strings ----------------
     QRectF sp(16, 328, 688, 176);
-    frame(sp, LOW, BG);
+    ui.frame(sp, LOW, BG);
     const qreal x0 = sp.x() + 40, dx = (sp.width() - 80) / 9.0;
     qint64 now = clock.elapsed();
     for (int row = 2; row >= 0; --row) {
@@ -1069,17 +914,17 @@ void MainWindow::paintPlay() {
                 qreal yy = y + 3.5 * std::sin(i * 0.7 + now * 0.03) * std::sin(3.14159 * i / 80.0);
                 if (i == 0) line.moveTo(x, yy); else line.lineTo(x, yy);
             }
-            g->setRenderHint(QPainter::Antialiasing, true);
-            g->setBrush(Qt::NoBrush);
-            g->setPen(QPen(QColor(255, 255, 255, 60), 5));
-            g->drawPath(line);
-            g->setPen(QPen(INK, 1.6));
-            g->drawPath(line);
-            g->setRenderHint(QPainter::Antialiasing, false);
+            ui.g->setRenderHint(QPainter::Antialiasing, true);
+            ui.g->setBrush(Qt::NoBrush);
+            ui.g->setPen(QPen(QColor(255, 255, 255, 60), 5));
+            ui.g->drawPath(line);
+            ui.g->setPen(QPen(INK, 1.6));
+            ui.g->drawPath(line);
+            ui.g->setRenderHint(QPainter::Antialiasing, false);
         } else {
-            g->fillRect(QRectF(sp.x() + 8, y, sp.width() - 16, 1), LOW);
+            ui.g->fillRect(QRectF(sp.x() + 8, y, sp.width() - 16, 1), LOW);
         }
-        txt(QRectF(sp.x() + 4, y - 26, 20, 12), QString("S%1").arg(row + 1), 10, su.gate ? INK : LOW, L);
+        ui.txt(QRectF(sp.x() + 4, y - 26, 20, 12), QString("S%1").arg(row + 1), 10, su.gate ? INK : LOW, L);
         // pitch -> x (piecewise linear across the row's notes)
         auto pitchX = [&](float pitch) {
             float pbase = pitch - u.bend;
@@ -1098,12 +943,12 @@ void MainWindow::paintPlay() {
             bool isHeldTop = su.held > 0 && su.topCol == c;
             bool isRoot = ((n - t.root) % 12 + 12) % 12 == 0;
             QRectF box(std::floor(X(c)) - 17, y - 11, 35, 23);
-            frame(box, isHeldTop || isRoot ? INK : LOW, isHeldTop ? INK : BG);
+            ui.frame(box, isHeldTop || isRoot ? INK : LOW, isHeldTop ? INK : BG);
             QString nn = QString("%1%2").arg(noteName(n)).arg(n / 12 - 1);
-            txt(box, nn, 12, isHeldTop ? BG : (isRoot ? INK : MID), Qt::AlignCenter, isRoot || isHeldTop);
+            ui.txt(box, nn, 12, isHeldTop ? BG : (isRoot ? INK : MID), Qt::AlignCenter, isRoot || isHeldTop);
             QRectF kr(box.center().x() - 8, y - 27, 16, 13);
-            if (chordKeys) tag(kr.adjusted(1, 0, -1, 0), QString(km.rows[row][c]), 10, Qt::AlignCenter);
-            else txt(kr, QString(km.rows[row][c]), 11, LOW);
+            if (chordKeys) ui.tag(kr.adjusted(1, 0, -1, 0), QString(km.rows[row][c]), 10, Qt::AlignCenter);
+            else ui.txt(kr, QString(km.rows[row][c]), 11, LOW);
         }
         // where the pitch really is: a cursor that travels during a slide, leaving a fading trail
         std::deque<float> &tr = trail[row];
@@ -1115,27 +960,27 @@ void MainWindow::paintPlay() {
             for (size_t i = 0; i + 1 < tr.size(); ++i) {
                 if (std::fabs(tr[i] - px) < 1.0f) continue;
                 int v = 40 + 14 * (int)i;
-                g->fillRect(QRectF(std::floor(tr[i]), y + 13, 1, 9), QColor(v, v, v));
+                ui.g->fillRect(QRectF(std::floor(tr[i]), y + 13, 1, 9), QColor(v, v, v));
             }
             qreal cx = std::floor(px);
             int wd = sliding ? 3 : 2;
-            g->fillRect(QRectF(cx - 21, y - 15, wd, 31), INK); // [ ] brackets round the sounding pitch
-            g->fillRect(QRectF(cx + 21 - wd + 1, y - 15, wd, 31), INK);
-            g->fillRect(QRectF(cx - 21, y - 15, 7, wd), INK);
-            g->fillRect(QRectF(cx - 21, y + 16 - wd, 7, wd), INK);
-            g->fillRect(QRectF(cx + 15, y - 15, 7, wd), INK);
-            g->fillRect(QRectF(cx + 15, y + 16 - wd, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx - 21, y - 15, wd, 31), INK); // [ ] brackets round the sounding pitch
+            ui.g->fillRect(QRectF(cx + 21 - wd + 1, y - 15, wd, 31), INK);
+            ui.g->fillRect(QRectF(cx - 21, y - 15, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx - 21, y + 16 - wd, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx + 15, y - 15, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx + 15, y + 16 - wd, 7, wd), INK);
             QPainterPath m; // trigger-style marker under the string
             m.moveTo(cx - 4, y + 23); m.lineTo(cx + 5, y + 23); m.lineTo(cx + 0.5, y + 17); m.closeSubpath();
-            g->setRenderHint(QPainter::Antialiasing, true);
-            g->setPen(Qt::NoPen);
-            g->setBrush(INK);
-            g->drawPath(m);
-            g->setRenderHint(QPainter::Antialiasing, false);
+            ui.g->setRenderHint(QPainter::Antialiasing, true);
+            ui.g->setPen(Qt::NoPen);
+            ui.g->setBrush(INK);
+            ui.g->drawPath(m);
+            ui.g->setRenderHint(QPainter::Antialiasing, false);
         } else if (!tr.empty()) tr.clear();
         // touch: press plays, dragging along the string slides
         QRectF zr(sp.x(), y - 27, sp.width(), 54);
-        zone(zr, QString("string%1").arg(row), [this, row, count, x0, dx, shift](QPointF p, int ph) {
+        ui.zone(zr, QString("string%1").arg(row), [this, row, count, x0, dx, shift](QPointF p, int ph) {
             int col = (int)std::floor((p.x() - x0) / dx - shift + 0.5);
             col = qBound(0, col, count - 1);
             int &cur = touchCol[row];
@@ -1153,14 +998,14 @@ void MainWindow::paintPlay() {
     // ---------------- bottom bar: the soft keys ----------------
     qreal x = 16, y = 628, h = 80;
     paintLoopButton(QRectF(x, y, 150, h)); x += 158;
-    button(QRectF(x, y, 66, h), "loop_undo", "Undo", false, [this] { inst.cmd(EV_LOOP, LC_UNDO); }, "layer"); x += 74;
+    ui.button(QRectF(x, y, 66, h), "loop_undo", "Undo", false, [this] { inst.cmd(EV_LOOP, LC_UNDO); }, "layer"); x += 74;
     bool lp = u.loopState == L_PLAY || u.loopState == L_OVERDUB;
-    button(QRectF(x, y, 66, h), "loop_playstop", lp ? QString::fromUtf8("■") : QString::fromUtf8("▶"), false, [this] { inst.cmd(EV_LOOP, LC_PLAYSTOP); }, "loop"); x += 74;
-    button(QRectF(x, y, 66, h), "sustain", "Sus", u.sustain, [this] { susLatch = !susLatch; inst.cmd(EV_SUSTAIN, susLatch || susKey ? 1 : 0); }, "sustain"); x += 74;
-    button(QRectF(x, y, 54, h), "octave_down", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
-    button(QRectF(x, y, 54, h), "octave_up", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
-    button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { randomise(); }, "sound"); x += 94;
-    button(QRectF(x, y, 704 - x, h), "menu", "Menu", false, [this] { goPage(PG_SOUND); }, QString::fromUtf8("≡"));
+    ui.button(QRectF(x, y, 66, h), "loop_playstop", lp ? QString::fromUtf8("■") : QString::fromUtf8("▶"), false, [this] { inst.cmd(EV_LOOP, LC_PLAYSTOP); }, "loop"); x += 74;
+    ui.button(QRectF(x, y, 66, h), "sustain", "Sus", u.sustain, [this] { susLatch = !susLatch; inst.cmd(EV_SUSTAIN, susLatch || susKey ? 1 : 0); }, "sustain"); x += 74;
+    ui.button(QRectF(x, y, 54, h), "octave_down", QString::fromUtf8("−"), false, [this] { inst.cmd(EV_OCTAVE, -1); }, "oct"); x += 62;
+    ui.button(QRectF(x, y, 54, h), "octave_up", "+", false, [this] { inst.cmd(EV_OCTAVE, 1); }, "oct"); x += 62;
+    ui.button(QRectF(x, y, 86, h), "new_sound", "New", false, [this] { randomise(); }, "sound"); x += 94;
+    ui.button(QRectF(x, y, 704 - x, h), "menu", "Menu", false, [this] { goPage(PG_SOUND); }, QString::fromUtf8("≡"));
 }
 
 void MainWindow::paintSound() {
@@ -1169,26 +1014,26 @@ void MainWindow::paintSound() {
         QRectF r(std::floor(16 + (i % 5) * (w + 8)), 66 + (i / 5) * 56, std::floor(w), 50);
         QString name = QString("slot%1").arg(i);
         bool on = curSlot == i && !slotSave;
-        bool inv = on || downNames.contains(name);
-        frame(r, inv || slotSave ? INK : LOW, inv ? INK : BG);
-        if (slotSave && !inv) frame(r.adjusted(3, 3, -3, -3), INK);
+        bool inv = on || ui.isDown(name);
+        ui.frame(r, inv || slotSave ? INK : LOW, inv ? INK : BG);
+        if (slotSave && !inv) ui.frame(r.adjusted(3, 3, -3, -3), INK);
         // slot number in a corner tab, name beneath: laid out like a soft-key label
-        g->fillRect(QRectF(r.x() + 1, r.y() + 1, 18, 16), inv ? BG : LOW);
-        txt(QRectF(r.x() + 1, r.y() + 1, 18, 16), QString::number((i + 1) % 10), 12, inv ? INK : BG, Qt::AlignCenter, true);
-        txt(QRectF(r.x() + 4, r.y() + 20, r.width() - 8, 24), fit(bank[i].name, 13, r.width() - 8), 13, inv ? BG : INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-        zone(r, name, [this, i](QPointF, int ph) { if (ph == PH_PRESS) selectSlot(i); });
+        ui.g->fillRect(QRectF(r.x() + 1, r.y() + 1, 18, 16), inv ? BG : LOW);
+        ui.txt(QRectF(r.x() + 1, r.y() + 1, 18, 16), QString::number((i + 1) % 10), 12, inv ? INK : BG, Qt::AlignCenter, true);
+        ui.txt(QRectF(r.x() + 4, r.y() + 20, r.width() - 8, 24), ui.fit(bank[i].name, 13, r.width() - 8), 13, inv ? BG : INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+        ui.zone(r, name, [this, i](QPointF, int ph) { if (ph == PH_PRESS) selectSlot(i); });
     }
     qreal y = 182;
     auto col = [w](int i) { return QRectF(std::floor(16 + i * (w + 8)), 182, std::floor(w), 54); };
     Q_UNUSED(y);
-    button(col(0), "newsound", "New sound", false, [this] { randomise(); }, "randomise");
-    button(col(1), "mutate", "Mutate", false, [this] { mutate(); }, "nudge it");
-    button(col(2), "undosound", "Undo", false, [this] { undoSound(); }, QString("%1 step%2").arg(undo.size()).arg(undo.size() == 1 ? "" : "s"));
-    button(col(3), "slotsave", "Store", slotSave, [this] { slotSave = !slotSave; }, slotSave ? "pick a slot" : "to a slot 1-0");
-    button(col(4), "fav", QString::fromUtf8("♥ Save"), false, [this] { saveFavourite(); }, "favourite");
+    ui.button(col(0), "newsound", "New sound", false, [this] { randomise(); }, "randomise");
+    ui.button(col(1), "mutate", "Mutate", false, [this] { mutate(); }, "nudge it");
+    ui.button(col(2), "undosound", "Undo", false, [this] { undoSound(); }, QString("%1 step%2").arg(undo.size()).arg(undo.size() == 1 ? "" : "s"));
+    ui.button(col(3), "slotsave", "Store", slotSave, [this] { slotSave = !slotSave; }, slotSave ? "pick a slot" : "to a slot 1-0");
+    ui.button(col(4), "fav", QString::fromUtf8("♥ Save"), false, [this] { saveFavourite(); }, "favourite");
 
-    txt(QRectF(18, 246, 440, 40), fit(lead.name, 24, 440), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    button(QRectF(704 - 220, 248, 220, 38), "deep", deepEdit ? QString::fromUtf8("‹ Quick controls") : QString::fromUtf8("All parameters ›"), deepEdit, [this] { deepEdit = !deepEdit; });
+    ui.txt(QRectF(18, 246, 440, 40), ui.fit(lead.name, 24, 440), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    ui.button(QRectF(704 - 220, 248, 220, 38), "deep", deepEdit ? QString::fromUtf8("‹ Quick controls") : QString::fromUtf8("All parameters ›"), deepEdit, [this] { deepEdit = !deepEdit; });
 
     if (deepEdit) {
         const int per = 12, pages = (P_COUNT + per - 1) / per;
@@ -1198,9 +1043,9 @@ void MainWindow::paintSound() {
             if (p >= P_COUNT) break;
             paramSlider(QRectF(16 + (k % 2) * 348, 296 + (k / 2) * 58, 340, 52), p);
         }
-        button(QRectF(16, 650, 160, 54), "deepprev", QString::fromUtf8("‹ Prev"), false, [this, pages] { deepPage = (deepPage + pages - 1) % pages; });
-        txt(QRectF(176, 650, 368, 54), QString("Page %1 / %2").arg(deepPage + 1).arg(pages), 14, MID);
-        button(QRectF(544, 650, 160, 54), "deepnext", QString::fromUtf8("Next ›"), false, [this, pages] { deepPage = (deepPage + 1) % pages; });
+        ui.button(QRectF(16, 650, 160, 54), "deepprev", QString::fromUtf8("‹ Prev"), false, [this, pages] { deepPage = (deepPage + pages - 1) % pages; });
+        ui.txt(QRectF(176, 650, 368, 54), QString("Page %1 / %2").arg(deepPage + 1).arg(pages), 14, MID);
+        ui.button(QRectF(544, 650, 160, 54), "deepnext", QString::fromUtf8("Next ›"), false, [this, pages] { deepPage = (deepPage + 1) % pages; });
         return;
     }
     static const int macro[8] = {P_CUTOFF, P_RESO, P_ATK, P_REL, P_GLIDE, P_DRIVE, P_DLYMIX, P_REVMIX};
@@ -1209,13 +1054,13 @@ void MainWindow::paintSound() {
     // favourites
     const int per = 6, pages = qMax(1, ((int)favs.size() + per - 1) / per);
     favPage = qBound(0, favPage, pages - 1);
-    section(534, QString("Favourites  %1").arg(favs.size()));
+    ui.section(534, QString("Favourites  %1").arg(favs.size()));
     qreal cw = (688 - 110 - 3 * 8) / 3.0;
     for (int k = 0; k < per; ++k) {
         int idx = favPage * per + k;
         QRectF r(std::floor(16 + (k % 3) * (cw + 8)), 560 + (k / 3) * 74, std::floor(cw), 66);
-        if (idx >= favs.size()) { frame(r, GRAT); continue; }
-        button(r, QString("favitem%1").arg(k), favs[idx].patch.name, false, [this, idx] {
+        if (idx >= favs.size()) { ui.frame(r, GRAT); continue; }
+        ui.button(r, QString("favitem%1").arg(k), favs[idx].patch.name, false, [this, idx] {
             if (idx >= favs.size()) return;
             if (favDelete) { QFile::remove(favs[idx].file); refreshLists(); favDelete = false; toast("Favourite removed"); return; }
             pushUndo(); lead = favs[idx].patch; applyLead(true);
@@ -1224,58 +1069,58 @@ void MainWindow::paintSound() {
     qreal bx = 704 - 102;
     { // the arrows say which way: the left half goes back a page, the right half forward, both wrapping
         const QRectF r(bx, 560, 102, 30);
-        const bool inv = downNames.contains("favprev");
-        frame(r, inv ? INK : LOW, inv ? INK : BG);
-        txt(r, QString::fromUtf8("‹ %1/%2 ›").arg(favPage + 1).arg(pages), 14, inv ? BG : INK, Qt::AlignCenter, true);
-        zone(r, "favprev", [this, r, pages](QPointF p, int ph) {
+        const bool inv = ui.isDown("favprev");
+        ui.frame(r, inv ? INK : LOW, inv ? INK : BG);
+        ui.txt(r, QString::fromUtf8("‹ %1/%2 ›").arg(favPage + 1).arg(pages), 14, inv ? BG : INK, Qt::AlignCenter, true);
+        ui.zone(r, "favprev", [this, r, pages](QPointF p, int ph) {
             if (ph == PH_PRESS) favPage = (favPage + (p.x() < r.center().x() ? pages - 1 : 1)) % pages;
         });
     }
-    button(QRectF(bx, 598, 102, 102), "favdel", "Delete", favDelete, [this] { favDelete = !favDelete; }, favDelete ? "pick one" : "a favourite");
+    ui.button(QRectF(bx, 598, 102, 102), "favdel", "Delete", favDelete, [this] { favDelete = !favDelete; }, favDelete ? "pick one" : "a favourite");
 }
 
 void MainWindow::paintBacking() {
-    section(62, QString::fromUtf8("A chord tap…"));
+    ui.section(62, QString::fromUtf8("A chord tap…"));
     static const char *MS[BM_COUNT] = {"adds to the loop", "latches one chord", "latches a drone note"};
     qreal w3 = (688 - 2 * 8) / 3.0;
     for (int i = 0; i < BM_COUNT; ++i)
-        button(QRectF(std::floor(16 + i * (w3 + 8)), 86, std::floor(w3), 54), QString("bmode%1").arg(i), nice(backModeName(i)), u.set.backMode == i, [this, i] { set(S_BACKMODE, (float)i); }, MS[i]);
+        ui.button(QRectF(std::floor(16 + i * (w3 + 8)), 86, std::floor(w3), 54), QString("bmode%1").arg(i), nice(backModeName(i)), u.set.backMode == i, [this, i] { set(S_BACKMODE, (float)i); }, MS[i]);
     qreal w5 = (688 - 4 * 6) / 5.0;
     for (int i = 0; i < BS_COUNT; ++i)
-        button(QRectF(std::floor(16 + i * (w5 + 6)), 148, std::floor(w5), 46), QString("bstyle%1").arg(i), nice(backStyleName(i)), u.set.backStyle == i, [this, i] { set(S_BACKSTYLE, (float)i); });
+        ui.button(QRectF(std::floor(16 + i * (w5 + 6)), 148, std::floor(w5), 46), QString("bstyle%1").arg(i), nice(backStyleName(i)), u.set.backStyle == i, [this, i] { set(S_BACKSTYLE, (float)i); });
 
     // progression slots
-    section(202, "Progression  tap a slot, then a chord, to replace it");
+    ui.section(202, "Progression  tap a slot, then a chord, to replace it");
     qreal sw = (688 - 7 * 6) / 8.0;
     for (int i = 0; i < kProgMax; ++i) {
         QRectF r(std::floor(16 + i * (sw + 6)), 226, std::floor(sw), 58);
         bool has = i < u.progLen, cur = has && i == u.progPos && u.backPlaying, sel = i == u.selSlot;
-        frame(r, sel || cur ? INK : (has ? MID : GRAT), cur ? INK : BG);
-        if (sel && !cur) frame(r.adjusted(3, 3, -3, -3), INK);
-        txt(QRectF(r.x(), r.y() + 5, r.width(), 14), QString::number(i + 1), 11, cur ? BG : (has ? MID : LOW));
-        if (has) txt(QRectF(r.x(), r.y() + 18, r.width(), 34), buildChord(u.set.tuning, u.prog[i], u.set.seventh).name, 18, cur ? BG : INK, Qt::AlignCenter, true);
-        if (has) zone(r, QString("bslot%1").arg(i), [this, i](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_BACK, BC_SELECT_SLOT, i); });
+        ui.frame(r, sel || cur ? INK : (has ? MID : GRAT), cur ? INK : BG);
+        if (sel && !cur) ui.frame(r.adjusted(3, 3, -3, -3), INK);
+        ui.txt(QRectF(r.x(), r.y() + 5, r.width(), 14), QString::number(i + 1), 11, cur ? BG : (has ? MID : LOW));
+        if (has) ui.txt(QRectF(r.x(), r.y() + 18, r.width(), 34), buildChord(u.set.tuning, u.prog[i], u.set.seventh).name, 18, cur ? BG : INK, Qt::AlignCenter, true);
+        if (has) ui.zone(r, QString("bslot%1").arg(i), [this, i](QPointF, int ph) { if (ph == PH_PRESS) inst.cmd(EV_BACK, BC_SELECT_SLOT, i); });
     }
     qreal w4 = (688 - 3 * 8) / 4.0;
     auto c4 = [w4](int i, qreal y, qreal h) { return QRectF(std::floor(16 + i * (w4 + 8)), y, std::floor(w4), h); };
-    button(c4(0, 292, 52), "bremove", "Remove last", false, [this] { inst.cmd(EV_BACK, BC_REMOVE_LAST); });
-    button(c4(1, 292, 52), "bclear", "Clear all", false, [this] { inst.cmd(EV_BACK, BC_CLEAR); });
-    button(c4(2, 292, 52), "bseventh", "7th chords", u.set.seventh, [this] { set(S_SEVENTH, u.set.seventh ? 0 : 1); });
-    button(c4(3, 292, 52), "bmetro", "Metronome", u.set.metro, [this] { set(S_METRO, u.set.metro ? 0 : 1); });
+    ui.button(c4(0, 292, 52), "bremove", "Remove last", false, [this] { inst.cmd(EV_BACK, BC_REMOVE_LAST); });
+    ui.button(c4(1, 292, 52), "bclear", "Clear all", false, [this] { inst.cmd(EV_BACK, BC_CLEAR); });
+    ui.button(c4(2, 292, 52), "bseventh", "7th chords", u.set.seventh, [this] { set(S_SEVENTH, u.set.seventh ? 0 : 1); });
+    ui.button(c4(3, 292, 52), "bmetro", "Metronome", u.set.metro, [this] { set(S_METRO, u.set.metro ? 0 : 1); });
 
     paintChordPads(QRectF(16, 356, 688, 84), false);
 
-    stepper(QRectF(16, 452, 340, 60), "chordbeats", "Beats per chord", QString::number(u.set.chordBeats),
+    ui.stepper(QRectF(16, 452, 340, 60), "chordbeats", "Beats per chord", QString::number(u.set.chordBeats),
             [this] { set(S_CHORDBEATS, (float)(u.set.chordBeats - 1)); }, [this] { set(S_CHORDBEATS, (float)(u.set.chordBeats + 1)); });
-    stepper(QRectF(364, 452, 340, 60), "arprate", "Arp steps per beat", QString::number(u.set.arpRate),
+    ui.stepper(QRectF(364, 452, 340, 60), "arprate", "Arp steps per beat", QString::number(u.set.arpRate),
             [this] { set(S_ARPRATE, (float)(u.set.arpRate - 1)); }, [this] { set(S_ARPRATE, (float)(u.set.arpRate + 1)); });
-    stepper(QRectF(16, 520, 340, 60), "bpm2", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
+    ui.stepper(QRectF(16, 520, 340, 60), "bpm2", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
             [this] { set(S_BPM, std::round(u.set.bpm) - 1); }, [this] { set(S_BPM, std::round(u.set.bpm) + 1); });
-    slider(QRectF(364, 520, 340, 60), "backvol", "Backing volume", u.set.backVol, QString("%1%").arg((int)(u.set.backVol * 100)), [this](float n) { set(S_BACKVOL, n); });
-    button(QRectF(16, 590, 688, 56), "bresync", "Use the current lead sound for the backing", false, [this] { inst.cmd(EV_BACK, BC_RESYNC_SOUND); },
+    ui.slider(QRectF(364, 520, 340, 60), "backvol", "Backing volume", u.set.backVol, QString("%1%").arg((int)(u.set.backVol * 100)), [this](float n) { set(S_BACKVOL, n); });
+    ui.button(QRectF(16, 590, 688, 56), "bresync", "Use the current lead sound for the backing", false, [this] { inst.cmd(EV_BACK, BC_RESYNC_SOUND); },
            QString("backing now plays: %1    lead: %2").arg(u.backName[0] ? u.backName : "(nothing yet)").arg(lead.name));
-    txt(QRectF(18, 654, 684, 20), "The backing keeps the sound it started with, so the lead can change freely.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(18, 676, 684, 20), QString::fromUtf8("Keyboard: hold %1 + Z‥M for chords, or press $ for a chord row.").arg(km.keyFor(A_CHORD_LAYER, false)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(18, 654, 684, 20), "The backing keeps the sound it started with, so the lead can change freely.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(18, 676, 684, 20), QString::fromUtf8("Keyboard: hold %1 + Z‥M for chords, or press $ for a chord row.").arg(km.keyFor(A_CHORD_LAYER, false)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
 }
 
 // ------------------------------------------------------------------ beat
@@ -1299,169 +1144,169 @@ void MainWindow::paintBeat() {
         if (u.drumHits[d] != seenHits[d]) { seenHits[d] = u.drumHits[d]; padLit[d] = now; }
 
     // the whole bar for all eight drums
-    section(60, QString("%1  %2 bpm%3").arg(beatSlots.empty() ? QString("Pattern") : beatSlots[beatCur].name).arg((int)std::round(u.set.bpm)).arg(u.beatRec ? "  recording" : (u.beatPlaying ? "  playing" : "")));
+    ui.section(60, QString("%1  %2 bpm%3").arg(beatSlots.empty() ? QString("Pattern") : beatSlots[beatCur].name).arg((int)std::round(u.set.bpm)).arg(u.beatRec ? "  recording" : (u.beatPlaying ? "  playing" : "")));
     const qreal ox = 104, cw = 37.5, sy = 84; const int ch = 12;
     for (int d = 0; d < kDrums; ++d) {
         qreal y = sy + d * (ch + 3);
-        txt(QRectF(16, y - 3, 84, ch + 6), nice(drumName(d)), 11, u.beatPat[d] ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(16, y - 3, 84, ch + 6), nice(drumName(d)), 11, u.beatPat[d] ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
         for (int s = 0; s < kDrumSteps; ++s) {
             QRectF c(std::floor(ox + s * cw), y, std::floor(ox + (s + 1) * cw) - std::floor(ox + s * cw) - 4, ch);
-            if ((u.beatPat[d] >> s) & 1) g->fillRect(c, INK);
-            else frame(c, s % 4 == 0 ? LOW : GRAT);
+            if ((u.beatPat[d] >> s) & 1) ui.g->fillRect(c, INK);
+            else ui.frame(c, s % 4 == 0 ? LOW : GRAT);
         }
     }
     const qreal sb = sy + kDrums * (ch + 3);
     if (u.beatStep >= 0)
-        frame(QRectF(std::floor(ox + u.beatStep * cw) - 3, sy - 4, std::floor(ox + (u.beatStep + 1) * cw) - std::floor(ox + u.beatStep * cw) + 2, sb - sy + 5), INK);
+        ui.frame(QRectF(std::floor(ox + u.beatStep * cw) - 3, sy - 4, std::floor(ox + (u.beatStep + 1) * cw) - std::floor(ox + u.beatStep * cw) + 2, sb - sy + 5), INK);
     for (int b = 0; b < 4; ++b)
-        txt(QRectF(std::floor(ox + b * 4 * cw), sb + 1, cw - 4, 14), QString::number(b + 1), 11, MID);
+        ui.txt(QRectF(std::floor(ox + b * 4 * cw), sb + 1, cw - 4, 14), QString::number(b + 1), 11, MID);
 
     // the pads
-    section(222, beatErase ? "Pads  tap the drum to erase" : "Pads  tap to play");
+    ui.section(222, beatErase ? "Pads  tap the drum to erase" : "Pads  tap to play");
     const qreal pw = (688 - 3 * 8) / 4.0;
     for (int d = 0; d < kDrums; ++d) {
         QRectF r(std::floor(16 + (d % 4) * (pw + 8)), 244 + (d / 4) * 108, std::floor(pw), 100);
         const QString name = QString("pad%1").arg(d);
-        const bool lit = now - padLit[d] < 110 || downNames.contains(name);
-        frame(r, INK, lit ? INK : BG);
+        const bool lit = now - padLit[d] < 110 || ui.isDown(name);
+        ui.frame(r, INK, lit ? INK : BG);
         if (!lit) {
-            frame(r.adjusted(1, 1, -1, -1), INK);
-            frame(r.adjusted(6, 6, -6, -6), beatErase ? INK : GRAT);
+            ui.frame(r.adjusted(1, 1, -1, -1), INK);
+            ui.frame(r.adjusted(6, 6, -6, -6), beatErase ? INK : GRAT);
         }
         const QColor fg = lit ? BG : INK, dim = lit ? BG : MID;
-        txt(QRectF(r.x() + 12, r.y() + 10, 30, 18), QString::number(d + 1), 12, lit ? BG : LOW, Qt::AlignLeft | Qt::AlignVCenter, true);
-        txt(QRectF(r.x() + 40, r.y() + 10, r.width() - 52, 18), km.drumKeys(d), 12, dim, Qt::AlignRight | Qt::AlignVCenter, true);
-        txt(QRectF(r.x(), r.bottom() - 40, r.width(), 26), nice(drumName(d)), 18, fg, Qt::AlignCenter, true);
-        if (beatErase && !lit) txt(QRectF(r.x(), r.y() + 34, r.width(), 18), "erase", 12, MID);
-        zone(r, name, [this, d](QPointF, int ph) { if (ph == PH_PRESS) hitPad(d); });
+        ui.txt(QRectF(r.x() + 12, r.y() + 10, 30, 18), QString::number(d + 1), 12, lit ? BG : LOW, Qt::AlignLeft | Qt::AlignVCenter, true);
+        ui.txt(QRectF(r.x() + 40, r.y() + 10, r.width() - 52, 18), km.drumKeys(d), 12, dim, Qt::AlignRight | Qt::AlignVCenter, true);
+        ui.txt(QRectF(r.x(), r.bottom() - 40, r.width(), 26), nice(drumName(d)), 18, fg, Qt::AlignCenter, true);
+        if (beatErase && !lit) ui.txt(QRectF(r.x(), r.y() + 34, r.width(), 18), "erase", 12, MID);
+        ui.zone(r, name, [this, d](QPointF, int ph) { if (ph == PH_PRESS) hitPad(d); });
     }
 
     paintKeptBeats(460);
 
     // transport
     auto c4 = [pw](int i, qreal y, qreal h) { return QRectF(std::floor(16 + i * (pw + 8)), y, std::floor(pw), h); };
-    button(c4(0, 540, 56), "beatrec", QString::fromUtf8("● Rec"), u.beatRec, [this] { inst.beatDo(BT_REC); beatErase = false; },
+    ui.button(c4(0, 540, 56), "beatrec", QString::fromUtf8("● Rec"), u.beatRec, [this] { inst.beatDo(BT_REC); beatErase = false; },
            u.beatRec ? "pads write hits" : "write what you play");
-    button(c4(1, 540, 56), "beatplay", u.beatPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.beatPlaying,
+    ui.button(c4(1, 540, 56), "beatplay", u.beatPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.beatPlaying,
            [this] { inst.beatDo(BT_PLAYSTOP); }, u.beatPlaying ? "beat is playing" : "start the beat");
-    button(c4(2, 540, 56), "beaterase", "Erase", false, [this] { beatErase = !beatErase; }, beatErase ? "now tap a pad" : "one drum's hits",
+    ui.button(c4(2, 540, 56), "beaterase", "Erase", false, [this] { beatErase = !beatErase; }, beatErase ? "now tap a pad" : "one drum's hits",
            beatErase ? LOOK_ARMED : LOOK_PLAIN);
-    stepper(c4(3, 540, 56), "kit", "Kit", nice(kitName(u.set.kit)),
+    ui.stepper(c4(3, 540, 56), "kit", "Kit", nice(kitName(u.set.kit)),
             [this] { set(S_KIT, (float)((u.set.kit + kKits - 1) % kKits)); }, [this] { set(S_KIT, (float)((u.set.kit + 1) % kKits)); });
-    slider(QRectF(16, 604, 340, 54), "beatvol", "Beat volume", u.set.beatVol, QString("%1%").arg((int)(u.set.beatVol * 100)), [this](float n) { set(S_BEATVOL, n); });
-    stepper(QRectF(364, 604, 340, 54), "bpm3", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
+    ui.slider(QRectF(16, 604, 340, 54), "beatvol", "Beat volume", u.set.beatVol, QString("%1%").arg((int)(u.set.beatVol * 100)), [this](float n) { set(S_BEATVOL, n); });
+    ui.stepper(QRectF(364, 604, 340, 54), "bpm3", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
             [this] { set(S_BPM, std::round(u.set.bpm) - 1); }, [this] { set(S_BPM, std::round(u.set.bpm) + 1); });
-    txt(QRectF(18, 666, 684, 20), QString("Keys: %1 play the top pads, %2 the bottom ones. Hits snap to the nearest step.")
+    ui.txt(QRectF(18, 666, 684, 20), QString("Keys: %1 play the top pads, %2 the bottom ones. Hits snap to the nearest step.")
             .arg(km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" ")).arg(km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" ")),
         12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(18, 688, 684, 20), QString("%1 starts and stops the beat, %2 is Rec, left right the beat before or after.")
+    ui.txt(QRectF(18, 688, 684, 20), QString("%1 starts and stops the beat, %2 is Rec, left right the beat before or after.")
             .arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
 }
 
 void MainWindow::paintTune() {
     const Tuning &t = u.set.tuning;
-    section(60, "Key");
+    ui.section(60, "Key");
     qreal w6 = (688 - 5 * 6) / 6.0;
     for (int i = 0; i < 12; ++i)
-        button(QRectF(std::floor(16 + (i % 6) * (w6 + 6)), 84 + (i / 6) * 52, std::floor(w6), 46), QString("root%1").arg(i), noteName(i), t.root == i, [this, i] { set(S_ROOT, (float)i); });
-    section(190, "Scale");
+        ui.button(QRectF(std::floor(16 + (i % 6) * (w6 + 6)), 84 + (i / 6) * 52, std::floor(w6), 46), QString("root%1").arg(i), noteName(i), t.root == i, [this, i] { set(S_ROOT, (float)i); });
+    ui.section(190, "Scale");
     qreal w4 = (688 - 3 * 6) / 4.0;
     for (int i = 0; i < SC_COUNT; ++i)
-        button(QRectF(std::floor(16 + (i % 4) * (w4 + 6)), 214 + (i / 4) * 52, std::floor(w4), 46), QString("scale%1").arg(i), scaleDef(i).name, t.scale == i, [this, i] { set(S_SCALE, (float)i); });
+        ui.button(QRectF(std::floor(16 + (i % 4) * (w4 + 6)), 214 + (i / 4) * 52, std::floor(w4), 46), QString("scale%1").arg(i), scaleDef(i).name, t.scale == i, [this, i] { set(S_SCALE, (float)i); });
 
     qreal w3 = (688 - 2 * 8) / 3.0;
     auto c3 = [w3](int i, qreal y) { return QRectF(std::floor(16 + i * (w3 + 8)), y, std::floor(w3), 60); };
-    stepper(c3(0, 326), "oct", "Octave", QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave),
+    ui.stepper(c3(0, 326), "oct", "Octave", QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave),
             [this] { inst.cmd(EV_OCTAVE, -1); }, [this] { inst.cmd(EV_OCTAVE, 1); });
-    stepper(c3(1, 326), "rowint", "String gap", QString("%1 st").arg(t.rowInterval),
+    ui.stepper(c3(1, 326), "rowint", "String gap", QString("%1 st").arg(t.rowInterval),
             [this] { set(S_ROWINT, (float)(u.set.tuning.rowInterval - 1)); }, [this] { set(S_ROWINT, (float)(u.set.tuning.rowInterval + 1)); });
-    stepper(c3(2, 326), "bendr", "Bend range", QString("%1 st").arg((int)u.set.bendRange),
+    ui.stepper(c3(2, 326), "bendr", "Bend range", QString("%1 st").arg((int)u.set.bendRange),
             [this] { set(S_BENDRANGE, u.set.bendRange - 1); }, [this] { set(S_BENDRANGE, u.set.bendRange + 1); });
 
-    stepper(c3(0, 394), "bpm", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
+    ui.stepper(c3(0, 394), "bpm", "Tempo", QString("%1 bpm").arg((int)std::round(u.set.bpm)),
             [this] { set(S_BPM, std::round(u.set.bpm) - 1); }, [this] { set(S_BPM, std::round(u.set.bpm) + 1); });
     QRectF mid = c3(1, 394);
-    button(QRectF(mid.x(), 394, std::floor(mid.width() / 2) - 4, 60), "tap", "Tap", false, [this] { tapTempo(); }, "tempo");
-    button(QRectF(mid.x() + std::floor(mid.width() / 2) + 4, 394, mid.right() - (mid.x() + std::floor(mid.width() / 2) + 4), 60), "metro", "Click", u.set.metro, [this] { set(S_METRO, u.set.metro ? 0 : 1); }, "metronome");
-    slider(c3(2, 394), "glidescale", "Glide speed", u.set.glideScale / 4.0f,
+    ui.button(QRectF(mid.x(), 394, std::floor(mid.width() / 2) - 4, 60), "tap", "Tap", false, [this] { tapTempo(); }, "tempo");
+    ui.button(QRectF(mid.x() + std::floor(mid.width() / 2) + 4, 394, mid.right() - (mid.x() + std::floor(mid.width() / 2) + 4), 60), "metro", "Click", u.set.metro, [this] { set(S_METRO, u.set.metro ? 0 : 1); }, "metronome");
+    ui.slider(c3(2, 394), "glidescale", "Glide speed", u.set.glideScale / 4.0f,
            u.set.glideScale < 0.02f ? QString("instant") : QString::fromUtf8("×%1").arg(u.set.glideScale, 0, 'f', 2), [this](float n) { set(S_GLIDESCALE, n * 4.0f); });
 
     // listen
     QRectF lp(16, 466, 688, 238);
-    frame(lp, LOW, BG);
-    tag(QRectF(lp.x() + 1, lp.y() + 1, 62, 18), "Listen", 12);
-    txt(QRectF(88, 466, 600, 20), "match the key and tempo of music around you", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.frame(lp, LOW, BG);
+    ui.tag(QRectF(lp.x() + 1, lp.y() + 1, 62, 18), "Listen", 12);
+    ui.txt(QRectF(88, 466, 600, 20), "match the key and tempo of music around you", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     int ls = listenState;
-    button(QRectF(32, 506, 200, 60), "listen", ls == 1 ? QString::fromUtf8("Listening…") : QString("Listen"), ls == 1, [this] { startListen(); }, ls == 1 ? QString("%1 s").arg(qMax<qint64>(0, 6 - (clock.elapsed() - listenStarted) / 1000)) : "6 seconds, needs a mic");
+    ui.button(QRectF(32, 506, 200, 60), "listen", ls == 1 ? QString::fromUtf8("Listening…") : QString("Listen"), ls == 1, [this] { startListen(); }, ls == 1 ? QString("%1 s").arg(qMax<qint64>(0, 6 - (clock.elapsed() - listenStarted) / 1000)) : "6 seconds, needs a mic");
     if (ls == 0) {
-        txt(QRectF(248, 506, 440, 60), "Uses the system's default audio input, if any.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(248, 506, 440, 60), "Uses the system's default audio input, if any.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
     } else if (ls == 3) {
         std::lock_guard<std::mutex> lk(listenMx);
-        g->setFont(font(13, false));
-        g->setPen(INK);
-        g->drawText(QRectF(248, 506, 440, 60), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap, listenError);
+        ui.g->setFont(ui.font(13, false));
+        ui.g->setPen(INK);
+        ui.g->drawText(QRectF(248, 506, 440, 60), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap, listenError);
     } else if (ls == 2) {
         std::lock_guard<std::mutex> lk(listenMx);
         const ListenResult &r = listenResult;
         const KeyGuess &k = r.keys[listenGuess % 3];
         float kc = listenGuess == 0 ? r.keyConfidence : r.keyConfidence * 0.5f;
         QString kq = kc > 0.6f ? "likely" : (kc > 0.3f ? "a guess" : "very unsure");
-        txt(QRectF(248, 500, 250, 40), QString("%1 %2").arg(noteName(k.root)).arg(k.minor ? "minor" : "major"), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-        txt(QRectF(248, 540, 250, 22), QString("key: %1 (%2%)").arg(kq).arg((int)(kc * 100)), 13, kc > 0.6f ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(248, 500, 250, 40), QString("%1 %2").arg(noteName(k.root)).arg(k.minor ? "minor" : "major"), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+        ui.txt(QRectF(248, 540, 250, 22), QString("key: %1 (%2%)").arg(kq).arg((int)(kc * 100)), 13, kc > 0.6f ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
         QString tq = r.bpmConfidence > 0.6f ? "likely" : (r.bpmConfidence > 0.3f ? "a guess" : "very unsure");
-        txt(QRectF(500, 500, 190, 40), r.bpm > 0 ? QString("%1 bpm").arg((int)std::round(r.bpm)) : QString("no pulse"), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-        txt(QRectF(500, 540, 190, 22), QString("tempo: %1 (%2%)").arg(tq).arg((int)(r.bpmConfidence * 100)), 13, r.bpmConfidence > 0.6f ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(500, 500, 190, 40), r.bpm > 0 ? QString("%1 bpm").arg((int)std::round(r.bpm)) : QString("no pulse"), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+        ui.txt(QRectF(500, 540, 190, 22), QString("tempo: %1 (%2%)").arg(tq).arg((int)(r.bpmConfidence * 100)), 13, r.bpmConfidence > 0.6f ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
     }
     if (ls == 2) {
         qreal bw = (656 - 3 * 8) / 4.0;
-        button(QRectF(32, 580, bw, 56), "lkey", "Use key", false, [this] { applyListen(true, false); toast("Key applied"); });
-        button(QRectF(32 + bw + 8, 580, bw, 56), "ltempo", "Use tempo", false, [this] { applyListen(false, true); toast("Tempo applied"); });
-        button(QRectF(32 + 2 * (bw + 8), 580, bw, 56), "lboth", "Use both", false, [this] { applyListen(true, true); toast("Key and tempo applied"); });
-        button(QRectF(32 + 3 * (bw + 8), 580, bw, 56), "lnext", "Other key", false, [this] { listenGuess = (listenGuess + 1) % 3; }, QString("guess %1 of 3").arg(listenGuess % 3 + 1));
-        txt(QRectF(32, 646, 656, 44), "Wrong? Pick the key and scale by hand above: detection is an estimate.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.button(QRectF(32, 580, bw, 56), "lkey", "Use key", false, [this] { applyListen(true, false); toast("Key applied"); });
+        ui.button(QRectF(32 + bw + 8, 580, bw, 56), "ltempo", "Use tempo", false, [this] { applyListen(false, true); toast("Tempo applied"); });
+        ui.button(QRectF(32 + 2 * (bw + 8), 580, bw, 56), "lboth", "Use both", false, [this] { applyListen(true, true); toast("Key and tempo applied"); });
+        ui.button(QRectF(32 + 3 * (bw + 8), 580, bw, 56), "lnext", "Other key", false, [this] { listenGuess = (listenGuess + 1) % 3; }, QString("guess %1 of 3").arg(listenGuess % 3 + 1));
+        ui.txt(QRectF(32, 646, 656, 44), "Wrong? Pick the key and scale by hand above: detection is an estimate.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     }
 }
 
 void MainWindow::paintSystem() {
-    slider(QRectF(16, 66, 340, 58), "volume", "Master volume", u.set.volume, QString("%1%").arg((int)(u.set.volume * 100)), [this](float n) { set(S_VOLUME, n); });
-    slider(QRectF(364, 66, 340, 58), "loopvol", "Loop volume", u.set.loopVol, QString("%1%").arg((int)(u.set.loopVol * 100)), [this](float n) { set(S_LOOPVOL, n); });
+    ui.slider(QRectF(16, 66, 340, 58), "volume", "Master volume", u.set.volume, QString("%1%").arg((int)(u.set.volume * 100)), [this](float n) { set(S_VOLUME, n); });
+    ui.slider(QRectF(364, 66, 340, 58), "loopvol", "Loop volume", u.set.loopVol, QString("%1%").arg((int)(u.set.loopVol * 100)), [this](float n) { set(S_LOOPVOL, n); });
 
-    section(130, "Touch pad mapping");
+    ui.section(130, "Touch pad mapping");
     qreal w6 = (688 - XY_COUNT * 6) / (XY_COUNT + 1.0);
     auto c6 = [w6](int i) { return QRectF(std::floor(16 + i * (w6 + 6)), 154, std::floor(w6), 54); };
     for (int i = 0; i < XY_COUNT; ++i)
-        button(c6(i), QString("xymap%1").arg(i), nice(xyMapName(i)), u.set.xyMap == i, [this, i] { set(S_XYMAP, (float)i); },
+        ui.button(c6(i), QString("xymap%1").arg(i), nice(xyMapName(i)), u.set.xyMap == i, [this, i] { set(S_XYMAP, (float)i); },
                QString("%1/%2").arg(xyAxisName(i, false)).arg(xyAxisName(i, true)).toLower().replace("resonance", "reso").replace("vibrato", "vib"));
-    button(c6(XY_COUNT), "xyhold2", "Hold", u.set.xyHold, [this] { set(S_XYHOLD, u.set.xyHold ? 0 : 1); }, "keep it on");
+    ui.button(c6(XY_COUNT), "xyhold2", "Hold", u.set.xyHold, [this] { set(S_XYHOLD, u.set.xyHold ? 0 : 1); }, "keep it on");
 
     qreal w4 = (688 - 3 * 8) / 4.0;
     auto c4 = [w4](int i, qreal y, qreal h) { return QRectF(std::floor(16 + i * (w4 + 8)), y, std::floor(w4), h); };
     qreal w5 = (688 - 4 * 6) / 5.0;
     auto c5 = [w5](int i) { return QRectF(std::floor(16 + i * (w5 + 6)), 218, std::floor(w5), 58); };
-    button(c5(0), "chordrow", "Chord row", chordRow, [this] { perform(A_CHORD_ROW); }, "low row = chords");
-    button(c5(1), "recwav", wav.isOpen() ? QString::fromUtf8("■ Stop rec") : QString::fromUtf8("● Record"), wav.isOpen(), [this] { toggleRecord(); },
+    ui.button(c5(0), "chordrow", "Chord row", chordRow, [this] { perform(A_CHORD_ROW); }, "low row = chords");
+    ui.button(c5(1), "recwav", wav.isOpen() ? QString::fromUtf8("■ Stop rec") : QString::fromUtf8("● Record"), wav.isOpen(), [this] { toggleRecord(); },
            wav.isOpen() ? QString("%1 s").arg(wav.frames() / audio.sampleRate()) : "what you hear");
-    button(c5(2), "playlast", playingBack() ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play last"), playingBack(), [this] { togglePlayback(); },
+    ui.button(c5(2), "playlast", playingBack() ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play last"), playingBack(), [this] { togglePlayback(); },
            playingBack() ? "playing it back" : "listen back");
-    button(c5(3), "savesession", "Save session", false, [this] {
+    ui.button(c5(3), "savesession", "Save session", false, [this] {
         QString path = store::baseDir() + "/sessions/" + store::timestampName("session", "json");
         toast(saveSession(path) ? QString("Saved %1").arg(QFileInfo(path).fileName()) : QString("Could not save session"), 2200);
     }, "sounds and loops");
-    button(c5(4), "keytest", "Key test", keyTest, [this] { keyTest = !keyTest; maxHeld = 0; }, "check the keys");
+    ui.button(c5(4), "keytest", "Key test", keyTest, [this] { keyTest = !keyTest; maxHeld = 0; }, "check the keys");
 
-    section(284, QString("Saved sessions  %1  tap to load").arg(sessions.size()));
+    ui.section(284, QString("Saved sessions  %1  tap to load").arg(sessions.size()));
     for (int k = 0; k < 4; ++k) {
         QRectF r(16 + (k % 2) * 348, 308 + (k / 2) * 54, 340, 48);
-        if (k >= sessions.size()) { frame(r, GRAT); continue; }
+        if (k >= sessions.size()) { ui.frame(r, GRAT); continue; }
         QString path = sessions[k];
-        button(r, QString("session%1").arg(k), QFileInfo(path).completeBaseName(), false, [this, path] {
+        ui.button(r, QString("session%1").arg(k), QFileInfo(path).completeBaseName(), false, [this, path] {
             toast(loadSession(path) ? QString("Loaded %1: press play on the loop / backing").arg(QFileInfo(path).completeBaseName()) : QString("Could not read that session"), 2600);
         });
     }
 
     QRectF ip(16, 424, 688, 206);
-    frame(ip, LOW, BG);
-    tag(QRectF(ip.x() + 1, ip.y() + 1, 62, 18), "Status", 12);
+    ui.frame(ip, LOW, BG);
+    ui.tag(QRectF(ip.x() + 1, ip.y() + 1, 62, 18), "Status", 12);
     QStringList L;
     QString sink = sinkDescription.isEmpty() ? QString("unknown") : sinkDescription;
     L << QString("Audio    %1, %2 Hz, %3-frame blocks (%4 ms)").arg(QString::fromStdString(audio.backend())).arg(audio.sampleRate()).arg(audio.quantum()).arg(1000.0 * audio.quantum() / audio.sampleRate(), 0, 'f', 1);
@@ -1472,20 +1317,20 @@ void MainWindow::paintSystem() {
     L << QString("Last WAV %1").arg(lastRecording.isEmpty() ? QString("-") : QFileInfo(lastRecording).fileName());
     L << QString("Keys     edit keymap.json in the folder above to remap");
     for (int i = 0; i < L.size(); ++i)
-        txt(QRectF(32, 448 + i * 22, 656, 20), fit(L[i], 13, 656), 13, i == 2 ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(32, 448 + i * 22, 656, 20), ui.fit(L[i], 13, 656), 13, i == 2 ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
     if (sinkIsDummy)
-        tag(QRectF(32, 448 + 7 * 22 + 2, 560, 20), "No real audio device: connect headphones or a speaker.", 13, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.tag(QRectF(32, 448 + 7 * 22 + 2, 560, 20), "No real audio device: connect headphones or a speaker.", 13, Qt::AlignLeft | Qt::AlignVCenter);
 
-    button(c4(0, 642, 60), "panic", "Panic", false, [this] { perform(A_PANIC); }, "all notes off");
-    stepper(c4(1, 642, 60), "latency", "Loop fix", QString("%1 ms").arg((int)u.set.latencyMs),
+    ui.button(c4(0, 642, 60), "panic", "Panic", false, [this] { perform(A_PANIC); }, "all notes off");
+    ui.stepper(c4(1, 642, 60), "latency", "Loop fix", QString("%1 ms").arg((int)u.set.latencyMs),
             [this] { set(S_LATENCY, u.set.latencyMs - 10); }, [this] { set(S_LATENCY, u.set.latencyMs + 10); });
-    button(c4(2, 642, 60), "factory", "Factory sounds", false, [this] {
+    ui.button(c4(2, 642, 60), "factory", "Factory sounds", false, [this] {
         for (int k = 0; k < 10; ++k) bank[k] = factoryPatch(k);
         int back = addExtraSounds();
         refreshLists();
         toast(back ? QString("Slots 1-0 restored, %1 favourite%2 put back").arg(back).arg(back == 1 ? "" : "s") : QString("Sound slots 1-0 restored"));
     }, "restore slots 1-0");
-    button(c4(3, 642, 60), "quit", "Quit", false, [this] { close(); }, "saves your setup");
+    ui.button(c4(3, 642, 60), "quit", "Quit", false, [this] { close(); }, "saves your setup");
 }
 
 void MainWindow::paintHelp() {
@@ -1570,11 +1415,11 @@ void MainWindow::paintHelp() {
     }
     const QString title = helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters = commands") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false))));
     // header: what this page of the guide is, the tour, the next page, and the way to ask
-    tag(QRectF(16, 62, 242, 30), fit(title, 14, 230), 14, Qt::AlignLeft | Qt::AlignVCenter);
-    zone(QRectF(16, 62, 242, 30), "help_section", [](QPointF, int) {});
-    button(QRectF(264, 62, 84, 30), "help_tour", "Tour", false, [this] { if (tourView) tourView->open(QString(), QString(), false, nullptr, true); });
-    button(QRectF(354, 62, 178, 30), "help_next", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; helpSel.clear(); });
-    button(QRectF(538, 62, 166, 30), "help_ask", "Ask Rook", false, [this] { helpAsk(); });
+    ui.tag(QRectF(16, 62, 242, 30), ui.fit(title, 14, 230), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.zone(QRectF(16, 62, 242, 30), "help_section", [](QPointF, int) {});
+    ui.button(QRectF(264, 62, 84, 30), "help_tour", "Tour", false, [this] { if (tourView) tourView->open(QString(), QString(), false, nullptr, true); });
+    ui.button(QRectF(354, 62, 178, 30), "help_next", helpPage == 0 ? QString::fromUtf8("Command keys ›") : (helpPage == 1 ? QString::fromUtf8("Beat keys ›") : (helpPage == 2 ? QString::fromUtf8("Track keys ›") : QString::fromUtf8("‹ Playing keys"))), false, [this] { helpPage = (helpPage + 1) % 4; helpSel.clear(); });
+    ui.button(QRectF(538, 62, 166, 30), "help_ask", "Ask Rook", false, [this] { helpAsk(); });
     // every row is a zone with a stable name built from its description, so Rook can point at it and a tap asks about it
     helpDesc.clear();
     QSet<QString> used;
@@ -1590,15 +1435,15 @@ void MainWindow::paintHelp() {
         helpDesc[nm] = QString("%1: %2").arg(rows[i].k, rows[i].d);
         const bool sel = helpSel == nm;
         QRectF kr(16, std::floor(y), 176, 25);
-        frame(kr, sel ? INK : LOW, sel ? INK : BG);
-        txt(kr, fit(rows[i].k, 13, 172), 13, sel ? BG : INK, Qt::AlignCenter, true);
-        txt(QRectF(204, std::floor(y), 500, 25), fit(rows[i].d, 13, 500), 13, sel || i % 2 == 0 ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, sel);
-        zone(QRectF(16, std::floor(y), 688, 25), nm, [this, nm](QPointF, int ph) { if (ph == PH_PRESS) { helpSel = nm; helpAsk(); } });
+        ui.frame(kr, sel ? INK : LOW, sel ? INK : BG);
+        ui.txt(kr, ui.fit(rows[i].k, 13, 172), 13, sel ? BG : INK, Qt::AlignCenter, true);
+        ui.txt(QRectF(204, std::floor(y), 500, 25), ui.fit(rows[i].d, 13, 500), 13, sel || i % 2 == 0 ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, sel);
+        ui.zone(QRectF(16, std::floor(y), 688, 25), nm, [this, nm](QPointF, int ph) { if (ph == PH_PRESS) { helpSel = nm; helpAsk(); } });
     }
-    txt(QRectF(18, 586, 680, 18), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(18, 606, 680, 18), QString("Ask Rook: tap a row, or press %1+%2. Rook answers here and can point at things.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(18, 626, 680, 18), QString("Tour: tap Tour (or press %1+%2) for a picture of every page. Tap any control to read what it does.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_TOUR, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    button(QRectF(16, 664, 688, 44), "help_back", "Back to playing", false, [this] { goPage(PG_PLAY); });
+    ui.txt(QRectF(18, 586, 680, 18), "Q20: digits and arrows live on the keyboard's number / symbol layers.", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(18, 606, 680, 18), QString("Ask Rook: tap a row, or press %1+%2. Rook answers here and can point at things.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(18, 626, 680, 18), QString("Tour: tap Tour (or press %1+%2) for a picture of every page. Tap any control to read what it does.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_TOUR, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.button(QRectF(16, 664, 688, 44), "help_back", "Back to playing", false, [this] { goPage(PG_PLAY); });
 }
 
 // Ask Rook from the Help page: opens the dock with the keyboard, and starts the question with the
@@ -1613,22 +1458,22 @@ void MainWindow::helpAsk() {
 }
 
 void MainWindow::paintKeyTest() {
-    zone(QRectF(0, 0, CW, CW), "keytestblock", [](QPointF, int) {}); // the panel swallows every touch but Close
+    ui.zone(QRectF(0, 0, CW, CW), "keytestblock", [](QPointF, int) {}); // the panel swallows every touch but Close
     QRectF r(40, 96, 640, 520);
-    frame(r.adjusted(-3, -3, 3, 3), INK, BG);
-    frame(r, INK, BG);
-    tag(QRectF(r.x() + 1, r.y() + 1, 100, 22), "Key test", 14, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.frame(r.adjusted(-3, -3, 3, 3), INK, BG);
+    ui.frame(r, INK, BG);
+    ui.tag(QRectF(r.x() + 1, r.y() + 1, 100, 22), "Key test", 14, Qt::AlignLeft | Qt::AlignVCenter);
     QStringList names;
     for (auto it = held.begin(); it != held.end(); ++it) names << keyName(it.key());
     names.sort();
-    txt(QRectF(60, 150, 600, 22), fit(QString("Held now (%1): %2").arg(names.size()).arg(names.join(" ")), 14, 600), 14, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    tag(QRectF(60, 176, 300, 22), QString("Most keys held at once: %1").arg(maxHeld), 14, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(60, 150, 600, 22), ui.fit(QString("Held now (%1): %2").arg(names.size()).arg(names.join(" ")), 14, 600), 14, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    ui.tag(QRectF(60, 176, 300, 22), QString("Most keys held at once: %1").arg(maxHeld), 14, Qt::AlignLeft | Qt::AlignVCenter);
     for (int i = 0; i < keyLog.size(); ++i)
-        txt(QRectF(60, 210 + i * 24, 600, 22), keyLog[i], 14, keyLog[i].startsWith("DOWN") ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
-    g->setFont(font(13, false));
-    g->setPen(MID);
-    g->drawText(QRectF(60, 506, 600, 80), Qt::AlignLeft | Qt::TextWordWrap,
+        ui.txt(QRectF(60, 210 + i * 24, 600, 22), keyLog[i], 14, keyLog[i].startsWith("DOWN") ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.g->setFont(ui.font(13, false));
+    ui.g->setPen(MID);
+    ui.g->drawText(QRectF(60, 506, 600, 80), Qt::AlignLeft | Qt::TextWordWrap,
                 "Hold one key on each row, then add more. Every key should show DOWN once and stay in Held until you let go. "
                 "A key you did not press appearing here, or a pressed key missing, is a keyboard-matrix limit.");
-    button(QRectF(516, 100, 160, 44), "keytestclose", "Close", false, [this] { keyTest = false; });
+    ui.button(QRectF(516, 100, 160, 44), "keytestclose", "Close", false, [this] { keyTest = false; });
 }

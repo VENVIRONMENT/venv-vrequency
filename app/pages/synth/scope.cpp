@@ -112,7 +112,7 @@ void MainWindow::drawScope(QRectF xy) {
     const qreal div = 46;
     const QRectF GR(xy.x() + 22, xy.y() + 21, GW, GH);
     const int L = Qt::AlignLeft | Qt::AlignVCenter;
-    frame(xy, downNames.contains("xy") ? INK : LOW, BG);
+    ui.frame(xy, ui.isDown("xy") ? INK : LOW, BG);
 
     // ---- graticule (drawn once): dotted grid, ticks on the centre axes ----
     if (gratPix.isNull()) {
@@ -130,7 +130,7 @@ void MainWindow::drawScope(QRectF xy) {
         q.setPen(QColor(0x46, 0x46, 0x44));
         q.drawRect(0, 0, GW, GH);
     }
-    g->drawPixmap(GR.topLeft(), gratPix);
+    ui.g->drawPixmap(GR.topLeft(), gratPix);
 
     // ---- acquire the newest samples ----
     static float buf[kScopeSize];
@@ -277,30 +277,30 @@ void MainWindow::drawScope(QRectF xy) {
             traceBlend(phos, cover, QColor(0xff, 0xff, 0xfb), 255);
         }
     }
-    g->setCompositionMode(QPainter::CompositionMode_Plus);
-    g->drawImage(GR.topLeft(), phos);
-    g->setCompositionMode(QPainter::CompositionMode_SourceOver);
+    ui.g->setCompositionMode(QPainter::CompositionMode_Plus);
+    ui.g->drawImage(GR.topLeft(), phos);
+    ui.g->setCompositionMode(QPainter::CompositionMode_SourceOver);
     if (gl) { // the present wave, white, over its own coloured history
         static QImage top;
         if (top.size() != QSize(GW, GH)) top = QImage(GW, GH, QImage::Format_ARGB32_Premultiplied);
         traceCoverage(tr, 1.6f, cover);
         traceOverlay(top, cover, QColor(255, 255, 251), (int)(255 * qBound(0.0f, glitchVis, 1.0f)));
-        g->drawImage(GR.topLeft(), top);
+        ui.g->drawImage(GR.topLeft(), top);
     }
 
     // ---- markers: trigger point (top centre), channel ground (left margin) ----
-    g->setRenderHint(QPainter::Antialiasing, true);
-    g->setPen(Qt::NoPen);
-    g->setBrush(INK);
+    ui.g->setRenderHint(QPainter::Antialiasing, true);
+    ui.g->setPen(Qt::NoPen);
+    ui.g->setBrush(INK);
     QPainterPath tm;
     tm.moveTo(GR.center().x() - 5, GR.y() + 1); tm.lineTo(GR.center().x() + 5, GR.y() + 1); tm.lineTo(GR.center().x(), GR.y() + 8); tm.closeSubpath();
-    g->drawPath(tm);
+    ui.g->drawPath(tm);
     QPainterPath gm;
     qreal gy = GR.center().y();
     gm.moveTo(xy.x() + 4, gy - 7); gm.lineTo(xy.x() + 15, gy - 7); gm.lineTo(xy.x() + 21, gy); gm.lineTo(xy.x() + 15, gy + 7); gm.lineTo(xy.x() + 4, gy + 7); gm.closeSubpath();
-    g->drawPath(gm);
-    g->setRenderHint(QPainter::Antialiasing, false);
-    txt(QRectF(xy.x() + 4, gy - 7, 12, 14), "1", 11, BG, Qt::AlignCenter, true);
+    ui.g->drawPath(gm);
+    ui.g->setRenderHint(QPainter::Antialiasing, false);
+    ui.txt(QRectF(xy.x() + 4, gy - 7, 12, 14), "1", 11, BG, Qt::AlignCenter, true);
 
     // ---- X-Y cursors (touch anywhere on the scope) ----
     const QString xn = nice(xyAxisName(u.set.xyMap, false)), yn = nice(xyAxisName(u.set.xyMap, true));
@@ -309,27 +309,27 @@ void MainWindow::drawScope(QRectF xy) {
         QPointF c(std::floor(xy.x() + xy.width() * u.xyX), std::floor(xy.bottom() - xy.height() * u.xyY));
         c.setX(qBound(GR.x(), c.x(), GR.right()));
         c.setY(qBound(GR.y(), c.y(), GR.bottom()));
-        g->setPen(QPen(u.xyTouch ? INK : MID, 1, Qt::DashLine));
-        g->drawLine(QPointF(c.x(), GR.y()), QPointF(c.x(), GR.bottom()));
-        g->drawLine(QPointF(GR.x(), c.y()), QPointF(GR.right(), c.y()));
-        frame(QRectF(c.x() - 7, c.y() - 7, 15, 15), INK, u.xyTouch ? INK : BG);
+        ui.g->setPen(QPen(u.xyTouch ? INK : MID, 1, Qt::DashLine));
+        ui.g->drawLine(QPointF(c.x(), GR.y()), QPointF(c.x(), GR.bottom()));
+        ui.g->drawLine(QPointF(GR.x(), c.y()), QPointF(GR.right(), c.y()));
+        ui.frame(QRectF(c.x() - 7, c.y() - 7, 15, 15), INK, u.xyTouch ? INK : BG);
     }
     // axis legends sit on the graticule like the scope's own annotations
-    g->fillRect(QRectF(GR.x() + 6, GR.y() + 12, (yn.size() + 3) * chW(12) + 4, 15), BG);
-    txt(QRectF(GR.x() + 8, GR.y() + 12, 300, 15), QString::fromUtf8("Y↑ %1").arg(yn), 12, MID, L);
-    g->fillRect(QRectF(GR.x() + 6, GR.bottom() - 19, (xn.size() + 3) * chW(12) + 4, 15), BG);
-    txt(QRectF(GR.x() + 8, GR.bottom() - 19, 300, 15), QString::fromUtf8("X→ %1").arg(xn), 12, MID, L);
+    ui.g->fillRect(QRectF(GR.x() + 6, GR.y() + 12, (yn.size() + 3) * ui.chW(12) + 4, 15), BG);
+    ui.txt(QRectF(GR.x() + 8, GR.y() + 12, 300, 15), QString::fromUtf8("Y↑ %1").arg(yn), 12, MID, L);
+    ui.g->fillRect(QRectF(GR.x() + 6, GR.bottom() - 19, (xn.size() + 3) * ui.chW(12) + 4, 15), BG);
+    ui.txt(QRectF(GR.x() + 8, GR.bottom() - 19, 300, 15), QString::fromUtf8("X→ %1").arg(xn), 12, MID, L);
 
     // ---- status line (inverse video), left of the two keys ----
     QRectF band(xy.x() + 1, xy.y() + 1, xy.width() - 206, 18);
-    g->fillRect(band, INK);
-    g->fillRect(QRectF(band.x() + 3, band.y() + 2, 14, 14), BG);
-    txt(QRectF(band.x() + 3, band.y() + 2, 14, 14), "1", 12, INK, Qt::AlignCenter, true);
-    txt(QRectF(band.x() + 24, band.y(), 80, 18), vdText(vdIdx), 13, BG, L, true);
-    txt(QRectF(band.x() + 104, band.y(), 90, 18), tbText(tbIdx), 13, BG, L, true);
+    ui.g->fillRect(band, INK);
+    ui.g->fillRect(QRectF(band.x() + 3, band.y() + 2, 14, 14), BG);
+    ui.txt(QRectF(band.x() + 3, band.y() + 2, 14, 14), "1", 12, INK, Qt::AlignCenter, true);
+    ui.txt(QRectF(band.x() + 24, band.y(), 80, 18), vdText(vdIdx), 13, BG, L, true);
+    ui.txt(QRectF(band.x() + 104, band.y(), 90, 18), tbText(tbIdx), 13, BG, L, true);
     QString trg = !audio.streaming() ? "Stop" : (trigd ? "Trig'd" : "Auto");
-    txt(QRectF(band.x() + 200, band.y(), 70, 18), trg, 13, BG, L, true);
-    txt(QRectF(band.x() + 270, band.y(), band.width() - 276, 18), QString("%1 kSa/s").arg(audio.sampleRate() / 1000), 13, BG, Qt::AlignRight | Qt::AlignVCenter, true);
+    ui.txt(QRectF(band.x() + 200, band.y(), 70, 18), trg, 13, BG, L, true);
+    ui.txt(QRectF(band.x() + 270, band.y(), band.width() - 276, 18), QString("%1 kSa/s").arg(audio.sampleRate() / 1000), 13, BG, Qt::AlignRight | Qt::AlignVCenter, true);
 
     // ---- measurement line ----
     QRectF ml(xy.x() + 8, GR.bottom() + 2, xy.width() - 16, xy.bottom() - GR.bottom() - 3);
@@ -338,9 +338,9 @@ void MainWindow::drawScope(QRectF xy) {
     QString nt = "--";
     for (int r = kStrings - 1; r >= 0; --r)
         if (u.str[r].gate) { nt = noteText(u.str[r].note + u.bend); break; }
-    txt(ml, QString("Freq(1): %1").arg(fq), 13, INK, L);
-    txt(ml.adjusted(170, 0, 0, 0), QString("Pk-Pk(1): %1").arg(pk), 13, INK, L);
-    txt(ml.adjusted(340, 0, 0, 0), QString("Note: %1").arg(nt), 13, INK, L);
+    ui.txt(ml, QString("Freq(1): %1").arg(fq), 13, INK, L);
+    ui.txt(ml.adjusted(170, 0, 0, 0), QString("Pk-Pk(1): %1").arg(pk), 13, INK, L);
+    ui.txt(ml.adjusted(340, 0, 0, 0), QString("Note: %1").arg(nt), 13, INK, L);
     if (xyActive)
-        txt(ml, QString("X %1%  Y %2%").arg((int)(u.xyX * 100)).arg((int)(u.xyY * 100)), 13, INK, Qt::AlignRight | Qt::AlignVCenter);
+        ui.txt(ml, QString("X %1%  Y %2%").arg((int)(u.xyX * 100)).arg((int)(u.xyY * 100)), 13, INK, Qt::AlignRight | Qt::AlignVCenter);
 }

@@ -125,13 +125,13 @@ bool MainWindow::chatKey(int key, int plainAct, bool dock) {
 void MainWindow::paintChat() {
     chatUnread = 0;
     const bool listening = copilotWaiters > 0 || clock.elapsed() - copilotSeenAt < 45000;
-    tag(QRectF(16, 64, 150, 22), "Copilot chat", 14, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(176, 64, 528, 22), listening ? "copilot: listening" : "copilot: not connected", 13, listening ? INK : MID,
+    ui.tag(QRectF(16, 64, 150, 22), "Copilot chat", 14, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(176, 64, 528, 22), listening ? "copilot: listening" : "copilot: not connected", 13, listening ? INK : MID,
         Qt::AlignRight | Qt::AlignVCenter, listening);
 
     const QRectF hist(16, 92, 688, 500);
-    frame(hist, LOW, BG);
-    const int cw = chW(13), lh = 17;
+    ui.frame(hist, LOW, BG);
+    const int cw = ui.chW(13), lh = 17;
     const int cols = (int)((hist.width() - 28) / cw);
     const int rows = (int)((hist.height() - 8) / lh);
     std::vector<Line> lines;
@@ -143,8 +143,8 @@ void MainWindow::paintChat() {
     chatScroll = qBound(0, chatScroll, qMax(0, total - rows));
     const int end = total - chatScroll, start = qMax(0, end - rows);
     if (chat.empty()) {
-        txt(QRectF(hist.x() + 12, hist.y() + 8, hist.width() - 24, 18), "No messages yet. Type below and press Enter.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
-        txt(QRectF(hist.x() + 12, hist.y() + 26, hist.width() - 24, 18), "A copilot connected to the control socket answers here.", 13, GRAT, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(hist.x() + 12, hist.y() + 8, hist.width() - 24, 18), "No messages yet. Type below and press Enter.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+        ui.txt(QRectF(hist.x() + 12, hist.y() + 26, hist.width() - 24, 18), "A copilot connected to the control socket answers here.", 13, GRAT, Qt::AlignLeft | Qt::AlignVCenter);
     }
     for (int i = start; i < end; ++i) {
         const Line &ln = lines[i];
@@ -154,42 +154,42 @@ void MainWindow::paintChat() {
             QString name = m.from.toUpper();
             if (m.kind == "ask") name += "?";
             const qreal w = (name.size() + 2) * cw;
-            if (m.user) { frame(QRectF(hist.x() + 10, y, w, lh - 2), MID); txt(QRectF(hist.x() + 10, y, w, lh - 2), name, 13, INK, Qt::AlignCenter, true); }
-            else tag(QRectF(hist.x() + 10, y, w, lh - 2), name, 13);
+            if (m.user) { ui.frame(QRectF(hist.x() + 10, y, w, lh - 2), MID); ui.txt(QRectF(hist.x() + 10, y, w, lh - 2), name, 13, INK, Qt::AlignCenter, true); }
+            else ui.tag(QRectF(hist.x() + 10, y, w, lh - 2), name, 13);
             QString extra = m.kind == "tip" ? "tip  " : "";
             extra += QDateTime::fromMSecsSinceEpoch(m.ts).toString("HH:mm");
-            txt(QRectF(hist.x() + 16 + w, y, 200, lh - 2), extra, 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+            ui.txt(QRectF(hist.x() + 16 + w, y, 200, lh - 2), extra, 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
         } else {
-            if (!m.user) g->fillRect(QRectF(hist.x() + 10, y, 2, lh), INK); // agent text carries a rule on the left
-            txt(QRectF(hist.x() + 10 + 2 * cw, y, hist.width() - 24, lh), ln.text, 13, m.user ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
+            if (!m.user) ui.g->fillRect(QRectF(hist.x() + 10, y, 2, lh), INK); // agent text carries a rule on the left
+            ui.txt(QRectF(hist.x() + 10 + 2 * cw, y, hist.width() - 24, lh), ln.text, 13, m.user ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
         }
     }
     if (total > rows) { // scroll marker
         const qreal th = hist.height() - 6, bh = qMax(12.0, th * rows / total);
         const qreal by = hist.y() + 3 + (th - bh) * (total - rows - chatScroll) / (total - rows);
-        g->fillRect(QRectF(hist.right() - 5, hist.y() + 3, 1, th), GRAT);
-        g->fillRect(QRectF(hist.right() - 6, by, 3, bh), MID);
+        ui.g->fillRect(QRectF(hist.right() - 5, hist.y() + 3, 1, th), GRAT);
+        ui.g->fillRect(QRectF(hist.right() - 6, by, 3, bh), MID);
     }
-    zone(hist, "chat_history", [this](QPointF p, int ph) { // drag the history to scroll it
+    ui.zone(hist, "chat_history", [this](QPointF p, int ph) { // drag the history to scroll it
         if (ph == PH_PRESS) { dragLastY = p.y(); return; }
         const int d = (int)std::round((p.y() - dragLastY) / 17.0);
         if (d) { chatScroll += d; dragLastY = p.y(); }
     });
 
     const QRectF box(16, 600, 580, 44);
-    frame(box, INK, BG);
-    const int bc = (int)((box.width() - 20) / chW(15));
+    ui.frame(box, INK, BG);
+    const int bc = (int)((box.width() - 20) / ui.chW(15));
     QString shown = chatDraft.size() > bc - 1 ? QString::fromUtf8("…") + chatDraft.right(bc - 2) : chatDraft;
-    if (chatDraft.isEmpty()) txt(box.adjusted(10, 0, -10, 0), "type a message", 15, LOW, Qt::AlignLeft | Qt::AlignVCenter);
-    else txt(box.adjusted(10, 0, -10, 0), shown, 15, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    if (chatDraft.isEmpty()) ui.txt(box.adjusted(10, 0, -10, 0), "type a message", 15, LOW, Qt::AlignLeft | Qt::AlignVCenter);
+    else ui.txt(box.adjusted(10, 0, -10, 0), shown, 15, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
     if ((clock.elapsed() / 500) % 2 == 0) {
-        const qreal cx = box.x() + 10 + (chatDraft.isEmpty() ? 0 : shown.size() * chW(15));
-        g->fillRect(QRectF(cx, box.y() + 10, chW(15) - 2, 24), INK);
+        const qreal cx = box.x() + 10 + (chatDraft.isEmpty() ? 0 : shown.size() * ui.chW(15));
+        ui.g->fillRect(QRectF(cx, box.y() + 10, ui.chW(15) - 2, 24), INK);
     }
-    zone(box, "chat_input", [](QPointF, int) {});
-    button(QRectF(604, 600, 100, 44), "chat_send", "Send", false, [this] { chatSend(); });
-    txt(QRectF(18, 652, 686, 18), "Enter sends  Backspace edits  Up/Down scrolls  Esc leaves", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(18, 670, 686, 18), QString("%1+Shift+%2 jumps here from any page and back. Letters type on this page.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.zone(box, "chat_input", [](QPointF, int) {});
+    ui.button(QRectF(604, 600, 100, 44), "chat_send", "Send", false, [this] { chatSend(); });
+    ui.txt(QRectF(18, 652, 686, 18), "Enter sends  Backspace edits  Up/Down scrolls  Esc leaves", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(18, 670, 686, 18), QString("%1+Shift+%2 jumps here from any page and back. Letters type on this page.").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
 }
 
 // A new agent message on any other page: two lines at the bottom, for a few seconds. It draws
@@ -199,12 +199,12 @@ void MainWindow::paintTicker() {
     QRectF r(16, 668, 688, 44);
     for (const QString &n : highlightedZones()) // never over what is highlighted: then it goes to the top
         if (inflatedHit(zoneRect(n), r)) { r = QRectF(16, 6, 688, 44); break; }
-    frame(r.adjusted(-2, -2, 2, 2), INK, BG);
-    const int cw = chW(13);
+    ui.frame(r.adjusted(-2, -2, 2, 2), INK, BG);
+    const int cw = ui.chW(13);
     QString name = ticker.from.toUpper();
     if (ticker.kind == "ask") name += "?";
     const qreal tw = (name.size() + 2) * cw;
-    tag(QRectF(r.x() + 5, r.y() + 4, tw, 17), name, 13);
+    ui.tag(QRectF(r.x() + 5, r.y() + 4, tw, 17), name, 13);
     const QString flat = QString(ticker.text).replace('\n', ' ');
     const int c1 = (int)((r.width() - tw - 20) / cw), c2 = (int)((r.width() - 12 - 150) / cw);
     QString l1 = flat.left(c1), rest = flat.mid(c1);
@@ -212,8 +212,8 @@ void MainWindow::paintTicker() {
         const int sp = l1.lastIndexOf(' ');
         if (sp > c1 / 2) { l1 = flat.left(sp); rest = flat.mid(sp + 1); }
     }
-    txt(QRectF(r.x() + 12 + tw, r.y() + 4, r.width() - tw - 16, 17), l1, 13, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    txt(QRectF(r.x() + 6, r.y() + 23, r.width() - 12 - 150, 17), fit(rest, 13, c2 * cw), 13, INK, Qt::AlignLeft | Qt::AlignVCenter);
-    txt(QRectF(r.right() - 150, r.y() + 23, 144, 17), QString("%1+%2 to reply").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignRight | Qt::AlignVCenter);
-    zone(r.adjusted(-2, -2, 2, 2), "ticker", [this](QPointF, int ph) { if (ph == PH_PRESS) { tickerUntil = 0; dockOpenFocus(); } }); // touch the ticker to answer
+    ui.txt(QRectF(r.x() + 12 + tw, r.y() + 4, r.width() - tw - 16, 17), l1, 13, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    ui.txt(QRectF(r.x() + 6, r.y() + 23, r.width() - 12 - 150, 17), ui.fit(rest, 13, c2 * cw), 13, INK, Qt::AlignLeft | Qt::AlignVCenter);
+    ui.txt(QRectF(r.right() - 150, r.y() + 23, 144, 17), QString("%1+%2 to reply").arg(km.keyFor(A_COMMAND, false)).arg(km.keyFor(A_CHAT, true)), 12, MID, Qt::AlignRight | Qt::AlignVCenter);
+    ui.zone(r.adjusted(-2, -2, 2, 2), "ticker", [this](QPointF, int ph) { if (ph == PH_PRESS) { tickerUntil = 0; dockOpenFocus(); } }); // touch the ticker to answer
 }
