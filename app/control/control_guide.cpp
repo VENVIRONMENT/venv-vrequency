@@ -16,7 +16,7 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     for (int i = 0; i < PG_COUNT; ++i) if (n == pageName(i)) p = i;
     if (p < 0) { e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; return {}; }
     w.tour().close(); // the real page is wanted: the tour steps aside
-    if (p == PG_CHAT && w.pg != PG_CHAT) w.chat.returnPage = w.pg;
+    if (p == PG_CHAT && w.page() != PG_CHAT) w.chat.returnPage = w.page();
     w.goPage(p);
     QJsonObject r; r["page"] = n;
     return r;
@@ -51,7 +51,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
         return r;
     }
     // optional page (and, for Help, the sub page: playing, commands, beat, track)
-    int page = w.pg, sub = -1;
+    int page = w.page(), sub = -1;
     if (A.has("page")) {
         const QString n = A.str("page", "", 12);
         if (e.isEmpty()) { page = pageFromName(n); if (page < 0) e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; }
@@ -98,8 +98,8 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     const int ms = A.integer("ms", 100, 30000, 8000);
     if (!e.isEmpty()) return {};
     w.tour().close(); // a highlight is drawn on the real page
-    if (page != w.pg || (page == PG_HELP && sub >= 0 && sub != w.helpPage.sub)) { // switch first, atomically with the highlight
-        if (page == PG_CHAT && w.pg != PG_CHAT) w.chat.returnPage = w.pg;
+    if (page != w.page() || (page == PG_HELP && sub >= 0 && sub != w.helpPage.sub)) { // switch first, atomically with the highlight
+        if (page == PG_CHAT && w.page() != PG_CHAT) w.chat.returnPage = w.page();
         w.goPage(page);
         if (page == PG_HELP && sub >= 0) w.helpPage.sub = sub;
     }
@@ -107,13 +107,13 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     QStringList unknown;
     const QStringList known = w.guide.setHighlight(names, label, ms, unknown);
     w.refreshZones();   // the dock may have moved out of the way
-    r["page"] = pageName(w.pg);
+    r["page"] = pageName(w.page());
     r["highlighted"] = QJsonArray::fromStringList(known);
     r["unknown"] = QJsonArray::fromStringList(unknown);
     r["ms"] = ms;
     r["caption"] = !w.guide.highlightCaptionRect().isNull();
     QJsonObject dock;
-    dock["open"] = w.guide.dockIsOpen() && w.pg != PG_CHAT;
+    dock["open"] = w.guide.dockIsOpen() && w.page() != PG_CHAT;
     if (!w.guide.dockRect().isNull()) { const QRectF d = w.guide.dockRect(); dock["y"] = qRound(d.y()); dock["h"] = qRound(d.height()); dock["position"] = d.y() < 100 ? "top" : "bottom"; }
     r["dock"] = dock;
     return r;

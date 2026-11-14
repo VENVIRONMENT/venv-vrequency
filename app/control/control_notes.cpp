@@ -23,8 +23,8 @@ bool ControlServer::notePitch(const QJsonObject &a, int string, const char *degK
 }
 
 int ControlServer::startNote(int string, float midi, float vel, int durMs) {
-    int id = w.nextNoteId++;
-    if (w.nextNoteId > 0x7ff) w.nextNoteId = 0x400;
+    int id = nextNoteId++;
+    if (nextNoteId > 0x7ff) nextNoteId = 0x400;
     liveNotes[id] = string;
     inst.note(string, id, midi, true, vel);
     QTimer::singleShot(durMs, this, [this, id] { releaseNote(id); });

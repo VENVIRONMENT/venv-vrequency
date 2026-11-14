@@ -12,14 +12,14 @@ using namespace pal;
 // ---------------------------------------------------------------------------------- the first-run offer
 
 void TourView::armFirstRunPrompt(int delayMs, int lifeMs) {
-    if (w.tourSeenFlag) return;
+    if (w.tourSeen()) return;
     promptDone = false;
     promptAt = w.clock.elapsed() + delayMs;
     promptUntil = promptAt + lifeMs;
 }
 
 bool TourView::promptShowing() const {
-    if (promptDone || opened || w.tourSeenFlag) return false;
+    if (promptDone || opened || w.tourSeen()) return false;
     if (promptAt < 0) return false;
     const qint64 now = w.clock.elapsed();
     return now >= promptAt && now < promptUntil;
@@ -34,7 +34,7 @@ void TourView::answerPrompt(bool yes) {
 bool TourView::promptKey(int k) {
     if (!promptShowing()) {
         // an offer nobody answered goes away quietly, once, and is not made again
-        if (!promptDone && !w.tourSeenFlag && promptAt >= 0 && w.clock.elapsed() >= promptUntil) markSeen();
+        if (!promptDone && !w.tourSeen() && promptAt >= 0 && w.clock.elapsed() >= promptUntil) markSeen();
         return false;
     }
     if (k == Qt::Key_Return || k == Qt::Key_Enter) { answerPrompt(true); return true; }
@@ -44,7 +44,7 @@ bool TourView::promptKey(int k) {
 
 void TourView::paintPrompt() {
     if (!promptShowing()) {
-        if (!promptDone && !w.tourSeenFlag && promptAt >= 0 && w.clock.elapsed() >= promptUntil) markSeen(); // unanswered: it does not come back
+        if (!promptDone && !w.tourSeen() && promptAt >= 0 && w.clock.elapsed() >= promptUntil) markSeen(); // unanswered: it does not come back
         return;
     }
     const QRectF r(12, 6, 696, 48);

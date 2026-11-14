@@ -20,7 +20,7 @@ void TourView::resetCards() { useOverride = false; override_ = CardDb(); }
 
 void TourView::ensureBuilt() {
     if (built) return;
-    tourBuildPictures(pics, &w.sink);
+    tourBuildPictures(pics, &w.outputSink());
     built = true;
 }
 
@@ -29,12 +29,12 @@ const TourView::Pic &TourView::picture(int page) {
     return pics[qBound(0, page, picCount() - 1)];
 }
 
-bool TourView::seen() const { return w.tourSeenFlag; }
-void TourView::forgetSeen() { w.tourSeenFlag = false; promptDone = false; promptOn = false; }
+bool TourView::seen() const { return w.tourSeen(); }
+void TourView::forgetSeen() { w.setTourSeen(false); promptDone = false; promptOn = false; }
 
 void TourView::markSeen() {
     promptOn = false; promptDone = true;
-    if (!w.tourSeenFlag) { w.tourSeenFlag = true; }
+    if (!w.tourSeen()) { w.setTourSeen(true); }
     w.saveState();
 }
 
@@ -44,7 +44,7 @@ bool TourView::open(const QString &page, const QString &element, bool guide, QSt
         idx = pageIndex(page);
         if (idx < 0) { if (err) *err = "unknown tour page '" + page.left(40) + "'"; return false; }
     } else if (!opened) {
-        const int last = pageIndex(w.tourLastPage);
+        const int last = pageIndex(w.tourLastPage());
         idx = last >= 0 ? last : pageIndex("synth");
     }
     if (!opened) w.guide.dockClose();
@@ -78,7 +78,7 @@ void TourView::finishOpen(int idx, const QString &element, bool guide) {
 void TourView::close() {
     if (!opened) return;
     opened = false; building = false; conceptOn = false; conceptId.clear(); guided = false;
-    w.tourLastPage = pageId();
+    w.setTourLastPage(pageId());
     w.saveState();
     w.update();
 }
@@ -88,6 +88,6 @@ void TourView::setPage(int i, bool keep) {
     variant = 0;
     if (!keep) selIdx = -1;
     scrollA = scrollB = 0;
-    w.tourLastPage = pageId();
+    w.setTourLastPage(pageId());
     conceptOn = false;
 }

@@ -18,7 +18,7 @@ void MainWindow::loadState(SessionData &sd) {
         if (st.contains("track")) store::trackFromJson(st["track"].toObject(), trackPage.track);
         chat.load(st);
         tourSeenFlag = st["tourSeen"].toBool(false);
-        tourLastPage = st["tourPage"].toString();
+        tourLastPageName = st["tourPage"].toString();
     }
     beatPage.load(st, sd);
 }
@@ -36,7 +36,7 @@ void MainWindow::saveState() {
     beatPage.save(o);
     chat.save(o);
     o["tourSeen"] = tourSeenFlag;
-    if (!tourLastPage.isEmpty()) o["tourPage"] = tourLastPage;
+    if (!tourLastPageName.isEmpty()) o["tourPage"] = tourLastPageName;
     store::writeJson(store::baseDir() + "/state.json", o);
 }
 

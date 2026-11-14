@@ -61,6 +61,7 @@ private:
     QString sockPath, err;
     std::vector<Conn *> conns;
     std::vector<Waiter> waiters;
+    int nextNoteId = 0x400;          // synthetic note ids cycle in 0x400..0x7ff, clear of the keyboard's
     QHash<int, int> liveNotes;       // note id -> string, for notes this socket started
     QStringList shots;               // screenshots written, oldest first
 

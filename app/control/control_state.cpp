@@ -15,7 +15,7 @@ using namespace ctl;
 QJsonObject ControlServer::cmdState() {
     const UiState u = inst.uiState();
     QJsonObject o;
-    o["page"] = pageName(w.pg);
+    o["page"] = pageName(w.page());
     QJsonObject snd;
     snd["name"] = QString::fromUtf8(w.sounds.lead.name);
     snd["slot"] = w.sounds.curSlot >= 0 ? QJsonValue(w.sounds.curSlot + 1) : QJsonValue();
@@ -83,7 +83,7 @@ QJsonObject ControlServer::cmdState() {
     o["track"] = tr;
     o["playing"] = u.voices > 0 || u.backPlaying || u.beatPlaying || u.trackPlaying || u.loopState == L_PLAY || u.loopState == L_OVERDUB;
     o["voices"] = u.voices;
-    o["toast"] = w.toastText;
+    o["toast"] = w.lastToast();
     QJsonObject cp;
     cp["listening"] = w.chat.listening();
     cp["last_seq"] = w.chat.seq;
@@ -91,9 +91,9 @@ QJsonObject ControlServer::cmdState() {
     o["chat"] = cp;
     o["chat_tail"] = chatJson(qMax(0, w.chat.seq - 10), 10);
     QJsonObject hf;
-    hf["page"] = pageName(w.pg);
+    hf["page"] = pageName(w.page());
     hf["highlighted"] = QJsonArray::fromStringList(w.guide.highlightedZones());
-    hf["dock_open"] = w.guide.dockIsOpen() && w.pg != PG_CHAT;
+    hf["dock_open"] = w.guide.dockIsOpen() && w.page() != PG_CHAT;
     hf["dock_focus"] = w.guide.dockHasFocus();
     hf["last_question_zone"] = w.guide.lastQuestionZone();
     hf["topic"] = w.guide.dockTopic();

@@ -44,8 +44,6 @@ class TourView;
 
 class MainWindow : public QWidget, public Shell {
     Q_OBJECT
-    friend class ControlServer;
-    friend class TourView;
     friend struct TourDemo;
 public:
     // `scratch`: an off-screen copy used only to draw the tour's pictures: it reads and writes no files
@@ -110,6 +108,12 @@ public:
     TourView &tour() { return *tourView; }
     bool tourOpen() const;
     bool tourSuspended = false;                              // set while the real page is drawn for a catalogue
+    // what the tour remembers between runs (kept in the state file), and the output device it shows
+    bool tourSeen() const { return tourSeenFlag; }
+    void setTourSeen(bool v) { tourSeenFlag = v; }
+    QString tourLastPage() const { return tourLastPageName; }
+    void setTourLastPage(const QString &p) { tourLastPageName = p; }
+    SinkProbe &outputSink() { return sink; }
     void tourAsk(const QString &page, const QString &zone, const QString &text); // Ask Rook from a tour card
 
 signals:
@@ -134,10 +138,9 @@ private:
     QString toastText; qint64 toastUntil = 0;
     bool scratchWindow = false;
     bool tourSeenFlag = false;                               // the player has answered the first-run offer
-    QString tourLastPage;                                    // the tour page last looked at (saved)
+    QString tourLastPageName;                                // the tour page last looked at (saved)
     std::unique_ptr<TourView> tourView;
     // synthetic notes from the control socket: string -> ids held
-    int nextNoteId = 0x400;
     std::vector<qint64> taps;
     int seenSinkGeneration = -1;
     SinkProbe ownSink;
