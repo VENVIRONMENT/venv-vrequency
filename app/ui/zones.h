@@ -202,6 +202,8 @@ inline constexpr char tour_var_next[] = "tour_var_next";
 inline constexpr char tour_var_prev[] = "tour_var_prev";
 inline constexpr char dock_prefix[] = "dock";      // every zone of the chat dock starts with this
 inline constexpr char tour_page[] = "tour_page_";   // family
+inline constexpr char tour_rel[] = "tour_rel";      // family: the Related chips of a card
+inline constexpr char tour_hot[] = "tour_hot_";     // a control in the tour's picture: tour_hot + the name of its zone
 inline constexpr char help_row[] = "help_row_";     // a Help row: help_row + a slug of its description
 
 inline QString at(const char *family, int i) { return QString::fromLatin1(family) + QString::number(i); }

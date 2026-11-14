@@ -2,6 +2,7 @@
 #include "audio/audio.h"
 #include "core/instrument/instrument.h"
 #include "app/control/control.h"
+#include "app/selftest/selftest.h"
 #include "app/shell/mainwindow.h"
 #include "app/tour/tour.h"
 #include <QApplication>
@@ -16,8 +17,6 @@ qint64 msSinceStart() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - g_start).count();
 }
 
-int runSelfTest(MainWindow &w, td::Instrument &inst, AudioOut &audio, const QString &shotsDir);
-int renderShots(MainWindow &w, td::Instrument &inst, const QString &dir);
 int tourDumpZones(const QString &pictureDir);
 int renderTourShots(MainWindow &w, const QString &dir);
 
