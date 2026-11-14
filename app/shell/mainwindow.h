@@ -87,12 +87,6 @@ public:
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }
-    // the Track page's state is in trackPage; the tour and the control socket still ask the window
-    bool clipInHand() const { return trackPage.clipInHand(); }
-    bool chopping() const { return trackPage.chopping(); }
-    bool pickingSound() const { return trackPage.pickingSound(); }
-    bool mixing() const { return trackPage.mixing(); }
-    int exportStatus() const { return trackPage.exportStatus(); } // 0 idle, 1 working
     int keptBeats() const { return (int)beatSlots.size(); }
     int keptBeatShown() const { return beatCur; }
     QString keptBeatName(int i) const { return i >= 0 && i < (int)beatSlots.size() ? beatSlots[i].name : QString(); }
@@ -167,17 +161,6 @@ private:
     uint32_t seenHits[td::kDrums] = {0};
     qint64 padLit[td::kDrums] = {0}; // when each pad last sounded
 
-    // until app/control reaches the page itself: the names it still uses on the window
-    td::TrackData &track = trackPage.track;
-    bool &handOn = trackPage.handOn;
-    QString &exportFile = trackPage.exportFile;
-    bool trackApply(const std::function<bool(td::TrackData &)> &fn) { return trackPage.trackApply(fn); }
-    void trackPlayStop() { trackPage.trackPlayStop(); }
-    int &shelfPage = trackPage.shelfPage;
-    void trackTake(int ci) { trackPage.trackTake(ci); }
-    void trackKeep() { trackPage.trackKeep(); }
-    bool trackPlace(int lane, int bar) { return trackPage.trackPlace(lane, bar); }
-    void trackExport() { trackPage.trackExport(); }
     QTimer saveTimer;                       // an edit is on disk a moment later
 
 

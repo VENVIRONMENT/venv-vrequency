@@ -128,38 +128,38 @@ QJsonObject ControlServer::cmdTrack(const QJsonObject &a, QString &e) {
     if (!e.isEmpty()) return {};
     QJsonObject r;
     bool any = false;
-    for (int ln = 0; ln < kLanes; ++ln) any = any || !w.track.lane[ln].empty();
+    for (int ln = 0; ln < kLanes; ++ln) any = any || !w.trackPage.track.lane[ln].empty();
     if (act == "keep") {
-        w.trackKeep();
-        r["clips"] = (int)w.track.clips.size();
+        w.trackPage.trackKeep();
+        r["clips"] = (int)w.trackPage.track.clips.size();
     } else if (act == "clear") {
         inst.trackDo(TC_STOP);
-        w.trackApply([](TrackData &t) { const bool had = !t.clips.empty(); t = TrackData(); return had; });
-        w.handOn = false;
+        w.trackPage.trackApply([](TrackData &t) { const bool had = !t.clips.empty(); t = TrackData(); return had; });
+        w.trackPage.handOn = false;
         r["clips"] = 0;
     } else if (act == "place") {
         const int clip = A.integer("clip", 0, 1000, 0, true);
         const int bar = A.integer("bar", 0, kTrackMaxBars - 1, 0, true);
         const int lane = A.integer("lane", 0, kLanes - 1, -1);
         if (!e.isEmpty()) return {};
-        if (clip >= (int)w.track.clips.size()) { e = "no such clip: keep first (see state.track.clips)"; return {}; }
-        w.handOn = false;
-        w.trackTake(clip);
-        const int l = lane >= 0 ? lane : laneForKind(w.track.clips[clip]->kind);
-        const bool ok = w.trackPlace(l, bar);
-        w.handOn = false;
+        if (clip >= (int)w.trackPage.track.clips.size()) { e = "no such clip: keep first (see state.track.clips)"; return {}; }
+        w.trackPage.handOn = false;
+        w.trackPage.trackTake(clip);
+        const int l = lane >= 0 ? lane : laneForKind(w.trackPage.track.clips[clip]->kind);
+        const bool ok = w.trackPage.trackPlace(l, bar);
+        w.trackPage.handOn = false;
         if (!ok) { e = "no room there"; return {}; }
         r["placed"] = true;
     } else if (act == "play") {
         if (!any) { e = "nothing on the track"; return {}; }
-        if (!inst.uiState().trackPlaying) w.trackPlayStop();
+        if (!inst.uiState().trackPlaying) w.trackPage.trackPlayStop();
     } else if (act == "stop") {
-        if (inst.uiState().trackPlaying) w.trackPlayStop();
+        if (inst.uiState().trackPlaying) w.trackPage.trackPlayStop();
     } else if (act == "export") {
         if (!any) { e = "nothing on the track to export"; return {}; }
-        if (w.exportStatus() == 1) { e = "an export is already running"; return {}; }
-        w.trackExport();
-        r["path"] = w.exportFile; r["async"] = true; // the file is complete when state.track.exporting is false
+        if (w.trackPage.exportStatus() == 1) { e = "an export is already running"; return {}; }
+        w.trackPage.trackExport();
+        r["path"] = w.trackPage.exportFile; r["async"] = true; // the file is complete when state.track.exporting is false
     } else {
         e = "action must be keep, place, play, stop, export or clear";
         return {};

@@ -35,7 +35,7 @@ void TourDemo::trackPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     inst.beatDo(BT_STEP, D_COWBELL, 7, 1); pump(inst, 80); rig.settle(2);
     rig.tap("track_keep"); pump(inst, 60);                                   // Beat 3: more clips than the shelf shows, so it pages
     rig.settle(2);
-    w.shelfPage = 0;                                                        // the keys 1-5 take the clips of the first page
+    w.trackPage.shelfPage = 0;                                                        // the keys 1-5 take the clips of the first page
     rig.esc();
     rig.press(Qt::Key_Return);
     rig.press(Qt::Key_1); for (int i = 0; i < 4; ++i) rig.ctrl(Qt::Key_V);
