@@ -1044,7 +1044,7 @@ void MainWindow::paintTrack() {
         const int ci = shelfPage * SHELF + k;
         if (ci >= nClips) { frame(r, GRAT); continue; }
         const Clip &c = *track.clips[ci];
-        const QString name = QString("shelf%1").arg(k);
+        const QString name = QString("shelf_clip%1").arg(k);
         const bool on = (handOn && hand.clip == ci) || downNames.contains(name);
         frame(r, on ? INK : LOW, on ? INK : BG);
         if (removeArmed == ci && !downNames.contains(name)) frame(r.adjusted(3, 3, -3, -3), on ? BG : INK);
@@ -1054,10 +1054,10 @@ void MainWindow::paintTrack() {
         zone(r, name, [this, ci](QPointF, int ph) { if (ph == PH_PRESS) trackTake(ci); });
     }
     if (pages > 1) {
-        button(QRectF(16, 354, 62, 48), "keep", "+ Keep", false, [this] { trackKeep(); }, "what plays");
-        button(QRectF(82, 354, 46, 48), "shelfpage", QString("%1/%2").arg(shelfPage + 1).arg(pages), false, [this, pages] { shelfPage = (shelfPage + 1) % pages; }, "more");
+        button(QRectF(16, 354, 62, 48), "track_keep", "+ Keep", false, [this] { trackKeep(); }, "what plays");
+        button(QRectF(82, 354, 46, 48), "track_shelf_page", QString("%1/%2").arg(shelfPage + 1).arg(pages), false, [this, pages] { shelfPage = (shelfPage + 1) % pages; }, "more");
     } else {
-        button(QRectF(16, 354, 112, 48), "keep", "+ Keep", false, [this] { trackKeep(); }, "beat chord loop");
+        button(QRectF(16, 354, 112, 48), "track_keep", "+ Keep", false, [this] { trackKeep(); }, "beat chord loop");
     }
 
     // the ruler of bars
@@ -1069,7 +1069,7 @@ void MainWindow::paintTrack() {
         if (in) g->fillRect(nr.adjusted(0, 0, 1, 0), INK);
         txt(nr, QString::number(bar + 1), 12, in ? BG : (bar >= track.bars ? LOW : (bar % 4 == 0 ? INK : MID)), Qt::AlignCenter, bar % 4 == 0 || in);
     }
-    zone(QRectF(GX, 78, GW, 26), "ruler", [this](QPointF p, int ph) {
+    zone(QRectF(GX, 78, GW, 26), "track_ruler", [this](QPointF p, int ph) {
         if (ph == PH_RELEASE) return;
         const int b = qBound(0, barAtX(p.x(), viewBar), qMin(track.bars, kTrackMaxBars - 1));
         if (b == playBar && ph == PH_MOVE) return;
@@ -1113,7 +1113,7 @@ void MainWindow::paintTrack() {
     }
     if (endX > GX && endX <= GX + GW) g->fillRect(QRectF(endX, LY, 2, lanesBottom - LY), MID); // the end of the track
     g->restore();
-    zone(QRectF(GX, LY - 2, GW, lanesBottom - LY + 4), "lanes", [this](QPointF p, int ph) { laneTouch(p, ph); });
+    zone(QRectF(GX, LY - 2, GW, lanesBottom - LY + 4), "track_lanes", [this](QPointF p, int ph) { laneTouch(p, ph); });
 
     if (nClips == 0 && placed == 0) {
         const QRectF m(GX + 40, LY + 76, GW - 80, 124);
@@ -1163,28 +1163,28 @@ void MainWindow::paintTrackTools() {
     const bool spot = handOn && placeSpot(spotLane, spotBar);
     const qreal fw = (688 - 4 * 8) / 5.0;
     auto r5 = [fw](int i) { return QRectF(std::floor(16 + i * (fw + 8)), 438, std::floor(fw), 60); };
-    button(r5(0), "tplace", "Place", handOn, [this] { trackPlaceAtLine(); },
+    button(r5(0), "track_place", "Place", handOn, [this] { trackPlaceAtLine(); },
            handOn ? (spot ? QString("at bar %1").arg(spotBar + 1) : QString("no room")) : QString("pick a clip first"));
-    button(r5(1), "tchop", "Chop", false, [this] { trackChop(); }, "cut and reorder");
+    button(r5(1), "track_chop", "Chop", false, [this] { trackChop(); }, "cut and reorder");
     QString plays = "keys guitar bass";
     if (sel) {
         const Clip &sc = *track.clips[sel->clip];
         const char *sn = soundName(sc, pickFor(sc, *sel));
         plays = sc.kind == CK_BEAT ? nice(sn) + " kit" : QString::fromUtf8(sn);
     }
-    button(r5(2), "tsound", "Sound", false, [this] { trackSound(); }, plays);
-    button(r5(3), "trepeat", "Repeat", false, [this] { trackRepeat(); }, "copy to the right");
+    button(r5(2), "track_sound", "Sound", false, [this] { trackSound(); }, plays);
+    button(r5(3), "track_repeat", "Repeat", false, [this] { trackRepeat(); }, "copy to the right");
     const bool armed = removeArmed >= 0 && clock.elapsed() - removeArmedAt <= 4000;
-    button(r5(4), "tremove", "Remove", false, [this] { trackRemove(); },
+    button(r5(4), "track_remove", "Remove", false, [this] { trackRemove(); },
            armed ? QString("again to delete") : (!sel && handOn && handFromShelf ? QString("clip and copies") : QString("from the track")),
            armed ? LOOK_ARMED : LOOK_PLAIN);
 
     const int from = cyc && (playBar < track.cycleFrom || playBar >= track.cycleTo) ? track.cycleFrom : qMin(playBar, track.bars - 1);
-    button(c4(0, 506), "tplay", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying, [this] { trackPlayStop(); },
+    button(c4(0, 506), "track_play", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying, [this] { trackPlayStop(); },
            u.trackPlaying ? QString("bar %1").arg((int)(u.trackPos / 4.0) + 1) : QString("from bar %1").arg(from + 1));
-    button(c4(1, 506), "tcycle", "Cycle", cyc, [this] { trackCycle(); },
+    button(c4(1, 506), "track_cycle", "Cycle", cyc, [this] { trackCycle(); },
            cyc ? barsText(track.cycleFrom, track.cycleTo - track.cycleFrom) : (sel ? QString("round this clip") : QString("round 4 bars")));
-    stepper(c4(2, 506), "tlen", "Length", QString("%1 bars").arg(track.bars),
+    stepper(c4(2, 506), "track_length", "Length", QString("%1 bars").arg(track.bars),
             [this] {
                 int last = 1;
                 for (int ln = 0; ln < kLanes; ++ln) for (const Placement &p : track.lane[ln]) last = qMax(last, p.bar + p.bars);
@@ -1192,19 +1192,19 @@ void MainWindow::paintTrackTools() {
                 --track.bars; trackSync();
             },
             [this] { if (track.bars < kTrackMaxBars) { ++track.bars; trackSync(); } });
-    button(c4(3, 506), "texport", exporting ? QString("%1%").arg(exportPct.load()) : QString("Export"), exporting, [this] { trackExport(); },
+    button(c4(3, 506), "track_export", exporting ? QString("%1%").arg(exportPct.load()) : QString("Export"), exporting, [this] { trackExport(); },
            exporting ? "writing audio" : "save as audio");
 
     auto c5 = [](int i) { return QRectF(16 + i * 106, 574, 98, 60); };
-    button(c5(0), "tsplit", "Split", false, [this] { trackSplit(); }, "at the line");
-    button(c5(1), "tjoin", "Join", false, [this] { trackJoin(); }, "with the next");
-    button(c5(2), "tmute", "Mute", sel && sel->mute, [this] { trackMute(); }, "this clip");
-    button(c5(3), "tundo", "Undo", false, [this] { trackUndoDo(); }, trackUndo.empty() ? QString("nothing yet") : QString("%1 step%2").arg(trackUndo.size()).arg(trackUndo.size() == 1 ? "" : "s"));
+    button(c5(0), "track_split", "Split", false, [this] { trackSplit(); }, "at the line");
+    button(c5(1), "track_join", "Join", false, [this] { trackJoin(); }, "with the next");
+    button(c5(2), "track_mute", "Mute", sel && sel->mute, [this] { trackMute(); }, "this clip");
+    button(c5(3), "track_undo", "Undo", false, [this] { trackUndoDo(); }, trackUndo.empty() ? QString("nothing yet") : QString("%1 step%2").arg(trackUndo.size()).arg(trackUndo.size() == 1 ? "" : "s"));
     QString mixSub = "lane levels";
     for (int ln = 0; ln < kLanes; ++ln)
         if (!laneHeard(track, ln) || track.mix[ln].level != kLaneLevelNormal) { mixSub = "lanes changed"; break; }
-    button(c5(4), "tmix", "Mix", false, [this] { trackMixer(); }, mixSub);
-    stepper(QRectF(546, 574, 158, 60), "tview", "Shown", QString("%1-%2").arg(viewBar + 1).arg(viewBar + VIEW),
+    button(c5(4), "track_mixer", "Mix", false, [this] { trackMixer(); }, mixSub);
+    stepper(QRectF(546, 574, 158, 60), "track_view", "Shown", QString("%1-%2").arg(viewBar + 1).arg(viewBar + VIEW),
             [this] { viewBar = qMax(0, viewBar - 4); }, [this] { viewBar = qMin(maxViewBar(), viewBar + 4); });
 
     const QString cmd = km.keyFor(A_COMMAND, false);
@@ -1259,23 +1259,23 @@ void MainWindow::paintChop() {
         const double rel = u.trackPos - pl.bar * 4.0;
         if (rel >= 0 && rel < pl.bars * 4.0) g->fillRect(QRectF(X(std::fmod(rel, Lc)), sr.y() + 1, 2, sr.height() - 2), INK);
     }
-    zone(sr, "chopstrip", [this, sr](QPointF p, int ph) {
+    zone(sr, "chop_strip", [this, sr](QPointF p, int ph) {
         if (ph == PH_PRESS) chopTap((p.x() - sr.x()) / sr.width(), sr.width());
     });
 
     const qreal pw = (688 - 3 * 8) / 4.0;
     auto c4 = [pw](int i, qreal y) { return QRectF(std::floor(16 + i * (pw + 8)), y, std::floor(pw), 54); };
     const double every = std::max(1.0, gr);
-    button(c4(0, 570), "chalves", "Halves", false, [this] { chopEdit([](Placement &x) { return cutPiece(x, piecesLength(x) / 2); }); }, "cut in two");
-    button(c4(1, 570), "cbeats", every >= 4 ? "Bars" : "Beats", false, [this] {
+    button(c4(0, 570), "chop_halves", "Halves", false, [this] { chopEdit([](Placement &x) { return cutPiece(x, piecesLength(x) / 2); }); }, "cut in two");
+    button(c4(1, 570), "chop_beats", every >= 4 ? "Bars" : "Beats", false, [this] {
         chopEdit([this](Placement &x) { size_t b = x.pieces.size(); cutEvery(x, std::max(1.0, chopGrid(*track.clips[x.clip]))); return x.pieces.size() != b; });
     },
            every == 1.0 ? "cut every beat" : (every == 2.0 ? "cut every 2 beats" : "cut every bar"));
-    button(c4(2, 570), "creset", "Reset", false, [this] {
+    button(c4(2, 570), "chop_reset", "Reset", false, [this] {
         chopEdit([this](Placement &x) { if (x.pieces.size() == 1 && !x.pieces[0].mute) return false; resetPieces(x, *track.clips[x.clip]); return true; });
         chopPiece = 0;
     }, "undo every cut");
-    button(c4(3, 570), "cdone", "Done", false, [this] { chopOpen = false; }, "back to the track");
+    button(c4(3, 570), "chop_done", "Done", false, [this] { chopOpen = false; }, "back to the track");
     const QString letter = chopPiece < 26 ? QString(QChar('A' + chopPiece)) : QString::number(chopPiece + 1);
     auto move = [this](int d) { // reads the pieces when tapped, not when drawn
         Placement *p = chosen();
@@ -1284,12 +1284,12 @@ void MainWindow::paintChop() {
         chopEdit([pc, d](Placement &x) { return movePiece(x, pc, d); });
         chopPiece = to;
     };
-    button(c4(0, 630), "cleft", QString::fromUtf8("‹ Move"), false, [move] { move(-1); }, QString("piece %1 earlier").arg(letter));
-    button(c4(1, 630), "cright", QString::fromUtf8("Move ›"), false, [move] { move(1); }, QString("piece %1 later").arg(letter));
-    button(c4(2, 630), "cmute", "Mute piece", pl.pieces[chopPiece].mute, [this] {
+    button(c4(0, 630), "chop_move_left", QString::fromUtf8("‹ Move"), false, [move] { move(-1); }, QString("piece %1 earlier").arg(letter));
+    button(c4(1, 630), "chop_move_right", QString::fromUtf8("Move ›"), false, [move] { move(1); }, QString("piece %1 later").arg(letter));
+    button(c4(2, 630), "chop_mute_piece", "Mute piece", pl.pieces[chopPiece].mute, [this] {
         chopEdit([this](Placement &x) { if (chopPiece >= (int)x.pieces.size()) return false; x.pieces[chopPiece].mute = !x.pieces[chopPiece].mute; return true; });
     }, "leave a gap");
-    button(c4(3, 630), "crepeat", "Repeat piece", false, [this] {
+    button(c4(3, 630), "chop_repeat_piece", "Repeat piece", false, [this] {
         const int pc = chopPiece;
         chopEdit([pc](Placement &x) { return repeatPiece(x, pc); });
         if (Placement *p = chosen()) chopPiece = qMin(pc + 1, (int)p->pieces.size() - 1);
@@ -1320,7 +1320,7 @@ void MainWindow::paintClipSound() {
         const QRectF r(std::floor(16 + k * (kw + 6)), 438, std::floor(kw), 52);
         const bool fits = beat ? k == PK_DRUMS : k != PK_DRUMS;
         if (fits) {
-            button(r, QString("skind%1").arg(k), KN[k], soundKind == k, [this, k] { if (soundKind != k) { soundKind = k; soundPage = 0; } }, KS[k]);
+            button(r, QString("sound_kind%1").arg(k), KN[k], soundKind == k, [this, k] { if (soundKind != k) { soundKind = k; soundPage = 0; } }, KS[k]);
         } else { // not for this kind of clip
             frame(r, GRAT, BG);
             txt(QRectF(r.x(), r.y() + r.height() * 0.13, r.width(), r.height() * 0.46), KN[k], 16, LOW, Qt::AlignCenter, true);
@@ -1334,7 +1334,7 @@ void MainWindow::paintClipSound() {
     const qreal cw = (688 - 2 * 8) / 3.0;
     for (int cell = 0; cell < 6; ++cell) {
         const QRectF r(std::floor(16 + (cell % 3) * (cw + 8)), 498 + (cell / 3) * 60, std::floor(cw), 54);
-        const QString zn = QString("scell%1").arg(cell);
+        const QString zn = QString("sound_cell%1").arg(cell);
         const int i = soundPage * per + cell;
         QString label, sub;
         bool on = false;
@@ -1357,21 +1357,21 @@ void MainWindow::paintClipSound() {
     }
 
     const qreal y = 622, h = 56;
-    button(QRectF(16, y, 130, h), "shear", hearOn ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Hear"), hearOn, [this] { hearToggle(); }, "this clip alone");
+    button(QRectF(16, y, 130, h), "sound_hear", hearOn ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Hear"), hearOn, [this] { hearToggle(); }, "this clip alone");
     const QRectF orr(154, y, 164, h);
     if (beat) {
         frame(orr, GRAT, BG);
         txt(QRectF(orr.x(), orr.y() + 6, orr.width(), 16), "Octave", 12, LOW);
         txt(QRectF(orr.x(), orr.y() + 22, orr.width(), h - 26), "notes only", 13, LOW);
     } else {
-        stepper(orr, "soct", "Octave", pk.octave > 0 ? QString("+%1").arg(pk.octave) : QString::number(pk.octave),
+        stepper(orr, "sound_octave", "Octave", pk.octave > 0 ? QString("+%1").arg(pk.octave) : QString::number(pk.octave),
                 [this] { soundApply([](SoundPick &k) { k.octave = qMax(-2, k.octave - 1); }); },
                 [this] { soundApply([](SoundPick &k) { k.octave = qMin(2, k.octave + 1); }); });
     }
-    button(QRectF(326, y, 130, h), "sscope", only ? QString("Only this one") : QString("Every %1").arg(name), false, [this] { soundScope(); },
+    button(QRectF(326, y, 130, h), "sound_scope", only ? QString("Only this one") : QString("Every %1").arg(name), false, [this] { soundScope(); },
            only ? QString("tap for every one") : QString("tap for only this"));
-    button(QRectF(464, y, 130, h), "srec", "As recorded", false, [this] { soundApply([](SoundPick &k) { k = SoundPick(); }); }, rec);
-    button(QRectF(602, y, 102, h), "sdone", "Done", false, [this] { soundOpen = false; }, "back to tools");
+    button(QRectF(464, y, 130, h), "sound_as_recorded", "As recorded", false, [this] { soundApply([](SoundPick &k) { k = SoundPick(); }); }, rec);
+    button(QRectF(602, y, 102, h), "sound_done", "Done", false, [this] { soundOpen = false; }, "back to tools");
     txt(QRectF(18, 688, 684, 20), beat ? QString("Keys: 1-3 pick a kit, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false))
                                        : QString("Keys: left right pick a kind, 1-6 a sound, up down the octave, %1 hear it, %2 done.").arg(km.keyFor(A_SUSTAIN, false)).arg(km.keyFor(A_LOOP, false)),
         12, MID, L);
@@ -1397,7 +1397,7 @@ void MainWindow::paintMixer() {
         if (chosenLane) g->fillRect(hd, INK);
         txt(hd, laneLabel(ln), 13, chosenLane ? BG : (heard ? INK : LOW), Qt::AlignCenter, true);
         g->fillRect(QRectF(x + 1, y0 + 24, W - 2, 1), GRAT);
-        zone(hd, QString("mxlane%1").arg(ln), [this, ln](QPointF, int ph) { if (ph == PH_PRESS) mixLane = ln; });
+        zone(hd, QString("mixer_lane%1").arg(ln), [this, ln](QPointF, int ph) { if (ph == PH_PRESS) mixLane = ln; });
 
         // the fader: the bar is the level; the notch beside it is 80, as recorded
         const qreal top = y0 + 36, bottom = y0 + 150;
@@ -1421,23 +1421,23 @@ void MainWindow::paintMixer() {
             const qreal sy = std::floor(mr.bottom() - 2 - (sgm + 1) * seg);
             g->fillRect(QRectF(mr.x() + 2, sy + 1, mr.width() - 4, std::max<qreal>(1, std::floor(seg) - 1)), lit ? INK : GRAT);
         }
-        zone(QRectF(x + 4, top - 8, 82, bottom - top + 16), QString("mxfader%1").arg(ln),
+        zone(QRectF(x + 4, top - 8, 82, bottom - top + 16), QString("mixer_fader%1").arg(ln),
              [this, ln, top, bottom](QPointF p, int ph) { mixFader(ln, p.y(), top + 3, bottom - 3, ph); });
 
         const qreal by = y0 + 160, bw = 56;
-        button(QRectF(x + 8, by, bw, 34), QString("mxmute%1").arg(ln), "M", m.mute,
+        button(QRectF(x + 8, by, bw, 34), QString("mixer_mute%1").arg(ln), "M", m.mute,
                [this, ln] { mixApply(ln, [](LaneMix &mm) { mm.mute = !mm.mute; return true; }); });
-        button(QRectF(x + 8 + bw + 4, by, bw, 34), QString("mxsolo%1").arg(ln), "S", m.solo,
+        button(QRectF(x + 8 + bw + 4, by, bw, 34), QString("mixer_solo%1").arg(ln), "S", m.solo,
                [this, ln] { mixApply(ln, [](LaneMix &mm) { mm.solo = !mm.solo; return true; }); });
     }
 
     const qreal x = 16 + kLanes * (W + G), w = 704 - x;
     const bool cyc = track.cycleTo > track.cycleFrom;
     const int from = cyc && (playBar < track.cycleFrom || playBar >= track.cycleTo) ? track.cycleFrom : qMin(playBar, track.bars - 1);
-    button(QRectF(x, y0, w, 62), "mxplay", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying,
+    button(QRectF(x, y0, w, 62), "mixer_play", u.trackPlaying ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play"), u.trackPlaying,
            [this] { trackPlayStop(); }, u.trackPlaying ? QString("bar %1").arg((int)(u.trackPos / 4.0) + 1) : QString("from bar %1").arg(from + 1));
-    button(QRectF(x, y0 + 68, w, 62), "mxreset", "Reset", false, [this] { mixReset(); }, "all back to 80");
-    button(QRectF(x, y0 + 136, w, 64), "mxdone", "Done", false, [this] { mixOpen = false; }, "back to tools");
+    button(QRectF(x, y0 + 68, w, 62), "mixer_reset", "Reset", false, [this] { mixReset(); }, "all back to 80");
+    button(QRectF(x, y0 + 136, w, 64), "mixer_done", "Done", false, [this] { mixOpen = false; }, "back to tools");
 
     txt(QRectF(18, 652, 684, 18), QString("Keys: left right choose a lane (or 1-4), up down its level, 0 back to 80,"), 12, MID, L);
     txt(QRectF(18, 670, 684, 18), QString("M mute, S solo, %1 play, %2 or X done. %3 + Z undoes a change.")

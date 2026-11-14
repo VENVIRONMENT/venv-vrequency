@@ -49,6 +49,7 @@ if(VREQUENCY_BUILD_APP)
     app/control.cpp
     app/control.h
     app/scope.cpp
+    app/guide.cpp
     app/palette.h
     app/mainwindow.h
     app/store.cpp

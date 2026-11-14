@@ -88,6 +88,7 @@ private:
     QJsonObject cmdBeat(const QJsonObject &a, QString &e);
     QJsonObject cmdTrack(const QJsonObject &a, QString &e);
     QJsonObject cmdPage(const QJsonObject &a, QString &e);
+    QJsonObject cmdGuide(const QString &cmd, const QJsonObject &a, QString &e); // highlight, unhighlight, zones
     QJsonObject cmdSession(const QJsonObject &a, QString &e);
     QJsonObject cmdScreenshot(QString &e);
     QJsonObject cmdChat(const QString &cmd, const QJsonObject &a, QString &e);

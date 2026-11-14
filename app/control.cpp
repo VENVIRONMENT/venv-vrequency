@@ -85,6 +85,11 @@ QJsonObject msgJson(const ChatMsg &m) {
     QJsonObject o;
     o["seq"] = m.seq; o["from"] = m.from; o["text"] = m.text; o["kind"] = m.kind;
     o["ts"] = (double)m.ts; o["user"] = m.user;
+    if (m.user) { // what the player was looking at (see highlight)
+        if (!m.page.isEmpty()) o["page"] = m.page;
+        o["focus"] = QJsonArray::fromStringList(m.focus);
+        if (!m.via.isEmpty()) o["via"] = m.via;
+    }
     return o;
 }
 } // namespace
@@ -306,6 +311,7 @@ QJsonObject ControlServer::dispatch(const QString &cmd, const QJsonObject &a, QS
     if (cmd == "beat") return cmdBeat(a, e);
     if (cmd == "track") return cmdTrack(a, e);
     if (cmd == "page") return cmdPage(a, e);
+    if (cmd == "highlight" || cmd == "unhighlight" || cmd == "zones") return cmdGuide(cmd, a, e);
     if (cmd == "session") return cmdSession(a, e);
     if (cmd == "screenshot") return cmdScreenshot(e);
     if (cmd == "chat_say" || cmd == "chat_poll") return cmdChat(cmd, a, e);
@@ -392,6 +398,14 @@ QJsonObject ControlServer::cmdState() {
     cp["unread"] = w.chatUnread;
     o["chat"] = cp;
     o["chat_tail"] = chatJson(qMax(0, w.chatSeq - 10), 10);
+    QJsonObject hf;
+    hf["page"] = pageNames[qBound(0, w.pg, (int)MainWindow::PG_COUNT - 1)];
+    hf["highlighted"] = QJsonArray::fromStringList(w.highlightedZones());
+    hf["dock_open"] = w.dockIsOpen() && w.pg != MainWindow::PG_CHAT;
+    hf["dock_focus"] = w.dockHasFocus();
+    hf["last_question_zone"] = w.lastQuestionZone();
+    hf["topic"] = w.dockTopic();
+    o["help_focus"] = hf;
     return o;
 }
 
@@ -828,6 +842,84 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     if (p == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
     w.pg = p; w.deepEdit = false; w.update();
     QJsonObject r; r["page"] = n;
+    return r;
+}
+
+// highlight, unhighlight, zones: pointing at the screen. See docs/CONTROL.md.
+QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QString &e) {
+    Args A{a, e};
+    QJsonObject r;
+    if (cmd == "unhighlight") {
+        const int n = w.highlightedZones().size();
+        w.clearHighlight();
+        r["cleared"] = n;
+        return r;
+    }
+    // optional page (and, for Help, the sub page: playing, commands, beat, track)
+    int page = w.pg, sub = -1;
+    if (A.has("page")) {
+        const QString n = A.str("page", "", 12);
+        if (e.isEmpty()) { page = MainWindow::pageFromName(n); if (page < 0) e = "page must be one of track, synth, sound, beat, backing, tune, system, help, chat"; }
+    }
+    if (A.has("sub")) {
+        const QJsonValue v = a["sub"];
+        static const char *subs[] = {"playing", "commands", "beat", "track"};
+        if (v.isDouble() && v.toDouble() >= 0 && v.toDouble() <= 3 && v.toDouble() == std::floor(v.toDouble())) sub = (int)v.toDouble();
+        else if (v.isString()) { for (int i = 0; i < 4; ++i) if (v.toString().toLower() == subs[i]) sub = i; }
+        if (sub < 0 && e.isEmpty()) e = "'sub' must be playing, commands, beat or track (or 0-3)";
+    }
+    if (cmd == "zones") {
+        if (!e.isEmpty()) return {};
+        QJsonArray zs;
+        const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(page, page == MainWindow::PG_HELP ? (sub >= 0 ? sub : w.helpPage) : -1);
+        for (const MainWindow::ZoneInfo &z : cat) {
+            QJsonObject o;
+            o["name"] = z.name; o["label"] = z.label;
+            o["x"] = qRound(z.r.x()); o["y"] = qRound(z.r.y()); o["w"] = qRound(z.r.width()); o["h"] = qRound(z.r.height());
+            if (z.covered) o["covered_by_dock"] = true;
+            zs.append(o);
+        }
+        r["page"] = pageNames[page];
+        if (page == MainWindow::PG_HELP) { static const char *subs[] = {"playing", "commands", "beat", "track"}; r["sub"] = subs[sub >= 0 ? sub : w.helpPage]; }
+        r["zones"] = zs;
+        r["dock_open"] = w.dockIsOpen() && page != MainWindow::PG_CHAT;
+        return r;
+    }
+    // highlight
+    QStringList names;
+    if (!a.contains("zones") || !a["zones"].isArray()) e = a.contains("zones") ? "'zones' must be an array of zone names" : "missing 'zones'";
+    else {
+        const QJsonArray za = a["zones"].toArray();
+        if (za.isEmpty() || za.size() > 16) e = "'zones' must hold 1 to 16 names";
+        for (const QJsonValue &v : za) {
+            if (!v.isString()) { e = "'zones' must be an array of strings"; break; }
+            if (v.toString().size() > 48) { e = "a zone name is longer than 48 characters"; break; }
+            names << v.toString();
+        }
+    }
+    QString label = A.str("label", "", 40);
+    for (QChar &c : label) if (c.unicode() < 0x20 || c.unicode() == 0x7f) c = ' ';
+    label = label.trimmed();
+    const int ms = A.integer("ms", 100, 30000, 8000);
+    if (!e.isEmpty()) return {};
+    if (page != w.pg || (page == MainWindow::PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
+        if (page == MainWindow::PG_CHAT && w.pg != MainWindow::PG_CHAT) w.chatReturn = w.pg;
+        w.pg = page; w.deepEdit = false;
+        if (page == MainWindow::PG_HELP && sub >= 0) w.helpPage = sub;
+    }
+    w.refreshZones();
+    QStringList unknown;
+    const QStringList known = w.setHighlight(names, label, ms, unknown);
+    w.refreshZones();   // the dock may have moved out of the way
+    r["page"] = pageNames[w.pg];
+    r["highlighted"] = QJsonArray::fromStringList(known);
+    r["unknown"] = QJsonArray::fromStringList(unknown);
+    r["ms"] = ms;
+    r["caption"] = !w.highlightCaptionRect().isNull();
+    QJsonObject dock;
+    dock["open"] = w.dockIsOpen() && w.pg != MainWindow::PG_CHAT;
+    if (!w.dockRect().isNull()) { const QRectF d = w.dockRect(); dock["y"] = qRound(d.y()); dock["h"] = qRound(d.height()); dock["position"] = d.y() < 100 ? "top" : "bottom"; }
+    r["dock"] = dock;
     return r;
 }
 
