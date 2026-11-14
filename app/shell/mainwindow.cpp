@@ -26,9 +26,6 @@ using namespace pal;
 namespace {
 const qreal CW = 720;
 
-QString sinkDescription; // refreshed asynchronously via wpctl
-bool sinkIsDummy = false, sinkIsBluetooth = false;
-int sinkGeneration = 0; // bumps when the output device type changes
 } // namespace
 
 QString nice(const char *label) {
@@ -78,7 +75,8 @@ QString paramText(int p, float v) {
 
 // ------------------------------------------------------------- lifecycle
 
-MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : Shell(i, a), scratchWindow(scratch) {
+MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *sharedSink)
+    : Shell(i, a), scratchWindow(scratch), sink(sharedSink ? *sharedSink : ownSink) {
     setWindowTitle("venv-vrequency");
     setAttribute(Qt::WA_AcceptTouchEvents);
     setAttribute(Qt::WA_OpaquePaintEvent);
@@ -137,43 +135,17 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch) : Shell(i, a), 
         static int skip = 0;
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
-                    clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !keys.held.isEmpty() ||
-                    s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
+                    clock.elapsed() < toastUntil + 200 || listenState == 1 || recorder.recording() || !keys.held.isEmpty() ||
+                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || dockOpen || clock.elapsed() < hl.until + 200 || s.trackPlaying || exportState.load() != 0 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
-    connect(&recTimer, &QTimer::timeout, this, [this] { drainRecording(); });
-
-    // which sink is PipeWire really sending us to? (tells the player when it is the dummy device)
-    auto *sinkTimer = new QTimer(this);
-    auto probe = [this] {
-        auto *pr = new QProcess(this);
-        connect(pr, &QProcess::finished, this, [pr](int, QProcess::ExitStatus) {
-            QString out = QString::fromUtf8(pr->readAllStandardOutput());
-            QString desc; bool dummy = false, bt = false;
-            for (const QString &ln : out.split('\n')) {
-                if (ln.contains("node.description")) desc = ln.section('"', 1, 1);
-                if (ln.contains("node.name") && ln.contains("auto_null")) dummy = true;
-                if (ln.contains("node.name") && ln.contains("bluez_output")) bt = true;
-            }
-            if (!out.isEmpty()) {
-                if (bt != sinkIsBluetooth || sinkGeneration == 0) ++sinkGeneration;
-                sinkDescription = desc; sinkIsDummy = dummy; sinkIsBluetooth = bt;
-            }
-            pr->deleteLater();
-        });
-        connect(pr, &QProcess::errorOccurred, this, [pr](QProcess::ProcessError) { pr->deleteLater(); });
-        pr->start("wpctl", {"inspect", "@DEFAULT_AUDIO_SINK@"});
-    };
-    connect(sinkTimer, &QTimer::timeout, this, probe);
-    sinkTimer->start(4000);
-    probe();
+    sink.start();
 }
 
 MainWindow::~MainWindow() {
     if (listenThread.joinable()) listenThread.join();
-    if (wav.isOpen()) stopRecording();
-    if (playingBack()) { player->kill(); player->waitForFinished(500); }
+    recorder.shutdown();
     if (exportThread.joinable()) exportThread.join();
 }
 
@@ -321,67 +293,6 @@ void MainWindow::tapTempo() {
     }
 }
 
-QString MainWindow::startRecording() {
-    store::ensureDirs();
-    QString path = store::baseDir() + "/recordings/" + store::timestampName("vrequency", "wav");
-    if (!wav.open(path, audio.sampleRate())) { toast("Could not create WAV file"); return QString(); }
-    float junk[1024];
-    while (inst.readRecorded(junk, 512) > 0) {} // discard stale frames
-    inst.setRecording(true);
-    recTimer.start(40);
-    return path;
-}
-
-QString MainWindow::stopRecording() {
-    inst.setRecording(false);
-    recTimer.stop();
-    drainRecording();
-    lastRecording = wav.path();
-    double secs = wav.frames() / (double)audio.sampleRate();
-    wav.close();
-    toast(QString("Saved %1 (%2 s)").arg(QFileInfo(lastRecording).fileName()).arg(secs, 0, 'f', 1), 2600);
-    return lastRecording;
-}
-
-// Listening back: the newest recording is played by PipeWire's own player (or ALSA's), so it
-// comes out of the same speaker as the synth.
-bool MainWindow::playingBack() const { return player && player->state() != QProcess::NotRunning; }
-
-bool MainWindow::togglePlayback() {
-    if (playingBack()) { player->kill(); toast("Playback stopped", 900); return true; }
-    if (wav.isOpen()) { toast("Stop recording first"); return false; }
-    QString path = lastRecording;
-    if (path.isEmpty() || !QFile::exists(path)) {
-        const QStringList all = store::listFiles("recordings", "wav");
-        path = all.isEmpty() ? QString() : all.first();
-    }
-    if (path.isEmpty()) { toast("Nothing recorded yet"); return false; }
-    if (!player) {
-        player = new QProcess(this);
-        connect(player, &QProcess::finished, this, [this](int, QProcess::ExitStatus) { update(); });
-        connect(player, &QProcess::errorOccurred, this, [this](QProcess::ProcessError e) {
-            if (e == QProcess::FailedToStart) toast("No audio player found (pw-play or aplay)", 2600);
-            update();
-        });
-    }
-    lastRecording = path;
-    const bool pw = !QStandardPaths::findExecutable("pw-play").isEmpty();
-    player->start(pw ? "pw-play" : "aplay", pw ? QStringList{path} : QStringList{"-q", path});
-    toast(QString("Playing %1").arg(QFileInfo(path).fileName()), 1600);
-    return true;
-}
-
-void MainWindow::toggleRecord() {
-    if (wav.isOpen()) stopRecording();
-    else if (!startRecording().isEmpty()) toast("Recording audio…", 1200);
-}
-
-void MainWindow::drainRecording() {
-    static float buf[4096 * 2];
-    int n;
-    while ((n = inst.readRecorded(buf, 4096)) > 0) wav.write(buf, n);
-}
-
 bool MainWindow::saveSession(const QString &path) {
     SessionData sd;
     inst.snapshot(sd);
@@ -491,10 +402,10 @@ void MainWindow::perform(int act, bool shift) {
     case A_LOOP_UNDO: inst.cmd(EV_LOOP, LC_UNDO); break;
     case A_LOOP_PLAY: inst.cmd(EV_LOOP, LC_PLAYSTOP); break;
     case A_LOOP_CLEAR: inst.cmd(EV_LOOP, LC_CLEAR); toast("Loop cleared", 900); break;
-    case A_RECORD: toggleRecord(); break;
+    case A_RECORD: recorder.toggle(); break;
     case A_BEAT_PLAY: inst.beatDo(BT_PLAYSTOP); toast(u.beatPlaying ? "Beat stopped" : "Beat playing", 900); break;
     case A_BEAT_REC: inst.beatDo(BT_REC); toast(u.beatRec ? "Beat recording off" : "Beat recording: pads write hits", 1200); break;
-    case A_PLAY_LAST: togglePlayback(); break;
+    case A_PLAY_LAST: recorder.togglePlayback(); break;
     case A_TRACK_PLAY: trackPlayStop(); break;
     case A_CHAT: // Ctrl+Y: the chat dock on this page; with Shift (or on the Chat page itself) the full Chat page
         if (shift || pg == PG_CHAT) chatToggle();
@@ -694,9 +605,9 @@ void MainWindow::paintEvent(QPaintEvent *) {
 
 void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     u = inst.uiState();
-    if (sinkGeneration != seenSinkGeneration) { // output device changed: pick a sensible loop timing offset
-        seenSinkGeneration = sinkGeneration;
-        set(S_LATENCY, sinkIsBluetooth ? 200.0f : 0.0f);
+    if (sink.generation != seenSinkGeneration) { // output device changed: pick a sensible loop timing offset
+        seenSinkGeneration = sink.generation;
+        set(S_LATENCY, sink.bluetooth ? 200.0f : 0.0f);
     }
     ui.beginFrame(painter);
     painter.fillRect(QRectF(0, 0, W, H), BG);
@@ -851,9 +762,9 @@ void MainWindow::paintPlay() {
     ui.txt(QRectF(18, 6, 430, 44), ui.fit(lead.name, 30, 428), 30, INK, L, true);
     QString slotTxt = curSlot >= 0 ? QString("Sound %1").arg(curSlot + 1) : QString("Unsaved sound");
     ui.txt(QRectF(20, 52, 230, 20), QString("%1   %2 voices").arg(slotTxt).arg(u.voices), 13, MID, L);
-    if (wav.isOpen()) {
-        if ((clock.elapsed() / 400) % 2 == 0) ui.tag(QRectF(250, 54, 104, 17), QString("REC %1 s").arg(wav.frames() / audio.sampleRate()), 12);
-    } else if (sinkIsDummy) {
+    if (recorder.recording()) {
+        if ((clock.elapsed() / 400) % 2 == 0) ui.tag(QRectF(250, 54, 104, 17), QString("REC %1 s").arg(recorder.seconds()), 12);
+    } else if (sink.dummy) {
         ui.tag(QRectF(250, 54, 150, 17), "No audio device", 12);
     } else if (u.limiter < 0.85f) {
         ui.tag(QRectF(250, 54, 60, 17), "Limit", 12);
@@ -1282,10 +1193,10 @@ void MainWindow::paintSystem() {
     qreal w5 = (688 - 4 * 6) / 5.0;
     auto c5 = [w5](int i) { return QRectF(std::floor(16 + i * (w5 + 6)), 218, std::floor(w5), 58); };
     ui.button(c5(0), "chordrow", "Chord row", keys.chordRow, [this] { perform(A_CHORD_ROW); }, "low row = chords");
-    ui.button(c5(1), "recwav", wav.isOpen() ? QString::fromUtf8("■ Stop rec") : QString::fromUtf8("● Record"), wav.isOpen(), [this] { toggleRecord(); },
-           wav.isOpen() ? QString("%1 s").arg(wav.frames() / audio.sampleRate()) : "what you hear");
-    ui.button(c5(2), "playlast", playingBack() ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play last"), playingBack(), [this] { togglePlayback(); },
-           playingBack() ? "playing it back" : "listen back");
+    ui.button(c5(1), "recwav", recorder.recording() ? QString::fromUtf8("■ Stop rec") : QString::fromUtf8("● Record"), recorder.recording(), [this] { recorder.toggle(); },
+           recorder.recording() ? QString("%1 s").arg(recorder.seconds()) : "what you hear");
+    ui.button(c5(2), "playlast", recorder.playingBack() ? QString::fromUtf8("■ Stop") : QString::fromUtf8("▶ Play last"), recorder.playingBack(), [this] { recorder.togglePlayback(); },
+           recorder.playingBack() ? "playing it back" : "listen back");
     ui.button(c5(3), "savesession", "Save session", false, [this] {
         QString path = store::baseDir() + "/sessions/" + store::timestampName("session", "json");
         toast(saveSession(path) ? QString("Saved %1").arg(QFileInfo(path).fileName()) : QString("Could not save session"), 2200);
@@ -1306,17 +1217,17 @@ void MainWindow::paintSystem() {
     ui.frame(ip, LOW, BG);
     ui.tag(QRectF(ip.x() + 1, ip.y() + 1, 62, 18), "Status", 12);
     QStringList L;
-    QString sink = sinkDescription.isEmpty() ? QString("unknown") : sinkDescription;
+    const QString output = sink.description.isEmpty() ? QString("unknown") : sink.description;
     L << QString("Audio    %1, %2 Hz, %3-frame blocks (%4 ms)").arg(QString::fromStdString(audio.backend())).arg(audio.sampleRate()).arg(audio.quantum()).arg(1000.0 * audio.quantum() / audio.sampleRate(), 0, 'f', 1);
-    L << QString("Output   %1%2").arg(sink.left(52)).arg(audio.streaming() ? "" : " (idle)");
-    L << (sinkIsBluetooth ? QString("         Bluetooth: about 0.2 s behind your fingers") : QString());
+    L << QString("Output   %1%2").arg(output.left(52)).arg(audio.streaming() ? "" : " (idle)");
+    L << (sink.bluetooth ? QString("         Bluetooth: about 0.2 s behind your fingers") : QString());
     L << QString("Engine   load %1%, peak %2%, %3 late blocks, %4 voices").arg((int)(audio.load() * 100)).arg((int)(audio.peakLoad() * 100)).arg(audio.overruns()).arg(u.voices);
     L << QString("Files    %1").arg(store::baseDir());
-    L << QString("Last WAV %1").arg(lastRecording.isEmpty() ? QString("-") : QFileInfo(lastRecording).fileName());
+    L << QString("Last WAV %1").arg(recorder.lastPath().isEmpty() ? QString("-") : QFileInfo(recorder.lastPath()).fileName());
     L << QString("Keys     edit keymap.json in the folder above to remap");
     for (int i = 0; i < L.size(); ++i)
         ui.txt(QRectF(32, 448 + i * 22, 656, 20), ui.fit(L[i], 13, 656), 13, i == 2 ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
-    if (sinkIsDummy)
+    if (sink.dummy)
         ui.tag(QRectF(32, 448 + 7 * 22 + 2, 560, 20), "No real audio device: connect headphones or a speaker.", 13, Qt::AlignLeft | Qt::AlignVCenter);
 
     ui.button(c4(0, 642, 60), "panic", "Panic", false, [this] { perform(A_PANIC); }, "all notes off");

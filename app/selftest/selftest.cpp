@@ -265,9 +265,9 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     check(inst.uiState().progLen == 5, "touch chord pads work");
 
     std::printf("- saving\n");
-    QString wavPath = w.startRecording();
+    QString wavPath = w.recorder.start();
     key(w, Qt::Key_D, true); wait(700); key(w, Qt::Key_D, false); wait(200);
-    w.stopRecording();
+    w.recorder.stop();
     QFile wf(wavPath);
     bool wavOk = wf.open(QIODevice::ReadOnly);
     QByteArray wd = wavOk ? wf.readAll() : QByteArray();
@@ -543,14 +543,14 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         check(w.exportStatus() == 1, "Export starts writing in the background");
         QElapsedTimer et; et.start();
         while (w.exportStatus() != 0 && et.elapsed() < 60000) { wait(100); w.shot(); }
-        QFile ef(w.lastRecordingPath());
+        QFile ef(w.recorder.lastPath());
         const bool eok = ef.open(QIODevice::ReadOnly);
         const QByteArray ed = eok ? ef.readAll() : QByteArray();
         int enz = 0;
         for (int i = 44; i + 1 < ed.size(); i += 2) if (ed[i] != 0 || ed[i + 1] != 0) ++enz;
         const double esec = (ed.size() - 44) / 4.0 / audio.sampleRate(), want = T().bars * 4 * 60.0 / inst.uiState().set.bpm;
         std::printf("  info  export: %d bars, %.1f s of audio, written in %.1f s\n", T().bars, esec, et.elapsed() / 1000.0);
-        check(eok && w.lastRecordingPath().contains("/track-") && ed.startsWith("RIFF") && enz > 1000, "the track is exported as a WAV file with audio in it");
+        check(eok && w.recorder.lastPath().contains("/track-") && ed.startsWith("RIFF") && enz > 1000, "the track is exported as a WAV file with audio in it");
         check(esec >= want && esec < want + 9, QString("it lasts the track plus the dying echoes (%1 s for a %2 s track)").arg(esec, 0, 'f', 1).arg(want, 0, 'f', 1));
 
         touch(cell(LN_BEAT, 0));
@@ -699,11 +699,11 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     }
 
     std::printf("- listening back\n");
-    check(w.togglePlayback() && w.playingBack(), "Play last starts playing the newest recording");
+    check(w.recorder.togglePlayback() && w.recorder.playingBack(), "Play last starts playing the newest recording");
     wait(300);
-    check(w.togglePlayback(), "and the same button stops it");
+    check(w.recorder.togglePlayback(), "and the same button stops it");
     wait(300);
-    check(!w.playingBack(), "playback has stopped");
+    check(!w.recorder.playingBack(), "playback has stopped");
 
     std::printf("- control socket and chat\n");
     {

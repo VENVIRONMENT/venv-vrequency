@@ -6,4 +6,9 @@ target_sources(vrequency PRIVATE
   mainwindow.cpp
   mainwindow.h
   pages.cpp
-  shell.h)
+  part.h
+  recorder.cpp
+  recorder.h
+  shell.h
+  sink_probe.cpp
+  sink_probe.h)

@@ -96,10 +96,10 @@ static void extras(int page, TourView::Pic &pic) {
     default: break;
     }
 }
-static void build(std::vector<TourView::Pic> &pics) {
+static void build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     Instrument inst(48000.0f);
     AudioOut audio; // never started: the System page only reads its name
-    MainWindow w(inst, audio, true);
+    MainWindow w(inst, audio, true, sink);
     Rig rig{inst, w};
     pics.assign(TourView::picCount(), TourView::Pic());
     auto P = [&](const char *id) -> TourView::Pic & { return pics[TourView::pageIndex(id)]; };
@@ -253,7 +253,7 @@ static void build(std::vector<TourView::Pic> &pics) {
 
 };
 
-void tourBuildPictures(std::vector<TourView::Pic> &pics) { TourDemo::build(pics); }
+void tourBuildPictures(std::vector<TourView::Pic> &pics, SinkProbe *sink) { TourDemo::build(pics, sink); }
 
 int tourDumpZones(const QString &picDir) {
     std::vector<TourView::Pic> pics;

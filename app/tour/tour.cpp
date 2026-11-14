@@ -104,7 +104,7 @@ void TourView::resetCards() { useOverride = false; override_ = CardDb(); }
 
 void TourView::ensureBuilt() {
     if (built) return;
-    tourBuildPictures(pics);
+    tourBuildPictures(pics, &w.sink);
     built = true;
 }
 

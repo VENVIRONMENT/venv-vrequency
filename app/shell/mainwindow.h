@@ -7,7 +7,9 @@
 #include "core/analysis/analysis.h"
 #include "core/presets/presets.h"
 #include "app/store/store.h"
+#include "app/shell/recorder.h"
 #include "app/shell/shell.h"
+#include "app/shell/sink_probe.h"
 #include <QElapsedTimer>
 #include <QFont>
 #include <QHash>
@@ -25,7 +27,6 @@
 #include <vector>
 
 class QPainter;
-class QProcess;
 class ControlServer;
 class TourView;
 
@@ -49,8 +50,10 @@ class MainWindow : public QWidget, public Shell {
 public:
 
     // `scratch`: an off-screen copy used only to draw the tour's pictures: it reads and writes no files
-    MainWindow(td::Instrument &inst, AudioOut &audio, bool scratch = false);
+    MainWindow(td::Instrument &inst, AudioOut &audio, bool scratch = false, SinkProbe *sharedSink = nullptr);
     ~MainWindow() override;
+
+    Recorder recorder{*this};
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
@@ -74,10 +77,6 @@ public:
     bool loadSession(const QString &path);
     void saveState() override;
     int addExtraSounds(int from = 0); // engine's extra sounds -> favourites; returns files written
-    QString startRecording();
-    QString stopRecording();
-    bool togglePlayback();            // play the newest recording back, or stop it; false = nothing to play
-    bool playingBack() const;
     void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keyTest = on; }
     int favouritesPage() const { return favPage; }
@@ -103,7 +102,6 @@ public:
     int mixLaneShown() const { return mixLane; }
     int playLineBar() const { return playBar; }
     int exportStatus() const { return exportState.load(); } // 0 idle, 1 working
-    QString lastRecordingPath() const { return lastRecording; }
     // --- the copilot chat ---
     int chatAdd(const QString &from, const QString &text, const QString &kind, bool user,
                 const QString &page = QString(), const QStringList &focus = QStringList(), const QString &via = QString()); // returns its seq
@@ -163,7 +161,7 @@ protected:
 
 private:
 
-    QTimer frameTimer, recTimer;
+    QTimer frameTimer;
 
     // sounds
     td::Patch lead;
@@ -214,11 +212,10 @@ private:
     std::vector<qint64> taps;
     QStringList sessions;
     int seenSinkGeneration = -1;
+    SinkProbe ownSink;
+    SinkProbe &sink;                         // a scratch copy shows the real window's output device
 
     // recording
-    WavWriter wav;
-    QString lastRecording;
-    QProcess *player = nullptr;      // plays a recording back
     // beat page
     bool beatErase = false;          // Erase is armed: the next pad clears that drum
     // kept beats: every beat you make has its own place; the one shown is the one the engine plays
@@ -335,13 +332,11 @@ private:
     void saveFavourite();
     void setParam(int p, float v);
     void tapTempo();
-    void toggleRecord();
     void startListen();
     void applyListen(bool key, bool tempo);
     void updateBend();
     void releaseAllKeys();
     void refreshLists();
-    void drainRecording();
 
     // the track
     td::Placement *chosen();

@@ -707,7 +707,7 @@ void MainWindow::pollExport() {
     if (exportThread.joinable()) exportThread.join();
     exportState = 0;
     if (es == 2) {
-        lastRecording = exportFile;
+        recorder.setLastPath(exportFile);
         toast(QString("Saved %1 (%2 s): Play last plays it").arg(QFileInfo(exportFile).fileName()).arg(exportSecs.load()), 3200);
     } else toast("Could not write the track's audio file", 2600);
 }
