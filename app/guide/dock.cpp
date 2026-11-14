@@ -114,10 +114,9 @@ void Guide::paintDock() {
             ui.txt(QRectF(x, y, hist.right() - x, lh), ln.text, 13, m.user ? MID : INK, Qt::AlignLeft | Qt::AlignVCenter);
         }
         if (total > dockLines && chat.scroll < total - dockLines) ui.txt(QRectF(hist.right() - 14, hist.y(), 12, 12), QString::fromUtf8("▴"), 11, MID);
-        ui.zone(hist, "dock_history", [this](QPointF p, int ph) { // drag to scroll
-            if (ph == PH_PRESS) { dockDragY = p.y(); return; }
-            const int d = (int)std::round((p.y() - dockDragY) / 16.0);
-            if (d) { chat.scroll += d; dockDragY = p.y(); }
+        ui.zone(hist, "dock_history", [this, lh](QPointF p, int ph) { // drag to scroll, a row at a time
+            if (ph == PH_PRESS) dockDrag.press(p.y());
+            else chat.scroll += dockDrag.rows(p.y(), lh);
         });
     }
 

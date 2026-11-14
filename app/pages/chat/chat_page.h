@@ -1,6 +1,7 @@
 // venv-vrequency — the Chat page: a terminal-style conversation with the copilot (see app/chat/chat.h).
 #pragma once
 #include "app/pages/page.h"
+#include "app/ui/layout.h"
 
 class Chat;
 
@@ -12,5 +13,5 @@ public:
 
 private:
     Chat &chat;
-    qreal dragLastY = 0;
+    lay::DragScroll drag;
 };

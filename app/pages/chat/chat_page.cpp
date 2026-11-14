@@ -63,10 +63,9 @@ void ChatPage::paint() {
         ui.g->fillRect(QRectF(hist.right() - 5, hist.y() + 3, 1, th), GRAT);
         ui.g->fillRect(QRectF(hist.right() - 6, by, 3, bh), MID);
     }
-    ui.zone(hist, "chat_history", [this](QPointF p, int ph) { // drag the history to scroll it
-        if (ph == PH_PRESS) { dragLastY = p.y(); return; }
-        const int d = (int)std::round((p.y() - dragLastY) / 17.0);
-        if (d) { chat.scroll += d; dragLastY = p.y(); }
+    ui.zone(hist, "chat_history", [this, lh](QPointF p, int ph) { // drag the history to scroll it, a row at a time
+        if (ph == PH_PRESS) drag.press(p.y());
+        else chat.scroll += drag.rows(p.y(), lh);
     });
 
     const QRectF box(16, 600, 580, 44);

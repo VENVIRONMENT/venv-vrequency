@@ -52,12 +52,14 @@ public:
     Chat chat{*this};
     Guide guide{*this, chat};
     ChatPage chatPage{*this, chat};
+    Page *pageOf[PG_COUNT] = {};             // the pages that are classes, by PageId (the rest are still methods here)
 
     // --- also used by the self-test ---
     void setPage(int p) { goPage(p); update(); }
     void goPage(int p) override {
         if (p == pg) return;
         pg = p; deepEdit = false; favDelete = false; sounds.slotSave = false; beatErase = false; removeArmed = -1;
+        for (Page *q : pageOf) if (q) q->disarm();
         update();
     }
     void toast(const QString &s, int ms = 1800) override;

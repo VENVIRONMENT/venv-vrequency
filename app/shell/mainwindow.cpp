@@ -83,6 +83,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     setFocusPolicy(Qt::StrongFocus);
     resize(720, 720);
     clock.start();
+    pageOf[PG_CHAT] = &chatPage;
     chat.attach(guide);
     chat.onUserMessage = [this] { emit userChatArrived(); };
     guide.rowLabels = &helpDesc;
@@ -327,7 +328,7 @@ void MainWindow::handleKey(int key, bool down) {
         if (!guide.dockFocus && plainAct == A_HOME) { guide.dockClose(); keys.held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
     }
     if (pg == PG_TRACK && !keys.testOpen && trackKey(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
-    if (pg == PG_CHAT && !keys.testOpen && chat.key(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+    if (pageOf[pg] && !keys.testOpen && pageOf[pg]->key(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
     if (keys.command) {
         perform(km.command.value(key, A_NONE), keys.chromatic);
         keys.held[key] = {HK_NONE, 0, 0};
@@ -476,7 +477,10 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     hearWatch();
     beatWatch();
 
+    for (Page *p : pageOf) if (p) p->tick();
+
     if (tourOpen()) tourView->paint(); // the tour draws a picture instead of the page: nothing on it is live
+    else if (Page *p = pageOf[pg]) { if (p->tabs()) paintTabs(); p->paint(); }
     else switch (pg) {
     case PG_TRACK: paintTabs(); paintTrack(); break;
     case PG_PLAY: paintPlay(); break;
@@ -486,7 +490,6 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     case PG_TUNE: paintTabs(); paintTune(); break;
     case PG_SYS: paintTabs(); paintSystem(); break;
     case PG_HELP: paintTabs(); paintHelp(); break;
-    case PG_CHAT: paintTabs(); chatPage.paint(); break;
     }
     ui.recordTexts(false);
     if (!tourOpen()) {

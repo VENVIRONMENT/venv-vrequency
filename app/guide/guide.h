@@ -4,6 +4,7 @@
 // the ones the last message mentioned, or the one touched last.
 #pragma once
 #include "app/shell/part.h"
+#include "app/ui/layout.h"
 #include <QHash>
 #include <QRectF>
 #include <QString>
@@ -58,7 +59,7 @@ private:
     Chat &chat;
     QRectF hlCaption, dockR;
     int dockLines = 0;
-    qreal dockDragY = 0;
+    lay::DragScroll dockDrag;
 
     QStringList expandZoneNames(const QStringList &names, QStringList &unknown) const;
 };
