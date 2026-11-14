@@ -3,7 +3,9 @@
 #include "instrument.h"
 #include "control.h"
 #include "mainwindow.h"
+#include "tour.h"
 #include <QApplication>
+#include <QDir>
 #include <QTemporaryDir>
 #include <chrono>
 #include <cstdio>
@@ -16,20 +18,23 @@ qint64 msSinceStart() {
 
 int runSelfTest(MainWindow &w, td::Instrument &inst, AudioOut &audio, const QString &shotsDir);
 int renderShots(MainWindow &w, td::Instrument &inst, const QString &dir);
+int tourDumpZones(const QString &pictureDir);
+int renderTourShots(MainWindow &w, const QString &dir);
 
 int main(int argc, char **argv) {
-    bool windowed = false, selftest = false, keytest = false, control = true;
-    QString shots, render, prefer = "auto";
+    bool windowed = false, selftest = false, keytest = false, control = true, dumpZones = false;
+    QString shots, render, dumpDir, prefer = "auto";
     for (int i = 1; i < argc; ++i) {
         QString a = argv[i];
         if (a == "--windowed") windowed = true;
         else if (a == "--selftest") selftest = true;
         else if (a == "--keytest") keytest = true;
         else if (a == "--no-control") control = false;
+        else if (a == "--dump-zones") { dumpZones = true; if (i + 1 < argc && argv[i + 1][0] != '-') dumpDir = argv[++i]; }
         else if (a == "--shots" && i + 1 < argc) shots = argv[++i];
         else if (a == "--render" && i + 1 < argc) render = argv[++i];
         else if (a == "--audio" && i + 1 < argc) prefer = argv[++i];
-        else if (a == "--version") { std::printf("vrequency 0.12.1\n"); return 0; }
+        else if (a == "--version") { std::printf("vrequency 0.13.0\n"); return 0; }
         else if (a == "--help" || a == "-h") {
             std::printf("venv-vrequency - pocket string synthesiser\n\n"
                         "  vrequency               start full screen\n"
@@ -38,11 +43,13 @@ int main(int argc, char **argv) {
                         "  vrequency --no-control  do not open the control socket (copilot / MCP access)\n"
                         "  vrequency --audio X     force a backend: pipewire | alsa | null\n"
                         "  vrequency --selftest [--shots DIR]   run the built-in checks (uses a temporary data folder)\n"
-                        "  vrequency --render DIR  write pictures of every page, then exit\n");
+                        "  vrequency --render DIR  write pictures of every page, then exit\n"
+                        "  vrequency --dump-zones [DIR]  print every touch zone of every tour page; with DIR also the pictures (developer; QT_QPA_PLATFORM=offscreen)\n");
             return 0;
         }
     }
     QApplication app(argc, argv);
+    if (dumpZones) return tourDumpZones(dumpDir);   // draws off-screen in a scratch copy: no audio, no files
     app.setApplicationName("venv-vrequency");
     app.setDesktopFileName("vrequency");
 
@@ -66,8 +73,10 @@ int main(int argc, char **argv) {
             rc = runSelfTest(w, inst, audio, shots);
         } else if (!render.isEmpty()) {
             w.show();
-            rc = renderShots(w, inst, render);
+            if (qEnvironmentVariableIsSet("VREQUENCY_TOUR_SHOTS_ONLY")) { QDir().mkpath(render); rc = renderTourShots(w, render); } // developer shortcut
+            else { rc = renderShots(w, inst, render); renderTourShots(w, render); }
         } else {
+            w.tour().armFirstRunPrompt(1500);   // first run only: an offer, never a block
             if (windowed) w.show(); else w.showFullScreen();
             rc = app.exec();
         }

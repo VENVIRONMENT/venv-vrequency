@@ -202,6 +202,23 @@ empty `messages` list. Nothing else is blocked meanwhile, and several clients ca
 ```
 While any chat_wait is pending, the Chat page says `copilot: listening`.
 
+### tour
+Opens or closes the player's tour (see GUIDE chapter 18). It only draws; it never changes sound or settings.
+`action`: `open` (default) or `close`. `page`: tour page id (track, track-chop, track-sound, track-mixer, synth,
+sound, sound-deep, beat, backing, tune, system, key-test, help, chat; the aliases play, back, sys, params, chop,
+picker, mixer are accepted; case and spaces ignored). `element`: a control or zone name to select on that page
+(unknown names open the page with nothing selected). `guided`: true starts the ten-page walk. Bad types, unknown
+pages, or a page over 24 or element over 64 characters, are refused. The pictures are built after the reply, so the reply shows
+`"building":true` the first time. The reply carries the tour state (`open`, `building`, `page`, `selected`, `concept`, `concepts_open`, `guided`, `step`), which is also `state.tour`:
+```
+{"id":30,"cmd":"tour","page":"beat","element":"pad0"}
+-> {"ok":true,"open":true,"building":true,"page":"beat","selected":"pad0","guided":false,...}
+{"id":31,"cmd":"tour","action":"close"}
+```
+The `page` and `highlight` commands close the tour first. The player can also open it with `Ctrl`+`O` or the Help
+page's Tour button. When the player taps **Ask Rook** on a card, their message arrives with `via:"tour"`, `page`
+set to the card's real page and `focus` set to the control's zone name (for a concept card, `concepts.<id>`).
+
 ## Guided help: pointing at the screen
 
 Every control on the screen is a named **zone**. An agent can ring the zones it is talking about, learn what
@@ -260,7 +277,7 @@ The Track page lists what its current view shows (shelf and tools, Chop, sound p
 A message typed in the dock (or on the Chat page) is an ordinary chat message with the next `seq`; `chat_poll` and
 `chat_wait` return it with extra fields: `page` (where the player was: `synth`, `help`...), `focus` (the highlighted
 zones, else the zones the last agent message was about, else the control the player touched last on that page;
-possibly empty) and `via` (`dock` or `chat`). So an agent reads "asked on synth with octave_down, octave_up
+possibly empty) and `via` (`dock`, `chat` or `tour`). So an agent reads "asked on synth with octave_down, octave_up
 highlighted" and can answer about exactly that. Tapping a row on the Help page asks about that row: `focus`
 is the row's zone name.
 ```

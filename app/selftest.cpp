@@ -27,6 +27,8 @@
 
 using namespace td;
 
+void runTourTests(MainWindow &w, Instrument &inst, AudioOut &audio, const std::function<void(bool, const QString &)> &check); // tourtest.cpp
+
 namespace {
 int fails = 0, passes = 0;
 void check(bool ok, const QString &what) {
@@ -1484,6 +1486,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
             w.setPage(MainWindow::PG_PLAY); w.shot();
         }
     }
+
+    runTourTests(w, inst, audio, check);
 
     std::printf("- panic / health\n");
     key(w, Qt::Key_Q, true); key(w, Qt::Key_A, true); wait(60);

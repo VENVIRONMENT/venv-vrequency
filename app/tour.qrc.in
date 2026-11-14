@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="helpcards.json">@CMAKE_SOURCE_DIR@/docs/helpcards.json</file>
+  </qresource>
+</RCC>

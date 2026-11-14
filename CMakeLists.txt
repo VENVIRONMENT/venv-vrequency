@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(vrequency VERSION 0.12.1 LANGUAGES C CXX)
+project(vrequency VERSION 0.13.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,6 +30,11 @@ option(VREQUENCY_BUILD_APP "Build the Qt application" ON)
 if(VREQUENCY_BUILD_APP)
   find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
   set(CMAKE_AUTOMOC ON)
+  set(CMAKE_AUTORCC ON)
+
+  # The tour's help cards (docs/helpcards.json) are built into the program as a Qt resource.
+  configure_file(app/tour.qrc.in ${CMAKE_BINARY_DIR}/tour.qrc @ONLY)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/docs/helpcards.json)
 
   # Audio headers: use the system dev packages when installed, otherwise the
   # copies fetched by scripts/fetch-deps.sh into third_party/sysroot.
@@ -50,6 +55,12 @@ if(VREQUENCY_BUILD_APP)
     app/control.h
     app/scope.cpp
     app/guide.cpp
+    app/tour.cpp
+    app/tour.h
+    app/tourcards.cpp
+    app/tourdemo.cpp
+    app/tourtest.cpp
+    ${CMAKE_BINARY_DIR}/tour.qrc
     app/palette.h
     app/mainwindow.h
     app/store.cpp

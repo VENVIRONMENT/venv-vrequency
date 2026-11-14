@@ -3,7 +3,8 @@
 
 Checks structure, every length limit, allowed kinds, duplicate titles inside a page,
 that every `related` id ("page.zone" or "concepts.id") exists, and, when docs/zones.txt
-exists, that every listed zone has a card.
+exists, that every listed zone has a card and that no card is an orphan (none of its zone names
+exists on its page). docs/zones.txt is written by `QT_QPA_PLATFORM=offscreen vrequency --dump-zones`.
 
 docs/zones.txt format (any of these per line, '#' comments allowed):
     zone
@@ -112,6 +113,9 @@ def main():
         intro = p.get("intro", "")
         if not isinstance(intro, str) or not intro.strip() or len(intro) > INTRO:
             err(f"page {pname}: intro empty or {len(intro) if isinstance(intro, str) else '?'} chars (max {INTRO})")
+        pr = p.get("recall")
+        if pr is not None and (not isinstance(pr, str) or not pr.strip() or len(pr) > LIM["recall"]):
+            err(f"page {pname}: recall empty or over {LIM['recall']} chars")
         titles = {}
         covered[pname] = set()
         for zone, c in (p.get("cards") or {}).items():
@@ -150,6 +154,7 @@ def main():
                 err(f"concepts.{cname}: related id {r!r} does not exist")
 
     if os.path.exists(ZONES):
+        listed = {}
         with open(ZONES, encoding="utf-8") as f:
             for ln in f:
                 ln = ln.split("#", 1)[0].strip()
@@ -163,8 +168,18 @@ def main():
                     pgs = [page]
                 else:
                     zone, pgs = ln, list(covered)
+                for pg in pgs:
+                    listed.setdefault(pg, set()).add(zone)
                 if not any(zone in covered.get(pg, ()) for pg in pgs):
                     err(f"zones.txt: no card for {ln!r}")
+        for pname, p in pages.items():
+            if pname not in listed:
+                err(f"zones.txt lists no zones for page {pname!r}")
+                continue
+            for zone, c in (p.get("cards") or {}).items():
+                names = {zone} | set(c.get("match") or [])
+                if not (names & listed[pname]):
+                    err(f"{pname}.{zone}: orphan card (none of its zone names is on that page)")
 
     ncards = sum(len(p.get("cards", {})) for p in pages.values() if isinstance(p, dict))
     if errors:
