@@ -71,6 +71,7 @@ enum EvType : uint8_t {
     EV_DRUM,       // a = Drum, f = velocity (0 = full): a pad hit; written into the beat while recording
     EV_BEAT,       // a = BeatCmd, b = drum, c = step
     EV_TRACK,      // a = TrackCmd, b = bar to start from
+    EV_NOTE,       // a = string, b = id, c = down, f = MIDI pitch (any, not scale-locked), g = velocity 0..1: a note from outside the keyboard
 };
 
 enum Setting {
@@ -330,6 +331,10 @@ public:
     }
     void set(int setting, float v) { Event e; e.type = EV_SET; e.a = (int16_t)setting; e.f = v; push(e); }
     void cmd(uint8_t type, int a = 0, int b = 0) { Event e; e.type = type; e.a = (int16_t)a; e.b = (int16_t)b; push(e); }
+    // a note at an exact pitch on a string, from outside the keyboard (id: any number 0x400 up, to release it again)
+    void note(int string, int id, float midi, bool down, float vel = 1.0f) {
+        Event e; e.type = EV_NOTE; e.a = (int16_t)string; e.b = (int16_t)id; e.c = down; e.f = midi; e.g = vel; push(e);
+    }
     void hit(int drum, float vel = 1.0f) { Event e; e.type = EV_DRUM; e.a = (int16_t)drum; e.f = vel; push(e); }
     void trackDo(int cmd, int bar = 0) { Event e; e.type = EV_TRACK; e.a = (int16_t)cmd; e.b = (int16_t)bar; push(e); }
     void beatDo(int cmd, int drum = -1, int step = 0, int arg = 2) {
@@ -463,6 +468,7 @@ private:
     void handle(const Event &e);
     void applySetting(int s, float v);
     void keyDown(int s, int col, bool chromatic);
+    void noteDown(int s, int id, float pitch, float vel);
     void keyUp(int s, int col);
     void setSustain(bool on);
     void panic();

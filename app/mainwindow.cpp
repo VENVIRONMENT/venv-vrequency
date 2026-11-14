@@ -102,6 +102,15 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         store::beatFromJson(st["beat"].toArray(), sd.beat);
         extrasSeeded = st["extras"].toInt(0);
         if (st.contains("track")) store::trackFromJson(st["track"].toObject(), track);
+        for (const QJsonValue &v : st["chat"].toArray()) {
+            const QJsonObject o = v.toObject();
+            ChatMsg m;
+            m.seq = o["seq"].toInt(); m.from = o["from"].toString(); m.text = o["text"].toString();
+            m.kind = o["kind"].toString("say"); m.ts = (qint64)o["ts"].toDouble(); m.user = o["user"].toBool();
+            if (m.seq > 0 && !m.text.isEmpty()) chat.push_back(m);
+        }
+        chatSeq = st["chatSeq"].toInt(0);
+        if (!chat.empty()) chatSeq = qMax(chatSeq, chat.back().seq);
     }
     beatsLoad(st, sd);
     sd.lead = lead; sd.backing = lead;
@@ -119,7 +128,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a) : inst(i), audio(a) {
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || !captured.isEmpty() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || listenState == 1 || wav.isOpen() || !held.isEmpty() ||
-                    s.beatPlaying || playingBack() || s.trackPlaying || exportState.load() != 0;
+                    s.beatPlaying || playingBack() || clock.elapsed() < tickerUntil + 200 || pg == PG_CHAT || s.trackPlaying || exportState.load() != 0;
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -179,6 +188,14 @@ void MainWindow::saveState() {
     o["extras"] = extrasSeeded;
     o["track"] = store::trackToJson(track);
     beatsSave(o);
+    QJsonArray ca;
+    for (const ChatMsg &m : chat) {
+        QJsonObject c;
+        c["seq"] = m.seq; c["from"] = m.from; c["text"] = m.text; c["kind"] = m.kind; c["ts"] = (double)m.ts; c["user"] = m.user;
+        ca.append(c);
+    }
+    o["chat"] = ca;
+    o["chatSeq"] = chatSeq;
     store::writeJson(store::baseDir() + "/state.json", o);
 }
 
@@ -461,6 +478,7 @@ void MainWindow::perform(int act, bool shift) {
     case A_BEAT_REC: inst.beatDo(BT_REC); toast(u.beatRec ? "Beat recording off" : "Beat recording: pads write hits", 1200); break;
     case A_PLAY_LAST: togglePlayback(); break;
     case A_TRACK_PLAY: trackPlayStop(); break;
+    case A_CHAT: chatToggle(); break;
     case A_HELP: pg = pg == PG_HELP ? PG_PLAY : PG_HELP; break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
@@ -510,6 +528,7 @@ void MainWindow::handleKey(int key, bool down) {
     if (plainAct == A_COMMAND) { modCommand = true; held[key] = {HK_ACT, A_COMMAND, 0}; return; }
 
     if (pg == PG_TRACK && !keyTest && trackKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
+    if (pg == PG_CHAT && !keyTest && chatKey(key, plainAct)) { held[key] = {HK_NONE, 0, 0}; return; }
     if (modCommand) {
         perform(km.command.value(key, A_NONE), modChromatic);
         held[key] = {HK_NONE, 0, 0};
@@ -549,7 +568,9 @@ void MainWindow::handleKey(int key, bool down) {
 
 void MainWindow::keyPressEvent(QKeyEvent *e) {
     if (e->isAutoRepeat()) return; // a held key is one note, not many
+    pendingText = e->text();
     handleKey(e->key(), true);
+    pendingText.clear();
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent *e) {
@@ -813,7 +834,9 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     case PG_TUNE: paintTabs(); paintTune(); break;
     case PG_SYS: paintTabs(); paintSystem(); break;
     case PG_HELP: paintTabs(); paintHelp(); break;
+    case PG_CHAT: paintTabs(); paintChat(); break;
     }
+    paintTicker();
     if (keyTest) paintKeyTest();
 
     if (clock.elapsed() < toastUntil && !toastText.isEmpty()) { // a message box, as the scope reports "Auto-scale"
@@ -842,10 +865,10 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
 }
 
 void MainWindow::paintTabs() {
-    static const char *N[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help"};
+    static const char *N[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
     qreal w = 688.0 / PG_COUNT;
     for (int i = 0; i < PG_COUNT; ++i) // one joined menu strip: neighbours share their edge
-        button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab%1").arg(i), N[i], pg == i,
+        button(QRectF(std::floor(16 + i * w), 8, std::floor(16 + (i + 1) * w) - std::floor(16 + i * w) + 1, 46), QString("tab%1").arg(i), (i == PG_CHAT && chatUnread > 0 ? QString("Chat %1").arg(qMin(chatUnread, 9)) : QString(N[i])), pg == i,
                [this, i] { pg = i; deepEdit = false; slotSave = false; beatErase = false; removeArmed = -1; });
 }
 
@@ -1478,7 +1501,7 @@ void MainWindow::paintHelp() {
             {K(A_LOOP_PLAY, true) + " " + K(A_LOOP_CLEAR, true), "loop start-stop / clear the loop"},
             {K(A_XYMAP, true), "next touch-pad mapping"},
             {K(A_RECORD, true), "record what you hear to a WAV file"},
-            {K(A_HELP, true) + " " + K(A_QUIT, true), "this guide / quit"},
+            {K(A_HELP, true) + " " + K(A_CHAT, true) + " " + K(A_QUIT, true), "this guide / chat with the copilot (and back) / quit"},
         };
     }
     tag(QRectF(16, 64, 688, 22), helpPage == 0 ? QString("Playing") : (helpPage == 2 ? QString("Beat and recording") : (helpPage == 3 ? QString("Track: letters are commands on the Track page") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false)))), 14, Qt::AlignLeft | Qt::AlignVCenter);

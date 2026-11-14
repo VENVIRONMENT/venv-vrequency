@@ -3,6 +3,7 @@
 // engine did. (It cannot press the physical keys or listen to the speaker:
 // those two checks need a human.)
 #include "audio.h"
+#include "control.h"
 #include "instrument.h"
 #include "mainwindow.h"
 #include "presets.h"
@@ -13,7 +14,10 @@
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QKeyEvent>
+#include <QLocalSocket>
+#include <QTemporaryDir>
 #include <QScreen>
 #include <QThread>
 #include <array>
@@ -42,6 +46,40 @@ void tap(MainWindow &w, const QString &zone) {
     w.pointer(7, r.center(), MainWindow::PH_PRESS);
     w.pointer(7, r.center(), MainWindow::PH_RELEASE);
 }
+
+// ---- the control socket: a real client in this process, talking over the real socket ----
+struct Client {
+    QLocalSocket s;
+    QByteArray buf;
+    bool open(const QString &path) { s.connectToServer(path); return s.waitForConnected(1000); }
+    // the next line the server sent, or empty after `ms`
+    QByteArray line(int ms) {
+        QElapsedTimer t; t.start();
+        while (t.elapsed() < ms) {
+            const int nl = buf.indexOf('\n');
+            if (nl >= 0) { QByteArray l = buf.left(nl); buf.remove(0, nl + 1); return l; }
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
+            buf += s.readAll();
+            QThread::msleep(1);
+        }
+        return QByteArray();
+    }
+    void send(const QByteArray &raw) { s.write(raw + "\n"); s.flush(); }
+    QJsonObject call(const QByteArray &raw, int ms = 3000) {
+        send(raw);
+        const QByteArray l = line(ms);
+        return QJsonDocument::fromJson(l).object();
+    }
+};
+// zero crossings of the output's tail: the pitch of a plain sine
+float scopeHz(Instrument &inst) {
+    static float x[8192];
+    inst.readScope(x, 8192);
+    int first = -1, last = -1, n = 0;
+    for (int i = 1; i < 8192; ++i)
+        if (x[i - 1] < 0 && x[i] >= 0) { if (first < 0) first = i; last = i; ++n; }
+    return n < 3 ? 0.0f : (n - 1) * 48000.0f / (last - first);
+}
 } // namespace
 
 int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString &shotsDir) {
@@ -62,8 +100,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     }
     QImage img = w.shot();
     check(img.width() == 720 && img.height() == 720, "interface renders at 720x720");
-    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help"};
-    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help"};
+    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
     if (!shotsDir.isEmpty()) QDir().mkpath(shotsDir);
     for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
         w.setPage(p);
@@ -86,7 +124,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
         std::printf("  info  play page redraw: %.1f ms per frame\n", pt.elapsed() / 40.0);
     }
     { // a busy wave on the scope once cost 40 to 60 ms a frame: a whole processor core at 25 frames a second
-        static const char *pn[] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help"};
+        static const char *pn[] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
         key(w, Qt::Key_Z, true); key(w, Qt::Key_S, true); key(w, Qt::Key_E, true); wait(300);
         double worst = 0; int worstPage = 0;
         for (int p = 0; p < MainWindow::PG_COUNT; ++p) {
@@ -664,6 +702,362 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     wait(300);
     check(!w.playingBack(), "playback has stopped");
 
+    std::printf("- control socket and chat\n");
+    {
+        QTemporaryDir cdir;
+        const QString sock = cdir.path() + "/vrequency.sock";
+        auto press = [&](int k) { key(w, k, true); key(w, k, false); };
+        auto B = [](const char *s) { return QByteArray(s); };
+        auto okOf = [](const QJsonObject &o) { return o["ok"].toBool(); };
+
+        { // a leftover file from a crashed run does not block start-up
+            QFile stale(sock);
+            stale.open(QIODevice::WriteOnly); stale.write("not a socket"); stale.close();
+            ControlServer probe(w, inst);
+            check(probe.start(sock) && probe.running(), "a stale socket file is replaced at start-up");
+        }
+        ControlServer ctl(w, inst);
+        check(ctl.start(sock) && QFile::exists(sock), "the control socket starts");
+        check((QFile::permissions(sock) & (QFileDevice::ReadGroup | QFileDevice::WriteGroup | QFileDevice::ReadOther | QFileDevice::WriteOther | QFileDevice::ExeOther | QFileDevice::ExeGroup)) == 0,
+              "and is private to the user (no group or other access)");
+        {
+            ControlServer second(w, inst);
+            check(!second.start(sock), "a second app does not take over a live socket");
+        }
+        Client c, c2;
+        check(c.open(sock) && c2.open(sock), "two clients connect at once");
+        QJsonObject r = c.call(B(R"({"id":"abc","cmd":"state"})"));
+        check(okOf(r) && r["id"].toString() == "abc", "replies carry the request id back");
+        check(r["result"].toObject().contains("sound") && r["result"].toObject().contains("backing") && r["result"].toObject().contains("track") &&
+              r["result"].toObject().contains("chat_tail") && r["result"].toObject()["sound"].toObject()["params"].toObject().contains("cutoff"),
+              "state holds the sound, parameters, backing, track and chat");
+
+        // a plain sine, no effects, so the pitch can be measured
+        for (const char *p : {R"({"cmd":"set_param","name":"wave1","value":0})", R"({"cmd":"set_param","name":"mix2","value":0})",
+                              R"({"cmd":"set_param","name":"unison","value":0})", R"({"cmd":"set_param","name":"sub","value":0})",
+                              R"({"cmd":"set_param","name":"fm","value":0})", R"({"cmd":"set_param","name":"vibdepth","value":0})",
+                              R"({"cmd":"set_param","name":"delaymix","value":0})", R"({"cmd":"set_param","name":"reverbmix","value":0})",
+                              R"({"cmd":"set_param","name":"chorus","value":0})", R"({"cmd":"set_param","name":"cutoff","value":16000})",
+                              R"({"cmd":"set_param","name":"fenv","value":0})", R"({"cmd":"set_param","name":"sustain","value":1})"})
+            c.call(B(p));
+        wait(100);
+        inst.set(S_VOLUME, 0.3f);
+        r = c.call(B(R"({"cmd":"note","string":0,"degree":0,"dur_ms":1500})"));
+        wait(450);
+        float hz = scopeHz(inst);
+        check(okOf(r) && std::fabs(hz - 110.0f) < 2.0f && inst.uiState().str[0].gate, QString("a note over the socket: string 0 degree 0 is A2 (measured %1 Hz)").arg(hz, 0, 'f', 1));
+        key(w, Qt::Key_X, true); wait(60); // the player's own key on the same string slides it: both interleave
+        check(inst.uiState().str[0].target == 48, "the player's keys still play over a socket note");
+        key(w, Qt::Key_X, false);
+        c.call(B(R"({"cmd":"release"})")); wait(300);
+        r = c.call(B(R"({"cmd":"note","string":1,"degree":3,"dur_ms":1500})"));
+        wait(450);
+        hz = scopeHz(inst);
+        const float want = (float)midiToHz(inst.uiState().set.tuning.noteFor(1, 3, false));
+        check(okOf(r) && std::fabs(hz - want) < want * 0.02f, QString("degree 3 of the middle string follows the scale (%1 Hz, wanted %2)").arg(hz, 0, 'f', 1).arg(want, 0, 'f', 1));
+        c.call(B(R"({"cmd":"panic"})")); wait(250);
+        r = c.call(B(R"({"cmd":"note","string":2,"midi":81,"dur_ms":1500})"));
+        wait(450);
+        hz = scopeHz(inst);
+        check(okOf(r) && std::fabs(hz - 880.0f) < 12.0f, QString("an exact MIDI note: 81 is 880 Hz (measured %1 Hz)").arg(hz, 0, 'f', 1));
+        r = c.call(B(R"({"cmd":"note","string":2,"degree":-2,"dur_ms":200})"));
+        check(okOf(r), "a negative scale degree is accepted");
+        c.call(B(R"({"cmd":"panic"})")); wait(250);
+        check(inst.uiState().voices == 0, "panic over the socket silences everything");
+        r = c.call(B(R"({"cmd":"note","string":0,"degree":0,"dur_ms":150})"));
+        wait(120);
+        check(inst.uiState().str[0].gate, "a note sounds for its duration...");
+        wait(500);
+        check(!inst.uiState().str[0].gate, "...and lets go by itself");
+        c.call(B(R"({"cmd":"slide","string":0,"from":0,"to":3,"ms":900})"));
+        wait(200);
+        const float fromNote = inst.uiState().str[0].note;
+        wait(500);
+        check(inst.uiState().str[0].note > fromNote + 0.5f || std::fabs(inst.uiState().str[0].target - fromNote) > 0.5f, "a slide moves the string's pitch");
+        wait(700);
+        c.call(B(R"({"cmd":"panic"})"));
+
+        // every command: a request that works, then one that must be refused
+        struct Case { const char *req; bool ok; int wait; };
+        const Case cases[] = {
+            {R"({"cmd":"note","string":1,"degree":0,"dur_ms":50,"velocity":0.5})", true, 0},
+            {R"({"cmd":"note","string":3,"degree":0})", false, 0},
+            {R"({"cmd":"note","string":"low","degree":0})", false, 0},
+            {R"({"cmd":"note","string":0})", false, 0},
+            {R"({"cmd":"note","string":0,"degree":1,"midi":60})", false, 0},
+            {R"({"cmd":"note","string":0,"midi":300})", false, 0},
+            {R"({"cmd":"note","string":0,"degree":0,"dur_ms":99999999})", false, 0},
+            {R"({"cmd":"chord","degrees":[0,2,4],"dur_ms":100})", true, 0},
+            {R"({"cmd":"chord","degrees":[0,2,4,6]})", false, 0},
+            {R"({"cmd":"notes","notes":[{"string":0,"degree":0},{"string":2,"midi":72}],"dur_ms":100})", true, 0},
+            {R"({"cmd":"notes","notes":[{"string":9,"degree":0}]})", false, 0},
+            {R"({"cmd":"notes","notes":[]})", false, 0},
+            {R"({"cmd":"slide","string":0,"from":0,"to":2,"ms":200})", true, 300},
+            {R"({"cmd":"slide","string":0,"from":0})", false, 0},
+            {R"({"cmd":"slide","string":0,"from":"a","to":2})", false, 0},
+            {R"({"cmd":"release","string":0})", true, 0},
+            {R"({"cmd":"release","string":7})", false, 0},
+            {R"({"cmd":"panic"})", true, 100},
+            {R"({"cmd":"get_params"})", true, 0},
+            {R"({"cmd":"set_param","name":"cutoff","value":99999})", true, 0},
+            {R"({"cmd":"set_param","name":"nonsense","value":1})", false, 0},
+            {R"({"cmd":"set_param","name":"cutoff","value":"high"})", false, 0},
+            {R"({"cmd":"set_param","name":"cutoff"})", false, 0},
+            {R"({"cmd":"sound","slot":3})", true, 80},
+            {R"({"cmd":"sound","slot":11})", false, 0},
+            {R"({"cmd":"sound","name":"mutate"})", true, 0},
+            {R"({"cmd":"sound","name":"undo"})", true, 0},
+            {R"({"cmd":"sound","name":"random"})", true, 0},
+            {R"({"cmd":"sound","name":"Haze"})", true, 80},
+            {R"({"cmd":"sound","name":"no such sound"})", false, 0},
+            {R"({"cmd":"sound"})", false, 0},
+            {R"({"cmd":"save_favourite","name":"Copilot test"})", true, 0},
+            {R"({"cmd":"save_favourite"})", false, 0},
+            {R"({"cmd":"scale","name":"major","root":"C"})", true, 80},
+            {R"({"cmd":"scale","name":"minor pentatonic","root":"A"})", true, 80},
+            {R"({"cmd":"scale","name":"polka"})", false, 0},
+            {R"({"cmd":"scale","root":"H"})", false, 0},
+            {R"({"cmd":"tempo","bpm":120})", true, 60},
+            {R"({"cmd":"tempo","bpm":10})", false, 0},
+            {R"({"cmd":"tempo"})", false, 0},
+            {R"({"cmd":"octave","delta":1})", true, 80},
+            {R"({"cmd":"octave","value":0})", true, 80},
+            {R"({"cmd":"octave","value":9})", false, 0},
+            {R"({"cmd":"bend","value":0.5,"ms":100})", true, 0},
+            {R"({"cmd":"bend","value":3})", false, 0},
+            {R"({"cmd":"sustain","on":true})", true, 0},
+            {R"({"cmd":"sustain","on":false})", true, 0},
+            {R"({"cmd":"sustain","on":"yes"})", false, 0},
+            {R"({"cmd":"loop","action":"clear"})", true, 120},
+            {R"({"cmd":"loop","action":"stop"})", false, 0},
+            {R"({"cmd":"loop","action":"play"})", false, 0},
+            {R"({"cmd":"loop","action":"clear"})", true, 0},
+            {R"({"cmd":"loop","action":"undo"})", true, 0},
+            {R"({"cmd":"loop","action":"record"})", true, 100},
+            {R"({"cmd":"loop","action":"dance"})", false, 0},
+            {R"({"cmd":"loop","action":"clear"})", true, 100},
+            {R"({"cmd":"backing","chords":["I","vi",4,5],"style":"pulse"})", true, 150},
+            {R"({"cmd":"backing","chords":[9]})", false, 0},
+            {R"({"cmd":"backing","chords":"I"})", false, 0},
+            {R"({"cmd":"backing","action":"stop"})", true, 100},
+            {R"({"cmd":"backing","action":"play"})", true, 100},
+            {R"({"cmd":"backing","action":"remove_last"})", true, 0},
+            {R"({"cmd":"backing"})", false, 0},
+            {R"({"cmd":"beat","kit":"crunchy"})", true, 0},
+            {R"({"cmd":"beat","kit":"disco"})", false, 0},
+            {R"({"cmd":"beat","set_step":{"drum":"kick","step":0,"on":true}})", true, 0},
+            {R"({"cmd":"beat","set_step":[{"drum":"snare","step":4},{"drum":2,"step":2}]})", true, 100},
+            {R"({"cmd":"beat","set_step":{"drum":"kick","step":16}})", false, 0},
+            {R"({"cmd":"beat","set_step":{"drum":"banjo","step":1}})", false, 0},
+            {R"({"cmd":"beat","hit":{"drum":"clap"}})", true, 0},
+            {R"({"cmd":"beat","hit":"nope"})", false, 0},
+            {R"({"cmd":"beat","action":"play"})", true, 100},
+            {R"({"cmd":"beat","action":"stop"})", true, 100},
+            {R"({"cmd":"beat"})", false, 0},
+            {R"({"cmd":"track","action":"clear"})", true, 60},
+            {R"({"cmd":"track","action":"play"})", false, 0},
+            {R"({"cmd":"track","action":"export"})", false, 0},
+            {R"({"cmd":"track","action":"place","clip":0,"bar":0})", false, 0},
+            {R"({"cmd":"track","action":"keep"})", true, 100},
+            {R"({"cmd":"track","action":"place","clip":0,"bar":0})", true, 60},
+            {R"({"cmd":"track","action":"place","clip":0,"bar":0})", false, 0},
+            {R"({"cmd":"track","action":"place","clip":0,"bar":99})", false, 0},
+            {R"({"cmd":"track","action":"play"})", true, 150},
+            {R"({"cmd":"track","action":"stop"})", true, 100},
+            {R"({"cmd":"track","action":"export"})", true, 0},
+            {R"({"cmd":"track","action":"rewind"})", false, 0},
+            {R"({"cmd":"page","name":"beat"})", true, 0},
+            {R"({"cmd":"page","name":"chat"})", true, 0},
+            {R"({"cmd":"page","name":"synth"})", true, 0},
+            {R"({"cmd":"page","name":"nowhere"})", false, 0},
+            {R"({"cmd":"session","action":"save","name":"copilot-test"})", true, 0},
+            {R"({"cmd":"session","action":"load","name":"copilot-test"})", true, 100},
+            {R"({"cmd":"session","action":"load","name":"missing"})", false, 0},
+            {R"({"cmd":"session","action":"save","name":"../evil"})", false, 0},
+            {R"({"cmd":"screenshot"})", true, 0},
+            {R"({"cmd":"chat_say","text":"hello from the test"})", true, 0},
+            {R"({"cmd":"chat_say","text":""})", false, 0},
+            {R"({"cmd":"chat_say","text":"x","kind":"shout"})", false, 0},
+            {R"({"cmd":"chat_say"})", false, 0},
+            {R"({"cmd":"chat_poll","since":0})", true, 0},
+            {R"({"cmd":"chat_poll","since":"zero"})", false, 0},
+            {R"({"cmd":"chat_wait","since":0,"timeout_ms":99999})", false, 0},
+            {R"({"cmd":"frobnicate"})", false, 0},
+            {R"({"cmd":42})", false, 0},
+            {R"({"id":7})", false, 0},
+        };
+        int bad = 0;
+        QString firstBad;
+        QString shotPath, exportPath;
+        for (const Case &cs : cases) {
+            const QJsonObject rr = c.call(B(cs.req));
+            const bool got = rr.contains("ok") && rr["ok"].toBool();
+            const bool answered = rr.contains("ok") && (got || !rr["error"].toString().isEmpty());
+            if (got != cs.ok || !answered) { ++bad; if (firstBad.isEmpty()) firstBad = QString("%1 -> %2").arg(cs.req, QString::fromUtf8(QJsonDocument(rr).toJson(QJsonDocument::Compact))); }
+            if (QByteArray(cs.req).contains("screenshot")) shotPath = rr["result"].toObject()["path"].toString();
+            if (QByteArray(cs.req).contains("\"export\"") && got) exportPath = rr["result"].toObject()["path"].toString();
+            if (cs.wait) wait(cs.wait);
+        }
+        check(bad == 0, QString("%1 requests: every command works with good arguments and refuses bad ones%2").arg((int)(sizeof cases / sizeof cases[0])).arg(bad ? " (first: " + firstBad + ")" : QString()));
+        c.call(B(R"({"cmd":"panic"})"));
+        c.call(B(R"({"cmd":"loop","action":"clear"})"));
+        {
+            const QImage png(shotPath);
+            check(!shotPath.isEmpty() && png.width() == 720 && png.height() == 720, "screenshot writes a 720x720 PNG");
+            QFile::remove(shotPath);
+        }
+        {
+            for (int i = 0; i < 100 && w.exportStatus() == 1; ++i) wait(100);
+            wait(150);
+            QFile ef(exportPath);
+            check(!exportPath.isEmpty() && ef.exists() && ef.size() > 44 + 48000, "track export (async) writes a WAV and gives its path");
+        }
+        r = c.call(B(R"({"cmd":"state"})"));
+        {
+            const QJsonObject st = r["result"].toObject();
+            check(st["track"].toObject()["clips"].toArray().size() >= 2 && st["backing"].toObject()["chords"].toArray().size() >= 3 &&
+                  st["beat"].toObject()["steps"].toObject()["kick"].toString().startsWith('x') && st["tempo"].toDouble() == 120 && st["page"].toString() == "synth",
+                  "state reflects what the commands did (track clips, backing chords, beat steps, tempo, page)");
+        }
+        inst.set(S_BPM, 100);
+        inst.beatDo(BT_ERASE, -1);
+        inst.cmd(EV_BACK, BC_CLEAR);
+
+        // ---- chat ----
+        w.setPage(MainWindow::PG_PLAY); wait(100);
+        const int before = w.chatLastSeq();
+        r = c.call(B(R"({"cmd":"chat_say","from":"rook","text":"Try a minor third up on the high string.","kind":"tip"})"));
+        wait(100);
+        check(okOf(r) && w.chatLastSeq() == before + 1 && w.chatUnreadCount() >= 1, "chat_say adds an agent message and counts it as unread");
+        check(w.chatTickerShowing(), "on another page the message shows in the ticker");
+        const QImage withTicker = w.shot();
+        w.setPage(MainWindow::PG_CHAT); wait(100);
+        const QImage chatShot = w.shot();
+        check(w.chatUnreadCount() == 0 && w.chatLog().back().text.startsWith("Try a minor third") && chatShot != withTicker, "the Chat page shows it and clears the unread count");
+        r = c.call(B(R"({"cmd":"state"})"));
+        check(r["result"].toObject()["chat_tail"].toArray().last().toObject()["text"].toString().startsWith("Try a minor third"), "and state's chat tail holds it");
+        r = c2.call(B(R"({"cmd":"chat_poll","since":0})"));
+        r = c.call(B(R"({"cmd":"state"})"));
+        check(r["result"].toObject()["chat"].toObject()["listening"].toBool(), "state says the copilot is listening after a poll");
+
+        // a waiting copilot is woken by the player's message, typed on the keyboard
+        const int seq0 = w.chatLastSeq();
+        c2.send(QByteArray(R"({"id":"w1","cmd":"chat_wait","since":)") + QByteArray::number(seq0) + R"(,"timeout_ms":8000})");
+        wait(100);
+        check(c2.line(50).isEmpty(), "chat_wait holds its reply while nobody has typed");
+        r = c.call(B(R"({"cmd":"state"})"));
+        check(okOf(r), "and other clients are answered meanwhile");
+        const int voices0 = inst.uiState().voices;
+        for (int k : {Qt::Key_H, Qt::Key_I, Qt::Key_Space, Qt::Key_O, Qt::Key_K, Qt::Key_Z}) press(k);
+        check(w.chatDraftText() == "hi okz" && inst.uiState().voices == voices0 && inst.uiState().voices == 0, "on the Chat page letters type and no string plays");
+        press(Qt::Key_Backspace);
+        check(w.chatDraftText() == "hi ok" && inst.uiState().droppedEvents == 0, "Backspace edits the line instead of silencing");
+        QElapsedTimer wt; wt.start();
+        press(Qt::Key_Return);
+        const QByteArray got = c2.line(2000);
+        const QJsonObject wr = QJsonDocument::fromJson(got).object();
+        const QJsonArray wm = wr["result"].toObject()["messages"].toArray();
+        check(wr["id"].toString() == "w1" && wr["ok"].toBool() && !wm.isEmpty() && wm.last().toObject()["text"].toString() == "hi ok" &&
+              wm.last().toObject()["user"].toBool() && wm.last().toObject()["seq"].toInt() == seq0 + 1 && !wr["result"].toObject()["timed_out"].toBool() && wt.elapsed() < 1500,
+              QString("Enter sends it: the waiting chat_wait is answered at once (%1 ms) with the message").arg(wt.elapsed()));
+        check(w.chatDraftText().isEmpty(), "the input line empties after sending");
+        r = c.call(B((QByteArray(R"({"cmd":"chat_poll","since":)") + QByteArray::number(seq0 - 1) + "}").constData()));
+        check(r["result"].toObject()["messages"].toArray().size() == 2, "chat_poll returns messages from both directions");
+        // touch: type, then tap Send
+        for (int k : {Qt::Key_Y, Qt::Key_E, Qt::Key_S}) press(k);
+        tap(w, "chatsend"); wait(60);
+        check(w.chatLog().back().text == "yes" && w.chatLog().back().user, "the Send button sends too");
+        // timeout answer
+        c2.send(QByteArray(R"({"id":"w2","cmd":"chat_wait","since":)") + QByteArray::number(w.chatLastSeq()) + R"(,"timeout_ms":300})");
+        const QJsonObject to = QJsonDocument::fromJson(c2.line(2000)).object();
+        check(to["ok"].toBool() && to["result"].toObject()["messages"].toArray().isEmpty() && to["result"].toObject()["timed_out"].toBool(), "chat_wait times out with an empty list");
+        // an already-waiting message answers immediately
+        r = c2.call(B((QByteArray(R"({"cmd":"chat_wait","since":)") + QByteArray::number(seq0 - 1) + R"(,"timeout_ms":2000})").constData()), 500);
+        check(okOf(r) && !r["result"].toObject()["messages"].toArray().isEmpty(), "chat_wait answers at once when a player message is already waiting");
+        // the hotkey and Esc
+        key(w, Qt::Key_Escape, true); key(w, Qt::Key_Escape, false);
+        check(w.page() != MainWindow::PG_CHAT, "Esc leaves the Chat page");
+        w.setPage(MainWindow::PG_BEAT);
+        key(w, Qt::Key_Control, true); press(Qt::Key_Y); key(w, Qt::Key_Control, false);
+        check(w.page() == MainWindow::PG_CHAT, "Ctrl+Y jumps to Chat");
+        key(w, Qt::Key_Control, true); press(Qt::Key_Y); key(w, Qt::Key_Control, false);
+        check(w.page() == MainWindow::PG_BEAT, "and Ctrl+Y again goes back to where you were");
+        // history survives a restart
+        w.saveState();
+        QJsonObject sj; store::readJson(store::baseDir() + "/state.json", sj);
+        bool kept = false;
+        for (const QJsonValue &v : sj["chat"].toArray()) kept = kept || v.toObject()["text"].toString() == "hi ok";
+        check(kept && sj["chatSeq"].toInt() == w.chatLastSeq(), "the chat history is in the state file");
+        // more than 200 messages: only the newest are kept
+        for (int i = 0; i < 230; ++i) w.chatAdd("rook", QString("filler %1").arg(i), "say", false);
+        check((int)w.chatLog().size() == 200 && w.chatLog().back().text == "filler 229", "only the last 200 messages are kept");
+        w.setPage(MainWindow::PG_CHAT);
+        QImage full; for (int i = 0; i < 3; ++i) full = w.shot();
+        check(full.width() == 720, "a full history draws");
+        w.setPage(MainWindow::PG_PLAY);
+
+        // ---- hostile input ----
+        c.send(B("this is not json"));
+        QJsonObject h = QJsonDocument::fromJson(c.line(1000)).object();
+        check(!h["ok"].toBool(true) && h["error"].toString().startsWith("bad JSON"), "garbage is answered with an error");
+        c.send(B("[1,2,3]"));
+        h = QJsonDocument::fromJson(c.line(1000)).object();
+        check(!h["ok"].toBool(true), "a JSON array is refused");
+        c.send(B("{\"cmd\":\"note\",\"string\":0,\"degree\":0,\"dur_ms\":" + QByteArray(40000, '9') + "}"));
+        h = QJsonDocument::fromJson(c.line(2000)).object();
+        check(h.contains("ok") && !h["ok"].toBool(), "a number thousands of digits long is refused");
+        c.send(QByteArray(R"({"cmd":"chat_say","text":")") + QByteArray(2 * 1024 * 1024, 'a') + "\"}");
+        h = QJsonDocument::fromJson(c.line(3000)).object();
+        check(!h["ok"].toBool(true), "a request line over a megabyte is refused");
+        r = c.call(B(R"({"cmd":"state"})"));
+        check(okOf(r), "and the connection still works after it");
+        c.send(B("{\"cmd\":\"chat_say\",\"text\":" + QByteArray(2000, '[') + "}"));
+        h = QJsonDocument::fromJson(c.line(2000)).object();
+        check(h.contains("ok") && !h["ok"].toBool(), "deeply nested JSON is refused");
+        c.send(B("{\"cmd\":\"note\",\"string\":0,\"degree\":0}\n{\"cmd\":\"state\"}\n{bad\n{\"cmd\":\"state\"}"));
+        int answers = 0;
+        for (int i = 0; i < 4; ++i) if (!c.line(500).isEmpty()) ++answers;
+        check(answers == 4, "several requests in one write are answered one by one");
+        c.s.write(B("{\"cmd\":\"state\"")); c.s.flush(); // half a line, then the client goes away
+        c.s.disconnectFromServer();
+        wait(100);
+        check(c.open(sock) && okOf(c.call(B(R"({"cmd":"state"})"))), "a client that vanishes mid-line does not disturb the server");
+        // every command with every argument set to the wrong kind of value
+        static const char *cmds[] = {"note", "notes", "chord", "slide", "release", "set_param", "sound", "save_favourite", "scale", "tempo", "octave", "bend", "sustain",
+                                     "loop", "backing", "beat", "track", "page", "session", "chat_say", "chat_poll"};
+        static const char *argk[] = {"string", "degree", "midi", "dur_ms", "velocity", "from", "to", "ms", "name", "value", "slot", "action", "chords", "kit", "set_step", "hit",
+                                     "clip", "bar", "lane", "text", "since", "notes", "degrees", "midis", "bpm", "root", "on", "delta", "style", "seventh", "beats", "kind", "limit"};
+        static const char *argv[] = {"null", "\"x\"", "1e99", "-1e99", "[]", "{}", "true", "[[1]]", "{\"a\":1}", "0.5", "-1"};
+        int refused = 0, total = 0, malformed = 0;
+        for (const char *cm : cmds)
+            for (const char *k : argk)
+                for (const char *v : argv) {
+                    const QByteArray req = QByteArray("{\"cmd\":\"") + cm + "\",\"" + k + "\":" + v + "}";
+                    const QJsonObject rr = ctl.handle(QJsonDocument::fromJson(req).object());
+                    ++total;
+                    if (!rr.contains("ok")) ++malformed;
+                    else if (!rr["ok"].toBool()) ++refused;
+                }
+        c.call(B(R"({"cmd":"panic"})"));
+        c.call(B(R"({"cmd":"loop","action":"clear"})"));
+        wait(150);
+        check(malformed == 0 && refused > total / 2, QString("%1 requests with one wrongly typed or out of range argument: every one answered, none crashed (%2 refused)").arg(total).arg(refused));
+        r = c.call(B(R"({"cmd":"state"})"));
+        check(okOf(r) && inst.uiState().droppedEvents == 0, "the app is still fine, no events dropped");
+        { // the output never exceeds full scale even with the abuse above
+            static float x[8192];
+            inst.readScope(x, 8192);
+            float pk = 0; for (float v : x) pk = std::max(pk, std::fabs(v));
+            check(pk <= 1.0f, "output stays inside full scale");
+        }
+        c.call(B(R"({"cmd":"panic"})"));
+        ctl.stop();
+        check(!QFile::exists(sock), "the socket file is removed when the server stops");
+        w.setPage(MainWindow::PG_PLAY);
+        inst.set(S_VOLUME, 0.06f);
+        wait(300);
+    }
+
     std::printf("- panic / health\n");
     key(w, Qt::Key_Q, true); key(w, Qt::Key_A, true); wait(60);
     key(w, Qt::Key_Backspace, true); key(w, Qt::Key_Backspace, false); wait(200);
@@ -680,8 +1074,8 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
 // Pictures of every page, for the documentation: `vrequency --audio null --render DIR`.
 int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
     QDir().mkpath(dir);
-    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help"};
-    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help"};
+    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
     inst.set(S_VOLUME, 0.5f);
     w.setPage(MainWindow::PG_PLAY);
     key(w, Qt::Key_A, true); wait(250);
@@ -696,11 +1090,25 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
             inst.set(S_BEATVOL, 0.0f);
             inst.beatDo(BT_PLAYSTOP);
         }
+        if (p == MainWindow::PG_CHAT) { // a conversation, so the page has something to show
+            w.chatAdd("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
+            w.chatAdd("you", "yes, something slow with a soft pad", "say", true);
+            w.chatAdd("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
+            w.chatAdd("rook", "Tip: hold Space and slide between the top row keys for long glides.", "tip", false);
+            w.chatSeen();
+            w.chatToggle(); w.chatToggle(); w.setPage(MainWindow::PG_CHAT); // leaves the draft empty, unread cleared
+        }
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
         if (p != MainWindow::PG_TRACK) w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
         if (p == MainWindow::PG_BEAT) { inst.beatDo(BT_PLAYSTOP); inst.set(S_BEATVOL, 0.7f); wait(60); }
     }
     (void)names;
+    {   // a new message from the copilot while playing: the ticker at the bottom
+        w.setPage(MainWindow::PG_PLAY);
+        w.chatAdd("rook", "Nice slide. Try ending the phrase on the fifth: hold Z, press N.", "tip", false);
+        for (int i = 0; i < 8; ++i) { w.shot(); wait(40); }
+        w.shot().save(QString("%1/15-ticker.png").arg(dir));
+    }
     {   // the Glitch mapping with a finger on the pad
         w.setPage(MainWindow::PG_PLAY);
         inst.set(S_XYMAP, XY_GLITCH); wait(60);

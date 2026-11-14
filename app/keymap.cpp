@@ -13,7 +13,7 @@ const char *actName(int act) {
         "key_up", "next_scale", "new_sound", "mutate_sound", "undo_sound", "save_favourite", "metronome", "tap_tempo",
         "backing_style", "backing_mode", "backing_clear", "backing_start_stop", "backing_remove_last",
         "loop_undo", "loop_start_stop", "loop_clear", "record_wav", "help", "xy_mapping", "quit",
-        "beat_start_stop", "beat_record", "play_last_recording", "track_start_stop"};
+        "beat_start_stop", "beat_record", "play_last_recording", "track_start_stop", "chat"};
     return (act >= 0 && act < A_COUNT) ? N[act] : "none";
 }
 
@@ -65,7 +65,7 @@ KeyMap KeyMap::defaults() {
     C(Qt::Key_U, A_LOOP_UNDO); C(Qt::Key_L, A_LOOP_PLAY); C(Qt::Key_D, A_LOOP_CLEAR);
     C(Qt::Key_E, A_RECORD); C(Qt::Key_H, A_HELP); C(Qt::Key_G, A_XYMAP); C(Qt::Key_Q, A_QUIT);
     C(Qt::Key_J, A_BEAT_PLAY); C(Qt::Key_I, A_BEAT_REC); C(Qt::Key_W, A_PLAY_LAST);
-    C(Qt::Key_Space, A_TRACK_PLAY);
+    C(Qt::Key_Space, A_TRACK_PLAY); C(Qt::Key_Y, A_CHAT);
     return k;
 }
 
