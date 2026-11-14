@@ -5,6 +5,11 @@ target_sources(vrequency PRIVATE
   keymap.h
   mainwindow.cpp
   mainwindow.h
+  window_keys.cpp
+  window_paint.cpp
+  window_perform.cpp
+  window_pointer.cpp
+  window_state.cpp
   pages.cpp
   part.h
   recorder.cpp

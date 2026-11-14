@@ -11,6 +11,7 @@
 class AudioOut;
 class Recorder;
 class Sounds;
+class SinkProbe;
 
 // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
 enum PageId { PG_TRACK, PG_PLAY, PG_SOUND, PG_BEAT, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
@@ -43,6 +44,9 @@ public:
     virtual const Recorder &recorderNow() const = 0;           // is it recording, and for how long
     virtual bool noAudioDevice() const = 0;                    // the output is the dummy device: nothing can be heard
     virtual void setLastRecording(const QString &path) = 0;    // an exported track is the newest recording
+    virtual const SinkProbe &sinkNow() const = 0;              // which output device the system says the sound goes to
+    virtual bool saveSession(const QString &path) = 0;         // settings, sounds, loops and the track, to a file
+    virtual bool loadSession(const QString &path) = 0;         // false when the file cannot be read
     void set(int setting, float v) { inst.set(setting, v); }
 
 protected:

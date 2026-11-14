@@ -66,7 +66,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     if (cmd == "zones") {
         if (!e.isEmpty()) return {};
         QJsonArray zs;
-        const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(page, page == PG_HELP ? (sub >= 0 ? sub : w.helpPage) : -1);
+        const QVector<MainWindow::ZoneInfo> cat = w.zoneCatalogue(page, page == PG_HELP ? (sub >= 0 ? sub : w.helpPage.sub) : -1);
         for (const MainWindow::ZoneInfo &z : cat) {
             QJsonObject o;
             o["name"] = z.name; o["label"] = z.label;
@@ -75,7 +75,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
             zs.append(o);
         }
         r["page"] = pageName(page);
-        if (page == PG_HELP) { static const char *subs[] = {"playing", "commands", "beat", "track"}; r["sub"] = subs[sub >= 0 ? sub : w.helpPage]; }
+        if (page == PG_HELP) { static const char *subs[] = {"playing", "commands", "beat", "track"}; r["sub"] = subs[sub >= 0 ? sub : w.helpPage.sub]; }
         r["zones"] = zs;
         r["dock_open"] = w.guide.dockIsOpen() && page != PG_CHAT;
         return r;
@@ -98,10 +98,10 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     const int ms = A.integer("ms", 100, 30000, 8000);
     if (!e.isEmpty()) return {};
     w.tour().close(); // a highlight is drawn on the real page
-    if (page != w.pg || (page == PG_HELP && sub >= 0 && sub != w.helpPage)) { // switch first, atomically with the highlight
+    if (page != w.pg || (page == PG_HELP && sub >= 0 && sub != w.helpPage.sub)) { // switch first, atomically with the highlight
         if (page == PG_CHAT && w.pg != PG_CHAT) w.chat.returnPage = w.pg;
         w.goPage(page);
-        if (page == PG_HELP && sub >= 0) w.helpPage = sub;
+        if (page == PG_HELP && sub >= 0) w.helpPage.sub = sub;
     }
     w.refreshZones();
     QStringList unknown;

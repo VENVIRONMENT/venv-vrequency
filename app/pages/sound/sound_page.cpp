@@ -9,6 +9,8 @@ using namespace pal;
 
 SoundPage::SoundPage(Shell &s) : Page(s), sounds(s.soundShelf()) {}
 
+void SoundPage::disarm() { deepEdit = false; favDelete = false; sounds.slotSave = false; }
+
 void SoundPage::paintSlots() {
     qreal w = (688 - 4 * 8) / 5.0;
     for (int i = 0; i < 10; ++i) {

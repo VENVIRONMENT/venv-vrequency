@@ -30,10 +30,10 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     rig.key(Qt::Key_F, false); rig.key(Qt::Key_A, false);
     w.setPage(PG_BEAT); rig.settle(2);
     for (int i = 0; i < 7; ++i) { // eight kept beats: the row pages, with More
-        w.beatNew(); rig.settle(2);
+        w.beatPage.newBeat(); rig.settle(2);
         inst.beatDo(BT_STEP, D_KICK, 0, 1); rig.settle(2);
     }
-    w.beatSwitchTo(0); rig.settle(3);
+    w.beatPage.switchTo(0); rig.settle(3);
     inst.beatDo(BT_PLAYSTOP); pump(inst, 700);
     inst.beatDo(BT_PLAYSTOP); pump(inst, 60);
     QThread::msleep(700);                                                     // the pads that just sounded fade
@@ -41,11 +41,11 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     w.setPage(PG_BACK); rig.settle(2);
     capture(rig, 8, P("backing"));
     w.setPage(PG_TUNE); rig.settle(2);
-    w.listener.result = td::ListenResult();
-    w.listener.result.ok = true;
-    w.listener.result.keys[0].root = 9; w.listener.result.keys[0].minor = true; w.listener.result.keys[0].score = 0.8f;
-    w.listener.result.keyConfidence = 0.7f; w.listener.result.bpm = 100; w.listener.result.bpmConfidence = 0.7f;
-    w.listener.state = 2; rig.settle(2);
+    w.tunePage.listener.result = td::ListenResult();
+    w.tunePage.listener.result.ok = true;
+    w.tunePage.listener.result.keys[0].root = 9; w.tunePage.listener.result.keys[0].minor = true; w.tunePage.listener.result.keys[0].score = 0.8f;
+    w.tunePage.listener.result.keyConfidence = 0.7f; w.tunePage.listener.result.bpm = 100; w.tunePage.listener.result.bpmConfidence = 0.7f;
+    w.tunePage.listener.state = 2; rig.settle(2);
     capture(rig, 9, P("tune"));
     w.setPage(PG_SYS); rig.settle(2);
     capture(rig, 10, P("system"));

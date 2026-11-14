@@ -26,7 +26,7 @@ QByteArray synthBytes(MainWindow &w, Instrument &inst) {
     extra["trackUndo"] = w.trackPage.trackUndoDepth();
     extra["clips"] = (int)w.trackPage.trackData().clips.size();
     extra["favs"] = QDir(store::baseDir() + "/favourites").entryList(QDir::Files).size();
-    extra["help"] = w.helpSubPage();
+    extra["help"] = w.helpPage.sub;
     o["_w"] = extra;
     return QJsonDocument(o).toJson(QJsonDocument::Compact);
 }

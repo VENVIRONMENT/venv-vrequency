@@ -10,7 +10,7 @@ class SoundPage : public Page {
 public:
     explicit SoundPage(Shell &s);
     void paint() override;
-    void disarm() override { deepEdit = false; favDelete = false; }
+    void disarm() override;                  // leaving the page drops All parameters, Delete and Store
 
     // what the window, the tour and the self-test reach
     bool deepEdit = false;                   // the All parameters view is showing

@@ -22,7 +22,7 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     // demo favourites and sessions, so those lists are not empty
     w.sounds.favs.clear();
     for (int i = 0; i < kExtraCount; ++i) { store::NamedPatch np; np.file = "demo"; np.patch = extraPatch(i); w.sounds.favs.push_back(np); }
-    w.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/beat-practice.json"};
+    w.systemPage.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/beat-practice.json"};
 
     // ---- a beat, a progression and a loop ----
     inst.set(S_VOLUME, 0.5f);

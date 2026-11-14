@@ -1,0 +1,86 @@
+// venv-vrequency — the words of the Help page: one list of rows (keys, what they do) for each of
+// the four parts, built from the key map so a remapped key shows up here.
+#include "app/pages/help/help_page.h"
+
+std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
+    using Row = HelpRow;
+    auto K = [&km](int act, bool cmd = false) { return (cmd ? km.keyFor(A_COMMAND, false) + "+" : QString()) + km.keyFor(act, cmd); };
+    std::vector<Row> rows;
+    if (helpPage == 0) {
+        rows = {
+            {km.rows[2].left(1) + QString::fromUtf8(" ‥ ") + km.rows[2].right(1), "high string: left to right goes up the scale"},
+            {km.rows[1].left(1) + QString::fromUtf8(" ‥ ") + km.rows[1].right(1), "middle string"},
+            {km.rows[0].left(1) + QString::fromUtf8(" ‥ ") + km.rows[0].right(1), "low string (or chords, see below)"},
+            {"hold + press", "hold a key, press another on its row: it SLIDES"},
+            {"let go", "release the newer key: it slides back"},
+            {K(A_CHROMATIC) + " (hold)", "chromatic: keys step in semitones"},
+            {K(A_SUSTAIN) + " (hold)", "sustain: released notes keep ringing"},
+            {K(A_PANIC), "panic: silence everything"},
+            {K(A_LOOP), "loop pedal: count-in, record, play, overdub"},
+            {"Left / Right", "pitch bend down / up (hold)"},
+            {"Up / Down", "octave up / down, held notes sweep"},
+            {QString::fromUtf8("1 ‥ 9, 0"), "sounds 1 to 10"},
+            {K(A_CHORD_LAYER) + "+" + km.rows[0].left(1) + QString::fromUtf8("‥") + km.rows[0].right(1), QString::fromUtf8("backing chord I ‥ VII")},
+            {K(A_CHORD_ROW), "toggle: bottom row plays chords"},
+            {"Tab / Esc", "next page / back to the Synth page"},
+            {"screen", "drag the scope = X-Y control, drag a string = slide"},
+        };
+    } else if (helpPage == 2) {
+        rows = {
+            {km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" "), "Beat page: pads 1-4 (kick, snare, hat, open hat)"},
+            {km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" "), "Beat page: pads 5-8 (clap, rim, tom, cowbell)"},
+            {km.rows[2].mid(6, 4).split("", Qt::SkipEmptyParts).join(" ") + " / " + km.rows[1].mid(5, 4).split("", Qt::SkipEmptyParts).join(" "), "the same pads again, for the other hand"},
+            {K(A_SUSTAIN), "Beat page: start / stop the beat"},
+            {K(A_LOOP), "Beat page: Rec on / off (pads write hits)"},
+            {km.rows[0].left(1) + QString::fromUtf8(" ‥ ") + km.rows[0].right(1), "Beat page: the low string still plays"},
+            {K(A_BEAT_PLAY, true), "start / stop the beat from any page"},
+            {K(A_BEAT_REC, true), "beat Rec on / off from any page"},
+            {K(A_PLAY_LAST, true), "play the last recording back / stop it"},
+            {"Rec + pads", "hits snap to the nearest of 16 steps in the bar"},
+            {"Erase, pad", "tap Erase, then a pad: that drum's hits are removed"},
+            {"Kit", "soft, crunchy or glitchy drum sounds"},
+            {"Left / Right", "Beat page: the kept beat before / after"},
+            {"+ New", "a fresh empty beat; the others are kept"},
+        };
+    } else if (helpPage == 3) {
+        const QString c = km.keyFor(A_COMMAND, false) + "+";
+        rows = {
+            {K(A_SUSTAIN) + " / " + K(A_LOOP), "Track page: play or stop / back to bar 1"},
+            {"Left / Right", "choose the clip before / after"},
+            {"Up / Down", "choose a clip on the lane above / below"},
+            {"Alt + arrows", "move the chosen clip a bar, or to the other loop lane"},
+            {"Shift + L / R", "move the play line a bar (also , and .)"},
+            {QString::fromUtf8("1 ‥ 5"), "take a clip from the shelf in hand"},
+            {c + "X / C / V", "cut / copy the chosen clip / paste at the play line"},
+            {c + "T / " + c + "J", "split the chosen clip at the play line / join"},
+            {c + "R", "repeat: a copy right after the chosen clip"},
+            {c + "Z", "undo (with " + K(A_CHROMATIC) + ": redo)"},
+            {K(A_PANIC), "delete the chosen clip from the track"},
+            {"M / C", "mute the chosen clip / cycle on or off"},
+            {"E / I", "chop the chosen clip / pick another sound for it"},
+            {"K / X", "keep what is live as clips / open the mixer"},
+            {c + "B", "export the track as an audio file"},
+            {K(A_TRACK_PLAY, true), "play or stop the track from any page"},
+        };
+    } else {
+        rows = {
+            {K(A_RANDOM, true), "new sound: invent an instrument"},
+            {K(A_MUTATE, true), "mutate the current sound a little"},
+            {K(A_UNDO_SOUND, true), "undo: back to the previous sound"},
+            {K(A_FAVOURITE, true), "save the sound as a favourite"},
+            {K(A_KEY_UP, true), "key up a semitone (with " + K(A_CHROMATIC) + ": down)"},
+            {K(A_SCALE_NEXT, true), "next scale (with " + K(A_CHROMATIC) + ": previous)"},
+            {K(A_TAP, true) + " " + K(A_METRO, true), "tap tempo / metronome"},
+            {K(A_BACK_MODE, true), "chord taps: progression / hold / drone"},
+            {K(A_BACK_STYLE, true), "backing style: sustain / pulse / arpeggio"},
+            {K(A_BACK_PLAY, true) + " " + K(A_BACK_CLEAR, true), "backing start-stop / clear backing"},
+            {K(A_BACK_REMOVE, true), "remove the last chord of the progression"},
+            {K(A_LOOP_UNDO, true), "undo the last loop layer"},
+            {K(A_LOOP_PLAY, true) + " " + K(A_LOOP_CLEAR, true), "loop start-stop / clear the loop"},
+            {K(A_XYMAP, true), "next touch-pad mapping"},
+            {K(A_RECORD, true), "record what you hear to a WAV file"},
+            {K(A_HELP, true) + " " + K(A_CHAT, true) + " " + K(A_QUIT, true), "this guide / chat dock (with Shift: Chat page) / quit"},
+        };
+    }
+    return rows;
+}

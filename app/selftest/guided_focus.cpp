@@ -76,7 +76,7 @@ void guideDockAvoidsEveryZone(Context &ctx) {
 // the Help page: ask from the guide without going to the Chat page
 void guideHelpPage(Context &ctx, Link &link) {
     MainWindow &w = ctx.w; const QString &shotsDir = ctx.shotsDir; Client &c = link.c;
-    w.setPage(PG_HELP); w.guide.dockClose(); w.setHelpSubPage(0); w.shot();
+    w.setPage(PG_HELP); w.guide.dockClose(); w.helpPage.sub = 0; w.shot();
     tap(w, zn::help_ask); w.shot();
     check(w.guide.dockIsOpen() && w.guide.dockHasFocus() && w.page() == PG_HELP && !w.chat.draft.isEmpty(), "Ask Rook on the Help page opens the dock with the keyboard and a starting question");
     QStringList hrows; for (const QString &n : w.zoneNames()) if (n.startsWith(zn::help_row)) hrows << n;
@@ -96,9 +96,9 @@ void guideHelpPage(Context &ctx, Link &link) {
     check(okOf(r) && strs(result(r)["highlighted"].toArray()) == QStringList({hrows.value(3)}) && !w.guide.dockRect().intersects(w.zoneRect(hrows.value(3))), "Rook can highlight a single Help row");
     QImage im = w.shot();
     if (!shotsDir.isEmpty()) im.save(shotsDir + "/17-dock-help.png");
-    const int sub0 = w.helpSubPage();
+    const int sub0 = w.helpPage.sub;
     tap(w, zn::help_next);
-    check(w.helpSubPage() == (sub0 + 1) % 4, "the Help sections are still reachable with the next button");
+    check(w.helpPage.sub == (sub0 + 1) % 4, "the Help sections are still reachable with the next button");
     w.guide.clearHighlight(); w.guide.dockClose(); w.setPage(PG_PLAY);
 }
 } // namespace selftest

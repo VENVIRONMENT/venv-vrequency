@@ -1,9 +1,17 @@
 # app/pages
 target_sources(vrequency PRIVATE
   page.h
+  backing/backing_page.cpp
+  backing/backing_page.h
+  beat/beat_grid.cpp
+  beat/beat_page.cpp
+  beat/beat_page.h
   beat/kept_beats.cpp
   chat/chat_page.cpp
   chat/chat_page.h
+  help/help_page.cpp
+  help/help_page.h
+  help/help_rows.cpp
   sound/sound_favourites.cpp
   sound/sound_page.cpp
   sound/sound_page.h
@@ -19,6 +27,10 @@ target_sources(vrequency PRIVATE
   synth/synth_page.h
   synth/synth_softkeys.cpp
   synth/synth_strings.cpp
+  system/system_keytest.cpp
+  system/system_page.cpp
+  system/system_page.h
+  system/system_status.cpp
   track/track_arrange.cpp
   track/track_chop.cpp
   track/track_clips.cpp
@@ -34,4 +46,7 @@ target_sources(vrequency PRIVATE
   track/track_layout.h
   track/track_page.h
   tune/listener.cpp
-  tune/listener.h)
+  tune/listener.h
+  tune/tune_listen.cpp
+  tune/tune_page.cpp
+  tune/tune_page.h)
