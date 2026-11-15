@@ -1,6 +1,7 @@
-// venv-vrequency — the Sound page's All parameters view: four pages of sliders. The first holds the
+// venv-vrequency — the Sound page's All parameters view: five pages of sliders. The first holds the
 // oscillator parameters under the OSCILLATORS picture; the second the amp envelope and the filter
-// under theirs; the other two the rest. The pictures follow the sliders as they move.
+// under theirs; the next two the rest; the fifth is the Warp view (sound_warp.cpp). The pictures
+// follow the sliders as they move.
 #include "app/pages/sound/sound_page.h"
 #include "app/sounds/sounds.h"
 #include "app/ui/palette.h"
@@ -20,7 +21,8 @@ const int *deepParams(int page, int &count) {
     case 0: count = 8; return kOsc;
     case 1: count = 8; return kEnvFilter;
     case 2: count = 12; return kMore1;
-    default: count = 12; return kMore2;
+    case 3: count = 12; return kMore2;
+    default: count = 6; return kWarpParams;
     }
 }
 
@@ -38,13 +40,17 @@ void SoundPage::paintDeep() {
     const float *p = sounds.lead.p;
     pics.note(u.str[0].gate || u.str[1].gate || u.str[2].gate, sh.clock.elapsed() / 1000.0);
     qreal y0 = 296;
-    if (deepPage == 0) { pics.oscillators(QRectF(16, 296, 688, 104), p); y0 = 408; }
+    if (deepPage == kDeepPages - 1) { // the Warp view, as WARP shows it
+        paintWarp(296);
+        ui.txt(QRectF(16, 540, 688, 20), "Each note is warped on its own, after the filter, before its envelope.", 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+    } else if (deepPage == 0) { pics.oscillators(QRectF(16, 296, 688, 104), p); y0 = 408; }
     if (deepPage == 1) { // the amp envelope and the filter side by side
         pics.envelope(QRectF(16, 296, 340, 104), p);
         pics.filter(QRectF(364, 296, 340, 104), p);
         y0 = 408;
     }
-    for (int k = 0; k < n; ++k) paramSlider(QRectF(16 + (k % 2) * 348, y0 + (k / 2) * 58, 340, 52), ids[k]);
+    if (deepPage < kDeepPages - 1)
+        for (int k = 0; k < n; ++k) paramSlider(QRectF(16 + (k % 2) * 348, y0 + (k / 2) * 58, 340, 52), ids[k]);
     ui.button(QRectF(16, 650, 160, 54), "deepprev", QString::fromUtf8("‹ Prev"), false, [this] { deepPage = (deepPage + kDeepPages - 1) % kDeepPages; });
     ui.txt(QRectF(176, 650, 368, 54), QString("Page %1 / %2").arg(deepPage + 1).arg(kDeepPages), 14, MID);
     ui.button(QRectF(544, 650, 160, 54), "deepnext", QString::fromUtf8("Next ›"), false, [this] { deepPage = (deepPage + 1) % kDeepPages; });

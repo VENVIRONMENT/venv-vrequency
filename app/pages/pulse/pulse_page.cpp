@@ -101,6 +101,6 @@ void PulsePage::paintSoftKeys(QRectF r) {
     pulseSyncRate(u.pulse[sel].rate, u.set.bpm, &perBeat);
     ui.button(at(2), zn::pulsesync, "Sync", u.set.pulseSync, [this] { sh.set(S_PULSESYNC, u.set.pulseSync ? 0 : 1); sh.saveSoon(); },
               u.set.pulseSync ? QString("%1 bpm").arg((int)std::round(u.set.bpm)) : QString("rate = tempo"));
-    ui.button(at(3), zn::pulsetype, "Type", false, [this] { cycleType(); },
-              QString("next: %1").arg(nice(pulseTypeName((u.pulse[sel].type + 1) % kPulseTypes))));
+    ui.button(at(3), zn::pulsewarp, "Warp", warpMode, [this] { warpMode = !warpMode; sh.redraw(); },
+              warpMode ? QString("sliders: warp") : QString("bend and distort"));
 }

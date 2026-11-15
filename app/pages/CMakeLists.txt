@@ -30,6 +30,7 @@ target_sources(vrequency PRIVATE
   sound/sound_params.cpp
   sound/sound_pictures.cpp
   sound/sound_pictures_filter.cpp
+  sound/sound_warp.cpp
   synth/chord_pads.cpp
   synth/chord_pads.h
   synth/scope.cpp

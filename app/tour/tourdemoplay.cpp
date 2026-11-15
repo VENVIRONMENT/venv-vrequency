@@ -25,7 +25,7 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     w.soundPage.deepEdit = true; w.soundPage.deepPage = 0; rig.settle(2);
     C("sound-deep");
     const int deep = TourView::pageIndex("sound-deep");
-    for (int dp = 1; dp < 4; ++dp) { w.soundPage.deepPage = dp; rig.settle(2); capture(rig, deep, pics[TourView::variantPic(deep, dp)]); } // the other parameters
+    for (int dp = 1; dp < kDeepPages; ++dp) { w.soundPage.deepPage = dp; rig.settle(2); capture(rig, deep, pics[TourView::variantPic(deep, dp)]); } // the other parameters
     w.soundPage.deepEdit = false;
     rig.key(Qt::Key_F, false); rig.key(Qt::Key_A, false);
     w.setPage(PG_PULSE); rig.settle(2);
@@ -35,6 +35,11 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     rig.settle(3);
     QThread::msleep(300);                                                     // the pads that just sounded fade
     C("pulse");
+    w.pulsePage.warpMode = true; inst.pulseSet(5, PF_DRIVE, 0.6f); inst.pulseSet(5, PF_FOLD, 0.3f); inst.pulseSet(5, PF_BEND, -12);
+    pump(inst, 60); rig.settle(2);                                            // the tom, warped, with WARP on
+    capture(rig, TourView::pageIndex("pulse"), pics[TourView::variantPic(TourView::pageIndex("pulse"), 1)]);
+    w.pulsePage.warpMode = false;
+    for (int f : {PF_DRIVE, PF_FOLD, PF_BEND}) inst.pulseSet(5, f, 0);
     w.setPage(PG_FREQ); inst.freqSet(2, FF_ON, 1); inst.freqSet(-1, FF_HOLD, 1);  // two tones beating, a fifth above
     pump(inst, 1700); rig.settle(2);
     C("freq");

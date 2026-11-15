@@ -40,7 +40,7 @@ the same string: both can sound, and a key pressed on a sounding string slides i
 ### state
 Everything at a glance: `page`, `sound` (name, `slot` 1-10 or null, `slots`, `favourites`, `params` by key),
 `scale` (name, index, root, octave), `tempo`, `volume`, `looper`, `pulse` (`sync`, and `pads`: for each of the eight
-`type`, `tone`, `length`, `rate`, `level`, `latched`), `backing` (`playing`, `mode`, `style`, `seventh`, `chords`, `degrees`, `position`), `playing`, `voices`, `toast` (the last message the app showed), `chat`
+`type`, `tone`, `length`, `rate`, `level`, `drive`, `fold`, `crush`, `bend`, `latched`), `backing` (`playing`, `mode`, `style`, `seventh`, `chords`, `degrees`, `position`), `playing`, `voices`, `toast` (the last message the app showed), `chat`
 (`listening`, `last_seq`, `unread`) and `chat_tail` (last ten messages).
 ```
 {"id":1,"cmd":"state"}
@@ -78,7 +78,8 @@ as `Backspace` does (also drops every pulse latch and stops the backing and the 
 ```
 
 ### set_param / get_params
-`set_param`: `name` is a key from `get_params` (`cutoff`, `attack`, `wave1`, `reverbmix`...), `value` is
+`set_param`: `name` is a key from `get_params` (`cutoff`, `attack`, `wave1`, `reverbmix`, the warp keys `fold`, `crush`,
+`downsample`, `ring`, `bendin`...), `value` is
 **clamped** to the parameter's range (stepped ones rounded); the reply says the value used and whether it was
 clamped. `get_params` lists every parameter with its value, range and default.
 ```
@@ -135,12 +136,14 @@ arp down, arp up-dn), `seventh` (bool), `beats` per chord 1-8.
 
 ### pulse
 The pulse pads. Any of: `type` (click, metal, snap, scratch, clap, tom, thump, 808), `tone` (Hz, 20-18000),
-`length` (ms, 1-2000), `rate` (Hz, 0.25-200), `level` (0-1), `latch` (true / false), `hit` (true: plays it now)
+`length` (ms, 1-2000), `rate` (Hz, 0.25-200), `level` (0-1), the warp: `drive`, `fold`, `crush` (each 0-1, 0 = off)
+and `bend` (semitones the pitch, or a noise kind's band, moves across the hit, -24 to 24, 0 = off), `latch` (true / false), `hit` (true: plays it now)
 for one pad, `pad` 0-7 (required with any of those); and `sync` (true / false: every pad's rate follows the
 tempo). Settings are applied before `latch` and `hit`. What each field means per kind is in GUIDE chapter 8.
 ```
 {"id":23,"cmd":"pulse","pad":5,"type":"tom","tone":1000,"length":250,"rate":40,"level":0.8,"hit":true}
 {"id":24,"cmd":"pulse","pad":4,"latch":true}
+{"id":26,"cmd":"pulse","pad":6,"drive":0.6,"fold":0.3,"bend":-12,"hit":true}
 {"id":25,"cmd":"pulse","sync":true}
 ```
 The `beat` command of earlier versions is gone (the step sequencer was removed in 1.0); it is refused as unknown.

@@ -88,6 +88,28 @@ void shootGlitch(MainWindow &w, Instrument &inst, const QString &dir) {
     inst.set(S_XYMAP, XY_FILTER); wait(60);
 }
 
+// Warp: the Sound page's Warp view with a folded, crushed sound, and the Pulse page with WARP on
+void shootWarp(MainWindow &w, Instrument &inst, const QString &dir) {
+    w.setPage(PG_SOUND);
+    const Patch before = w.sounds.lead;
+    w.soundPage.warpView = true;
+    w.sounds.setParam(P_DRIVE, 0.2f); w.sounds.setParam(P_FOLD, 0.75f); w.sounds.setParam(P_CRUSH, 8);
+    w.sounds.setParam(P_DSAMP, 0.3f); w.sounds.setParam(P_BENDIN, -12);
+    for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+    w.shot().save(QString("%1/29-sound-warp.png").arg(dir));
+    w.sounds.recall(before); w.soundPage.warpView = false;
+    w.setPage(PG_PULSE);
+    for (int k : {0, 2, 6, 3, 7, 1, 5}) { w.pulsePage.hitPad(k); w.shot(); wait(160); } // hits in the strip, the tom selected
+    inst.pulseSet(5, PF_DRIVE, 0.6f); inst.pulseSet(5, PF_FOLD, 0.3f); inst.pulseSet(5, PF_BEND, -12);
+    inst.pulseSet(7, PF_CRUSH, 0.5f);
+    w.pulsePage.warpMode = true; wait(60);
+    for (int i = 0; i < 6; ++i) { w.shot(); wait(40); }
+    w.shot().save(QString("%1/30-pulse-warp.png").arg(dir));
+    w.pulsePage.warpMode = false;
+    for (int p = 0; p < kPulsePads; ++p) for (int f : {PF_DRIVE, PF_FOLD, PF_CRUSH, PF_BEND}) inst.pulseSet(p, f, 0);
+    wait(60);
+}
+
 // every page of the built-in guide, for proof-reading
 void shootHelpSections(MainWindow &w, const QString &dir) {
     w.setPage(PG_HELP);
@@ -118,6 +140,7 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
     shootTicker(w, dir);
     shootGuidedHelp(w, dir);
     shootGlitch(w, inst, dir);
+    shootWarp(w, inst, dir);
     key(w, Qt::Key_F, false); key(w, Qt::Key_A, false);
     if (qEnvironmentVariableIsSet("VREQUENCY_HELP_SHOTS")) shootHelpSections(w, dir);
     shootKeyTest(w, dir);

@@ -116,6 +116,10 @@ pulse pad4
 pulse pad5
 pulse pad6
 pulse pad7
+pulse pulsebend
+pulse pulsecrush
+pulse pulsedrive
+pulse pulsefold
 pulse pulselast
 pulse pulselatch
 pulse pulselength
@@ -125,6 +129,7 @@ pulse pulserate
 pulse pulsesync
 pulse pulsetone
 pulse pulsetype
+pulse pulsewarp
 pulse pulsewave
 pulse tab_backing
 pulse tab_chat
@@ -175,6 +180,7 @@ sound tab_synth
 sound tab_system
 sound tab_tune
 sound undosound
+sound warp
 sound-deep deep
 sound-deep deepnext
 sound-deep deepprev
@@ -216,6 +222,11 @@ sound-deep param37
 sound-deep param38
 sound-deep param39
 sound-deep param4
+sound-deep param40
+sound-deep param41
+sound-deep param42
+sound-deep param43
+sound-deep param44
 sound-deep param5
 sound-deep param6
 sound-deep param7
@@ -245,6 +256,8 @@ sound-deep tab_synth
 sound-deep tab_system
 sound-deep tab_tune
 sound-deep undosound
+sound-deep warp
+sound-deep warpcurve
 synth backmode
 synth backplay
 synth chord0

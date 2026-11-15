@@ -47,7 +47,7 @@ void tourReachesNothing(TourContext &ctx) {
         for (int v = 0; v < t.variantsOnPage(); ++v) {
             if (v) press(w, Qt::Key_V);
             w.shot();
-            const auto &hot = t.picture(t.variantsOnPage() > 1 ? (v == 0 ? p : (p == 6 ? 13 + v : 17)) : p).hot;
+            const auto &hot = t.picture(TourView::variantPic(p, v)).hot;
             for (const TourView::Hot &h : hot) {
                 const QRectF zr = w.zoneRect(zn::tour_hot + h.name);
                 if (zr.isNull()) continue;

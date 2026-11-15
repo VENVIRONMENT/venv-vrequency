@@ -27,7 +27,7 @@ tests ─▶  core
 | Folder | What |
 |---|---|
 | `core/synth` | one voice, a patch's parameters, a Part (a sound plus its live modulation), scales |
-| `core/fx` | master effects: chorus, delay, reverb, crusher, limiter; `ring.h` is the shared delay-line tap; `warp.*` is a mono drive / fold / crush / low-pass stage any sound can own (the Freq tones use it first) |
+| `core/fx` | master effects: chorus, delay, reverb, crusher, limiter; `ring.h` is the shared delay-line tap; `warp.*` is a mono drive / fold / crush / low-pass stage any sound can own (the Freq tones), and its per-sample pieces `WarpShape` (drive, fold) and `WarpGrid` (bits, held rate), which the synth voices (`core/synth/voice_warp.h`) and the pulse generator use sample by sample |
 | `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, the backing chords (`backing.cpp`), the pulse pads' place in it (`pulse_pads.cpp`), the Freq tones' (`freq_tones.cpp`), looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
 | `core/freq` | the four Freq tones (`freq`: settings, beat, ratio and SNAP sums; `freq_bank`: the audio-thread oscillators, 2 > 1, GATE, warp and a lock-free tap of their output) |
 | `core/pulse` | the eight pulse sounds (`pulse_voice`: one generator, used by the audio thread and for the page's pictures), the bank of pads with LATCH, SYNC and a lock-free record of every hit (`pulse_bank`) |

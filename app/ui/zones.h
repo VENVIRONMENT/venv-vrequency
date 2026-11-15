@@ -46,6 +46,8 @@ inline constexpr char param[] = "param";   // family
 inline constexpr char slot[] = "slot";   // family
 inline constexpr char slotsave[] = "slotsave";
 inline constexpr char undosound[] = "undosound";
+inline constexpr char warp[] = "warp";   // the Warp view, in place of the quick sliders
+inline constexpr char warpcurve[] = "warpcurve";   // its IN > OUT picture (also All parameters p.5)
 
 // ---- Sound: all parameters ----
 inline constexpr char deepnext[] = "deepnext";
@@ -54,6 +56,10 @@ inline constexpr char deepprev[] = "deepprev";
 // ---- Pulse ----
 inline constexpr char pad[] = "pad";   // family: the eight pulse pads
 inline constexpr char pulselast[] = "pulselast";
+inline constexpr char pulsebend[] = "pulsebend";
+inline constexpr char pulsecrush[] = "pulsecrush";
+inline constexpr char pulsedrive[] = "pulsedrive";
+inline constexpr char pulsefold[] = "pulsefold";
 inline constexpr char pulselatch[] = "pulselatch";
 inline constexpr char pulselength[] = "pulselength";
 inline constexpr char pulselevel[] = "pulselevel";
@@ -61,7 +67,8 @@ inline constexpr char pulseloop[] = "pulseloop";
 inline constexpr char pulserate[] = "pulserate";
 inline constexpr char pulsesync[] = "pulsesync";
 inline constexpr char pulsetone[] = "pulsetone";
-inline constexpr char pulsetype[] = "pulsetype";
+inline constexpr char pulsetype[] = "pulsetype";   // the pad's name in the line above its picture: the next kind
+inline constexpr char pulsewarp[] = "pulsewarp";   // soft key: the four sliders become the warp
 inline constexpr char pulsewave[] = "pulsewave";
 
 // ---- Freq ----

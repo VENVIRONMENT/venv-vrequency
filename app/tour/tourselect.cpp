@@ -49,12 +49,12 @@ const HelpCard *TourView::cardFor(const Hot &h) const {
     return &missing;
 }
 
-// a touch on a hotspot: select it; the editor's Prev / Next also turn the picture to the other parameters
+// a touch on a hotspot: select it; the editor's Prev / Next turn the picture to other parameters, Pulse's WARP to its other sliders
 void TourView::tapHot(int idx) {
     choose(idx);
     const QString n = selectedName();
-    if (pageIdx == pageIndex("sound-deep") && (n == "deepnext" || n == "deepprev")) {
-        setVariant(variant + (n == "deepnext" ? 1 : -1));
+    if ((pageIdx == pageIndex("sound-deep") && (n == "deepnext" || n == "deepprev")) || (pageIdx == pageIndex("pulse") && n == "pulsewarp")) {
+        setVariant(variant + (n == "deepprev" ? -1 : 1));
         const auto &hot = pics[picIndex()].hot;
         for (int i = 0; i < (int)hot.size(); ++i) if (hot[i].name == n) choose(i);
     }

@@ -56,13 +56,34 @@ int TourView::pageIndex(const QString &n0) {
     return -1;
 }
 
-// One page needs more than one picture: the All-parameters editor (twelve parameters a page). Its
-// other three pictures come after the pages' own.
-int TourView::variantCount(int page) { return page == pageIndex("sound-deep") ? 4 : 1; }
-int TourView::variantBase(int page) { return page == pageIndex("sound-deep") ? kPageCount : -1; }
+// Two pages need more than one picture: the All-parameters editor (one a page of parameters, the last
+// the Warp view) and Pulse (its sound sliders, then with WARP on). Their other pictures come after
+// the pages' own, in this order.
+namespace {
+struct Variants { const char *page; int count; };
+const Variants kVariants[] = {{"sound-deep", kDeepPages}, {"pulse", 2}};
+} // namespace
+int TourView::variantCount(int page) {
+    for (const Variants &v : kVariants) if (page == pageIndex(v.page)) return v.count;
+    return 1;
+}
+int TourView::variantBase(int page) {
+    int base = kPageCount;
+    for (const Variants &v : kVariants) { if (page == pageIndex(v.page)) return base; base += v.count - 1; }
+    return -1;
+}
 int TourView::picIndex() const { return variant <= 0 || variantBase(pageIdx) < 0 ? pageIdx : variantBase(pageIdx) + variant - 1; }
-int TourView::picCount() { return kPageCount + 3; }
-int TourView::picPage(int pic) { return pic < kPageCount ? pic : pageIndex("sound-deep"); }
+int TourView::picCount() {
+    int n = kPageCount;
+    for (const Variants &v : kVariants) n += v.count - 1;
+    return n;
+}
+int TourView::picPage(int pic) {
+    if (pic < kPageCount) return pic;
+    int base = kPageCount;
+    for (const Variants &v : kVariants) { if (pic < base + v.count - 1) return pageIndex(v.page); base += v.count - 1; }
+    return 0;
+}
 
 void TourView::setVariant(int v) {
     const int n = variantCount(pageIdx);

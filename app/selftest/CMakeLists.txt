@@ -16,6 +16,7 @@ target_sources(vrequency PRIVATE
   listening.cpp
   looper.cpp
   pulse.cpp
+  warp.cpp
   render_shots.cpp
   saving.cpp
   selftest.cpp

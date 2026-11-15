@@ -36,7 +36,8 @@ std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
             {"Loop", "Pulse page soft key: the same loop pedal"},
             {"Latch", "the selected pad keeps going until tapped again"},
             {"Sync", "every pad's RATE snaps to a division of the tempo"},
-            {"Type", "the selected pad's kind: click, metal, snap..."},
+            {"Pad name", "tap it for the selected pad's next kind"},
+            {"Warp", "sliders: drive, fold, crush, bend (pitch sweep)"},
             {"Tone Length Rate", "the selected pad's sliders (and Level)"},
             {K(A_PLAY_LAST, true), "play the last recording back / stop it"},
         };

@@ -57,11 +57,15 @@ void tourSelection(TourContext &ctx) {
         press(w, Qt::Key_Period); check(t.pageId() == "freq", "the period key goes to the next page (Pulse to Freq)");
         press(w, Qt::Key_Comma); press(w, Qt::Key_Comma); check(t.pageId() == "sound-deep", "the comma key goes to the previous page");
         check(w.page() == PG_PLAY, "and the real app never left the Synth page");
-        check(t.variantsOnPage() == 4, "the All-parameters editor has four pictures (eight or twelve parameters each)");
+        check(t.variantsOnPage() == 5, "the All-parameters editor has five pictures (four of parameters, then Warp)");
         w.shot(); tourTap(w, QString(zn::tour_hot) + zn::deepnext); w.shot();
         check(t.variantShown() == 1 && t.selectedName() == zn::deepnext, "tapping Next in the editor picture turns it to the next parameters");
         t.select(zn::at(zn::param, 20)); w.shot();
         check(t.variantShown() == 2 && t.selectedName() == zn::at(zn::param, 20), "a control on another picture of the page can be reached by name");
+        t.select(zn::warpcurve); w.shot();
+        check(t.variantShown() == 4 && t.selectedName() == zn::warpcurve, "the editor's last picture is the Warp view, with its IN > OUT picture");
+        t.open("pulse", zn::pulsewarp); settleTour(w); w.shot(); tourTap(w, QString(zn::tour_hot) + zn::pulsewarp); w.shot();
+        check(t.variantsOnPage() == 2 && t.variantShown() == 1 && t.selectedName() == zn::pulsewarp, "Pulse has two pictures: tapping WARP turns to the warp sliders");
         press(w, Qt::Key_Escape); press(w, Qt::Key_Escape);
         check(!t.isOpen(), "a second Esc leaves the tour");
     }

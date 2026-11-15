@@ -29,6 +29,16 @@ QString division(float perBeat) { // hits per beat as a note value
 // sliders: tone, length and rate move in octaves, level in a straight line
 float toNorm(float v, float lo, float hi) { return std::log(v / lo) / std::log(hi / lo); }
 float fromNorm(float n, float lo, float hi) { return lo * std::pow(hi / lo, qBound(0.0f, n, 1.0f)); }
+bool isNoise(int type) { return type == PT_METAL || type == PT_CLAP; }  // no pitch: BEND moves their band
+QString crushText(float c) { return c <= 0 ? QString("off") : QString("%1 bits").arg(warpCrushBits(c), 0, 'f', 1); }
+QString warpLine(const PulsePad &p) { // the top right of the big picture, with WARP on
+    QStringList w;
+    if (p.drive > 0) w << QString("drive %1").arg((int)std::round(p.drive * 100));
+    if (p.fold > 0) w << QString("fold %1").arg((int)std::round(p.fold * 100));
+    if (p.crush > 0) w << crushText(p.crush);
+    if (p.bend != 0) w << QString("bend %1%2").arg(p.bend > 0 ? "+" : "").arg((int)std::round(p.bend));
+    return w.isEmpty() ? QString("no warp") : w.join("  ");
+}
 QString what(const PulsePad &p, int /*onsets*/, float sr) { // the top right of the big picture
     const float top = 0.45f * sr;
     switch (p.type) {
@@ -65,7 +75,20 @@ void PulsePage::paintPads(qint64 now) {
 void PulsePage::paintSelected(qreal y) {
     const PulsePad &d = u.pulse[sel];
     const float sr = inst.sampleRate();
-    ui.section(y, QString("Pad %1  %2   %3").arg(sel + 1).arg(pulseTypeName(d.type)).arg(nice(pulseTypeLine(d.type))));
+    { // "Pad 6 [TOM ›] a sine that falls, struck": the name is TYPE, a tap gives the pad the next kind
+        const int cw = ui.chW(13);
+        const QString head = QString("Pad %1").arg(sel + 1), kind = QString(pulseTypeName(d.type)) + QString::fromUtf8(" ›");
+        ui.txt(QRectF(18, y, 120, 20), head, 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+        const QRectF chip(18 + (head.size() + 1) * cw, y - 2, (kind.size() + 2) * cw, 22);
+        const bool dn = ui.isDown(zn::pulsetype);
+        ui.frame(chip, dn ? INK : LOW, dn ? INK : BG);
+        ui.txt(chip, kind, 13, dn ? BG : INK, Qt::AlignCenter, true);
+        const QString line = nice(pulseTypeLine(d.type));
+        const qreal lx = chip.right() + 12, rx = lx + line.size() * cw + 10;
+        ui.txt(QRectF(lx, y, 704 - lx, 20), line, 13, MID, Qt::AlignLeft | Qt::AlignVCenter);
+        if (rx < 700) ui.g->fillRect(QRectF(rx, y + 10, 704 - rx, 1), GRAT);
+        ui.zone(QRectF(16, y - 4, chip.right() + 4 - 16, 26), zn::pulsetype, [this](QPointF, int ph) { if (ph == PH_PRESS) cycleType(); });
+    }
     const QRectF box(16, y + 22, 340, 196);
     ui.frame(box, LOW, BG);
     const QRect pic((int)box.x() + 10, (int)box.y() + 28, (int)box.width() - 20, 136);
@@ -73,12 +96,27 @@ void PulsePage::paintSelected(qreal y) {
     ui.g->drawImage(pic.topLeft(), img);
     const double lenMs = PulseVoice::lengthSamples(d, sr) * 1000.0 / sr, winMs = big.samples() * 1000.0 / sr;
     ui.txt(QRectF(box.x() + 10, box.y() + 6, 150, 18), ms(lenMs), 13, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    ui.txt(QRectF(box.x() + 150, box.y() + 6, 180, 18), what(d, big.onsets(), sr), 13, INK, Qt::AlignRight | Qt::AlignVCenter, true);
+    ui.txt(QRectF(box.x() + 90, box.y() + 6, 240, 18), ui.fit(warpMode ? warpLine(d) : what(d, big.onsets(), sr), 13, 240), 13, INK,
+           Qt::AlignRight | Qt::AlignVCenter, true);
     ui.g->fillRect(QRectF(pic.x(), pic.bottom() + 3, pic.width(), 1), GRAT);
     ui.txt(QRectF(box.x() + 10, box.bottom() - 26, 80, 18), "0", 12, MID, Qt::AlignLeft | Qt::AlignVCenter);
     ui.txt(QRectF(box.right() - 130, box.bottom() - 26, 120, 18), ms(winMs), 12, MID, Qt::AlignRight | Qt::AlignVCenter);
     ui.zone(box, zn::pulsewave, [](QPointF, int) {});
-    paintSliders(QRectF(364, y + 22, 340, 196));
+    if (warpMode) paintWarpSliders(QRectF(364, y + 22, 340, 196));
+    else paintSliders(QRectF(364, y + 22, 340, 196));
+}
+
+// WARP: the same four places hold DRIVE, FOLD, CRUSH and BEND
+void PulsePage::paintWarpSliders(QRectF r) {
+    const PulsePad &d = u.pulse[sel];
+    auto row = [&](int i) { return QRectF(r.x(), r.y() + i * 50, r.width(), 46); };
+    auto pct = [](float v) { return v <= 0 ? QString("off") : QString("%1%").arg((int)std::round(v * 100)); };
+    ui.slider(row(0), zn::pulsedrive, "Drive", d.drive, pct(d.drive), [this](float n) { setField(PF_DRIVE, qBound(0.0f, n, 1.0f)); });
+    ui.slider(row(1), zn::pulsefold, "Fold", d.fold, pct(d.fold), [this](float n) { setField(PF_FOLD, qBound(0.0f, n, 1.0f)); });
+    ui.slider(row(2), zn::pulsecrush, "Crush", d.crush, crushText(d.crush), [this](float n) { setField(PF_CRUSH, qBound(0.0f, n, 1.0f)); });
+    ui.slider(row(3), zn::pulsebend, isNoise(d.type) ? "Bend (band)" : "Bend (pitch)",
+              (d.bend + kPulseBendMax) / (2 * kPulseBendMax), d.bend == 0 ? QString("off") : QString("%1%2 st").arg(d.bend > 0 ? "+" : "").arg((int)std::round(d.bend)),
+              [this](float n) { setField(PF_BEND, std::round((qBound(0.0f, n, 1.0f) * 2 - 1) * kPulseBendMax)); });
 }
 
 void PulsePage::paintSliders(QRectF r) {

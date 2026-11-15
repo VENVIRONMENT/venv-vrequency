@@ -73,19 +73,22 @@ QJsonObject ControlServer::cmdBacking(const QJsonObject &a, QString &e) {
     return r;
 }
 
-// {"cmd":"pulse","pad":5,"type":"tom","tone":1000,"length":250,"rate":40,"level":0.8,"latch":true,"hit":true,"sync":false}
+// {"cmd":"pulse","pad":5,"type":"tom","tone":1000,"length":250,"rate":40,"level":0.8,"drive":0.5,"fold":0,"crush":0,
+//  "bend":-12,"latch":true,"hit":true,"sync":false}
 // Every field is optional, but there must be one; all but sync need a pad (0 to 7).
 QJsonObject ControlServer::cmdPulse(const QJsonObject &a, QString &e) {
     Args A{a, e};
-    static const char *const fields[] = {"hit", "latch", "type", "tone", "length", "rate", "level", "sync"};
+    static const char *const fields[] = {"hit", "latch", "type", "tone", "length", "rate", "level", "drive", "fold", "crush", "bend", "sync"};
     bool any = false, needPad = false;
     for (const char *f : fields) if (A.has(f)) { any = true; if (QString(f) != "sync") needPad = true; }
-    if (!any) { e = "give 'hit', 'latch', 'type', 'tone', 'length', 'rate', 'level' or 'sync'"; return {}; }
+    if (!any) { e = "give 'hit', 'latch', 'type', 'tone', 'length', 'rate', 'level', 'drive', 'fold', 'crush', 'bend' or 'sync'"; return {}; }
     const int pad = A.integer("pad", 0, kPulsePads - 1, -1, needPad);
     const bool hit = A.boolean("hit", false), latch = A.boolean("latch", false), sync = A.boolean("sync", false);
     const QString type = A.str("type", "", 12);
     const double tone = A.num("tone", kPulseToneMin, kPulseToneMax, -1), length = A.num("length", kPulseLenMin, kPulseLenMax, -1);
     const double rate = A.num("rate", kPulseRateMin, kPulseRateMax, -1), level = A.num("level", 0, 1, -1);
+    const double drive = A.num("drive", 0, 1, -1), fold = A.num("fold", 0, 1, -1), crush = A.num("crush", 0, 1, -1);
+    const double bend = A.num("bend", -kPulseBendMax, kPulseBendMax, 0);
     if (!e.isEmpty()) return {};
     const int t = type.isEmpty() ? -1 : pulseTypeFromKey(type.toLower().toUtf8().constData());
     if (!type.isEmpty() && t < 0) { e = "type must be click, metal, snap, scratch, clap, tom, thump or 808"; return {}; }
@@ -95,6 +98,10 @@ QJsonObject ControlServer::cmdPulse(const QJsonObject &a, QString &e) {
     if (length >= 0) inst.pulseSet(pad, PF_LENGTH, (float)length);
     if (rate >= 0) inst.pulseSet(pad, PF_RATE, (float)rate);
     if (level >= 0) inst.pulseSet(pad, PF_LEVEL, (float)level);
+    if (drive >= 0) inst.pulseSet(pad, PF_DRIVE, (float)drive);
+    if (fold >= 0) inst.pulseSet(pad, PF_FOLD, (float)fold);
+    if (crush >= 0) inst.pulseSet(pad, PF_CRUSH, (float)crush);
+    if (A.has("bend")) inst.pulseSet(pad, PF_BEND, (float)bend);
     if (A.has("latch")) w.pulsePage.setLatch(pad, latch);
     if (hit) w.pulsePage.hitPad(pad);
     w.saveSoon();

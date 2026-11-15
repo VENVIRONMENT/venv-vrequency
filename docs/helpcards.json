@@ -714,7 +714,7 @@
   },
   "sound": {
    "title": "Sound",
-   "intro": "Pick a sound, make a new one and shape it. Ten slots, five quick-change sliders on one page, favourites below, and all parameters on request.",
+   "intro": "Pick a sound, make a new one and shape it. Ten slots, quick sliders or the Warp view, favourites below, and all parameters on request.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
@@ -943,7 +943,7 @@
      "title": "ALL PARAMETERS",
      "kind": "toggle",
      "summary": "Switches between eight quick sliders and every parameter.",
-     "does": "Quick controls are eight sliders. All parameters shows all 40 in pages of 12 (oscillators, envelopes, filter, modulation, effects), with Prev and Next below. Same sound either way.",
+     "does": "Quick controls are eight sliders. All parameters shows all 45 in five pages (oscillators, envelopes, filter, modulation, effects, then Warp), with Prev and Next below. Same sound either way.",
      "use": [
       {
        "how": "Touch",
@@ -973,7 +973,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Drag it while holding a note to hear the sweep."
      ],
@@ -995,7 +995,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Very high RESO plus low CUTOFF can be piercing."
      ],
@@ -1017,7 +1017,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Attack above 300 ms makes quick playing disappear."
      ],
@@ -1039,7 +1039,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Dream sounds use long releases; shorten them for tight playing."
      ],
@@ -1061,7 +1061,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "0 gives instant jumps without a slide."
      ],
@@ -1083,7 +1083,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Drive adds loudness; watch the Limit tag."
      ],
@@ -1105,7 +1105,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Slow, sparse playing sounds best with echoes."
      ],
@@ -1127,7 +1127,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Pull this down if the sound feels washed out."
      ],
@@ -1209,13 +1209,35 @@
       "system.factory"
      ],
      "ask": "How do I delete a favourite I do not want?"
+    },
+    "warp": {
+     "title": "WARP",
+     "kind": "toggle",
+     "summary": "Bend, fold and crush: six sliders and a picture.",
+     "does": "Swaps the eight quick sliders for the Warp view: DRIVE, FOLD, CRUSH, DOWNSAMPLE, RING MOD and BEND IN, beside a picture of what they do to a signal. Each note is warped on its own. Tap again to go back.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to switch; the button is lit while the Warp view shows."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page, left of All parameters. Also the last page of All parameters. Leaving Sound turns it off.",
+     "tips": [
+      "Every warp slider at 0 leaves the sound exactly as it was."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound-deep.param40"
+     ],
+     "ask": "How do I make this sound dirtier or stranger?"
     }
    },
    "recall": "Sound tab, or tap the sound name or Menu on Synth. Keys 1-0 pick the ten slots."
   },
   "sound-deep": {
    "title": "Sound editor",
-   "intro": "Every parameter of a sound, twelve to a page, with Prev and Next. Reached from the Sound tab: All parameters.",
+   "intro": "Every parameter of a sound, twelve to a page, with Prev and Next; the last page is Warp. Reached from the Sound tab: All parameters.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
@@ -1444,7 +1466,7 @@
      "title": "ALL PARAMETERS",
      "kind": "toggle",
      "summary": "Switches between eight quick sliders and every parameter.",
-     "does": "Quick controls are eight sliders. All parameters shows all 40 in pages of 12 (oscillators, envelopes, filter, modulation, effects), with Prev and Next below. Same sound either way.",
+     "does": "Quick controls are eight sliders. All parameters shows all 45 in five pages (oscillators, envelopes, filter, modulation, effects, then Warp), with Prev and Next below. Same sound either way.",
      "use": [
       {
        "how": "Touch",
@@ -1465,8 +1487,8 @@
     "deepprev": {
      "title": "PREV PAGE",
      "kind": "button",
-     "summary": "Shows the previous twelve parameters.",
-     "does": "All parameters runs over four pages of twelve: oscillators and attack; envelopes and filter; modulation, glide, drive, chorus; then feedback, reverb and level. Prev goes back and wraps around.",
+     "summary": "Shows the previous page of parameters.",
+     "does": "All parameters runs over five pages: oscillators; envelope and filter; modulation; glide, drive and the effects; then Warp, its picture and six sliders. Prev goes back and wraps around.",
      "use": [
       {
        "how": "Touch",
@@ -1485,8 +1507,8 @@
     "deepnext": {
      "title": "NEXT PAGE",
      "kind": "button",
-     "summary": "Shows the next twelve parameters.",
-     "does": "Goes on to the next of the four pages, wrapping to the first after the last. Page 1: oscillators and attack. Page 2: envelope and filter. Page 3: modulation, glide, drive, chorus, delay time. Page 4: feedback, reverb, level.",
+     "summary": "Shows the next page of parameters.",
+     "does": "Goes on to the next of the five pages, wrapping round. 1: oscillators. 2: envelope and filter. 3: modulation. 4: glide, drive, chorus, delay, reverb, level. 5: Warp (fold, crush, ring mod, bend in).",
      "use": [
       {
        "how": "Touch",
@@ -1514,7 +1536,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Saw or square into a low cutoff is the classic synth lead."
      ],
@@ -1536,7 +1558,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Set B PITCH to +12 for an octave of shimmer."
      ],
@@ -1558,7 +1580,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Small B MIX plus a little DETUNE gives a fat, slowly beating tone."
      ],
@@ -1580,7 +1602,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Fifths and octaves sound sweet; odd values sound dissonant."
      ],
@@ -1602,7 +1624,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Around 5 to 12 cents is the thick-but-in-tune range."
      ],
@@ -1624,7 +1646,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Needs SPREAD above 0 to be audible."
      ],
@@ -1646,7 +1668,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Pair high UNISON with 10 to 20 cents."
      ],
@@ -1668,7 +1690,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Small speakers may not reproduce very low notes."
      ],
@@ -1690,7 +1712,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Short decay plus noise makes percussion."
      ],
@@ -1712,7 +1734,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "LFO>WID can sweep this for a shimmering tone."
      ],
@@ -1734,7 +1756,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 1/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Try FM 1 to 2 with B PITCH +12 for glassy bells."
      ],
@@ -1756,7 +1778,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Attack above 300 ms makes quick playing disappear."
      ],
@@ -1778,7 +1800,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 2/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Decay does nothing if SUSTAIN is 100%."
      ],
@@ -1800,7 +1822,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 2/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Use DECAY with low SUSTAIN for a pluck."
      ],
@@ -1822,7 +1844,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Dream sounds use long releases; shorten them for tight playing."
      ],
@@ -1844,7 +1866,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 2/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "LOW is the usual choice."
      ],
@@ -1866,7 +1888,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Drag it while holding a note to hear the sweep."
      ],
@@ -1888,7 +1910,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Very high RESO plus low CUTOFF can be piercing."
      ],
@@ -1910,7 +1932,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 2/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Positive F.ENV with short F.DEC gives a plucky wow."
      ],
@@ -1932,7 +1954,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -1954,7 +1976,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -1976,7 +1998,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -1998,7 +2020,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -2020,7 +2042,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Low K.TRACK makes high notes dull."
      ],
@@ -2042,7 +2064,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "5 to 6 Hz sounds like a singer."
      ],
@@ -2064,7 +2086,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "5 to 10 cents is subtle and expressive."
      ],
@@ -2086,7 +2108,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Zero gives vibrato from the first instant."
      ],
@@ -2108,7 +2130,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Match the delay: 1 Hz is one wobble a second."
      ],
@@ -2130,7 +2152,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Slow LFO HZ with LFO>CUT 1 sounds like a pad breathing."
      ],
@@ -2152,7 +2174,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Keep it under 30% for a subtle shimmer."
      ],
@@ -2174,7 +2196,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Set WAVE A to SQUARE first."
      ],
@@ -2196,7 +2218,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "0 gives instant jumps without a slide."
      ],
@@ -2218,7 +2240,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Drive adds loudness; watch the Limit tag."
      ],
@@ -2240,7 +2262,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Chorus and reverb together sound big."
      ],
@@ -2262,7 +2284,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Slow, sparse playing sounds best with echoes."
      ],
@@ -2284,7 +2306,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "1/8 dotted is the classic rhythmic echo."
      ],
@@ -2306,7 +2328,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Has no effect when DELAY is 0."
      ],
@@ -2328,7 +2350,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/5). Re-tap the sound's slot to reload it.",
      "tips": [
       "Pull this down if the sound feels washed out."
      ],
@@ -2350,7 +2372,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Large size with low REVERB is a subtle halo."
      ],
@@ -2372,7 +2394,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/5. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "If the Limit tag shows, lower this or Master volume."
      ],
@@ -2394,7 +2416,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. It only shows; it is not touchable.",
+     "recall": "Sound > All parameters, page 1/5. It only shows; it is not touchable.",
      "tips": [
       "Two near-equal pitches make a slow beat: try DETUNE."
      ],
@@ -2416,7 +2438,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. It only shows; it is not touchable.",
+     "recall": "Sound > All parameters, page 2/5. It only shows; it is not touchable.",
      "tips": [
       "The dot is timed from when the screen saw the key go down."
      ],
@@ -2438,7 +2460,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. It only shows; it is not touchable.",
+     "recall": "Sound > All parameters, page 2/5. It only shows; it is not touchable.",
      "tips": [
       "Raise RESO for a peak at the dot; F.ENV opens the dashed curve."
      ],
@@ -2447,13 +2469,167 @@
       "sound-deep.param17"
      ],
      "ask": "What does the filter picture show?"
+    },
+    "warp": {
+     "title": "WARP",
+     "kind": "toggle",
+     "summary": "Bend, fold and crush: six sliders and a picture.",
+     "does": "Swaps the eight quick sliders for the Warp view: DRIVE, FOLD, CRUSH, DOWNSAMPLE, RING MOD and BEND IN, beside a picture of what they do to a signal. Each note is warped on its own. Tap again to go back.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to switch; the button is lit while the Warp view shows."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page, left of All parameters. Also the last page of All parameters. Leaving Sound turns it off.",
+     "tips": [
+      "Every warp slider at 0 leaves the sound exactly as it was."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound-deep.param40"
+     ],
+     "ask": "How do I make this sound dirtier or stranger?"
+    },
+    "warpcurve": {
+     "title": "IN > OUT",
+     "kind": "readout",
+     "summary": "What the warp does to a signal, drawn from the real code.",
+     "does": "A ramp from -1 (left) to +1 (right) run through the voice's own DRIVE, FOLD, CRUSH and DOWNSAMPLE; the line is what comes out. Straight: clean. Bent: drive. Folded back: fold. Steps: crush.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Nothing to tap. Move the warp sliders and watch the line."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page, Warp view, left. RING MOD and BEND IN move with time, so they are named under it, not drawn.",
+     "tips": [
+      "A flat line through the middle means the fold has folded the wave right back."
+     ],
+     "related": [
+      "sound-deep.param40",
+      "sound-deep.param42"
+     ],
+     "ask": "How do I read the IN > OUT picture?"
+    },
+    "param40": {
+     "title": "FOLD",
+     "kind": "slider",
+     "summary": "Folds loud peaks back down: bright, hollow, metallic.",
+     "does": "A wave-folder: past a point the wave turns back on itself instead of clipping, adding many harmonics. 0 is off; more folds more often. Works on every note on its own.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page: Warp, or All parameters p.5/5. Re-tap the sound's slot to reload it.",
+     "tips": [
+      "Fold with a sine wave and a little DRIVE gives bell- and gong-like tones."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound.warp"
+     ],
+     "ask": "What does FOLD do to the sound?"
+    },
+    "param41": {
+     "title": "CRUSH",
+     "kind": "slider",
+     "summary": "Fewer bits: from gritty to a coarse staircase.",
+     "does": "Rounds every sample to a coarser grid: off, then 12 bits down to 2. Few bits turn a smooth wave into steps, like an old sampler or game console.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page: Warp, or All parameters p.5/5. Re-tap the sound's slot to reload it.",
+     "tips": [
+      "Quiet notes crush hardest: the grid stays the same size."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound.warp"
+     ],
+     "ask": "What does CRUSH do to the sound?"
+    },
+    "param42": {
+     "title": "DOWNSAMPLE",
+     "kind": "slider",
+     "summary": "A lower sample rate: hiss, whine and aliasing.",
+     "does": "Holds each sample for longer, as if the rate were 1/2 down to 1/32 of normal. High notes fold back into strange low ones; everything gains a metallic whine. 0 is off.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page: Warp, or All parameters p.5/5. Re-tap the sound's slot to reload it.",
+     "tips": [
+      "Combine with CRUSH for a lo-fi, 8-bit sound."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound.warp"
+     ],
+     "ask": "What does DOWNSAMPLE do to the sound?"
+    },
+    "param43": {
+     "title": "RING MOD",
+     "kind": "slider",
+     "summary": "A clangy, bell-like ring that is out of tune on purpose.",
+     "does": "Multiplies each note by a sine 1.41 times its pitch, so you hear the sum and difference instead: metallic, inharmonic tones. 0 is off, 100% is all ring.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page: Warp, or All parameters p.5/5. Re-tap the sound's slot to reload it.",
+     "tips": [
+      "Half way keeps the note's pitch clear under the ring."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound.warp"
+     ],
+     "ask": "What does RING MOD do to the sound?"
+    },
+    "param44": {
+     "title": "BEND IN",
+     "kind": "slider",
+     "summary": "Each note swoops onto its pitch from above or below.",
+     "does": "Every new note starts this many semitones away (up to two octaves, up or down) and slides onto its pitch in about 70 ms. 0 is off.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound page: Warp, or All parameters p.5/5. Re-tap the sound's slot to reload it.",
+     "tips": [
+      "A small negative bend (-2) sounds like a singer scooping into a note."
+     ],
+     "related": [
+      "sound-deep.warpcurve",
+      "sound.warp"
+     ],
+     "ask": "What does BEND IN do to the sound?"
     }
    },
-   "recall": "Sound tab, then All parameters. Prev and Next turn the four pages."
+   "recall": "Sound tab, then All parameters. Prev and Next turn the five pages; the fifth is Warp."
   },
   "pulse": {
    "title": "Pulse",
-   "intro": "Eight pulse pads: click, metal, snap, scratch, clap, tom, sub thump and 808. Pick a pad, shape it with four sliders, latch it, sync it, loop it.",
+   "intro": "Eight pulse pads: click, metal, snap, scratch, clap, tom, sub thump and 808. Pick a pad, shape it with four sliders, warp it, latch it, sync it, loop it.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
@@ -2498,7 +2674,7 @@
      "title": "PAD 1",
      "kind": "pad",
      "summary": "Plays pad 1 and selects it. Starts as click.",
-     "does": "A short ringing click: TONE is its ring, LENGTH how fast it dies. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "A short ringing click: TONE is its ring, LENGTH how fast it dies. Tap: it plays and is selected, so the picture and sliders show it. Tap its name above the picture for another kind. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2532,7 +2708,7 @@
      "title": "PAD 2",
      "kind": "pad",
      "summary": "Plays pad 2 and selects it. Starts as metal.",
-     "does": "Six square waves at clashing ratios in a high band, like a hi-hat. TONE is the lowest square. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "Six square waves at clashing ratios in a high band, like a hi-hat. TONE is the lowest square. Tap: it plays and is selected. Tap its name above the picture for another kind. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2566,7 +2742,7 @@
      "title": "PAD 3",
      "kind": "pad",
      "summary": "Plays pad 3 and selects it. Starts as snap.",
-     "does": "A short pitched body at TONE under a burst of bright noise, like a snare. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "A short pitched body at TONE under a burst of bright noise, like a snare. Tap: it plays and is selected. Tap its name above the picture for another kind. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2600,7 +2776,7 @@
      "title": "PAD 4",
      "kind": "pad",
      "summary": "Plays pad 4 and selects it. Starts as scratch.",
-     "does": "A turntable scratch: a rough tone pushed forward, then pulled back, over LENGTH. TONE is its pitch at normal speed. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "A turntable scratch: a rough tone pushed, then pulled back, over LENGTH. TONE is its pitch at normal speed. Tap: it plays and is selected. Tap its name above the picture for another kind. Tap a pad showing LATCH to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2634,7 +2810,7 @@
      "title": "PAD 5",
      "kind": "pad",
      "summary": "Plays pad 5 and selects it. Starts as clap.",
-     "does": "Noise in a band at TONE, in three quick bursts 11 ms apart, then a tail. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "Noise in a band at TONE, in three quick bursts 11 ms apart, then a tail. Tap: it plays and is selected. Tap its name above the picture for another kind. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2668,7 +2844,7 @@
      "title": "PAD 6",
      "kind": "pad",
      "summary": "Plays pad 6 and selects it. Starts as tom.",
-     "does": "An 808 tom: a sine falling from 2.5 times TONE to TONE, with a short noise strike. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "An 808 tom: a sine falling from 2.5 times TONE to TONE, with a short noise strike. Tap: it plays and is selected. Tap its name above the picture for another kind. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2702,7 +2878,7 @@
      "title": "PAD 7",
      "kind": "pad",
      "summary": "Plays pad 7 and selects it. Starts as sub thump.",
-     "does": "A low sine that drops from four times TONE to TONE in about 15 ms. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "A low sine that drops from four times TONE to TONE in about 15 ms. Tap: it plays and is selected, so the picture and sliders show it. Tap its name above the picture for another kind. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2736,7 +2912,7 @@
      "title": "PAD 8",
      "kind": "pad",
      "summary": "Plays pad 8 and selects it. Starts as 808.",
-     "does": "A long, tuned 808 boom: a sine gliding down from twice TONE, softly saturated. Set TONE to the song's key. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "does": "A long, tuned 808 boom: a sine gliding down from twice TONE, softly saturated. Set TONE to the song's key. Tap: it plays and is selected. Tap its name above the picture for another kind. Tap a pad showing LATCH to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2977,18 +3153,18 @@
      "ask": "What does SYNC snap to?"
     },
     "pulsetype": {
-     "title": "TYPE",
+     "title": "PAD KIND",
      "kind": "button",
-     "summary": "The selected pad's kind: the next of eight.",
-     "does": "Steps the selected pad through click, metal, snap, scratch, clap, tom, sub thump and 808. The pad keeps its tone, length, rate and level; their meaning follows the new kind.",
+     "summary": "Tap the pad's name: it becomes the next kind.",
+     "does": "Steps the selected pad through click, metal, snap, scratch, clap, tom, sub thump and 808. The pad keeps its tone, length, rate, level and warp; their meaning follows the new kind.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap until the kind you want; the label says the next one."
+       "text": "Tap the boxed name above the picture until the kind you want."
       }
      ],
      "keys": [],
-     "recall": "Pulse page, last soft key. Any pad can be any kind, and two pads can be the same kind.",
+     "recall": "Pulse page, the name in the line above the big picture. Any pad can be any kind.",
      "tips": [
       "Two pads of one kind with different tones make an interval."
      ],
@@ -2997,6 +3173,116 @@
       "pulse.pulsetone"
      ],
      "ask": "Which kind should I choose?"
+    },
+    "pulsewarp": {
+     "title": "WARP",
+     "kind": "toggle",
+     "summary": "The four sliders become DRIVE, FOLD, CRUSH and BEND.",
+     "does": "Swaps the selected pad's TONE, LENGTH, RATE and LEVEL for its warp: DRIVE, FOLD, CRUSH and BEND. The pictures show the warped sound. Tap again for the sound sliders.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap the last soft key; it is lit while the warp sliders show."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, last soft key. Leaving the page shows the sound sliders again.",
+     "tips": [
+      "Warp settings are saved with the pad, like its tone."
+     ],
+     "related": [
+      "pulse.pulsedrive",
+      "pulse.pulsebend"
+     ],
+     "ask": "How do I distort a pulse pad?"
+    },
+    "pulsedrive": {
+     "title": "DRIVE",
+     "kind": "slider",
+     "summary": "Saturation: rounder, louder, fuzzier hits.",
+     "does": "Squashes the pad's sound through a soft curve: low is warm, high is fuzz. 0 is off. The same curve the Freq page uses.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page with WARP on. It sets the selected pad only.",
+     "tips": [
+      "Drive on a tom or 808 makes it punch through."
+     ],
+     "related": [
+      "pulse.pulsewarp",
+      "pulse.pulsewave"
+     ],
+     "ask": "What does DRIVE do to a pad?"
+    },
+    "pulsefold": {
+     "title": "FOLD",
+     "kind": "slider",
+     "summary": "Folds the peaks back: bright, metallic hits.",
+     "does": "A wave-folder: loud parts of the hit turn back on themselves, adding harmonics. 0 is off. Strongest at the start of a hit, where it is loudest.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page with WARP on. It sets the selected pad only.",
+     "tips": [
+      "Fold on a sub thump turns it into a knock."
+     ],
+     "related": [
+      "pulse.pulsewarp",
+      "pulse.pulsewave"
+     ],
+     "ask": "What does FOLD do to a pad?"
+    },
+    "pulsecrush": {
+     "title": "CRUSH",
+     "kind": "slider",
+     "summary": "Fewer bits and a lower rate: lo-fi grit.",
+     "does": "Off, then fewer bits (10 down to 2) and a lower sample rate together, as one amount. The picture shows the steps.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page with WARP on. It sets the selected pad only.",
+     "tips": [
+      "A little crush on hats and claps sounds like an old drum machine."
+     ],
+     "related": [
+      "pulse.pulsewarp",
+      "pulse.pulsewave"
+     ],
+     "ask": "What does CRUSH do to a pad?"
+    },
+    "pulsebend": {
+     "title": "BEND",
+     "kind": "slider",
+     "summary": "Sweeps the pitch up or down across the hit.",
+     "does": "Over the hit's length the pitch moves this many semitones (up to two octaves either way). On metal and clap it moves their noise band instead. 0 is off.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar; the value shows at the right."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page with WARP on. It sets the selected pad only.",
+     "tips": [
+      "-12 on a tom gives a falling, laser-like drop."
+     ],
+     "related": [
+      "pulse.pulsewarp",
+      "pulse.pulsewave"
+     ],
+     "ask": "What does BEND do to a pad?"
     }
    }
   },
@@ -6282,7 +6568,7 @@
    "use": [
     {
      "how": "Touch",
-     "text": "TYPE on the Pulse page steps the selected pad through them."
+     "text": "Tap the selected pad's name on the Pulse page to step through them."
     }
    ],
    "keys": [],

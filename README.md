@@ -60,12 +60,16 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Sounds**: ten factory sounds in slots 1‥0, five sine-based dream sounds (Haze, Fuzz, Teeth,
   Bend, Grain) offered as favourites, a randomiser that invents playable instruments
   (every result is loudness-normalised), mutate, undo, favourites, an all-parameters editor.
+- **Warp**: bend, warp and distort any sound. On the Sound page, Warp shows drive, fold, crush,
+  downsample, ring mod and bend in, per note, beside an IN > OUT picture drawn by the voice's own code
+  ([picture](docs/shots/29-sound-warp.png)). On the Pulse page, Warp gives each pad drive, fold, crush
+  and a pitch bend across the hit ([picture](docs/shots/30-pulse-warp.png)).
 - **Backing**: diatonic triads/sevenths from the scale. Tap up to eight chords for a looping
   progression, or latch one chord, or latch drone notes. Sustain / pulse / arpeggio styles.
   The backing keeps the sound it started with while you change the lead. `Ctrl`+`Space` starts and stops it.
 - **Pulse**: eight percussive pulse pads built from sines, squares and noise: click, metal, snap,
   scratch, clap, tom, sub thump and 808, any pad any kind,
-  each with Tone, Length, Rate and Level. Each pad shows a picture of its real sound (drawn by its own
+  each with Tone, Length, Rate and Level, and a warp (drive, fold, crush, bend). Each pad shows a picture of its real sound (drawn by its own
   generator); a strip shows every hit of the last four seconds. Latch keeps a pad going, Sync snaps
   rates to the tempo, and pad taps are recorded by the loop pedal.
 - **Freq**: up to four steady tones at exact frequencies (sine, triangle, square, saw or band-passed noise), with the beat between close tones shown and drawn from the real output, tone 2 bending tone 1 (FM or ring), fold / filter / drive / crush / delay, Hold, Gate (tempo-synced with Sync), the letter keys setting tone 1, and Snap to simple ratios. See [GUIDE chapter 18](docs/GUIDE.md#18-freq).

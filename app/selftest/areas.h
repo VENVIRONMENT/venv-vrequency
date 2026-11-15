@@ -21,6 +21,7 @@ void testLooper(Context &ctx);           // looper.cpp
 void testTouch(Context &ctx);            // touch.cpp
 void testSaving(Context &ctx);           // saving.cpp
 void testPulse(Context &ctx);            // pulse.cpp
+void testWarp(Context &ctx);             // warp.cpp
 void testFreq(Context &ctx);             // freq.cpp
 void testListeningBack(Context &ctx);    // listening.cpp
 void testControlSocket(Context &ctx);    // socket.cpp, which runs:

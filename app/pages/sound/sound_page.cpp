@@ -2,6 +2,7 @@
 #include "app/pages/sound/sound_page.h"
 #include "app/sounds/sounds.h"
 #include "app/ui/palette.h"
+#include "app/ui/zones.h"
 #include <QPainter>
 
 using namespace td;
@@ -9,7 +10,7 @@ using namespace pal;
 
 SoundPage::SoundPage(Shell &s) : Page(s), sounds(s.soundShelf()), pics(s.ui) {}
 
-void SoundPage::disarm() { deepEdit = false; favDelete = false; sounds.slotSave = false; }
+void SoundPage::disarm() { deepEdit = false; warpView = false; favDelete = false; sounds.slotSave = false; }
 
 void SoundPage::paintSlots() {
     qreal w = (688 - 4 * 8) / 5.0;
@@ -36,9 +37,14 @@ void SoundPage::paintSlots() {
 
 void SoundPage::paint() {
     paintSlots();
-    ui.txt(QRectF(18, 246, 440, 40), ui.fit(sounds.lead.name, 24, 440), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
-    ui.button(QRectF(704 - 220, 248, 220, 38), "deep", deepEdit ? QString::fromUtf8("‹ Quick controls") : QString::fromUtf8("All parameters ›"), deepEdit, [this] { deepEdit = !deepEdit; });
+    ui.txt(QRectF(18, 246, 300, 40), ui.fit(sounds.lead.name, 24, 300), 24, INK, Qt::AlignLeft | Qt::AlignVCenter, true);
+    // WARP swaps the quick sliders for the Warp view; either button leaves the other's view
+    ui.button(QRectF(704 - 220 - 8 - 150, 248, 150, 38), zn::warp, "Warp", warpView && !deepEdit, [this] {
+        warpView = deepEdit || !warpView; deepEdit = false;
+    });
+    ui.button(QRectF(704 - 220, 248, 220, 38), zn::deep, deepEdit ? QString::fromUtf8("‹ Quick controls") : QString::fromUtf8("All parameters ›"), deepEdit, [this] { deepEdit = !deepEdit; if (deepEdit) warpView = false; });
     if (deepEdit) { paintDeep(); return; }
-    paintQuick();
+    if (warpView) paintWarp(296);
+    else paintQuick();
     paintFavourites();
 }

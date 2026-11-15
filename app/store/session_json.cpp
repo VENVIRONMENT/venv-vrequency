@@ -66,7 +66,9 @@ td::Settings settingsFromJson(const QJsonObject &o) {
     return s;
 }
 
-// The pulse pads: one object per pad, {"type": "click", "tone": Hz, "length": ms, "rate": Hz, "level": 0..1}.
+// The pulse pads: one object per pad, {"type": "click", "tone": Hz, "length": ms, "rate": Hz, "level": 0..1,
+// "drive", "fold", "crush": 0..1, "bend": semitones}. A file without the warp (any file from before
+// Warp) loads with it off.
 QJsonArray pulseToJson(const td::PulsePad *pads) {
     QJsonArray a;
     for (int p = 0; p < td::kPulsePads; ++p) {
@@ -74,6 +76,8 @@ QJsonArray pulseToJson(const td::PulsePad *pads) {
         o["type"] = td::pulseTypeKey(pads[p].type);
         o["tone"] = (double)pads[p].tone; o["length"] = (double)pads[p].lengthMs;
         o["rate"] = (double)pads[p].rate; o["level"] = (double)pads[p].level;
+        o["drive"] = (double)pads[p].drive; o["fold"] = (double)pads[p].fold;
+        o["crush"] = (double)pads[p].crush; o["bend"] = (double)pads[p].bend;
         a.append(o);
     }
     return a;
@@ -92,6 +96,8 @@ void pulseFromJson(const QJsonArray &a, td::PulsePad *pads) {
         pads[p].lengthMs = (float)o["length"].toDouble(pads[p].lengthMs);
         pads[p].rate = (float)o["rate"].toDouble(pads[p].rate);
         pads[p].level = (float)o["level"].toDouble(pads[p].level);
+        pads[p].drive = (float)o["drive"].toDouble(0); pads[p].fold = (float)o["fold"].toDouble(0);
+        pads[p].crush = (float)o["crush"].toDouble(0); pads[p].bend = (float)o["bend"].toDouble(0);
         td::pulseClamp(pads[p]);
     }
 }

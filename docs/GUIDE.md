@@ -164,7 +164,33 @@ picture go back to normal. `Backspace` (panic) also switches it off.
 
 **Shape it.** The eight sliders are the quick controls: Cutoff, Reso, Attack, Release, Glide,
 Drive, Delay and Reverb. Drag one to change it. **All parameters** swaps them for every parameter
-the sound has, twelve to a page, with Prev and Next at the bottom.
+the sound has, twelve to a page, with Prev and Next at the bottom (the fifth page is Warp, below).
+
+**Bend, warp and break it.** Tap **Warp**, beside All parameters, and the eight sliders become the
+Warp view. Tap it again to go back.
+
+![The Warp view on the Sound page](shots/29-sound-warp.png)
+
+- **IN > OUT**, the picture on the left, shows what the warp does to a sound. Imagine a signal
+  rising from its lowest (left) to its highest (right); the line is what comes out. A straight line
+  means clean. A line that bends flat at the ends is drive. A line that turns back on itself is fold.
+  A staircase is crush. It is drawn by running the synth's own warp code, so it is the truth.
+- **Drive** is the same Drive as in the quick sliders: warm, then fuzzy.
+- **Fold** folds the loud parts of the wave back down instead of clipping them: bright, hollow,
+  bell-like or metallic.
+- **Crush** rounds the sound to fewer steps: off, then 12 bits (barely there) down to 2 bits (a
+  coarse buzz), like an old sampler or a game console.
+- **Downsample** holds each sample longer, as if the sound were played at 1/2 down to 1/32 of its
+  normal rate: a metallic whine, and high notes that fold back into odd low ones.
+- **Ring mod** mixes in the note multiplied by a sine 1.41 times its pitch. You hear clangy,
+  out-of-tune partials, like a bell or a robot voice. At 100% the note itself disappears.
+- **Bend in** makes every new note start up to two octaves away (up or down) and swoop onto its
+  pitch in about 70 ms. 0 is off; a small negative bend sounds like a singer scooping into a note.
+
+Each note is warped on its own, so chords stay clear instead of turning to mush. With every warp
+slider at 0 a sound is exactly what it was before. Warp is saved with the sound: in slots, favourites,
+sessions and Undo, like every other setting. **New sound** leaves the warp off; **Mutate** leaves it
+as it is.
 
 **Keep it.** There are two places:
 
@@ -260,8 +286,9 @@ Each pad shows a small picture of its sound. The picture is made by running the 
 generator, the same code the audio uses, so it is the sound you hear (drawn again whenever a
 setting changes).
 
-**The eight kinds.** Pad *n* starts as the *n*-th kind, but any pad can be any kind (**Type**).
-What **Tone** means depends on the kind:
+**The eight kinds.** Pad *n* starts as the *n*-th kind, but any pad can be any kind: tap the
+selected pad's **name** (the boxed word in the line above the big picture, `TOM ›`) and it becomes
+the next kind. What **Tone** means depends on the kind:
 
 | Kind | What it is | Tone |
 |---|---|---|
@@ -292,9 +319,24 @@ played it, oldest on the left, with a thin bar for its length.
 | Loop | the loop pedal (the same as `Enter`): pad taps made while it records go into the loop and play back with the pad's settings of the moment |
 | Latch | the selected pad is hit again Rate times a second until you tap it (or Latch) again. Several pads can be latched; `Backspace` stops them all |
 | Sync | every pad's Rate snaps to the nearest division of the tempo (from four bars to 1/512), shown beside the rate; latched one-shots then fall on the beat clock's grid, in time with the loop |
-| Type | the selected pad's next kind |
+| Warp | the four sliders become the selected pad's warp: Drive, Fold, Crush and Bend (below). Tap again for Tone, Length, Rate and Level |
 
-The pads' settings and Sync are saved in your state and in sessions; latches are not, so nothing
+**Warp a pad.** With **Warp** on, the sliders beside the big picture bend and break the selected pad:
+
+![The Pulse page with Warp on](shots/30-pulse-warp.png)
+
+- **Drive** pushes the hit through a soft curve: rounder and louder at first, fuzzy at the top.
+- **Fold** folds the loud start of the hit back on itself: brighter, knocking, metallic.
+- **Crush** gives it fewer bits and a lower sample rate together: lo-fi grit.
+- **Bend** sweeps the pitch across the hit, up to two octaves up or down: -12 on a tom is a falling
+  laser drop, +12 on a click a rising chirp. On Metal and Clap, which have no pitch, it moves their
+  noise band instead.
+
+The top right of the big picture names the warp in use, and both the big picture and the small
+ones on the pads show the warped sound: they are made by the same code the audio plays. Leaving
+the page turns the Warp key off again (the pads keep their warp).
+
+The pads' settings (warp included) and Sync are saved in your state and in sessions; latches are not, so nothing
 starts by itself. Latched repeats are not written into a loop, only taps.
 
 ## 9. The loop pedal

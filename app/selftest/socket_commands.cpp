@@ -81,6 +81,9 @@ const Case cases[] = {
     {R"({"cmd":"backing"})", false, 0},
     {R"({"cmd":"pulse","pad":0,"type":"tom","tone":800,"length":120,"rate":30,"level":0.5})", true, 0},
     {R"({"cmd":"pulse","pad":0,"type":"banjo"})", false, 0},
+    {R"({"cmd":"pulse","pad":1,"drive":0.5,"fold":0.25,"crush":0.1,"bend":-7})", true, 0},
+    {R"({"cmd":"pulse","pad":1,"bend":30})", false, 0},
+    {R"({"cmd":"pulse","pad":1,"fold":2})", false, 0},
     {R"({"cmd":"pulse","pad":8,"hit":true})", false, 0},
     {R"({"cmd":"pulse","hit":true})", false, 0},
     {R"({"cmd":"pulse","pad":2,"tone":5})", false, 0},
@@ -140,13 +143,15 @@ void socketEveryCommand(Context &ctx, Link &link) {
         const QJsonObject st = r["result"].toObject();
         check(st["backing"].toObject()["chords"].toArray().size() >= 3 &&
               st["pulse"].toObject()["pads"].toArray()[0].toObject()["type"].toString() == "tom" && st["pulse"].toObject()["sync"].toBool() &&
+              st["pulse"].toObject()["pads"].toArray()[1].toObject()["drive"].toDouble() == 0.5 && st["pulse"].toObject()["pads"].toArray()[1].toObject()["bend"].toDouble() == -7 &&
               st["tempo"].toDouble() == 120 && st["page"].toString() == "synth" && !st.contains("beat"),
-              "state reflects what the commands did (backing chords, a pulse pad, sync, tempo, page)");
+              "state reflects what the commands did (backing chords, a pulse pad and its warp, sync, tempo, page)");
     }
     inst.set(S_BPM, 100);
     inst.cmd(EV_BACK, BC_CLEAR);
     inst.set(S_PULSESYNC, 0);
     for (int p = 0; p < kPulsePads; ++p) inst.pulseSet(p, PF_TYPE, pulseDefault(p).type);
+    for (int p = 0; p < kPulsePads; ++p) for (int f : {PF_DRIVE, PF_FOLD, PF_CRUSH, PF_BEND}) inst.pulseSet(p, f, 0);
     for (int p = 0; p < kPulsePads; ++p) { inst.pulseSet(p, PF_TONE, pulseDefault(p).tone); inst.pulseSet(p, PF_LENGTH, pulseDefault(p).lengthMs); inst.pulseSet(p, PF_RATE, pulseDefault(p).rate); inst.pulseSet(p, PF_LEVEL, pulseDefault(p).level); }
 }
 } // namespace selftest

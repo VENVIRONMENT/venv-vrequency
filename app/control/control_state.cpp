@@ -47,6 +47,7 @@ QJsonObject ControlServer::cmdState() {
         QJsonObject po;
         po["type"] = pulseTypeKey(d.type); po["tone"] = (double)d.tone; po["length"] = (double)d.lengthMs;
         po["rate"] = (double)d.rate; po["level"] = (double)d.level; po["latched"] = u.pulseLatched[p];
+        po["drive"] = (double)d.drive; po["fold"] = (double)d.fold; po["crush"] = (double)d.crush; po["bend"] = (double)d.bend;
         pp.append(po);
     }
     pl["pads"] = pp;

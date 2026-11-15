@@ -37,6 +37,9 @@ QString paramText(int p, float v) {
     case P_FENV: case P_LFOCUT: return QString("%1 oct").arg(v, 0, 'f', 1);
     case P_FM: return QString::number(v, 'f', 1);
     case P_LEVEL: return QString("%1 dB").arg(20 * std::log10(v), 0, 'f', 1);
+    case P_CRUSH: return v < 0.5f ? QString("off") : QString("%1 bits").arg((int)crushBits(v));
+    case P_DSAMP: return v <= 0 ? QString("off") : QString("1/%1").arg(1 / dsampKeep(v), 0, 'f', 1 / dsampKeep(v) < 9.95f ? 1 : 0);
+    case P_BENDIN: return v == 0 ? QString("off") : QString("%1%2 st").arg(v > 0 ? "+" : "").arg((int)v);
     default: {
         const ParamInfo &m = paramInfo(p);
         return QString("%1%").arg((int)std::round((v - m.min) / (m.max - m.min) * 100));
