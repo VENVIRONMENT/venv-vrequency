@@ -41,7 +41,6 @@ void tapAt(MainWindow &w, QPointF at, int finger) {
     w.pointer(finger, at, PH_RELEASE);
 }
 void tap(MainWindow &w, const QString &zone) { tapAt(w, w.zoneRect(zone).center(), 7); }
-void touch(MainWindow &w, QPointF at) { tapAt(w, at, 3); }
 void tourTapAt(MainWindow &w, QPointF at) { tapAt(w, at, 9); }
 void tourTap(MainWindow &w, const QString &zone) { tourTapAt(w, w.zoneRect(zone).center()); }
 

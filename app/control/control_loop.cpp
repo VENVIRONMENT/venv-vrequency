@@ -1,4 +1,4 @@
-// venv-vrequency — the control socket: loop, backing chords, beat and track commands.
+// venv-vrequency — the control socket: loop, backing chords and beat commands.
 #include "app/control/control.h"
 #include "app/control/control_internal.h"
 #include "app/shell/mainwindow.h"
@@ -121,49 +121,3 @@ QJsonObject ControlServer::cmdBeat(const QJsonObject &a, QString &e) {
     QJsonObject r; r["steps_set"] = (int)steps.size();
     return r;
 }
-
-QJsonObject ControlServer::cmdTrack(const QJsonObject &a, QString &e) {
-    Args A{a, e};
-    const QString act = A.str("action", "", 8, true);
-    if (!e.isEmpty()) return {};
-    QJsonObject r;
-    bool any = false;
-    for (int ln = 0; ln < kLanes; ++ln) any = any || !w.trackPage.track.lane[ln].empty();
-    if (act == "keep") {
-        w.trackPage.trackKeep();
-        r["clips"] = (int)w.trackPage.track.clips.size();
-    } else if (act == "clear") {
-        inst.trackDo(TC_STOP);
-        w.trackPage.trackApply([](TrackData &t) { const bool had = !t.clips.empty(); t = TrackData(); return had; });
-        w.trackPage.handOn = false;
-        r["clips"] = 0;
-    } else if (act == "place") {
-        const int clip = A.integer("clip", 0, 1000, 0, true);
-        const int bar = A.integer("bar", 0, kTrackMaxBars - 1, 0, true);
-        const int lane = A.integer("lane", 0, kLanes - 1, -1);
-        if (!e.isEmpty()) return {};
-        if (clip >= (int)w.trackPage.track.clips.size()) { e = "no such clip: keep first (see state.track.clips)"; return {}; }
-        w.trackPage.handOn = false;
-        w.trackPage.trackTake(clip);
-        const int l = lane >= 0 ? lane : laneForKind(w.trackPage.track.clips[clip]->kind);
-        const bool ok = w.trackPage.trackPlace(l, bar);
-        w.trackPage.handOn = false;
-        if (!ok) { e = "no room there"; return {}; }
-        r["placed"] = true;
-    } else if (act == "play") {
-        if (!any) { e = "nothing on the track"; return {}; }
-        if (!inst.uiState().trackPlaying) w.trackPage.trackPlayStop();
-    } else if (act == "stop") {
-        if (inst.uiState().trackPlaying) w.trackPage.trackPlayStop();
-    } else if (act == "export") {
-        if (!any) { e = "nothing on the track to export"; return {}; }
-        if (w.trackPage.exportStatus() == 1) { e = "an export is already running"; return {}; }
-        w.trackPage.trackExport();
-        r["path"] = w.trackPage.exportFile; r["async"] = true; // the file is complete when state.track.exporting is false
-    } else {
-        e = "action must be keep, place, play, stop, export or clear";
-        return {};
-    }
-    return r;
-}
-

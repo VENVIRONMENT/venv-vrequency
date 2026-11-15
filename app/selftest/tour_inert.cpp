@@ -23,8 +23,6 @@ QByteArray synthBytes(MainWindow &w, Instrument &inst) {
     extra["armed"] = w.armedModes();
     extra["lead"] = QString::fromUtf8(w.sounds.lead.name);
     extra["undo"] = (int)w.sounds.undo.size();
-    extra["trackUndo"] = w.trackPage.trackUndoDepth();
-    extra["clips"] = (int)w.trackPage.trackData().clips.size();
     extra["favs"] = QDir(store::baseDir() + "/favourites").entryList(QDir::Files).size();
     extra["help"] = w.helpPage.sub;
     o["_w"] = extra;

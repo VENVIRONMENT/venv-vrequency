@@ -5,7 +5,6 @@
 #include "core/instrument/instrument.h"
 #include "app/shell/mainwindow.h"
 #include "core/presets/presets.h"
-#include "core/presets/sound_shelf.h"
 #include <QThread>
 #include <array>
 
@@ -43,7 +42,6 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     pump(inst, 80);
 
     playPages(rig, pics);
-    trackPages(rig, pics);
     for (int i = 0; i < (int)pics.size(); ++i) extras(TourView::picPage(i), pics[i]);
 }
 

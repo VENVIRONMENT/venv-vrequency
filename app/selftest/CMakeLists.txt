@@ -17,7 +17,6 @@ target_sources(vrequency PRIVATE
   listening.cpp
   looper.cpp
   render_shots.cpp
-  render_track.cpp
   saving.cpp
   selftest.cpp
   selftest.h
@@ -37,11 +36,4 @@ target_sources(vrequency PRIVATE
   tour_limits.cpp
   tour_open.cpp
   tour_pictures.cpp
-  tour_select.cpp
-  track.cpp
-  track_arrange.cpp
-  track_edit.cpp
-  track_mixer.cpp
-  track_play.cpp
-  track_saved.cpp
-  track_sound.cpp)
+  tour_select.cpp)

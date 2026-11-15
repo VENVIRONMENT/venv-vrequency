@@ -121,7 +121,6 @@ QJsonObject ControlServer::dispatch(const QString &cmd, const QJsonObject &a, QS
     if (cmd == "loop") return cmdLoop(a, e);
     if (cmd == "backing") return cmdBacking(a, e);
     if (cmd == "beat") return cmdBeat(a, e);
-    if (cmd == "track") return cmdTrack(a, e);
     if (cmd == "page") return cmdPage(a, e);
     if (cmd == "highlight" || cmd == "unhighlight" || cmd == "zones") return cmdGuide(cmd, a, e);
     if (cmd == "tour") return cmdTour(a, e);

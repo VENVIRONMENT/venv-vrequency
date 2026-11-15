@@ -98,7 +98,7 @@ void guideHelpPage(Context &ctx, Link &link) {
     if (!shotsDir.isEmpty()) im.save(shotsDir + "/17-dock-help.png");
     const int sub0 = w.helpPage.sub;
     tap(w, zn::help_next);
-    check(w.helpPage.sub == (sub0 + 1) % 4, "the Help sections are still reachable with the next button");
+    check(w.helpPage.sub == (sub0 + 1) % kHelpParts, "the Help sections are still reachable with the next button");
     w.guide.clearHighlight(); w.guide.dockClose(); w.setPage(PG_PLAY);
 }
 } // namespace selftest

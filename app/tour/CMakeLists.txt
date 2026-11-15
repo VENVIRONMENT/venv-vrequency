@@ -16,5 +16,4 @@ target_sources(vrequency PRIVATE
   tourdemo.cpp
   tourdemocapture.cpp
   tourdemoplay.cpp
-  tourdemotrack.cpp
   tourdemozones.cpp)

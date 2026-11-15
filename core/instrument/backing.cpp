@@ -6,7 +6,6 @@
 namespace td {
 
 void Instrument::chordTap(int degree) {
-    if (trackPlaying) return; // the chords lane is using the backing
     degree = ((degree % 7) + 7) % 7;
     bool wasActive = backingActive();
     switch (st.backMode) {
@@ -39,8 +38,7 @@ void Instrument::tickBacking(double b0, double b1) {
     progPos = -1;
     if (backPlaying) {
         if (progLen > 0) {
-            // a track piece can begin part-way through a block, so the track reads the chord at the block's end
-            double rel = ((trackPlaying ? b1 : b0) - progOrigin) / st.chordBeats;
+            double rel = (b0 - progOrigin) / st.chordBeats;
             long idx = (long)std::floor(rel);
             idx %= progLen; if (idx < 0) idx += progLen;
             progPos = (int)idx;

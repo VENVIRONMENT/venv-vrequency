@@ -101,7 +101,7 @@ void MainWindow::paintToast() {
     if (clock.elapsed() < toastUntil && !toastText.isEmpty()) {
         QString t = ui.fit(toastText, 14, 640);
         int w = t.size() * ui.chW(14) + 28;
-        QRectF r(std::floor((CW - w) / 2), pg == PG_TRACK ? 398 : 86, w, 30); // on the Track page, clear of the bars
+        QRectF r(std::floor((CW - w) / 2), 86, w, 30);
         ui.frame(r.adjusted(-4, -4, 4, 4), INK, BG);
         ui.tag(r, t, 14);
     }

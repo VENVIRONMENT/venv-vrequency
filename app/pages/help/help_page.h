@@ -1,4 +1,4 @@
-// venv-vrequency — the Help page (PG_HELP): the guide to the keys, four parts of it, one row per key.
+// venv-vrequency — the Help page (PG_HELP): the guide to the keys, three parts of it, one row per key.
 // Every row is a touch zone with a stable name, so Rook can point at it and a tap asks about it.
 // help_page.cpp draws it and asks Rook; help_rows.cpp holds the words of each part.
 #pragma once
@@ -11,7 +11,8 @@ class Chat;
 class Guide;
 
 struct HelpRow { QString k, d; };            // the keys, and what they do
-std::vector<HelpRow> helpRows(const KeyMap &km, int part);   // part 0 playing, 1 commands, 2 beat, 3 track
+constexpr int kHelpParts = 3;
+std::vector<HelpRow> helpRows(const KeyMap &km, int part);   // part 0 playing, 1 commands, 2 beat
 
 class HelpPage : public Page {
 public:
@@ -19,7 +20,7 @@ public:
     void paint() override;
 
     // what the window, the control socket, the tour and the self-test reach
-    int sub = 0;                             // which of the four parts is showing
+    int sub = 0;                             // which of the three parts is showing
     QString sel;                             // the row last tapped
     QHash<QString, QString> desc;            // row zone -> its description (the guide reads these)
 

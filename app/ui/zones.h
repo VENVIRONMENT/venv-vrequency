@@ -7,7 +7,6 @@
 //   minus(bpm)    -> "bpm-"     the two halves of a stepper
 //   plus(bpm)     -> "bpm+"
 #pragma once
-#include "app/ui/zones_track.h"
 #include <QString>
 
 namespace zn {

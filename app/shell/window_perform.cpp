@@ -42,7 +42,6 @@ void MainWindow::perform(int act, bool shift) {
     case A_BEAT_PLAY: inst.beatDo(BT_PLAYSTOP); toast(u.beatPlaying ? "Beat stopped" : "Beat playing", 900); break;
     case A_BEAT_REC: inst.beatDo(BT_REC); toast(u.beatRec ? "Beat recording off" : "Beat recording: pads write hits", 1200); break;
     case A_PLAY_LAST: recorder.togglePlayback(); break;
-    case A_TRACK_PLAY: trackPage.trackPlayStop(); break;
     case A_CHAT: // Ctrl+Y: the chat dock on this page; with Shift (or on the Chat page itself) the full Chat page
         if (shift || pg == PG_CHAT) chat.toggle();
         else if (!guide.dockOpen) guide.dockOpenFocus();

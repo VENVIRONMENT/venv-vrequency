@@ -16,13 +16,6 @@ void Instrument::snapshot(SessionData &out) {
     out.backing = parts[1].patch;
     for (int i = 0; i < kProgMax; ++i) out.prog[i] = prog[i];
     out.progLen = progLen; out.holdChord = holdChord; out.droneMask = droneMask;
-    if (liveSaved) { // a track is playing on the backing: report the live backing, not the clip
-        out.settings.backStyle = live.backStyle; out.settings.chordBeats = live.chordBeats;
-        out.settings.arpRate = live.arpRate; out.settings.seventh = live.seventh;
-        out.backing = live.patch;
-        for (int i = 0; i < kProgMax; ++i) out.prog[i] = live.prog[i];
-        out.progLen = live.progLen; out.holdChord = live.holdChord; out.droneMask = live.droneMask;
-    }
     out.loopBeats = nLayers > 0 ? loopLen : 0;
     for (int d = 0; d < kDrums; ++d) out.beat[d] = beatPat[d];
     for (int i = 0; i < nLayers; ++i) {

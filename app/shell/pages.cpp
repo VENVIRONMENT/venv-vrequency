@@ -2,8 +2,8 @@
 #include "app/shell/shell.h"
 
 namespace {
-const char *kNames[PG_COUNT] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
-const char *kTitles[PG_COUNT] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
+const char *kNames[PG_COUNT] = {"synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
+const char *kTitles[PG_COUNT] = {"Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
 } // namespace
 
 const char *pageName(int p) { return p >= 0 && p < PG_COUNT ? kNames[p] : "synth"; }

@@ -1,7 +1,6 @@
-// venv-vrequency — engine tests: the factory sounds, the randomiser, the dream sounds and the shelf.
+// venv-vrequency — engine tests: the factory sounds, the randomiser, and the dream sounds.
 #include "tests/support.h"
 #include "core/presets/presets.h"
-#include "core/presets/sound_shelf.h"
 #include <algorithm>
 #include <cstring>
 #include <string>
@@ -144,36 +143,4 @@ void testExtraSounds() {
         for (int k = 0; k < kFactoryCount; ++k)
             if (std::strcmp(extraPatch(i).name, factoryPatch(k).name) == 0) names.clear();
     CHECK(!names.empty(), "no extra sound shares a name with a factory sound");
-}
-
-void testSoundShelf() {
-    SECTION("sound shelf: Keys, Guitar and Bass");
-    std::vector<std::string> names;
-    float lo = 1e9f, hi = 0;
-    bool unique = true, found = true, hints = true;
-    for (int k = 0; k < kLibKinds; ++k)
-        for (int i = 0; i < kLibSounds; ++i) {
-            const Patch &p = librarySound(k, i);
-            for (const std::string &n : names) unique = unique && n != p.name;
-            names.push_back(p.name);
-            int at = -1;
-            found = found && libraryFind(p.name, &at) == k && at == i;
-            hints = hints && std::strlen(libraryHint(k, i)) > 3;
-            Rig r;
-            r.inst.setPatch(0, p);
-            r.inst.set(S_VOLUME, 1.0f);
-            r.inst.key(1, 2, true);
-            r.run(0.25);
-            bool finite = true;
-            for (float v : r.L) if (!(v == v)) finite = false;
-            const float pk = std::max(peak(r.L), peak(r.R));
-            CHECK(finite && pk > 0.02f && pk <= 1.0f, "%s %s sounds and stays inside full scale (peak %.3f)", libraryKindName(k), p.name, pk);
-            lo = std::min(lo, pk); hi = std::max(hi, pk);
-        }
-    CHECK(unique && found && hints, "eighteen sounds, each with its own name, findable by it, with a hint");
-    for (int i = 0; i < kExtraCount; ++i) unique = unique && libraryFind(extraPatch(i).name) < 0;
-    for (int i = 0; i < kFactoryCount; ++i) unique = unique && libraryFind(factoryPatch(i).name) < 0;
-    CHECK(unique, "no shelf sound shares a name with a factory or dream sound");
-    CHECK(libraryOctave(SK_BASS) == -1 && libraryOctave(SK_KEYS) == 0 && libraryOctave(SK_GUITAR) == 0, "bass sits an octave down, the others where they were played");
-    CHECK(&librarySound(SK_KEYS, 0) == &librarySound(SK_KEYS, 0), "a sound is built once and kept");
 }

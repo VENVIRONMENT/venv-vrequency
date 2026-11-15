@@ -33,9 +33,9 @@ void modesDropOnPageChange(Context &ctx, Client &c) {
     for (const Route &r : routes) {
         w.setPage(PG_SOUND); w.shot();
         w.armAllModes();
-        check(w.armedModes() == "delete,store,erase,remove", "all four modes can be armed");
+        check(w.armedModes() == "delete,store,erase", "all three modes can be armed");
         r.go(); w.shot();
-        check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store, Erase and the remove confirmation").arg(r.name));
+        check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store and Erase").arg(r.name));
         w.guide.clearHighlight(); w.guide.dockClose();
     }
     w.setPage(PG_SOUND); w.shot();

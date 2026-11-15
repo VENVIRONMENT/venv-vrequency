@@ -88,7 +88,6 @@ void Instrument::panic() {
     }
     for (auto &v : voices)
         if (v.active()) v.kill(sr);
-    if (trackPlaying) trackStop();
     backPlaying = false;
     beatPlaying = beatRec = false; drums.silence();
     if (beatSwitching) beatSwitchNow(); // a beat waiting for the bar line arrives now

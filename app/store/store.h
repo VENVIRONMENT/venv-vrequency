@@ -9,7 +9,6 @@
 #pragma once
 #include "core/instrument/instrument.h"
 #include "core/instrument/session.h"
-#include "core/track/track.h"
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QString>
@@ -30,10 +29,8 @@ QJsonObject sessionToJson(const td::SessionData &s);
 bool sessionFromJson(const QJsonObject &o, td::SessionData &s);
 QJsonArray beatToJson(const uint16_t *beat);
 void beatFromJson(const QJsonArray &a, uint16_t *beat);
-QJsonArray layersToJson(const std::vector<td::LayerData> &src);          // recorded layers: a loop's, a clip's
+QJsonArray layersToJson(const std::vector<td::LayerData> &src);          // a loop's recorded layers
 std::vector<td::LayerData> layersFromJson(const QJsonArray &src);
-QJsonObject trackToJson(const td::TrackData &t);
-void trackFromJson(const QJsonObject &o, td::TrackData &t); // anything damaged is left out
 
 bool writeJson(const QString &path, const QJsonObject &o);
 bool readJson(const QString &path, QJsonObject &o);

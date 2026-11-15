@@ -23,7 +23,6 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     testSaving(ctx);
     testBeat(ctx);
     testKeptBeats(ctx);
-    testTrack(ctx);
     testListeningBack(ctx);
     testControlSocket(ctx);
     testGuidedHelp(ctx);

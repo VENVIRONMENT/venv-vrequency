@@ -16,7 +16,6 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     resize(720, 720);
     clock.start();
     pageOf[PG_CHAT] = &chatPage;
-    pageOf[PG_TRACK] = &trackPage;
     pageOf[PG_PLAY] = &synthPage;
     pageOf[PG_SOUND] = &soundPage;
     pageOf[PG_BEAT] = &beatPage;
@@ -34,9 +33,8 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     loadState(sd);                                           // the state file, if there is one
     sd.lead = sounds.lead; sd.backing = sounds.lead;
     inst.restore(sd);
-    inst.setTrack(std::make_shared<const TrackData>(trackPage.track));
     saveTimer.setSingleShot(true);
-    connect(&saveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edited track is on disk a moment later
+    connect(&saveTimer, &QTimer::timeout, this, [this] { saveState(); }); // an edit is on disk a moment later
     if (scratch) {
         sounds.extrasSeeded = kExtraCount;
         return;                                              // a picture-drawing copy: no timers, no probes, no files
@@ -52,7 +50,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.backPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || tunePage.listener.state == 1 || recorder.recording() || !keys.held.isEmpty() ||
-                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || s.trackPlaying || trackPage.exportStatus() != 0 || tourOpen() || (tourView && tourView->promptShowing());
+                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);
@@ -61,7 +59,6 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
 
 MainWindow::~MainWindow() {
     recorder.shutdown();
-    trackPage.stopExport();
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {

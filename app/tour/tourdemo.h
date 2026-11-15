@@ -19,8 +19,6 @@ struct Rig {
     MainWindow &w;
     void key(int k, bool down) { w.handleKey(k, down); }
     void press(int k) { w.shot(); key(k, true); key(k, false); }  // the window is drawn first, as it would be on a screen: its zones and readouts are current
-    // Escape drops what is in hand or closes a panel; on the Track page with nothing to drop it would leave for the Synth
-    void esc() { if (w.trackPage.clipInHand() || w.trackPage.chopping() || w.trackPage.pickingSound() || w.trackPage.mixing()) press(Qt::Key_Escape); }
     void ctrl(int k) { key(Qt::Key_Control, true); press(k); key(Qt::Key_Control, false); }
     void tap(const QString &zone) {
         w.shot();
@@ -34,10 +32,9 @@ struct Rig {
 
 // The part of the picture-drawing that needs the window's private state (a friend of MainWindow).
 struct TourDemo {
-    static void capture(Rig &rig, int page, TourView::Pic &pic);       // the controls of whatever the scratch window shows now
+    static void capture(Rig &rig, int page, TourView::Pic &pic);       // the controls of whatever the scratch window shows now (page: a tour page)
     static td::LayerData melody(const td::Patch &sound, std::initializer_list<std::array<double, 3>> notes);
     static void extras(int page, TourView::Pic &pic);                  // named controls that are not zones
     static void playPages(Rig &rig, std::vector<TourView::Pic> &pics); // synth, sound, beat, backing, tune, system, help, chat
-    static void trackPages(Rig &rig, std::vector<TourView::Pic> &pics); // the Track page and its panels
     static void build(std::vector<TourView::Pic> &pics, SinkProbe *sink);
 };

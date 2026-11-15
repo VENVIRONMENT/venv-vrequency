@@ -1,5 +1,5 @@
 // venv-vrequency — pictures of every page, for the documentation: `vrequency --audio null --render DIR`.
-// (The Track page's pictures are in render_track.cpp, the tour's in tourdemo.cpp.)
+// (The tour's pictures are in tourdemo.cpp.)
 #include "app/selftest/selftest.h"
 #include "app/selftest/areas.h"
 #include "app/selftest/harness.h"
@@ -15,7 +15,7 @@ namespace selftest {
 namespace {
 // every page as it stands, while a slide is held
 void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
-    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p);
         if (p == PG_BEAT) { // a beat in progress, so the strip and the play line show something
@@ -35,7 +35,7 @@ void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
             w.chat.toggle(); w.chat.toggle(); w.setPage(PG_CHAT); // leaves the draft empty, unread cleared
         }
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
-        if (p != PG_TRACK) w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
+        w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
         if (p == PG_BEAT) { inst.beatDo(BT_PLAYSTOP); inst.set(S_BEATVOL, 0.7f); wait(60); }
     }
 }
@@ -118,7 +118,6 @@ int renderShots(MainWindow &w, Instrument &inst, const QString &dir) {
     shootGuidedHelp(w, dir);
     shootGlitch(w, inst, dir);
     key(w, Qt::Key_F, false); key(w, Qt::Key_A, false);
-    renderTrackShots(w, inst, dir);
     if (qEnvironmentVariableIsSet("VREQUENCY_HELP_SHOTS")) shootHelpSections(w, dir);
     shootKeyTest(w, dir);
     std::printf("wrote %s\n", dir.toUtf8().constData());

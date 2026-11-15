@@ -76,17 +76,12 @@ void Instrument::handle(const Event &e) {
         case LC_PLAYSTOP: loopPlayStop(); break;
         }
         break;
-    case EV_TRACK:
-        if (e.a == TC_STOP) { if (trackPlaying) trackStop(); }
-        else trackStart(e.b, e.a == TC_ONCE);
-        break;
     case EV_BACK:
-        if (trackPlaying) break; // the chords lane is using the backing
         switch (e.a) {
         case BC_PLAYSTOP:
             backPlaying = !backPlaying;
             if (backPlaying) {
-                if (loopState == L_EMPTY && !beatPlaying && !trackPlaying) { beat = 0; progOrigin = 0; }
+                if (loopState == L_EMPTY && !beatPlaying) { beat = 0; progOrigin = 0; }
                 else progOrigin = std::floor(beat / st.chordBeats) * st.chordBeats;
                 lastPulseStep = lastArpStep = -1;
             }

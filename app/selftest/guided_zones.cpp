@@ -16,11 +16,10 @@ namespace selftest {
 void guideZoneListing(Context &ctx, Link &link) {
     MainWindow &w = ctx.w; Client &c = link.c;
     bool allSame = true; int total = 0; QStringList bad;
-    static const char *pn[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p); w.shot();
         QSet<QString> drawn; for (const QString &n : w.zoneNames()) if (n != zn::ticker) drawn.insert(n);
-        const QJsonObject r = c.call(QByteArray(R"({"cmd":"zones","page":")") + pn[p] + "\"}");
+        const QJsonObject r = c.call(QByteArray(R"({"cmd":"zones","page":")") + pageName(p) + "\"}");
         QSet<QString> listed; bool shaped = okOf(r);
         for (const QJsonValue &v : result(r)["zones"].toArray()) {
             const QJsonObject z = v.toObject();
@@ -28,7 +27,7 @@ void guideZoneListing(Context &ctx, Link &link) {
             shaped = shaped && z["w"].toInt() > 0 && z["h"].toInt() > 0 && !z["label"].toString().isEmpty() && z["label"].toString().size() <= 60;
         }
         total += listed.size();
-        if (!shaped || listed != drawn) { allSame = false; bad << pn[p]; }
+        if (!shaped || listed != drawn) { allSame = false; bad << pageName(p); }
     }
     check(allSame && total > 150, QString("zones lists every named zone of every page, with a rectangle and a label (%1 in all%2)").arg(total).arg(bad.isEmpty() ? QString() : " - differs on " + bad.join(",")));
     w.setPage(PG_PLAY); w.shot();
@@ -42,9 +41,9 @@ void guideZoneListing(Context &ctx, Link &link) {
     check(synth.contains(zn::octave_down) && synth.contains(zn::octave_up) && synth.contains(zn::loop_pedal) && synth.contains(zn::xy) && synth.contains(zn::octave_readout) && synth.contains(zn::hdr_tune),
           "the Synth page names its octave buttons, loop pedal, pad and tabs readably");
     check(!c.call(R"({"cmd":"zones","page":"nowhere"})")["ok"].toBool(true) && !c.call(R"({"cmd":"zones","page":"help","sub":"x"})")["ok"].toBool(true), "zones refuses an unknown page or help section");
-    // Help: every row is a zone, all four sections stay reachable
-    int rowsPer[4]; bool unique = true; QSet<QString> seen;
-    for (int sub = 0; sub < 4; ++sub) {
+    // Help: every row is a zone, all three sections stay reachable
+    int rowsPer[kHelpParts]; bool unique = true; QSet<QString> seen;
+    for (int sub = 0; sub < kHelpParts; ++sub) {
         const QJsonObject hr = c.call(QByteArray(R"({"cmd":"zones","page":"help","sub":)") + QByteArray::number(sub) + "}");
         int n = 0;
         for (const QJsonValue &v : result(hr)["zones"].toArray()) {
@@ -53,7 +52,7 @@ void guideZoneListing(Context &ctx, Link &link) {
         }
         rowsPer[sub] = n;
     }
-    check(rowsPer[0] == 16 && rowsPer[1] == 16 && rowsPer[2] == 14 && rowsPer[3] == 16 && unique, QString("every help row on all four sections is a named zone (%1/%2/%3/%4)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]).arg(rowsPer[3]));
+    check(rowsPer[0] == 16 && rowsPer[1] == 16 && rowsPer[2] == 14 && unique, QString("every help row on all three sections is a named zone (%1/%2/%3)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]));
     w.setPage(PG_HELP); w.shot();
     QStringList hz = w.zoneNames();
     check(hz.contains(zn::help_ask) && hz.contains(zn::help_next) && hz.contains(zn::help_back) && hz.contains(zn::help_section), "the Help page has Ask Rook, next section, back and its section title as zones");

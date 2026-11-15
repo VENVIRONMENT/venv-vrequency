@@ -5,7 +5,7 @@
 // thread: the queues take a single writer) talks to it through the lock-free queues
 // (push / setPatch) and reads state through uiState()/readScope().
 // The exception is the mutex `mx`: process() holds it for the whole of every block, and
-// snapshot(), restore() and setTrack() take it on the caller's thread. While one of those
+// snapshot() and restore() take it on the caller's thread. While one of those
 // runs, the audio thread waits. How long that is, and why it was left as it is, is in
 // docs/ARCHITECTURE.md ("Audio thread and the engine lock").
 #pragma once
@@ -23,16 +23,13 @@
 #include "core/synth/params.h"
 #include "core/synth/part.h"
 #include "core/synth/voice.h"
-#include "core/track/lanes.h"
 #include <atomic>
-#include <memory>
 #include <mutex>
 
 namespace td {
 
 struct LayerData;
 struct SessionData;
-struct TrackData;
 
 class Instrument : public EventPort {
 public:
@@ -40,9 +37,8 @@ public:
     ~Instrument();
 
     // ---- the control thread (one writer; see the top of this file) ----
-    // push, key, set, cmd, note, hit, trackDo and beatDo come from EventPort (event_port.h)
+    // push, key, set, cmd, note, hit and beatDo come from EventPort (event_port.h)
     void setPatch(int part, const Patch &p); // lock-free hand-off
-    void setTrack(std::shared_ptr<const TrackData> t); // takes mx; the old track is freed on the caller's thread
     UiState uiState() const;
     void readScope(float *dst, int n) const; // most recent n mono samples
 
@@ -70,7 +66,6 @@ private:
     Settings st;
     Part parts[kParts];
     float bendTarget[kParts] = {0};
-    float partShift[kParts] = {0};     // semitones added to every note of a part (a track clip's octave)
     Voice voices[kVoices];
     int slotVoice[kParts][kSlots];
     float slotNote[kParts][kSlots];
@@ -112,14 +107,6 @@ private:
     void beatSwitchNow();
     long skipStep[kDrums];             // a step just recorded by hand: do not sound it twice
     uint32_t drumHits[kDrums] = {0};
-    // track
-    std::shared_ptr<const TrackData> track;
-    bool trackPlaying = false, trackOnce = false, trackDirty = false, liveSaved = false;
-    double trackPos = 0;
-    uint32_t trackPasses = 0;
-    int trackKit = -1;                 // the kit of the beat clip that is playing, -1 = none
-    LaneState laneSt[kLanes];
-    LiveBacking live;
     // click
     float clickEnv = 0, clickPh = 0, clickFreq = 1500;
 
@@ -139,7 +126,6 @@ private:
     std::atomic<uint32_t> recW{0}, recR{0}, recDrops{0};
     std::atomic<bool> recOn{false};
     float peakHold = 0;
-    float laneHold[kLanes] = {0};
     int silentBlocks = 0;
     uint64_t frames = 0;
 
@@ -163,8 +149,7 @@ private:
     void opOff(int part, int slot);
     void partOff(int part, bool hard);
     void leadOp(uint8_t op, int slot, float a, float b = 0);
-    // One recorded event played on a part. `keepSound`: the sound changes recorded with it are passed over.
-    void applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches, bool keepSound = false);
+    void applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches); // one recorded event played on a part
 
     void chordTap(int degree);
     bool backingActive() const { return backPlaying && (progLen > 0 || holdChord >= 0 || droneMask != 0); }
@@ -185,13 +170,7 @@ private:
     void drumHit(int drum, float vel);
     void beatCmd(int cmd, int drum, int step, int arg);
     void tickBeat(double b0, double b1);
-    bool transportIdle() const { return !trackPlaying && !backingActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
-    void trackStart(int fromBar, bool once);
-    void trackStop();
-    void tickTrack(double b0, double b1);
-    void runLanes(const TrackData &t, double a, double b, double globalBeat);
-    void runLane(const TrackData &t, int lane, double a, double b, double globalBeat);
-    void laneOff(int lane);
+    bool transportIdle() const { return !backingActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
 
     void block(float *l, float *r, int n);
     void publish();

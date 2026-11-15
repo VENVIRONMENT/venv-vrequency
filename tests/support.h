@@ -1,17 +1,15 @@
 // venv-vrequency — engine tests: the check macros, the rig that renders the instrument offline,
-// and the measurements and small clips the tests share.
+// and the measurements the tests share.
 #pragma once
 #include "core/drums/drums.h"
 #include "core/dsp.h"
 #include "core/instrument/instrument.h"
 #include "core/instrument/session.h"
 #include "core/synth/params.h"
-#include "core/track/track.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <functional>
-#include <memory>
 #include <vector>
 
 using namespace td;
@@ -121,34 +119,6 @@ inline float shareAt(const float *x, int n, double hz) {
         c += x[i] * std::cos(ph); q += x[i] * std::sin(ph); e += (double)x[i] * x[i];
     }
     return e > 0 ? (float)(2.0 * (c * c + q * q) / (n * e)) : 0;
-}
-
-// ---- small tracks and clips for the track tests ----
-
-inline std::shared_ptr<const TrackData> share(const TrackData &t) { return std::make_shared<const TrackData>(t); }
-
-inline Clip kickSnareClip() { // kick on step 1, snare on step 9
-    Clip c; c.kind = CK_BEAT; c.bars = 1; c.kit = KIT_SOFT;
-    c.beat[D_KICK] = 1u << 0; c.beat[D_SNARE] = 1u << 8;
-    return c;
-}
-
-inline Clip noteClip(float note, double on, double off, int bars = 1) {
-    Clip c; c.kind = CK_LOOP; c.bars = bars;
-    LayerData ld; ld.patches.push_back(purePatch());
-    LoopEv a; a.beat = on; a.op = OP_ON; a.slot = 0; a.a = note; a.b = 1; a.seq = 0;
-    LoopEv b; b.beat = off; b.op = OP_OFF; b.slot = 0; b.a = 0; b.b = 0; b.seq = 1;
-    ld.ev.push_back(a); ld.ev.push_back(b);
-    c.layers.push_back(ld);
-    return c;
-}
-
-inline void put(TrackData &t, int lane, int clip, int bar, int bars = 0) {
-    Placement p = placeClip(*t.clips[clip], bar);
-    p.clip = clip;
-    if (bars > 0) p.bars = bars;
-    t.lane[lane].push_back(p);
-    sortLane(t, lane);
 }
 
 // seconds at which each new hit of `drum` was counted, to the nearest block of 256 frames

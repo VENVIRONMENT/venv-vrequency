@@ -7,8 +7,7 @@ constexpr int kStrings = 3;
 constexpr int kMaxHeld = 12;
 constexpr int kVoices = 28;
 constexpr int kLayers = 6;
-constexpr int kTrackPart0 = 2 + kLayers;  // the track's two loop lanes each get kLayers parts
-constexpr int kParts = 2 + 3 * kLayers; // 0 = lead, 1 = backing, 2.. = loop layers, then the track's loop lanes
+constexpr int kParts = 2 + kLayers;  // 0 = lead, 1 = backing, 2.. = loop layers
 constexpr int kSlots = 12;          // voice slots per part
 constexpr int kChordSlots = 5;      // backing slots 0..4 = chord voices
 constexpr int kDroneSlot0 = 5;      // backing slots 5..11 = drones (degree 0..6)
