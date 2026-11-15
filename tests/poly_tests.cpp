@@ -27,6 +27,9 @@ void testPoly() {
     r.inst.key(1, 0, false);
     r.run(0.05);
     CHECK(r.gated(0) == 3, "poly: sustain holds a released key (%d)", r.gated(0));
+    UiState u = r.inst.uiState();
+    CHECK(!(u.str[1].heldMask & 1) && (u.str[1].soundMask & 1), "poly: the screen shows the released key still sounding");
+    CHECK((u.str[1].heldMask & 4) && (u.str[1].soundMask & 4), "poly: and the held key as held and sounding");
     r.inst.cmd(EV_SUSTAIN, 0);
     r.run(0.05);
     CHECK(r.gated(0) == 2, "poly: lifting sustain lets it go (%d)", r.gated(0));

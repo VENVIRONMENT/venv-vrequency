@@ -75,6 +75,7 @@ private:
     bool sustain = false;
     // poly mode: which key holds each lead voice slot (-1 free), and slots waiting for sustain to lift
     int polyKey[kSlots];
+    int polySound[kSlots];                    // the key whose note a slot is sounding, until it is let go
     bool polyPending[kSlots];
     int polyNext = 0;
     float xyX = 0.5f, xyY = 0.5f;
@@ -138,6 +139,7 @@ private:
     void polyUp(int s, int col);
     void polyRelease();                       // sustain lifted: let pending poly notes go
     void polyOctave(int delta);
+    void polyMasks(int s, uint16_t &held, uint16_t &sound) const;
     void setSustain(bool on);
     void panic();
     void shiftOctave(int delta);

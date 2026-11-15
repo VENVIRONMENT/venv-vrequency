@@ -14,6 +14,7 @@ struct StringUi {
     float note = 0, target = 0;
     int held = 0;      // number of keys held on this string
     int topCol = -1;   // column of the sounding key
+    uint16_t heldMask = 0, soundMask = 0; // poly: keys held / notes sounding (held or sustained), bit = column
 };
 
 struct UiState {

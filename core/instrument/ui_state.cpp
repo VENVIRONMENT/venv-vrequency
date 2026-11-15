@@ -40,6 +40,9 @@ void Instrument::publish() {
         u.str[s].target = v >= 0 ? voices[v].target : top;
         u.str[s].held = strings[s].n;
         u.str[s].topCol = strings[s].n > 0 ? (strings[s].col[strings[s].n - 1] & 0xff) : -1;
+        if (st.poly) polyMasks(s, u.str[s].heldMask, u.str[s].soundMask);
+        else u.str[s].heldMask = u.str[s].soundMask = 0;
+        if (st.poly) u.str[s].gate = u.str[s].soundMask != 0;
     }
     u.set = st;
     u.beat = beat;

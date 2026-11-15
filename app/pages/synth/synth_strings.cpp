@@ -22,6 +22,14 @@ void SynthPage::paintStrings(QRectF sp) {
         int shift = row == 0 ? 1 : 0; // the Q20's bottom letter row starts one key in
         auto X = [&](qreal col) { return x0 + (col + shift) * dx; };
         const StringUi &su = u.str[row];
+        auto bracket = [this](qreal cx, qreal y, int wd) { // [ ] round a sounding pitch
+            ui.g->fillRect(QRectF(cx - 21, y - 15, wd, 31), INK);
+            ui.g->fillRect(QRectF(cx + 21 - wd + 1, y - 15, wd, 31), INK);
+            ui.g->fillRect(QRectF(cx - 21, y - 15, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx - 21, y + 16 - wd, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx + 15, y - 15, 7, wd), INK);
+            ui.g->fillRect(QRectF(cx + 15, y + 16 - wd, 7, wd), INK);
+        };
         // the string is a trace: flat at rest, standing wave while it sounds
         if (su.gate) {
             QPainterPath line;
@@ -56,7 +64,7 @@ void SynthPage::paintStrings(QRectF sp) {
         bool chordKeys = row == 0 && (keys.chordRow || keys.chord);
         for (int c = 0; c < count; ++c) {
             int n = t.noteFor(row, c, false);
-            bool isHeldTop = su.held > 0 && su.topCol == c;
+            bool isHeldTop = u.set.poly ? (su.heldMask >> c & 1) : (su.held > 0 && su.topCol == c);
             bool isRoot = ((n - t.root) % 12 + 12) % 12 == 0;
             QRectF box(std::floor(X(c)) - 17, y - 11, 35, 23);
             ui.frame(box, isHeldTop || isRoot ? INK : LOW, isHeldTop ? INK : BG);
@@ -68,7 +76,11 @@ void SynthPage::paintStrings(QRectF sp) {
         }
         // where the pitch really is: a cursor that travels during a slide, leaving a fading trail
         std::deque<float> &tr = trail[row];
-        if (su.gate) {
+        if (u.set.poly) { // poly: brackets round every note still sounding, held or sustained
+            tr.clear();
+            for (int c = 0; c < count; ++c)
+                if (su.soundMask >> c & 1) bracket(std::floor(X(c)), y, 2);
+        } else if (su.gate) {
             float px = (float)pitchX(su.note + u.bend);
             tr.push_back(px);
             if (tr.size() > 10) tr.pop_front();
@@ -79,13 +91,7 @@ void SynthPage::paintStrings(QRectF sp) {
                 ui.g->fillRect(QRectF(std::floor(tr[i]), y + 13, 1, 9), QColor(v, v, v));
             }
             qreal cx = std::floor(px);
-            int wd = sliding ? 3 : 2;
-            ui.g->fillRect(QRectF(cx - 21, y - 15, wd, 31), INK); // [ ] brackets round the sounding pitch
-            ui.g->fillRect(QRectF(cx + 21 - wd + 1, y - 15, wd, 31), INK);
-            ui.g->fillRect(QRectF(cx - 21, y - 15, 7, wd), INK);
-            ui.g->fillRect(QRectF(cx - 21, y + 16 - wd, 7, wd), INK);
-            ui.g->fillRect(QRectF(cx + 15, y - 15, 7, wd), INK);
-            ui.g->fillRect(QRectF(cx + 15, y + 16 - wd, 7, wd), INK);
+            bracket(cx, y, sliding ? 3 : 2);
             QPainterPath m; // trigger-style marker under the string
             m.moveTo(cx - 4, y + 23); m.lineTo(cx + 5, y + 23); m.lineTo(cx + 0.5, y + 17); m.closeSubpath();
             ui.g->setRenderHint(QPainter::Antialiasing, true);
