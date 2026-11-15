@@ -5,6 +5,7 @@
 // seed on every hit, so every hit of a pad is exactly the same sound.
 #pragma once
 #include "core/dsp.h"
+#include "core/fx/warp.h"
 #include "core/pulse/pulse.h"
 #include <cstdint>
 
@@ -39,7 +40,13 @@ private:
     float hpA = 0, hp[4] = {0};       // metal: two one-pole high-passes (in and out of each)
     float ic1 = 0, ic2 = 0, svA1 = 0, svA2 = 0, svA3 = 0, svK = 0.5f, svNorm = 1; // a band-pass (metal, snap, clap)
     Rng rng;
+    WarpShape shape;                  // DRIVE and FOLD (the shared warp curves)
+    WarpGrid grid;                    // CRUSH
+    bool warpOn = false, gridOn = false;
+    float tone0 = 1000;
+    double bendMul = 1, bendStep = 1; // BEND: tone = tone0 * bendMul, moving each sample
     void setFilters();
+    void setWarp(const PulsePad &p); // after tone and len are set
     float band(float x);              // one sample through the band-pass
 };
 

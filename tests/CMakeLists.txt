@@ -15,6 +15,8 @@ add_executable(vrequency_tests
   looper_tests.cpp
   session_tests.cpp
   analysis_tests.cpp
-  warp_golden.cpp)
+  warp_golden.cpp
+  warp_tests.cpp
+  pulse_warp_tests.cpp)
 target_link_libraries(vrequency_tests PRIVATE vreqcore)
 add_test(NAME core COMMAND vrequency_tests)

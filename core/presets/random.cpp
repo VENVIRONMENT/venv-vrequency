@@ -170,7 +170,7 @@ Patch mutatePatch(const Patch &src, Rng &rng, float amount) {
     Gen g{rng};
     Patch p = src;
     for (int i = 0; i < P_COUNT; ++i) {
-        if (i == P_LEVEL) continue;
+        if (i >= P_LEVEL) continue; // LEVEL, and the warp after it, stay as they are
         const ParamInfo &m = paramInfo(i);
         if (m.integer) {
             if (g.chance(amount * 0.2f) && i != P_SEMI2) p.p[i] = m.min + (float)g.pick((int)(m.max - m.min) + 1);

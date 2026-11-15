@@ -15,17 +15,20 @@
 //   SUB THUMP  a low sine that falls from four times TONE to TONE in about 15 ms
 //   808        a long, tuned sub boom: a sine gliding down from twice TONE, softly saturated
 // RATE sets how often a latched pad repeats. LEVEL is 0..1.
+// Warp, over every kind: DRIVE and FOLD (0..1), CRUSH (0 off .. 1: fewer bits and a lower rate, the
+// Freq page's crush) and BEND (semitones the pitch, or a noise kind's band, moves across the hit).
 #pragma once
 
 namespace td {
 
 enum PulseType { PT_CLICK, PT_METAL, PT_SNAP, PT_SCRATCH, PT_CLAP, PT_TOM, PT_THUMP, PT_BOOM, kPulseTypes };
-enum PulseField { PF_TYPE, PF_TONE, PF_LENGTH, PF_RATE, PF_LEVEL, PF_COUNT };
+enum PulseField { PF_TYPE, PF_TONE, PF_LENGTH, PF_RATE, PF_LEVEL, PF_DRIVE, PF_FOLD, PF_CRUSH, PF_BEND, PF_COUNT };
 constexpr int kPulsePads = 8;
 
 constexpr float kPulseToneMin = 20, kPulseToneMax = 18000;  // Hz
 constexpr float kPulseLenMin = 1, kPulseLenMax = 2000;      // ms
 constexpr float kPulseRateMin = 0.25f, kPulseRateMax = 200; // Hz
+constexpr float kPulseBendMax = 24;                         // semitones, either way
 
 struct PulsePad {
     int type = PT_CLICK;
@@ -33,6 +36,8 @@ struct PulsePad {
     float lengthMs = 100;
     float rate = 4;         // Hz
     float level = 0.8f;     // 0..1
+    float drive = 0, fold = 0, crush = 0; // 0..1: the warp, off by default
+    float bend = 0;         // semitones across the hit
 };
 
 PulsePad pulseDefault(int pad);            // pad n is the n-th kind, with values that suit it

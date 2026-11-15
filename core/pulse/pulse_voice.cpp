@@ -31,6 +31,17 @@ void PulseVoice::setFilters() {
     hpA = std::exp(-2.0f * kPi * std::min(tone * 10.0f, 0.4f * sr) / sr); // metal: cuts below ten times TONE
 }
 
+// The warp: DRIVE and FOLD through the shared curves, CRUSH as the Freq page crushes, and BEND as a
+// step the tone is multiplied by each sample, so it has moved BEND semitones by the end of the hit.
+void PulseVoice::setWarp(const PulsePad &p) {
+    tone0 = tone;
+    tone = std::min((float)(tone0 * bendMul), 0.45f * sr);
+    shape.set(p.drive, p.fold);
+    grid.set(p.crush > 0 ? warpCrushBits(p.crush) : 0, p.crush > 0 ? warpCrushHz(p.crush, sr) / sr : 1);
+    gridOn = grid.on(); warpOn = shape.on() || gridOn;
+    bendStep = p.bend != 0 ? std::exp2(p.bend / (12.0 * len)) : 1.0;
+}
+
 float PulseVoice::band(float x) {
     const float v3 = x - ic2;
     const float v1 = svA1 * ic1 + svA2 * v3, v2 = ic2 + svA2 * ic1 + svA3 * v3;
@@ -48,6 +59,8 @@ void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rate
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     len = lengthSamples(p, sr);
     fadeLen = std::max(1, std::min((int)(0.001f * sr), len / 4));
+    bendMul = 1; grid.reset();
+    setWarp(p);
     ph = 0; ic1 = ic2 = 0;
     for (float &h : hp) h = 0;
     for (double &q : sq) q = 0;
@@ -74,6 +87,7 @@ void PulseVoice::retune(const PulsePad &p0, float rateHz) {
     pulseClamp(p);
     if (p.type != type) { release(); return; }   // another kind: this one fades, the latch starts the new one
     tone = std::min(p.tone, 0.45f * sr); level = p.level;
+    setWarp(p);
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     setFilters();
 }
@@ -90,6 +104,10 @@ float PulseVoice::next(bool &onset, int &dur) {
     if (wait > 0) { --wait; return 0; }
     if (!runOn && pos >= len) { on = false; return 0; }
     if (pos == 0) { onset = true; dur = type == PT_CLICK ? 0 : len; }
+    if (bendStep != 1.0) { // BEND: the tone (and with it every band) moves a little each sample
+        bendMul *= bendStep; tone = std::min((float)(tone0 * bendMul), 0.45f * sr);
+        if ((pos & 31) == 0) setFilters();
+    }
     const float t = pos / sr; // seconds into the hit
     float y = 0;
     switch (type) {
@@ -150,6 +168,7 @@ float PulseVoice::next(bool &onset, int &dur) {
         break;
     }
     }
+    if (warpOn) { y = shape(y); if (gridOn) y = grid(y); } // DRIVE, FOLD, CRUSH: the shared warp stages
     if (type != PT_CLAP) decay *= decayCoef;
     if (!runOn) { // a short fade at the end, so every hit stops in silence
         const int left = len - pos;

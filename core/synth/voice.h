@@ -3,6 +3,7 @@
 #include "core/dsp.h"
 #include "core/synth/params.h"
 #include "core/synth/part.h"
+#include "core/synth/voice_warp.h"
 #include <cmath>
 #include <cstdint>
 
@@ -28,6 +29,7 @@ struct Voice {
     float vibPh = 0, lfoPh = 0;
     Env amp, fenv;
     Svf filt;
+    VoiceWarp warp;       // FOLD, CRUSH, DOWNSAMPLE, RING MOD, BEND IN (voice_warp.h)
     Rng rng;
     // smoothed controls
     float cutSm = 1000, levelSm = 0, mixSm = 0, subSm = 0, noiseSm = 0, driveSm = 0, uniSm = 0, fmSm = 0;
@@ -94,6 +96,7 @@ struct Voice {
         float lfo = fastSin(lfoPh);
 
         float semis = note + pt.bend + vibCents * 0.01f;
+        semis += warp.bendIn(P[P_BENDIN], fresh, sr);
         float f1 = 440.0f * std::exp2((semis - 69.0f) * (1.0f / 12.0f));
         if (f1 > sr * 0.45f) f1 = sr * 0.45f;
         float tInc1 = f1 / sr;
@@ -130,6 +133,7 @@ struct Voice {
             fmSm += sm * (P[P_FM] - fmSm); levelSm += sm * (levelT - levelSm);
         }
         filt.set(cutSm, clampf(P[P_RESO] + pt.modRes, 0.0f, 0.97f), sr);
+        warp.block(P, tInc1, wasFresh);
 
         int w1 = (int)P[P_WAVE1], w2 = (int)P[P_WAVE2], fmode = (int)P[P_FMODE];
         float pw = clampf(P[P_PW] + P[P_LFOPW] * lfo, 0.08f, 0.92f);
@@ -137,8 +141,8 @@ struct Voice {
         float uni = uniSm, sub = subSm, noise = noiseSm, fm = fmSm;
         bool useFm = fm > 0.001f, useUni = uni > 0.001f, useSub = sub > 0.001f, useNoise = noise > 0.001f;
         bool useO2 = mix2 > 0.001f;
-        float pre = 1.0f + driveSm * 9.0f;
-        float post = 1.0f / (1.0f + driveSm * 2.2f);
+        float pre = drivePre(driveSm);
+        float post = drivePost(driveSm);
         bool useDrive = driveSm > 0.001f;
         float trem = 1.0f - P[P_LFOAMP] * (0.5f - 0.5f * lfo);
         float lvlT = levelSm * trem;
@@ -168,7 +172,8 @@ struct Voice {
             if (useSub) { ps += incS; if (ps >= 1.0f) ps -= 1.0f; x += fastSin(ps) * sub; }
             if (useNoise) x += rng.bipolar() * noise;
             float y = filt.tick(x * 0.5f, fmode);
-            if (useDrive) y = fastTanh(y * pre) * post;
+            if (useDrive) y = voiceDrive(y, pre, post);
+            if (warp.on) y = warp(y);
             float e = amp.tick(aC, dC, sus, rC);
             if (fadeStep > 0) {
                 fade -= fadeStep;

@@ -31,10 +31,13 @@ void pulseClamp(PulsePad &p) {
     p.lengthMs = fin(p.lengthMs, kPulseLenMin, kPulseLenMax, 100);
     p.rate = fin(p.rate, kPulseRateMin, kPulseRateMax, 4);
     p.level = fin(p.level, 0, 1, 0.8f);
+    p.drive = fin(p.drive, 0, 1, 0); p.fold = fin(p.fold, 0, 1, 0); p.crush = fin(p.crush, 0, 1, 0);
+    p.bend = fin(p.bend, -kPulseBendMax, kPulseBendMax, 0);
 }
 
 bool samePulse(const PulsePad &a, const PulsePad &b) {
-    return a.type == b.type && a.tone == b.tone && a.lengthMs == b.lengthMs && a.rate == b.rate && a.level == b.level;
+    return a.type == b.type && a.tone == b.tone && a.lengthMs == b.lengthMs && a.rate == b.rate && a.level == b.level
+        && a.drive == b.drive && a.fold == b.fold && a.crush == b.crush && a.bend == b.bend;
 }
 
 const char *pulseTypeName(int t) { return kNames[clampType(t)]; }

@@ -23,7 +23,7 @@ void Warp::init(float sampleRate) {
     reset();
 }
 
-void Warp::reset() { lp1 = lp2 = held = 0; ph = 1; }
+void Warp::reset() { lp1 = lp2 = 0; grid.reset(); }
 
 void Warp::process(float *x, int n) {
     // the settings move once a block (kBlock samples), towards their targets
@@ -32,25 +32,14 @@ void Warp::process(float *x, int n) {
     cur.fold += k * (target.fold - cur.fold);
     cur.cutoff *= std::pow(target.cutoff / cur.cutoff, k);   // in octaves
     cur.crush = target.crush;                                // a grid does not glide
-    const float d = cur.drive, gain = 1.0f + 24.0f * d, norm = 1.0f / fastTanh(gain);
-    const float f = cur.fold, fgain = 1.0f + 3.0f * f;
+    WarpShape shape;
+    shape.set(cur.drive, cur.fold);
     const bool crush = cur.crush > 0;
-    const float q = crush ? std::pow(2.0f, warpCrushBits(cur.crush) - 1.0f) : 1;
-    const float inc = crush ? warpCrushHz(cur.crush, sr) / sr : 1;
+    grid.set(crush ? warpCrushBits(cur.crush) : 0, crush ? warpCrushHz(cur.crush, sr) / sr : 1);
     const float a = std::exp(-2.0f * kPi * cur.cutoff / sr), b = 1.0f - a;
     for (int i = 0; i < n; ++i) {
-        float s = x[i];
-        if (d > 1e-4f) s += d * (fastTanh(s * gain) * norm - s);
-        if (f > 1e-4f) {
-            float p = s * fgain * 0.25f;                     // sin(pi/2 * s * fgain), in cycles
-            p -= std::floor(p);
-            s += f * (clampf(fastSin(p), -1, 1) - s);
-        }
-        if (crush) {
-            ph += inc;
-            if (ph >= 1.0f) { ph -= 1.0f; held = clampf(std::floor(s * q + 0.5f) / q, -1, 1); }
-            s = held;
-        }
+        float s = shape(x[i]);
+        if (crush) s = grid(s);
         lp1 += b * (s - lp1);
         lp2 += b * (lp1 - lp2);
         x[i] = lp2;

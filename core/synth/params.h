@@ -3,6 +3,7 @@
 // engine, the randomiser, the UI sliders and the JSON files all share one
 // definition of what a sound is.
 #pragma once
+#include <cmath>
 #include <cstring>
 
 namespace td {
@@ -25,6 +26,8 @@ enum Param {
     // effects
     P_DRIVE, P_CHORUS, P_DLYMIX, P_DLYDIV, P_DLYFB, P_REVMIX, P_REVSIZE,
     P_LEVEL,
+    // warp (after LEVEL so older files and recorded loops keep their parameter numbers)
+    P_FOLD, P_CRUSH, P_DSAMP, P_RING, P_BENDIN,
     P_COUNT
 };
 
@@ -78,6 +81,11 @@ inline const ParamInfo &paramInfo(int p) {
         {"reverbmix", "REVERB", 0, 0.8f, 0.2f, false, false},
         {"reverbsize", "REV SIZE", 0.2f, 0.98f, 0.7f, false, false},
         {"level", "LEVEL", 0.02f, 4, 1, false, true},
+        {"fold", "FOLD", 0, 1, 0, false, false},
+        {"crush", "CRUSH", 0, 11, 0, true, false},           // 0 off, then 12 bits (1) down to 2 (11)
+        {"downsample", "DOWNSAMPLE", 0, 1, 0, false, false}, // 0 off, then 1/2 down to 1/32 of the rate
+        {"ring", "RING MOD", 0, 1, 0, false, false},
+        {"bendin", "BEND IN", -24, 24, 0, true, false},     // semitones
     };
     return T[p];
 }
@@ -99,6 +107,11 @@ inline const char *filterName(int f) {
     static const char *N[3] = {"LOW", "HIGH", "BAND"};
     return N[f < 0 ? 0 : (f > 2 ? 2 : f)];
 }
+
+// What the warp parameters leave: CRUSH's bit depth (0: off) and the share of the sample rate
+// DOWNSAMPLE keeps (1: all of it; 1/2 just above 0, 1/32 at the top).
+inline float crushBits(float v) { return v < 0.5f ? 0.0f : 13.0f - (float)(int)(v + 0.5f); }
+inline float dsampKeep(float v) { return v <= 0 ? 1.0f : 0.5f / std::pow(16.0f, v > 1 ? 1.0f : v); }
 
 struct Patch {
     char name[28];

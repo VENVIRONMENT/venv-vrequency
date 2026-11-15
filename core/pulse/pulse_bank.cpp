@@ -48,6 +48,10 @@ void PulseBank::set(int p, int field, float val, float bpm) {
     case PF_LENGTH: d.lengthMs = val; break;
     case PF_RATE: d.rate = val; break;
     case PF_LEVEL: d.level = val; break;
+    case PF_DRIVE: d.drive = val; break;
+    case PF_FOLD: d.fold = val; break;
+    case PF_CRUSH: d.crush = val; break;
+    case PF_BEND: d.bend = val; break;
     default: return;
     }
     pulseClamp(d);
