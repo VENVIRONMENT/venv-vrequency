@@ -27,7 +27,9 @@ void testSaving(Context &ctx) {
     check(w.saveSession(sp), "session saved");
     check(a.layers.size() == 1 && !a.layers[0].ev.empty() && a.loopBeats >= 4, "the session holds the recorded loop");
     key(w, Qt::Key_Control, true);
-    key(w, Qt::Key_X, true); key(w, Qt::Key_X, false);   // Ctrl+X clear backing
+    key(w, Qt::Key_Control, false);
+    w.perform(A_BACK_CLEAR);                              // backing clear (its page button; Ctrl+X sweeps the filter)
+    key(w, Qt::Key_Control, true);
     key(w, Qt::Key_D, true); key(w, Qt::Key_D, false);   // Ctrl+D clear loop
     key(w, Qt::Key_Control, false);
     inst.set(S_ROOT, 3); wait(100);

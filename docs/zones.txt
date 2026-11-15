@@ -232,6 +232,7 @@ synth pslot0
 synth pslot1
 synth pslot2
 synth pslot3
+synth scopeview
 synth string0
 synth string1
 synth string2

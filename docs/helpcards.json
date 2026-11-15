@@ -2293,6 +2293,36 @@
      ],
      "ask": "When should I use Hold on the touch pad?"
     },
+    "scopeview": {
+     "title": "3D",
+     "kind": "toggle",
+     "summary": "Switches the scope between the 3D stack and the moving line.",
+     "does": "Lit: the newest real cycle of your sound sits at the front and older ones move back and fade, so changes roll through the stack. Off: the classic moving line. Chords and noise show the last 20 ms.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to switch; lit means 3D."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+V switches. Hold Ctrl+C to open the filter, Ctrl+X to close it."
+      }
+     ],
+     "keys": [
+      "Ctrl+V",
+      "Ctrl+C",
+      "Ctrl+X"
+     ],
+     "recall": "Synth page, top right of the scope, left of the mapping key.",
+     "tips": [
+      "Hold a note with Space, then hold Ctrl+C and watch the cycles sharpen."
+     ],
+     "related": [
+      "synth.xy",
+      "synth.xyhold"
+     ],
+     "ask": "Why does the scope show waves stacked in 3D?"
+    },
     "string2": {
      "title": "HIGH STRING (S3)",
      "kind": "pad",

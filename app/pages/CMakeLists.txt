@@ -21,6 +21,7 @@ target_sources(vrequency PRIVATE
   synth/scope.cpp
   synth/scope.h
   synth/scope_measure.cpp
+  synth/scope_stack.cpp
   synth/scope_trace.cpp
   synth/synth_header.cpp
   synth/synth_page.cpp

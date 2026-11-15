@@ -2,6 +2,7 @@
 // a button or the control socket.
 #include "app/shell/mainwindow.h"
 #include "app/tour/tour.h"
+#include <cmath>
 
 using namespace td;
 
@@ -51,8 +52,27 @@ void MainWindow::perform(int act, bool shift) {
     case A_TOUR: if (tourView) { if (tourView->isOpen()) tourView->close(); else tourView->open(QString(), QString(), false, nullptr, true); } break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
+    case A_SCOPE_VIEW: toast(synthPage.toggleScopeView() ? "Scope: 3D stack" : "Scope: line", 900); break;
+    case A_FILTER_OPEN: nudgeCutoff(0.5); break;   // from a button or the socket: one step
+    case A_FILTER_CLOSE: nudgeCutoff(-0.5); break;
     default:
         if (act >= A_SOUND_1 && act <= A_SOUND_10) sounds.selectSlot(act - A_SOUND_1);
         break;
     }
+}
+
+// Moves the lead sound's cutoff by `octaves`, and says where it is.
+void MainWindow::nudgeCutoff(double octaves) {
+    const float c = std::clamp((float)(sounds.lead.p[P_CUTOFF] * std::pow(2.0, octaves)), 40.0f, 16000.0f);
+    sounds.setParam(P_CUTOFF, c);
+    toast(c >= 1000 ? QString("Cutoff %1 kHz").arg(c / 1000, 0, 'f', 1) : QString("Cutoff %1 Hz").arg((int)c), 700);
+}
+
+// Every frame: while Ctrl+C or Ctrl+X is held the cutoff glides, two and a half octaves a second.
+void MainWindow::sweepFilter() {
+    static qint64 last = 0;
+    const qint64 now = clock.elapsed();
+    const double dt = std::min(0.1, (now - last) / 1000.0);
+    last = now;
+    if (keys.filterDir) nudgeCutoff(keys.filterDir * 2.5 * dt);
 }

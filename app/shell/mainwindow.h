@@ -159,5 +159,7 @@ private:
     // actions
     void tapTempo();
     void updateBend();
+    void nudgeCutoff(double octaves);   // the lead's filter cutoff, by octaves (window_perform.cpp)
+    void sweepFilter();                 // every frame: Ctrl+C / Ctrl+X held
     void releaseAllKeys();
 };

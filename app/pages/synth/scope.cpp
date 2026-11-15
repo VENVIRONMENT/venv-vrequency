@@ -1,8 +1,9 @@
 // venv-vrequency — the oscilloscope on the Synth page. It shows the instrument's real output:
 // triggered so the wave stands still, with its own time and voltage scales (they follow the signal
-// automatically and never affect the pitch), measured frequency and level, and a fading
-// white-phosphor trace. Touching it is the X-Y sound control. This file lays the screen out;
-// scope_measure.cpp measures and scope_trace.cpp draws the trace.
+// automatically and never affect the pitch), measured frequency and level, and either a 3D stack
+// of the latest cycles or a fading white-phosphor trace. Touching it is the X-Y sound control.
+// This file lays the screen out; scope_measure.cpp measures, scope_trace.cpp draws the trace and
+// scope_stack.cpp the stack.
 #include "app/pages/synth/scope.h"
 #include "app/ui/palette.h"
 #include "audio/audio.h"
@@ -55,15 +56,18 @@ void Scope::paintMarkers(QRectF xy, QRectF gr) {
     ui.g->setRenderHint(QPainter::Antialiasing, true);
     ui.g->setPen(Qt::NoPen);
     ui.g->setBrush(INK);
-    QPainterPath tm;
-    tm.moveTo(gr.center().x() - 5, gr.y() + 1); tm.lineTo(gr.center().x() + 5, gr.y() + 1); tm.lineTo(gr.center().x(), gr.y() + 8); tm.closeSubpath();
-    ui.g->drawPath(tm);
-    QPainterPath gm;
     qreal gy = gr.center().y();
-    gm.moveTo(xy.x() + 4, gy - 7); gm.lineTo(xy.x() + 15, gy - 7); gm.lineTo(xy.x() + 21, gy); gm.lineTo(xy.x() + 15, gy + 7); gm.lineTo(xy.x() + 4, gy + 7); gm.closeSubpath();
-    ui.g->drawPath(gm);
+    if (!stackView) { // trigger and ground markers belong to the moving line
+        QPainterPath tm;
+        tm.moveTo(gr.center().x() - 5, gr.y() + 1); tm.lineTo(gr.center().x() + 5, gr.y() + 1); tm.lineTo(gr.center().x(), gr.y() + 8); tm.closeSubpath();
+        ui.g->drawPath(tm);
+        QPainterPath gm;
+        gm.moveTo(xy.x() + 4, gy - 7); gm.lineTo(xy.x() + 15, gy - 7); gm.lineTo(xy.x() + 21, gy); gm.lineTo(xy.x() + 15, gy + 7); gm.lineTo(xy.x() + 4, gy + 7); gm.closeSubpath();
+        ui.g->drawPath(gm);
+        ui.g->setRenderHint(QPainter::Antialiasing, false);
+        ui.txt(QRectF(xy.x() + 4, gy - 7, 12, 14), "1", 11, BG, Qt::AlignCenter, true);
+    }
     ui.g->setRenderHint(QPainter::Antialiasing, false);
-    ui.txt(QRectF(xy.x() + 4, gy - 7, 12, 14), "1", 11, BG, Qt::AlignCenter, true);
 
     // X-Y cursors (touch anywhere on the scope)
     const QString xn = nice(xyAxisName(u.set.xyMap, false)), yn = nice(xyAxisName(u.set.xyMap, true));
@@ -85,12 +89,13 @@ void Scope::paintMarkers(QRectF xy, QRectF gr) {
 
 // The status line (inverse video, left of the two keys) and the measurement line below the trace.
 void Scope::paintReadouts(QRectF xy, QRectF gr) {
-    QRectF band(xy.x() + 1, xy.y() + 1, xy.width() - 206, 18);
+    QRectF band(xy.x() + 1, xy.y() + 1, xy.width() - 276, 18);
     ui.g->fillRect(band, INK);
     ui.g->fillRect(QRectF(band.x() + 3, band.y() + 2, 14, 14), BG);
     ui.txt(QRectF(band.x() + 3, band.y() + 2, 14, 14), "1", 12, INK, Qt::AlignCenter, true);
     ui.txt(QRectF(band.x() + 24, band.y(), 80, 18), vdText(vdIdx), 13, BG, L, true);
-    ui.txt(QRectF(band.x() + 104, band.y(), 90, 18), tbText(tbIdx), 13, BG, L, true);
+    const QString tb = !stackView ? tbText(tbIdx) : (period > 8 ? QString("1 cycle") : QString("20ms"));
+    ui.txt(QRectF(band.x() + 104, band.y(), 90, 18), tb, 13, BG, L, true);
     QString trg = !sh.audio.streaming() ? "Stop" : (trigd ? "Trig'd" : "Auto");
     ui.txt(QRectF(band.x() + 200, band.y(), 70, 18), trg, 13, BG, L, true);
     ui.txt(QRectF(band.x() + 270, band.y(), band.width() - 276, 18), QString("%1 kSa/s").arg(sh.audio.sampleRate() / 1000), 13, BG, Qt::AlignRight | Qt::AlignVCenter, true);
@@ -112,9 +117,10 @@ void Scope::draw(QRectF xy) {
     const qreal div = 46;
     const QRectF gr(xy.x() + 22, xy.y() + 21, kTraceW, kTraceH);
     ui.frame(xy, ui.isDown("xy") ? INK : LOW, BG);
-    paintGraticule(gr, div);
+    if (!stackView) paintGraticule(gr, div);
     const View v = acquire();
-    paintTrace(v, gr, div);
+    if (stackView) { captureCycle(v); paintStack(gr, div); }
+    else paintTrace(v, gr, div);
     paintMarkers(xy, gr);
     paintReadouts(xy, gr);
 }

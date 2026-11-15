@@ -15,6 +15,7 @@ struct KeyState {
     QString text;                             // the text of the key being handled, for typing
     bool chromatic = false, chord = false, command = false;   // the modifier layers
     bool bendUp = false, bendDown = false;
+    int filterDir = 0;                        // Ctrl+C / Ctrl+X held: the cutoff sweeps up (1) or down (-1)
     bool susKey = false, susLatch = false;    // sustain: held by a key, latched by the soft key
     bool chordRow = false;                    // the bottom letter row plays chords
     bool testOpen = false;                    // the key test panel is over the page

@@ -62,6 +62,7 @@ void MainWindow::drawAll(QPainter &painter, qreal W, qreal H) {
     ui.recordTexts(true);
     guide.beginFrame();
 
+    sweepFilter();
     for (Page *p : pageOf) if (p) p->tick();
 
     if (tourOpen()) tourView->paint(); // the tour draws a picture instead of the page: nothing on it is live

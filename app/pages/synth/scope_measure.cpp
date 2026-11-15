@@ -83,7 +83,7 @@ Scope::View Scope::acquire() {
     float lo = 1e9f, hi = -1e9f;
     for (int i = v.total - v.need; i < v.total; ++i) { lo = qMin(lo, buf[i]); hi = qMax(hi, buf[i]); }
     v.span = hi - lo;
-    const float period = measureFrequency(v);
+    period = measureFrequency(v);
 
     // trigger: rising zero crossing after a deep negative swing, at most once per cycle
     float hyst = qMax(0.003f, -lo * 0.55f);

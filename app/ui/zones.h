@@ -30,6 +30,7 @@ inline constexpr char pslot[] = "pslot";   // family
 inline constexpr char string[] = "string";   // family
 inline constexpr char sustain[] = "sustain";
 inline constexpr char tempo_readout[] = "tempo_readout";
+inline constexpr char scopeview[] = "scopeview";
 inline constexpr char xy[] = "xy";
 inline constexpr char xyhold[] = "xyhold";
 inline constexpr char xymap[] = "xymap";   // family

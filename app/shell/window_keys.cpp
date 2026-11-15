@@ -17,6 +17,7 @@ void MainWindow::releaseAllKeys() {
     keys.held.clear();
     synthPage.releaseTouches();
     keys.chromatic = keys.chord = keys.command = false;
+    keys.filterDir = 0;
     if (keys.bendUp || keys.bendDown) { keys.bendUp = keys.bendDown = false; updateBend(); }
     if (keys.susKey) { keys.susKey = false; inst.cmd(EV_SUSTAIN, keys.susLatch ? 1 : 0); }
 }
@@ -45,6 +46,7 @@ void MainWindow::handleKey(int key, bool down) {
             case A_COMMAND: keys.command = false; break;
             case A_BEND_UP: keys.bendUp = false; updateBend(); break;
             case A_BEND_DOWN: keys.bendDown = false; updateBend(); break;
+            case A_FILTER_OPEN: case A_FILTER_CLOSE: keys.filterDir = 0; break;
             }
         }
         return;
@@ -71,7 +73,13 @@ void MainWindow::handleKey(int key, bool down) {
     }
     if (pageOf[pg] && !keys.testOpen && pageOf[pg]->key(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
     if (keys.command) {
-        perform(km.command.value(key, A_NONE), keys.chromatic);
+        const int act = km.command.value(key, A_NONE);
+        if (act == A_FILTER_OPEN || act == A_FILTER_CLOSE) { // held: sweeps until the key comes up
+            keys.filterDir = act == A_FILTER_OPEN ? 1 : -1;
+            keys.held[key] = {HK_ACT, act, 0};
+            return;
+        }
+        perform(act, keys.chromatic);
         keys.held[key] = {HK_NONE, 0, 0};
         return;
     }
