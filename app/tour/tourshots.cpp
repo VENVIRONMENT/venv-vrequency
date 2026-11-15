@@ -25,7 +25,6 @@ int renderTourShots(MainWindow &w, const QString &dir) {
     w.setPage(PG_PLAY);
     t.open("synth", "octave_up");           save("20-tour-synth");
     t.open("beat", "beatrec");              save("21-tour-beat");
-    t.open("track-mixer", "mixer_fader1");  save("22-tour-mixer");
     t.open("synth", "concepts.recall");     save("23-tour-concept-recall");
     t.open("synth", QString(), true);       save("24-tour-start-here");
     t.open("sound-deep", "param17");        save("25-tour-parameter");

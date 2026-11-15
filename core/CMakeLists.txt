@@ -4,8 +4,8 @@ add_library(vreqcore STATIC
   analysis/analysis.cpp
   drums/drum_kit.cpp
   drums/kit_sounds.cpp
-  instrument/backing.cpp
   instrument/beat.cpp
+  instrument/chord_pads.cpp
   instrument/events.cpp
   instrument/instrument.cpp
   instrument/lead.cpp
@@ -17,12 +17,6 @@ add_library(vreqcore STATIC
   instrument/voices.cpp
   presets/factory.cpp
   presets/normalise.cpp
-  presets/random.cpp
-  presets/sound_shelf.cpp
-  track/arrange.cpp
-  track/chop.cpp
-  track/clip.cpp
-  track/playback.cpp
-  track/transport.cpp)
+  presets/random.cpp)
 target_include_directories(vreqcore PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(vreqcore PUBLIC Threads::Threads)

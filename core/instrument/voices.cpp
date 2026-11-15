@@ -35,7 +35,7 @@ void Instrument::opOn(int part, int slot, float pitch, float vel) {
     int old = slotVoice[part][slot];
     if (old >= 0) voices[old].release();
     int v = allocVoice();
-    voices[v].start(part, slot, pitch + partShift[part], vel, panFor(part, slot), serial++);
+    voices[v].start(part, slot, pitch, vel, panFor(part, slot), serial++);
     slotVoice[part][slot] = v;
     slotNote[part][slot] = pitch;
 }
@@ -43,7 +43,7 @@ void Instrument::opOn(int part, int slot, float pitch, float vel) {
 void Instrument::opGlide(int part, int slot, float pitch) {
     int v = slotVoice[part][slot];
     if (v < 0) { opOn(part, slot, pitch, 1.0f); return; }
-    voices[v].glideTo(pitch + partShift[part], glideMs(part), sr);
+    voices[v].glideTo(pitch, glideMs(part), sr);
     slotNote[part][slot] = pitch;
 }
 

@@ -41,11 +41,9 @@ void Instrument::publish() {
     }
     u.set = st;
     u.beat = beat;
-    u.backPlaying = backPlaying;
-    for (int i = 0; i < kProgMax; ++i) u.prog[i] = prog[i];
-    u.progLen = progLen; u.progPos = backPlaying ? progPos : -1; u.selSlot = selSlot;
-    u.holdChord = holdChord; u.droneMask = droneMask; u.curChord = backPlaying ? curChord : -1;
-    std::memcpy(u.backName, parts[1].patch.name, sizeof u.backName);
+    u.padsPlaying = padsPlaying;
+    u.holdChord = holdChord; u.droneMask = droneMask; u.curChord = padsPlaying ? curChord : -1;
+    std::memcpy(u.padsName, parts[1].patch.name, sizeof u.padsName);
     std::memcpy(u.leadName, parts[0].patch.name, sizeof u.leadName);
     u.loopState = loopState;
     u.loopBars = (int)(loopLen / 4.0 + 0.5);
@@ -59,8 +57,6 @@ void Instrument::publish() {
     u.beatPlaying = beatPlaying; u.beatRec = beatRec; u.beatSwitching = beatSwitching;
     u.beatStep = beatPlaying ? (int)((((long)std::floor(beat * 4.0) % kDrumSteps) + kDrumSteps) % kDrumSteps) : -1;
     for (int d = 0; d < kDrums; ++d) { u.beatPat[d] = beatPat[d]; u.drumHits[d] = drumHits[d]; }
-    u.trackPlaying = trackPlaying; u.trackPos = trackPos; u.trackPasses = trackPasses;
-    for (int ln = 0; ln < kLanes; ++ln) u.lanePeak[ln] = laneHold[ln];
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
     u.sustain = sustain; u.bend = parts[0].bend;
     u.xyX = xyX; u.xyY = xyY; u.xyTouch = xyTouch;

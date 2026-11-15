@@ -1,7 +1,7 @@
 // venv-vrequency — the beat.
 //
 // One bar of sixteen steps for eight drums, locked to the beat clock: bars start on
-// multiples of four beats, the same grid the backing and the looper use.
+// multiples of four beats, the same grid the looper uses.
 #include "core/instrument/instrument.h"
 #include "core/drums/drums.h"
 #include <algorithm>
@@ -28,7 +28,7 @@ void Instrument::beatCmd(int cmd, int drum, int step, int arg) {
     case BT_PLAYSTOP:
         beatPlaying = !beatPlaying;
         if (beatPlaying) {
-            if (transportIdle()) { beat = 0; progOrigin = 0; lastDrumStep = -1; }   // start on step 1, now
+            if (transportIdle()) { beat = 0; lastDrumStep = -1; }   // start on step 1, now
             else lastDrumStep = (long)std::floor(beat * 4.0);                       // join the bar in progress
         } else {
             beatRec = false;

@@ -49,39 +49,12 @@ QJsonObject ControlServer::cmdState() {
     }
     bt["steps"] = steps;
     o["beat"] = bt;
-    QJsonObject bk;
-    bk["playing"] = u.backPlaying;
-    bk["mode"] = QString(backModeName(u.set.backMode)).toLower();
-    bk["style"] = QString(backStyleName(u.set.backStyle)).toLower();
-    bk["seventh"] = u.set.seventh;
-    QJsonArray ch, deg;
-    for (int i = 0; i < u.progLen && i < kProgMax; ++i) {
-        ch.append(QString::fromUtf8(buildChord(u.set.tuning, u.prog[i], u.set.seventh).name));
-        deg.append(u.prog[i] + 1);
-    }
-    bk["chords"] = ch; bk["degrees"] = deg;
-    bk["position"] = u.progPos;
-    o["backing"] = bk;
-    QJsonObject tr;
-    tr["playing"] = u.trackPlaying; tr["bars"] = w.trackPage.track.bars;
-    QJsonArray clips, lanes;
-    static const char *kinds[] = {"beat", "chords", "loop"};
-    for (size_t i = 0; i < w.trackPage.track.clips.size(); ++i) {
-        QJsonObject c;
-        c["index"] = (int)i; c["name"] = QString::fromUtf8(w.trackPage.track.clips[i]->name);
-        c["kind"] = kinds[qBound(0, w.trackPage.track.clips[i]->kind, 2)]; c["bars"] = w.trackPage.track.clips[i]->bars;
-        clips.append(c);
-    }
-    static const char *laneN[kLanes] = {"beat", "chords", "loop_a", "loop_b"};
-    for (int l = 0; l < kLanes; ++l) {
-        QJsonArray pl;
-        for (const Placement &p : w.trackPage.track.lane[l]) { QJsonObject x; x["clip"] = p.clip; x["bar"] = p.bar; x["bars"] = p.bars; x["mute"] = p.mute; pl.append(x); }
-        QJsonObject ln; ln["lane"] = laneN[l]; ln["placements"] = pl; lanes.append(ln);
-    }
-    tr["clips"] = clips; tr["lanes"] = lanes;
-    tr["exporting"] = w.trackPage.exportStatus() == 1;
-    o["track"] = tr;
-    o["playing"] = u.voices > 0 || u.backPlaying || u.beatPlaying || u.trackPlaying || u.loopState == L_PLAY || u.loopState == L_OVERDUB;
+    QJsonObject pads;
+    pads["playing"] = u.padsPlaying;
+    pads["mode"] = QString(padModeName(u.set.padMode)).toLower();
+    pads["held"] = u.holdChord >= 0 ? QJsonValue(QString::fromUtf8(buildChord(u.set.tuning, u.holdChord, false).name)) : QJsonValue();
+    o["chord_pads"] = pads;
+    o["playing"] = u.voices > 0 || u.padsPlaying || u.beatPlaying || u.loopState == L_PLAY || u.loopState == L_OVERDUB;
     o["voices"] = u.voices;
     o["toast"] = w.lastToast();
     QJsonObject cp;

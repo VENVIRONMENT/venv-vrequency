@@ -21,7 +21,6 @@ public:
     bool togglePlayback();                   // play the newest recording back, or stop it; false = nothing to play
     bool playingBack() const;
     QString lastPath() const { return lastRecording; }
-    void setLastPath(const QString &path) { lastRecording = path; }   // an exported track is the newest recording
     void shutdown();                         // the window is closing: finish the file, stop the player
 
 private:

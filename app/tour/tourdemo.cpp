@@ -5,7 +5,6 @@
 #include "core/instrument/instrument.h"
 #include "app/shell/mainwindow.h"
 #include "core/presets/presets.h"
-#include "core/presets/sound_shelf.h"
 #include <QThread>
 #include <array>
 
@@ -24,7 +23,7 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     for (int i = 0; i < kExtraCount; ++i) { store::NamedPatch np; np.file = "demo"; np.patch = extraPatch(i); w.sounds.favs.push_back(np); }
     w.systemPage.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/beat-practice.json"};
 
-    // ---- a beat, a progression and a loop ----
+    // ---- a beat, a held chord and a loop ----
     inst.set(S_VOLUME, 0.5f);
     static const char *pat[kDrums] = {"x......x..x.....", "....x.......x...", "x.x.x.x.x.x.x.x.", "...............x",
                                       "............x...", "..x......x......", "..............x.", "................"};
@@ -33,8 +32,8 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     inst.set(S_BEATVOL, 0.7f);
     pump(inst, 60);
     SessionData sd; inst.snapshot(sd);
-    sd.prog[0] = 5; sd.prog[1] = 3; sd.prog[2] = 0; sd.prog[3] = 4; sd.progLen = 4; sd.settings.chordBeats = 4;
-    sd.backing = extraPatch(1);
+    sd.pads = extraPatch(1);
+    sd.holdChord = 5;
     sd.loopBeats = 8;
     sd.layers = {melody(extraPatch(0), {{0, 1.5, 64}, {1.5, 1.5, 67}, {3.5, 0.5, 69}, {4, 2, 72}, {6, 1, 71}, {7, 0.9, 67}})};
     inst.restore(sd);
@@ -43,7 +42,6 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     pump(inst, 80);
 
     playPages(rig, pics);
-    trackPages(rig, pics);
     for (int i = 0; i < (int)pics.size(); ++i) extras(TourView::picPage(i), pics[i]);
 }
 

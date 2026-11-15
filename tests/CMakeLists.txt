@@ -7,13 +7,8 @@ add_executable(vrequency_tests
   sound_tests.cpp
   drum_tests.cpp
   beat_tests.cpp
-  track_clip_tests.cpp
-  track_play_tests.cpp
-  track_transport_tests.cpp
-  track_pick_tests.cpp
-  track_mix_tests.cpp
   fx_tests.cpp
-  backing_tests.cpp
+  chord_pads_tests.cpp
   looper_tests.cpp
   session_tests.cpp
   analysis_tests.cpp)

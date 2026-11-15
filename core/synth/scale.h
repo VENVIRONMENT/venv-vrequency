@@ -15,7 +15,7 @@ struct ScaleDef {
     const char *shortName;
     int n;
     int steps[12];
-    int chordParent; // 7-note scale used to build backing chords
+    int chordParent; // 7-note scale used to build the chord pads' chords
 };
 
 inline const ScaleDef &scaleDef(int id) {

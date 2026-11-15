@@ -12,7 +12,7 @@ QVector<MainWindow::ZoneInfo> MainWindow::zoneCatalogue(int page, int helpSub) {
     const bool sTourSusp = tourSuspended;
     tourSuspended = true;                                   // the page itself is wanted, not the tour's picture of it
     if (page != pg) { pg = page; soundPage.deepEdit = false; }
-    if (page == PG_HELP && helpSub >= 0) helpPage.sub = qBound(0, helpSub, 3);
+    if (page == PG_HELP && helpSub >= 0) helpPage.sub = qBound(0, helpSub, kHelpParts - 1);
     guide.hl.page = pg; guide.hl.zones = sHl.page == page ? sHl.zones : QStringList(); guide.hl.until = sHl.until;
     guide.topicPage = pg;
     shot();

@@ -52,9 +52,9 @@ void tourSelection(TourContext &ctx) {
         check(t.selectedName().isEmpty() && t.isOpen(), "Esc first closes the card (back to the page intro)");
     }
     {   // page selection: touch chips and the page keys
-        tourTap(w, zn::at(zn::tour_page, 7)); w.shot();
+        tourTap(w, zn::at(zn::tour_page, TourView::pageIndex("beat"))); w.shot();
         check(t.pageId() == "beat", "touching a page chip changes the tour page");
-        press(w, Qt::Key_Period); check(t.pageId() == "backing", "the period key goes to the next page");
+        press(w, Qt::Key_Period); check(t.pageId() == "tune", "the period key goes to the next page");
         press(w, Qt::Key_Comma); press(w, Qt::Key_Comma); check(t.pageId() == "sound-deep", "the comma key goes to the previous page");
         check(w.page() == PG_PLAY, "and the real app never left the Synth page");
         check(t.variantsOnPage() == 4, "the All-parameters editor has four pictures (eight or twelve parameters each)");

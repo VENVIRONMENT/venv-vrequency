@@ -36,9 +36,9 @@ void testControlSocket(Context &ctx) {
     check(c.open(sock) && c2.open(sock), "two clients connect at once");
     QJsonObject r = c.call(R"({"id":"abc","cmd":"state"})");
     check(okOf(r) && r["id"].toString() == "abc", "replies carry the request id back");
-    check(r["result"].toObject().contains("sound") && r["result"].toObject().contains("backing") && r["result"].toObject().contains("track") &&
+    check(r["result"].toObject().contains("sound") && r["result"].toObject().contains("chord_pads") &&
           r["result"].toObject().contains("chat_tail") && r["result"].toObject()["sound"].toObject()["params"].toObject().contains("cutoff"),
-          "state holds the sound, parameters, backing, track and chat");
+          "state holds the sound, parameters, chord pads and chat");
 
     Link link{ctl, c, c2, sock};
     socketNotes(ctx, link);

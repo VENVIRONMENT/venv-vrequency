@@ -1,6 +1,6 @@
 // venv-vrequency self-test — every group of checks, in the order they run. The order matters: each
 // group starts from the state the ones before it left in the app (the loop the looper recorded is the
-// one the session saves, the Track page keeps, the control socket clears...).
+// one the session saves, the control socket clears...).
 #pragma once
 
 class MainWindow;
@@ -11,31 +11,17 @@ namespace selftest {
 struct Context;
 struct Link;
 struct TourContext;
-struct TrackState;
 
 void testAudio(Context &ctx);            // audio_layout.cpp
 void testLayout(Context &ctx);
 void testKeys(Context &ctx);             // keys.cpp
 void testSounds(Context &ctx);           // sounds.cpp
-void testBacking(Context &ctx);          // backing.cpp
+void testChordPads(Context &ctx);        // chord_pads.cpp
 void testLooper(Context &ctx);           // looper.cpp
 void testTouch(Context &ctx);            // touch.cpp
 void testSaving(Context &ctx);           // saving.cpp
 void testBeat(Context &ctx);             // beat.cpp
 void testKeptBeats(Context &ctx);        // kept_beats.cpp
-void testTrack(Context &ctx);            // track.cpp, which runs:
-void trackKeepAndPlace(Context &ctx, TrackState &tr);      // track_arrange.cpp
-void trackChopByTouch(Context &ctx, TrackState &tr);       // track_edit.cpp
-void trackChooseCopyPaste(Context &ctx);
-void trackChopByKeys(Context &ctx, TrackState &tr);
-void trackCycle(Context &ctx);
-void trackPlay(Context &ctx);                              // track_play.cpp
-void trackExport(Context &ctx);
-void trackRemove(Context &ctx, TrackState &tr);
-void trackPickLoopSound(Context &ctx, TrackState &tr);     // track_sound.cpp
-void trackPickBeatKit(Context &ctx, TrackState &tr);
-void trackMixer(Context &ctx);                             // track_mixer.cpp
-void trackSaveAndLoad(Context &ctx, TrackState &tr);       // track_saved.cpp
 void testListeningBack(Context &ctx);    // listening.cpp
 void testControlSocket(Context &ctx);    // socket.cpp, which runs:
 void socketNotes(Context &ctx, Link &link);                // socket_notes.cpp
@@ -68,7 +54,4 @@ void tourCardsFit(TourContext &ctx);
 void tourPaintTime(TourContext &ctx);                      // tour_limits.cpp
 void tourHostileArguments(TourContext &ctx);
 void testPanicAndHealth(Context &ctx);   // health.cpp
-
-// The Track page's share of renderShots (render_shots.cpp).
-void renderTrackShots(MainWindow &w, td::Instrument &inst, const QString &dir);   // render_track.cpp
 } // namespace selftest

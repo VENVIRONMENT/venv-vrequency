@@ -3,7 +3,6 @@
 #include "core/drums/drums.h"
 #include "core/instrument/limits.h"
 #include "core/instrument/settings.h"
-#include "core/track/lanes.h"
 #include <cstdint>
 
 namespace td {
@@ -21,12 +20,10 @@ struct UiState {
     StringUi str[kStrings];
     Settings set;
     double beat = 0;
-    // backing
-    bool backPlaying = false;
-    int prog[kProgMax] = {0};
-    int progLen = 0, progPos = -1, selSlot = -1;
+    // chord pads
+    bool padsPlaying = false;
     int holdChord = -1, droneMask = 0, curChord = -1;
-    char backName[28] = {0};
+    char padsName[28] = {0};           // the sound they play
     // looper
     int loopState = L_EMPTY;
     float loopPos = 0;
@@ -38,12 +35,7 @@ struct UiState {
     bool beatSwitching = false;        // another beat waits for the next bar
     uint16_t beatPat[kDrums] = {0};
     uint32_t drumHits[kDrums] = {0};   // counts every hit of each drum (pads light up on a change)
-    // track
-    bool trackPlaying = false;
-    double trackPos = 0;               // beats from the start of the track
-    uint32_t trackPasses = 0;          // counts play-once passes that reached the end
     // meters
-    float lanePeak[kLanes] = {0};      // what each track lane is putting out (linear, held and falling)
     float peak = 0, limiter = 1;
     int voices = 0;
     bool sustain = false;

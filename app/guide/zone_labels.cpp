@@ -19,14 +19,12 @@ QString Guide::zoneLabel(const QString &name) const {
         {"octave_down", "Octave down"}, {"octave_up", "Octave up"}, {"loop_pedal", "Loop pedal"},
         {"loop_undo", "Undo loop layer"}, {"loop_playstop", "Loop play / stop"}, {"sustain", "Sustain"},
         {"new_sound", "New sound"}, {"menu", "Menu"}, {"string0", "Low string"}, {"string1", "Middle string"},
-        {"string2", "High string"}, {"track_lanes", "Track lanes"}, {"track_ruler", "Track ruler (bars)"},
-        {"track_keep", "Keep"}, {"chop_strip", "Chop strip"}, {"chat_history", "Chat history"},
+        {"string2", "High string"}, {"chat_history", "Chat history"},
         {"chat_input", "Chat input"}, {"chat_send", "Send"}, {"help_section", "Help section title"},
         {"help_next", "Next help page"}, {"help_ask", "Ask Rook"}, {"help_back", "Back to playing"},
         {"dock", "Chat dock"}, {"dock_history", "Dock messages"}, {"dock_input", "Dock input"},
         {"dock_send", "Dock Send"}, {"dock_full", "Open the Chat page"}, {"dock_close", "Hide the dock"},
-        {"ticker", "Message ticker"}, {"backmode", "Chord tap mode"}, {"backplay", "Backing play / stop"},
-        {"sound_octave-", "Sound octave down"}, {"sound_octave+", "Sound octave up"},
+        {"ticker", "Message ticker"}, {"padmode", "Chord pad mode"}, {"padplay", "Chord pads play / stop"},
     };
     if (fixed.contains(name)) return fixed[name];
     static const QRegularExpression lane("^mixer_(lane|fader|mute|solo)(\\d)$");

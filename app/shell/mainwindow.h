@@ -9,7 +9,6 @@
 #include "app/store/store.h"
 #include "app/chat/chat.h"
 #include "app/guide/guide.h"
-#include "app/pages/backing/backing_page.h"
 #include "app/pages/beat/beat_page.h"
 #include "app/pages/chat/chat_page.h"
 #include "app/pages/help/help_page.h"
@@ -17,7 +16,6 @@
 #include "app/pages/synth/chord_pads.h"
 #include "app/pages/synth/synth_page.h"
 #include "app/pages/system/system_page.h"
-#include "app/pages/track/track_page.h"
 #include "app/pages/tune/tune_page.h"
 #include "app/shell/recorder.h"
 #include "app/shell/shell.h"
@@ -55,12 +53,10 @@ public:
     Chat chat{*this};
     Guide guide{*this, chat};
     ChatPage chatPage{*this, chat};
-    TrackPage trackPage{*this};
-    ChordPads chordPads{*this};              // shared by the Synth and Backing pages
+    ChordPads chordPads{*this};              // drawn on the Synth page
     SynthPage synthPage{*this, chordPads};
     SoundPage soundPage{*this};
     BeatPage beatPage{*this};
-    BackingPage backingPage{*this, chordPads};
     TunePage tunePage{*this};
     SystemPage systemPage{*this};
     HelpPage helpPage{*this, chat, guide};
@@ -80,7 +76,6 @@ public:
     Sounds &soundShelf() override { return sounds; }
     const Recorder &recorderNow() const override { return recorder; }
     bool noAudioDevice() const override { return sink.dummy; }
-    void setLastRecording(const QString &path) override { recorder.setLastPath(path); }
     void saveSoon() override { saveTimer.start(2500); }
     int page() const override { return pg; }
     void handleKey(int qtKey, bool down);
@@ -94,8 +89,8 @@ public:
     void saveState() override;
     void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keys.testOpen = on; }
-    QString armedModes() const { QStringList l; if (soundPage.favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatPage.erase) l << "erase"; if (trackPage.armed()) l << "remove"; return l.join(","); }
-    void armAllModes() { soundPage.favDelete = sounds.slotSave = beatPage.erase = true; trackPage.armAll(); }
+    QString armedModes() const { QStringList l; if (soundPage.favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatPage.erase) l << "erase"; return l.join(","); }
+    void armAllModes() { soundPage.favDelete = sounds.slotSave = beatPage.erase = true; }
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }

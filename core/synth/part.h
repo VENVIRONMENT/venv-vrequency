@@ -4,8 +4,8 @@
 
 namespace td {
 
-// A Part is one independent instrument layer: the live lead, the backing, or a
-// loop layer. Each owns its own patch so backing/loops keep their sound when
+// A Part is one independent instrument layer: the live lead, the chord pads, or a
+// loop layer. Each owns its own patch so the pads and loops keep their sound when
 // the lead changes.
 struct Part {
     Patch patch;

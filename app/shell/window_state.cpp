@@ -2,11 +2,10 @@
 #include "app/shell/mainwindow.h"
 #include "app/store/store.h"
 #include <QJsonArray>
-#include <memory>
 
 using namespace td;
 
-// The state file, read at start-up: settings, sounds, the track, the beats and the chat. Nothing
+// The state file, read at start-up: settings, sounds, the beats and the chat. Nothing
 // in a scratch window, and the beats are set up even when there is no file.
 void MainWindow::loadState(SessionData &sd) {
     QJsonObject st;
@@ -15,7 +14,6 @@ void MainWindow::loadState(SessionData &sd) {
         sounds.load(st);
         keys.chordRow = st["chordRow"].toBool(false);
         store::beatFromJson(st["beat"].toArray(), sd.beat);
-        if (st.contains("track")) store::trackFromJson(st["track"].toObject(), trackPage.track);
         chat.load(st);
         tourSeenFlag = st["tourSeen"].toBool(false);
         tourLastPageName = st["tourPage"].toString();
@@ -32,7 +30,6 @@ void MainWindow::saveState() {
     sounds.save(o);
     o["chordRow"] = keys.chordRow;
     o["beat"] = store::beatToJson(sd.beat);
-    o["track"] = store::trackToJson(trackPage.track);
     beatPage.save(o);
     chat.save(o);
     o["tourSeen"] = tourSeenFlag;
@@ -44,7 +41,6 @@ bool MainWindow::saveSession(const QString &path) {
     SessionData sd;
     inst.snapshot(sd);
     QJsonObject o = store::sessionToJson(sd);
-    o["track"] = store::trackToJson(trackPage.track);
     bool ok = store::writeJson(path, o);
     refreshLists();
     return ok;
@@ -57,8 +53,5 @@ bool MainWindow::loadSession(const QString &path) {
     releaseAllKeys();
     inst.restore(sd);
     sounds.lead = sd.lead; sounds.curSlot = -1;
-    if (o.contains("track")) { // sessions saved before the track existed leave the track alone
-        trackPage.loadJson(o["track"].toObject());
-    }
     return true;
 }

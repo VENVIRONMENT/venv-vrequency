@@ -33,8 +33,7 @@ void testLayout(Context &ctx) {
     }
     QImage img = w.shot();
     check(img.width() == 720 && img.height() == 720, "interface renders at 720x720");
-    static const char *files[] = {"10-track", "0-play", "1-sound", "9-beat", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
-    static const char *names[] = {"track", "synth", "sound", "beat", "backing", "tune", "system", "help", "chat"};
+    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-beat", "3-tune", "4-system", "5-help", "14-chat"};
     if (!shotsDir.isEmpty()) QDir().mkpath(shotsDir);
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p);
@@ -46,7 +45,7 @@ void testLayout(Context &ctx) {
             ++count;
             if (r.left() < 0 || r.top() < 0 || r.right() > 720 || r.bottom() > 720) inside = false;
         }
-        check(inside && count > 5, QString("%1 page: all %2 controls fit inside 720x720 (no scrolling)").arg(names[p]).arg(count));
+        check(inside && count > 5, QString("%1 page: all %2 controls fit inside 720x720 (no scrolling)").arg(pageName(p)).arg(count));
         if (!shotsDir.isEmpty()) im.save(QString("%1/%2.png").arg(shotsDir).arg(files[p]));
     }
     w.setPage(PG_PLAY);
@@ -57,7 +56,6 @@ void testLayout(Context &ctx) {
         std::printf("  info  play page redraw: %.1f ms per frame\n", pt.elapsed() / 40.0);
     }
     { // a busy wave on the scope once cost 40 to 60 ms a frame: a whole processor core at 25 frames a second
-        static const char *pn[] = {"Track", "Synth", "Sound", "Beat", "Backing", "Tune", "System", "Help", "Chat"};
         key(w, Qt::Key_Z, true); key(w, Qt::Key_S, true); key(w, Qt::Key_E, true); wait(300);
         double worst = 0; int worstPage = 0;
         for (int p = 0; p < PG_COUNT; ++p) {
@@ -70,7 +68,7 @@ void testLayout(Context &ctx) {
         key(w, Qt::Key_E, false); key(w, Qt::Key_S, false); key(w, Qt::Key_Z, false);
         inst.cmd(EV_PANIC); // no release tails left for the checks that follow
         w.setPage(PG_PLAY); wait(400);
-        check(worst < 25.0, QString("with three notes sounding every page redraws well inside a 40 ms frame (slowest: %1, %2 ms)").arg(pn[worstPage]).arg(worst, 0, 'f', 1));
+        check(worst < 25.0, QString("with three notes sounding every page redraws well inside a 40 ms frame (slowest: %1, %2 ms)").arg(pageTitle(worstPage)).arg(worst, 0, 'f', 1));
     }
 }
 } // namespace selftest

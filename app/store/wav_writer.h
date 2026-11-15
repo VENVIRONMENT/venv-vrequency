@@ -1,4 +1,4 @@
-// venv-vrequency — a WAV file written as the audio arrives: recordings and the track's export.
+// venv-vrequency — a WAV file written as the audio arrives: recordings.
 #pragma once
 #include <QFile>
 #include <QString>

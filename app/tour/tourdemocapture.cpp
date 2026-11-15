@@ -5,7 +5,6 @@
 #include "core/instrument/instrument.h"
 #include "app/shell/mainwindow.h"
 #include "core/presets/presets.h"
-#include "core/presets/sound_shelf.h"
 #include <QThread>
 #include <array>
 #include <set>
@@ -23,7 +22,7 @@ void TourDemo::capture(Rig &rig, int page, TourView::Pic &pic) {
     pic.small = pic.img.scaled(380, 380, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     std::set<QString> seen;
     size_t from = 0;
-    if (page == 11) // the Key test panel swallows every touch but its own Close button
+    if (page == TourView::pageIndex("key-test")) // the Key test panel swallows every touch but its own Close button
         for (size_t i = 0; i < rig.w.ui.zones().size(); ++i) if (rig.w.ui.zones()[i].name == "keytestblock") from = i + 1;
     for (size_t i = from; i < rig.w.ui.zones().size(); ++i) {
         const auto &z = rig.w.ui.zones()[i];
@@ -48,17 +47,14 @@ LayerData TourDemo::melody(const Patch &sound, std::initializer_list<std::array<
 
 void TourDemo::extras(int page, TourView::Pic &pic) {
     auto add = [&](const char *name, QRectF r, const char *ref) { TourView::Hot h; h.name = name; h.r = r; h.ref = ref; h.real = false; pic.hot.push_back(h); };
-    switch (page) {
-    case 4: // synth
+    const QString id = TourView::pageInfo(page).id;
+    if (id == "synth") {
         add("level_strip", QRectF(16, 76, 688, 12), "concepts.level-strip");
         add("scope_readouts_top", QRectF(18, 93, 470, 18), "concepts.scope-readouts");
         add("scope_readouts_bottom", QRectF(18, 298, 480, 18), "concepts.scope-readouts");
         add("string_brackets", QRectF(235, 400, 48, 40), "concepts.string-brackets");
-        break;
-    case 7: add("step_grid", QRectF(16, 80, 688, 130), "concepts.step-grid"); break;
-    case 9: add("listen_result", QRectF(240, 494, 456, 72), "concepts.listen-result"); break;
-    case 10: add("status_box", QRectF(16, 424, 688, 206), "concepts.status-box"); break;
-    case 12: add("key_list_rows", QRectF(16, 100, 688, 474), "concepts.help-rows"); break;
-    default: break;
-    }
+    } else if (id == "beat") add("step_grid", QRectF(16, 80, 688, 130), "concepts.step-grid");
+    else if (id == "tune") add("listen_result", QRectF(240, 494, 456, 72), "concepts.listen-result");
+    else if (id == "system") add("status_box", QRectF(16, 424, 688, 206), "concepts.status-box");
+    else if (id == "help") add("key_list_rows", QRectF(16, 100, 688, 474), "concepts.help-rows");
 }

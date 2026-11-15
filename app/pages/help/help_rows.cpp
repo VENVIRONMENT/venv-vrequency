@@ -1,5 +1,5 @@
 // venv-vrequency — the words of the Help page: one list of rows (keys, what they do) for each of
-// the four parts, built from the key map so a remapped key shows up here.
+// the three parts, built from the key map so a remapped key shows up here.
 #include "app/pages/help/help_page.h"
 
 std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
@@ -20,7 +20,7 @@ std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
             {"Left / Right", "pitch bend down / up (hold)"},
             {"Up / Down", "octave up / down, held notes sweep"},
             {QString::fromUtf8("1 ‥ 9, 0"), "sounds 1 to 10"},
-            {K(A_CHORD_LAYER) + "+" + km.rows[0].left(1) + QString::fromUtf8("‥") + km.rows[0].right(1), QString::fromUtf8("backing chord I ‥ VII")},
+            {K(A_CHORD_LAYER) + "+" + km.rows[0].left(1) + QString::fromUtf8("‥") + km.rows[0].right(1), QString::fromUtf8("chord pad I ‥ VII")},
             {K(A_CHORD_ROW), "toggle: bottom row plays chords"},
             {"Tab / Esc", "next page / back to the Synth page"},
             {"screen", "drag the scope = X-Y control, drag a string = slide"},
@@ -42,26 +42,6 @@ std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
             {"Left / Right", "Beat page: the kept beat before / after"},
             {"+ New", "a fresh empty beat; the others are kept"},
         };
-    } else if (helpPage == 3) {
-        const QString c = km.keyFor(A_COMMAND, false) + "+";
-        rows = {
-            {K(A_SUSTAIN) + " / " + K(A_LOOP), "Track page: play or stop / back to bar 1"},
-            {"Left / Right", "choose the clip before / after"},
-            {"Up / Down", "choose a clip on the lane above / below"},
-            {"Alt + arrows", "move the chosen clip a bar, or to the other loop lane"},
-            {"Shift + L / R", "move the play line a bar (also , and .)"},
-            {QString::fromUtf8("1 ‥ 5"), "take a clip from the shelf in hand"},
-            {c + "X / C / V", "cut / copy the chosen clip / paste at the play line"},
-            {c + "T / " + c + "J", "split the chosen clip at the play line / join"},
-            {c + "R", "repeat: a copy right after the chosen clip"},
-            {c + "Z", "undo (with " + K(A_CHROMATIC) + ": redo)"},
-            {K(A_PANIC), "delete the chosen clip from the track"},
-            {"M / C", "mute the chosen clip / cycle on or off"},
-            {"E / I", "chop the chosen clip / pick another sound for it"},
-            {"K / X", "keep what is live as clips / open the mixer"},
-            {c + "B", "export the track as an audio file"},
-            {K(A_TRACK_PLAY, true), "play or stop the track from any page"},
-        };
     } else {
         rows = {
             {K(A_RANDOM, true), "new sound: invent an instrument"},
@@ -71,10 +51,6 @@ std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
             {K(A_KEY_UP, true), "key up a semitone (with " + K(A_CHROMATIC) + ": down)"},
             {K(A_SCALE_NEXT, true), "next scale (with " + K(A_CHROMATIC) + ": previous)"},
             {K(A_TAP, true) + " " + K(A_METRO, true), "tap tempo / metronome"},
-            {K(A_BACK_MODE, true), "chord taps: progression / hold / drone"},
-            {K(A_BACK_STYLE, true), "backing style: sustain / pulse / arpeggio"},
-            {K(A_BACK_PLAY, true) + " " + K(A_BACK_CLEAR, true), "backing start-stop / clear backing"},
-            {K(A_BACK_REMOVE, true), "remove the last chord of the progression"},
             {K(A_LOOP_UNDO, true), "undo the last loop layer"},
             {K(A_LOOP_PLAY, true) + " " + K(A_LOOP_CLEAR, true), "loop start-stop / clear the loop"},
             {K(A_XYMAP, true), "next touch-pad mapping"},

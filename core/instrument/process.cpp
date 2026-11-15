@@ -2,7 +2,6 @@
 #include "core/instrument/instrument.h"
 #include "core/dsp.h"
 #include "core/synth/params.h"
-#include "core/track/track.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -20,25 +19,17 @@ void Instrument::block(float *l, float *r, int n) {
     while (evq.pop(e)) handle(e);
 
     // a loop layer that switched the crusher on must not leave it on once the loop stops or goes
-    if (glitchOwner >= kTrackPart0 ? !trackPlaying
-                                   : (glitchOwner >= 2 && ((loopState != L_PLAY && loopState != L_OVERDUB) || glitchOwner - 2 >= nLayers))) {
+    if (glitchOwner >= 2 && ((loopState != L_PLAY && loopState != L_OVERDUB) || glitchOwner - 2 >= nLayers)) {
         crush.set(false, 0, 0); glitchOwner = -1;
     }
     double b0 = beat, b1 = beat + (double)st.bpm / 60.0 / sr * n;
-    tickTrack(b0, b1);
     tickLoop(b0, b1);
-    tickBacking(b0, b1);
+    tickPads();
     tickBeat(b0, b1);
     beat = b1;
 
-    // the track's mix: the chords lane plays on part 1, the loop lanes on their own parts;
-    // the beat lane's level goes into each hit it triggers (see runLane)
-    const TrackData *tk = trackPlaying ? track.get() : nullptr;
-    float lg[kLanes];
-    for (int ln = 0; ln < kLanes; ++ln) lg[ln] = tk ? laneGain(*tk, ln) : 1.0f;
     parts[0].gain = 1.0f;
-    parts[1].gain = st.backVol * lg[LN_CHORDS];
-    for (int p = kTrackPart0; p < kParts; ++p) parts[p].gain = st.loopVol * lg[p < kTrackPart0 + kLayers ? LN_LOOPA : LN_LOOPB];
+    parts[1].gain = 0.7f; // the chord pads sit under the lead
     float bc = 1.0f - std::exp(-(float)n / (st.bendTime * 0.001f * sr * 0.33f));
     for (int p = 0; p < kParts; ++p) {
         parts[p].bend += bc * (bendTarget[p] - parts[p].bend);
@@ -52,8 +43,6 @@ void Instrument::block(float *l, float *r, int n) {
     float dryL[kBlock], dryR[kBlock], sC[kBlock], sD[kBlock], sR[kBlock], tmp[kBlock];
     for (int i = 0; i < n; ++i) dryL[i] = dryR[i] = sC[i] = sD[i] = sR[i] = 0;
 
-    float laneBuf[kLanes][kBlock]; // what each track lane plays, for its meter
-    if (tk) for (int ln = 0; ln < kLanes; ++ln) for (int i = 0; i < n; ++i) laneBuf[ln][i] = 0;
     int nActive = 0;
     for (int vi = 0; vi < kVoices; ++vi) {
         Voice &v = voices[vi];
@@ -68,27 +57,19 @@ void Instrument::block(float *l, float *r, int n) {
             dryL[i] += x * gl; dryR[i] += x * gr;
             sC[i] += x * c; sD[i] += x * d; sR[i] += x * rv;
         }
-        const int ln = !tk ? -1 : (p == 1 ? LN_CHORDS : (p >= kTrackPart0 + kLayers ? LN_LOOPB : (p >= kTrackPart0 ? LN_LOOPA : -1)));
-        if (ln >= 0) for (int i = 0; i < n; ++i) laneBuf[ln][i] += tmp[i];
     }
-    float lanePk[kLanes] = {0};
-    if (tk) for (int ln = 0; ln < kLanes; ++ln) for (int i = 0; i < n; ++i) lanePk[ln] = std::max(lanePk[ln], std::fabs(laneBuf[ln][i]));
 
     if (drums.active()) {
         float dl[kBlock], dr[kBlock];
         for (int i = 0; i < n; ++i) dl[i] = dr[i] = 0;
-        const int kit = trackKit >= 0 ? trackKit : st.kit; // one drum bus: a playing track's kit decides its colour
-        drums.render(kit, dl, dr, n);
-        const float g = st.beatVol * 0.85f, rv = drums.reverbSend(kit);
+        drums.render(st.kit, dl, dr, n);
+        const float g = st.beatVol * 0.85f, rv = drums.reverbSend(st.kit);
         for (int i = 0; i < n; ++i) {
             dryL[i] += dl[i] * g; dryR[i] += dr[i] * g;
             sR[i] += 0.5f * (dl[i] + dr[i]) * g * rv;
-            if (tk) lanePk[LN_BEAT] = std::max(lanePk[LN_BEAT], 0.5f * std::fabs(dl[i] + dr[i]) * g);
         }
         ++nActive; // keeps the effects running and the idle shortcut off
     }
-
-    for (int ln = 0; ln < kLanes; ++ln) laneHold[ln] = lanePk[ln] > laneHold[ln] ? lanePk[ln] : laneHold[ln] * 0.9985f; // falls about 20 dB a second
 
     // Nothing sounding and every effect tail has died away: skip the effects
     // entirely (saves battery while the instrument sits idle).

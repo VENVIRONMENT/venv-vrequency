@@ -33,9 +33,9 @@ void modesDropOnPageChange(Context &ctx, Client &c) {
     for (const Route &r : routes) {
         w.setPage(PG_SOUND); w.shot();
         w.armAllModes();
-        check(w.armedModes() == "delete,store,erase,remove", "all four modes can be armed");
+        check(w.armedModes() == "delete,store,erase", "all three modes can be armed");
         r.go(); w.shot();
-        check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store, Erase and the remove confirmation").arg(r.name));
+        check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store and Erase").arg(r.name));
         w.guide.clearHighlight(); w.guide.dockClose();
     }
     w.setPage(PG_SOUND); w.shot();
@@ -101,9 +101,7 @@ void favouritesOverwriteAndPage(Context &ctx, Client &c) {
 void tempoStepsByOne(Context &ctx) {
     MainWindow &w = ctx.w; Instrument &inst = ctx.inst;
     inst.set(S_BPM, 100); wait(40);
-    w.setPage(PG_BACK); w.shot(); tap(w, zn::plus(zn::bpm2)); wait(60);
-    check(std::lround(inst.uiState().set.bpm) == 101, "Backing page tempo steps by 1");
-    w.setPage(PG_BEAT); w.shot(); tap(w, zn::minus(zn::bpm3)); wait(60); w.shot(); tap(w, zn::minus(zn::bpm3)); wait(60);
+    w.setPage(PG_BEAT); w.shot(); tap(w, zn::minus(zn::bpm3)); wait(60);
     check(std::lround(inst.uiState().set.bpm) == 99, "Beat page tempo steps by 1");
     w.setPage(PG_TUNE); w.shot(); tap(w, zn::plus(zn::bpm)); wait(60);
     check(std::lround(inst.uiState().set.bpm) == 100, "Tune page tempo steps by 1");

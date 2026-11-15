@@ -53,7 +53,7 @@ const HelpCard *TourView::cardFor(const Hot &h) const {
 void TourView::tapHot(int idx) {
     choose(idx);
     const QString n = selectedName();
-    if (pageIdx == 6 && (n == "deepnext" || n == "deepprev")) {
+    if (pageIdx == pageIndex("sound-deep") && (n == "deepnext" || n == "deepprev")) {
         setVariant(variant + (n == "deepnext" ? 1 : -1));
         const auto &hot = pics[picIndex()].hot;
         for (int i = 0; i < (int)hot.size(); ++i) if (hot[i].name == n) choose(i);

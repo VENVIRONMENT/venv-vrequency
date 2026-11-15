@@ -1,7 +1,7 @@
 # How to use venv-vrequency
 
 A guide to playing the synth, page by page. Everything here describes version 0.13.0 with the
-default key bindings.
+Track and Backing pages taken out (the way to 1.0), and the default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
 
@@ -13,18 +13,17 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 4. [Playing the strings](#4-playing-the-strings)
 5. [The scope and touch pad](#5-the-scope-and-touch-pad)
 6. [Sounds](#6-sounds)
-7. [Backing chords](#7-backing-chords)
+7. [Chord pads](#7-chord-pads)
 8. [Beat](#8-beat)
 9. [The loop pedal](#9-the-loop-pedal)
-10. [Track](#10-track)
-11. [Key, scale and tempo](#11-key-scale-and-tempo)
-12. [Saving and recording](#12-saving-and-recording)
-13. [System page](#13-system-page)
-14. [All the keys](#14-all-the-keys)
-15. [When something is wrong](#15-when-something-is-wrong)
-16. [Chat with a copilot](#16-chat-with-a-copilot)
-17. [Asking Rook while you play (the chat dock)](#17-asking-rook-while-you-play-the-chat-dock)
-18. [The tour](#18-the-tour)
+10. [Key, scale and tempo](#10-key-scale-and-tempo)
+11. [Saving and recording](#11-saving-and-recording)
+12. [System page](#12-system-page)
+13. [All the keys](#13-all-the-keys)
+14. [When something is wrong](#14-when-something-is-wrong)
+15. [Chat with a copilot](#15-chat-with-a-copilot)
+16. [Asking Rook while you play (the chat dock)](#16-asking-rook-while-you-play-the-chat-dock)
+17. [The tour](#17-the-tour)
 
 ## 1. Start and quit
 
@@ -46,9 +45,8 @@ saves your setup (sounds, key, tempo, settings) and it comes back the same next 
    Let go of `F` and it slides back to `A`.
 3. Press `1` to `9` and `0` to try the ten sounds. On the Q20 the digits are on the number layer.
 4. Drag a finger across the scope at the top of the screen. That changes the tone.
-5. Tap two or three of the chord pads (Am, C, Em ...). The first tap starts the backing, and the
-   chords loop as you add them, so you can play over them. (The Play button next to the pads stops
-   it, and starts it again.)
+5. Tap one of the chord pads (Am, C, Em ...). It holds that chord so you can play over it; tap
+   another to change chord, or the same one again to let it go.
 6. Press `Backspace` if anything gets stuck. It silences everything.
 
 Every key is locked to a scale, so nothing you press is a wrong note.
@@ -68,8 +66,7 @@ From top to bottom:
 | Level strip | Output level, as a row of segments | Nothing |
 | Scope | The real output wave, with frequency and level readouts | Dragging is the touch pad (section 5) |
 | Strings | Three strings with each note's key letter above it | Press to play, drag to slide |
-| Progression strip | The chords you have queued, up to eight | Tap a filled slot to select it |
-| Chord pads | The seven chords of the current key | Adds or plays a chord (section 7) |
+| Chord pads | The seven chords of the current key, with their mode and Play / Stop | Holds a chord or a drone (section 7) |
 | Bottom row | Loop, Undo, loop play/stop, Sus, octave − and +, New, Menu | See below |
 
 The bottom row:
@@ -81,7 +78,7 @@ The bottom row:
 - **− / +**: octave down or up.
 - **New**: invents a new random sound.
 - **Menu**: opens the Sound page, which has the tab strip along the top for all the other pages:
-  Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat, in that order.
+  Synth, Sound, Beat, Tune, System, Help and Chat, in that order.
 
 `Tab` steps through the pages and `Esc` returns to Synth.
 
@@ -139,7 +136,7 @@ returns to normal when you let go.
 
 ![The Glitch mapping](shots/7-glitch.png)
 
-Glitch crushes everything you hear (lead, backing and loop) into a rough, low-quality digital
+Glitch crushes everything you hear (lead, chord pads, loop and drums) into a rough, low-quality digital
 sound for as long as your finger is on the pad.
 
 - **Left to right (Coarse):** the sound gets blockier and more metallic.
@@ -201,39 +198,23 @@ strings more than fast playing. If the wash is too much, pull **Reverb** and **D
 To put one on a number key: tap it, tap **Store**, then tap a slot. If you delete one, it stays
 deleted until you use **Factory sounds** on the System page.
 
-## 7. Backing chords
+## 7. Chord pads
 
-![The Backing page](shots/2-backing.png)
-
-The seven chord pads are the chords that belong to the current key. What a tap does depends on the
-mode, shown on the small button beside the pads on the Synth page (tap it to change) and as three
-buttons at the top of the Backing page:
+The seven chord pads under the strings are the chords that belong to the current key (a small
+numeral is a minor chord). What a tap does depends on the mode, shown on the upper button beside
+the pads (tap it to change):
 
 | Mode | A chord tap ... |
 |---|---|
-| Progression | Adds the chord to a looping sequence of up to eight |
-| Hold | Plays that one chord until you pick another |
+| Hold | Plays that one chord until you pick another; tapping it again lets it go |
 | Drone | Switches a drone note for that chord on or off |
 
-To build a progression:
+A held chord and drones can sound together: set up the drones, switch to Hold and pick a chord over
+them. The lower button, **Stop**, silences the pads but remembers what they held, and **Play** brings
+it back. Panic (`Backspace`) stops them too.
 
-1. Make sure the mode is Progression.
-2. Tap chords in the order you want. They fill the strip. The first chord tap already starts the
-   backing, and the loop grows as you add chords.
-3. **Play** stops the backing, and starts it again from the first chord. Tapping it while the
-   backing is already running stops it.
-
-To change one chord, tap its slot and then tap the new chord. **Remove last** and **Clear all** are
-on the Backing page.
-
-Also on the Backing page:
-
-- **Style**: Sustain, Pulse, Arp up, Arp down, Arp up-dn.
-- **7th chords**: four-note chords instead of three.
-- **Beats per chord** and **Arp steps per beat** (the arpeggio styles only; Pulse always strikes once per beat).
-- **Tempo**, **Metronome** and **Backing volume**.
-- **Use the current lead sound for the backing**. The backing keeps the sound it started with, so
-  you can change the lead without changing the chords. Tap this when you do want them to match.
+The pads take the sound that is live when they start, so you can change the lead without changing
+the chords. To give them a new sound, stop them, choose the sound, then tap a chord.
 
 From the keyboard, hold `Alt` and press `Z` to `M` for chords one to seven. `$` turns the whole
 bottom row into chord keys until you press it again.
@@ -286,7 +267,7 @@ saved a moment after each change. A beat cannot be deleted or renamed yet.
 **Kit** chooses the drum sounds: Soft (round and quiet, with a little room), Crunchy (driven and
 lo-fi) or Glitchy (zaps and crushed noise). **Beat volume** and **Tempo** are underneath.
 
-The beat follows the tempo and shares its bar lines with the backing chords and the loop pedal, so
+The beat follows the tempo and shares its bar lines with the loop pedal, so
 they stay together whichever you start first. The Glitch touch-pad mapping crushes the drums along
 with everything else. Every kept beat is saved a moment after it changes; a saved session holds
 the beat shown, not the whole row.
@@ -315,183 +296,7 @@ and the loop follows the tempo if you change it.
 
 Loop volume is on the System page.
 
-## 10. Track
-
-The Track page is where a beat, some chords and a loop or two become a piece of music. It is the
-first tab.
-
-![The Track page](shots/10-track.png)
-
-**Clips.** A clip is a copy of something you made on another page: the beat, the backing's chords,
-or the loop. Make one of those, come to the Track page and tap **+ Keep**. Each thing that is not
-already on the shelf is added as a clip (Beat 1, Chords 1, Loop 1 ...). The original is untouched,
-so you can change the beat, keep again and have Beat 2.
-
-**Lanes.** The track has four lanes, and each kind of clip has its place:
-
-| Lane | Takes | Sounds like |
-|---|---|---|
-| Beat | Beat clips | The drums, in the kit the beat was kept with (or the kit you pick with **Sound**) |
-| Chords | Chords clips | The backing, with the sound and style it was kept with |
-| Loop A, Loop B | Loop clips | The loop, every layer with its own sound. Two lanes, so two loops can play at once |
-
-Any placed clip can be given another sound afterwards: see **Sound** below.
-
-**Placing.**
-
-1. Tap a clip on the shelf. It is now "in hand" (shown inverted).
-2. Tap an empty bar in its lane. The clip is placed there. Tap more bars to place it again.
-3. Or tap **Place**: it goes at the play line, and the line moves on, so tapping Place four times
-   lays down four in a row. The dashed box shows where it will go.
-
-Clips snap to whole bars and two clips cannot share bars in one lane. The track grows when you
-place past its end; **Length** sets how many bars it has.
-
-**Choosing and moving.** Tap a placed clip to choose it (double frame). Drag it left or right to
-move it, or between Loop A and Loop B.
-
-| Button | Does |
-|---|---|
-| **Repeat** | Puts a copy right after the chosen clip |
-| **Split** | Cuts the chosen clip in two at the play line. Each half can then be moved or removed |
-| **Join** | Joins the chosen clip with the one right after it, if that one carries on from it (a repeat, or the other half of a split) |
-| **Mute** | Silences the chosen clip without removing it |
-| **Remove** | Removes the chosen clip from the track. With a shelf clip in hand and nothing chosen, it deletes the clip and every copy of it, and asks twice |
-| **Undo** | Takes back the last change, up to 40 steps |
-
-**Playing.** Tap the numbers above the lanes to put the play line on a bar. **Play** starts from
-there and goes round the whole track until you stop it. **Cycle** goes round just the chosen clip's
-bars (or four bars from the play line); the cycled bars show inverted in the ruler. Starting the
-track stops the live beat, backing and loop. While it plays you can go to the Synth page and play
-over it, start the live beat on top, or record a new loop in time with it. `Ctrl`+`Space` starts
-and stops the track from any page.
-
-**Chop.** Choose a placed clip and tap **Chop**.
-
-![Chopping a loop](shots/11-chop.png)
-
-The strip shows one pass of the clip. Tap a dotted line to cut there; tap a cut to mend it. Tap a
-piece to choose it, then:
-
-- **‹ Move** and **Move ›** swap it with its neighbour, so the clip plays in a new order.
-- **Mute piece** leaves a gap.
-- **Repeat piece** makes the next piece play the same material again.
-- **Halves** and **Beats** make the usual cuts for you. **Reset** undoes every cut.
-
-Pieces always stay in time: the clip keeps its length whatever you do. Chopping changes only that
-one placed copy, not the clip on the shelf.
-
-**Sound.** Choose a placed clip and tap **Sound** to play it with another instrument. What you
-recorded is not changed: the clip remembers its own sound, and **As recorded** brings it back.
-
-![Picking a sound for a loop](shots/12-sound.png)
-
-The top row is the kind of sound, the six cells under it are the sounds of that kind:
-
-| Kind | What is in it |
-|---|---|
-| **Keys** | E-piano, Soft keys, Organ, Toy keys, Clav, Strings |
-| **Synth** | Your own sounds: slots 1 to 0, then your favourites. With more than six, the last cell turns the page |
-| **Guitar** | Pluck, Steel, Clean, Drive, Mute, Twelve |
-| **Bass** | Sub, Round, Pick, Acid, Growl, Hollow. Picking one drops the clip an octave |
-| **Drums** | For beat clips only: the three kits |
-
-Tap a cell and the clip plays in that sound. If nothing is playing, the clip starts going round on
-its own so you can hear it; **Hear** starts and stops that. If the track is already playing, the
-change is heard in place.
-
-| Button | Does |
-|---|---|
-| **Hear** | Plays the chosen clip alone, round and round. Everything else on the track is silent meanwhile |
-| **Octave** | Moves the clip's notes up or down, two octaves each way. Works with the recorded sound too. Not for beats |
-| **Every Loop 1** / **Only this one** | Who gets the sound: every placed copy of the clip and the clip on the shelf, or just the chosen copy. Tap to switch. The chosen copy keeps what it plays either way |
-| **As recorded** | Back to the sound (or kit) the clip was kept with, and the octave it was played in |
-| **Done** | Back to the tools |
-
-A clip with a picked sound shows its name beside the clip's name on the lane. A loop with several
-layers plays every layer in the picked sound, and sound changes you made while recording it are
-passed over. A chords clip keeps its chords and style and changes only the backing's sound.
-
-The Keys, Guitar and Bass sounds are made with the same synth voice as everything else, shaped to
-suggest those instruments. They are not recordings of real ones.
-
-**Mix.** Tap **Mix** (or press `X`, as in Logic) and the tools under the lanes become a mixer: a
-strip for each lane.
-
-![The mixer](shots/13-mixer.png)
-
-| On a strip | What it does |
-|---|---|
-| The fader | Tap or drag it to set the lane's level. **80** plays the lane as it was recorded; **100** is about 4 dB louder; **0** is silent. The small notch beside it marks 80, and dragging near it snaps there |
-| The meter | How loud the lane is right now, while the track plays |
-| **M** | Mute: the lane goes quiet, and on the lanes above its name says "muted" and its clips go faint |
-| **S** | Solo: only soloed lanes are heard. Solo two lanes to hear just those two. The others say "off" |
-
-**Reset** puts every lane back to 80, unmuted and unsoloed. **Play** works as it does in the tools,
-and **Done** (or `Esc`, `Enter` or `X` again) closes the mixer. Every change is one step of
-**Undo**, a whole fader drag included. The mix is saved with the track and is heard in an export.
-**Hear** in the sound picker plays its clip whatever the mixer says.
-
-| Key, while the mixer is open | Does |
-|---|---|
-| `Left` / `Right`, or `1`‥`4` | Choose a lane |
-| `Up` / `Down` | Its level, five at a time |
-| `0` | Its level back to 80 |
-| `M` / `S` | Mute / solo it |
-| `Esc`, `Enter` or `X` | Close the mixer |
-
-The mixer sets the track's lanes only. What you play live on the other pages keeps its own levels
-(Synth, Beat and Backing volumes on the System page).
-
-**Export.** Tap **Export** to write the whole track to a WAV file in `recordings/`. It plays once
-from bar 1 to the end, ignoring the cycle, at full master volume, and runs on until the echoes have
-died away. It is done in the background, much faster than real time, and does not need the speaker.
-**Play last** on the System page then plays it.
-
-**Keys.** On this page letters are commands, not notes, and they follow the usual shortcuts of
-desktop music programs (`Ctrl` where a Mac uses Cmd):
-
-| Key | Does |
-|---|---|
-| `Space` | Play / stop |
-| `Enter` | Play line back to bar 1 |
-| `Shift`+`Left` / `Right`, or `,` / `.` | Play line a bar back / on |
-| `Left` / `Right` | Choose the clip before / after |
-| `Up` / `Down` | Choose a clip on the lane above / below |
-| `Alt`+arrows | Move the chosen clip a bar, or to the other loop lane |
-| `1`‥`5` | Take that shelf clip in hand |
-| `Ctrl`+`V` | Paste: place the clip in hand at the play line |
-| `Ctrl`+`X` / `Ctrl`+`C` | Cut / copy the chosen clip (with its chops) into your hand |
-| `Ctrl`+`T` / `Ctrl`+`J` | Split at the play line / join |
-| `Ctrl`+`R` | Repeat |
-| `Ctrl`+`Z` / `Shift`+`Ctrl`+`Z` | Undo / redo |
-| `Backspace` | Delete the chosen clip (with nothing chosen it is Panic, as everywhere) |
-| `M` / `C` | Mute / cycle on and off |
-| `E` | Chop (again, or `Esc`, closes it) |
-| `I` | Sound: pick an instrument for the chosen clip |
-| `K` | Keep |
-| `X` | Mix: open or close the mixer |
-| `Ctrl`+`B` | Export |
-| `Esc` | Put down the clip in hand; with nothing in hand, back to Synth |
-
-While Chop is open, `Left` / `Right` choose a piece, `Alt`+`Left` / `Right` move it, `M` mutes it,
-`Ctrl`+`T` cuts it in half, `Ctrl`+`J` mends it with the next and `Ctrl`+`R` repeats it.
-
-While Sound is open, `Left` / `Right` pick the kind, `1`‥`6` pick a sound (or turn the page),
-`Up` / `Down` move the octave, `Space` starts and stops Hear, `Backspace` goes back to the recorded
-sound, and `Enter`, `Esc` or `I` close it.
-
-Because the letters are commands here, `Ctrl`+`T` (tap tempo), `Ctrl`+`R` (new sound), `Ctrl`+`Z`
-(undo sound), `Ctrl`+`X` (clear backing), `Ctrl`+`J` (beat) and `Ctrl`+`B` (backing mode) mean the
-things above while you are on this page.
-
-The track is saved a moment after every change, and inside sessions.
-
-Things it does not do yet: clips shorter than a bar or placed off the bar line, a different sound for each layer of one loop, more than one beat lane, and tempo or key
-changes inside a track. Chords clips follow the key and scale you are in now, and every clip follows the
-current tempo.
-
-## 11. Key, scale and tempo
+## 10. Key, scale and tempo
 
 ![The Tune page](shots/3-tune.png)
 
@@ -509,7 +314,7 @@ current tempo.
 **Listen** tries to work out the key and tempo of music playing nearby. It needs a microphone,
 and this Hackberry does not have one, so it will say so.
 
-## 12. Saving and recording
+## 11. Saving and recording
 
 Everything is kept in the `vrequency` folder in your home folder.
 
@@ -517,17 +322,16 @@ Everything is kept in the `vrequency` folder in your home folder.
 |---|---|---|
 | Your setup | Automatic when you quit | `state.json` |
 | A favourite sound | Sound page, Save, or `Ctrl`+`F` | `favourites/` |
-| A session: sounds, backing, loops, the beat and the track together | System page, Save session | `sessions/` |
+| A session: sounds, chord pads, loops and the beat together | System page, Save session | `sessions/` |
 | A recording of what you hear | System page, Record, or `Ctrl`+`E`. The same again stops it. | `recordings/` |
-| The track as audio | Track page, Export, or `Ctrl`+`B` there | `recordings/track-….wav` |
-| The track itself | Automatic, a moment after each change, and inside sessions | `state.json`, `sessions/` |
 
 **Listening back.** System page, **Play last** (or `Ctrl`+`W`) plays your newest recording through
 the speaker. The same again stops it. You can play along while it runs.
 
-To load a session, tap it in the list on the System page, then start the loop, backing or beat.
+To load a session, tap it in the list on the System page, then start the loop or the beat, or tap a chord.
+Sessions saved by earlier versions load too; their track and chord progression are left out.
 
-## 13. System page
+## 12. System page
 
 ![The System page](shots/4-system.png)
 
@@ -543,7 +347,7 @@ To load a session, tap it in the list on the System page, then start the loop, b
 - **Factory sounds**: restores slots 1 to 0 and puts back any deleted dream sounds.
 - **Quit**.
 
-## 14. All the keys
+## 13. All the keys
 
 Playing:
 
@@ -557,7 +361,7 @@ Playing:
 | `Left` / `Right`, or `[` / `]` | Bend down / up |
 | `Down` / `Up`, or `-` / `=` | Octave down / up |
 | `1`‥`9`, `0` | Sounds 1 to 10 |
-| `Alt` + `Z`‥`M` | Backing chords |
+| `Alt` + `Z`‥`M` | Chord pads I to VII |
 | `$` | Bottom row plays chords, on and off |
 | `Tab` / `Esc` | Next page / back to Synth |
 
@@ -565,18 +369,17 @@ Commands, with `Ctrl` held:
 
 | Key | Does | Key | Does |
 |---|---|---|---|
-| `R` | New sound | `B` | Backing mode |
-| `N` | Mutate | `A` | Backing style |
-| `Z` | Undo sound | `P` | Backing play / stop |
-| `F` | Save favourite | `X` | Clear backing |
-| `K` | Key up | `Backspace` | Remove last chord |
-| `S` | Next scale | `U` | Undo loop layer |
-| `T` | Tap tempo | `L` | Loop play / stop |
-| `M` | Metronome | `D` | Clear loop |
-| `G` | Next touch-pad mapping | `E` | Record WAV |
-| `J` | Beat play / stop | `W` | Play last recording |
-| `I` | Beat Rec on / off | `Q` | Quit |
-| `H` | Help | `Space` | Track play / stop |
+| `R` | New sound | `U` | Undo loop layer |
+| `N` | Mutate | `L` | Loop play / stop |
+| `Z` | Undo sound | `D` | Clear loop |
+| `F` | Save favourite | `E` | Record WAV |
+| `K` | Key up | `W` | Play last recording |
+| `S` | Next scale | `Q` | Quit |
+| `T` | Tap tempo | `H` | Help |
+| `M` | Metronome | `O` | Tour |
+| `G` | Next touch-pad mapping | `V` | Scope: 3D stack or line |
+| `J` | Beat play / stop | `C` (hold) | Open the filter |
+| `I` | Beat Rec on / off | `X` (hold) | Close the filter |
 | `Y` | Chat dock: ask Rook on this page (`Shift`: the Chat page) | | |
 
 On the Beat page only:
@@ -588,12 +391,10 @@ On the Beat page only:
 | `Space` | Beat play / stop |
 | `Enter` | Rec on / off |
 
-The Track page has its own keys: see section 10.
-
 To change any binding, edit `keymap.json` in the `vrequency` folder and restart the app. Deleting
 that file restores the defaults.
 
-## 15. When something is wrong
+## 14. When something is wrong
 
 | Problem | Try this |
 |---|---|
@@ -604,9 +405,6 @@ that file restores the defaults.
 | Loops play back early or late | System page, Loop fix. Adjust in steps until a recorded bar lines up. |
 | Some keys do not sound when held together | Open Key test on the System page and hold the same keys. A key missing there is a limit of the keyboard, not the synth. |
 | A slot was overwritten by mistake | Storing to a slot cannot be undone. Factory sounds on the System page puts the ten originals back, replacing anything else you stored in slots. |
-| Letters do not play notes | You are on the Track page, where letters are commands. `Esc` goes back to Synth. |
-| + Keep says there is nothing to keep | Make a beat (Beat page), tap some chords (Backing page) or record a loop first. Keep copies what exists now. |
-| A clip will not go where I tap | Those bars are taken in that lane, or the clip is the wrong kind for the lane. Loops go on Loop A or Loop B, beats on Beat, chords on Chords. |
 | My drum hits land on the wrong step | The Bluetooth speaker is late, so you hit late. System page, Loop fix moves recorded hits earlier; raise it if hits land a step late, lower it if early. |
 | The sound is distorted or quiet with "Limit" showing | Lower Master volume, or the sound's Drive. |
 
@@ -621,13 +419,13 @@ bluetoothctl devices
 bluetoothctl connect XX:XX:XX:XX:XX:XX
 ```
 
-## 16. Chat with a copilot
+## 15. Chat with a copilot
 
 ![The Chat page](shots/14-chat.png)
 
 The last tab, **Chat**, is a conversation between you and an AI copilot (for example the agent Rook, or
 Claude Code) that is connected to the app through its control socket. It can play notes, change the sound,
-set up a beat or a backing and look at the screen while you talk. The commands it uses are in
+set up a beat and look at the screen while you talk. The commands it uses are in
 [CONTROL.md](CONTROL.md). The socket is a local file only your user can open; `vrequency --no-control`
 switches it off, and then the Chat page simply stays quiet.
 
@@ -635,14 +433,14 @@ switches it off, and then the Chat page simply stays quiet.
   `Backspace` deletes a letter, `Up` / `Down` (or a finger drag on the history) scroll, `Esc` leaves the page.
   The **Send** button sends by touch. `Tab` and the `Ctrl` commands still work.
 - **Hotkey**: `Ctrl`+`Shift`+`Y` jumps to this page from any page, and `Ctrl`+`Y` here takes you back to where
-  you were. (On the other pages `Ctrl`+`Y` opens the chat dock instead, chapter 17. It is bound as `chat`
+  you were. (On the other pages `Ctrl`+`Y` opens the chat dock instead, chapter 16. It is bound as `chat`
   in `keymap.json`; the other `Ctrl` letters are unchanged.)
 - The copilot's messages have a white tag with its name; yours have an outlined `YOU`. A `?` after the
   name means it is asking you something, `tip` marks a suggestion.
 - **The ticker**: when the copilot says something while you are on another page, the message appears in a
   two-line strip at the bottom of the screen for about seven seconds, and the Chat tab shows how many are
   unread (`Chat 2`). It never takes the keyboard away, so you can keep playing; it does cover the
-  bottom row of controls while it shows. Touch it, or press `Ctrl`+`Y`, to answer in the chat dock (chapter 17).
+  bottom row of controls while it shows. Touch it, or press `Ctrl`+`Y`, to answer in the chat dock (chapter 16).
 - **`copilot: listening`** at the top right means a copilot is connected and waiting for you
   (it has asked for your messages in the last 45 seconds, or is waiting right now); otherwise it says
   `copilot: not connected`. Messages you type then wait for it: they are kept.
@@ -650,7 +448,7 @@ switches it off, and then the Chat page simply stays quiet.
 
 ![A message arriving while playing](shots/15-ticker.png)
 
-## 17. Asking Rook while you play (the chat dock)
+## 16. Asking Rook while you play (the chat dock)
 
 ![The chat dock on the Synth page, with OCTAVE highlighted](shots/16-dock-synth.png)
 
@@ -681,7 +479,7 @@ input line and Send. The page behind it stays visible and keeps working above th
 Rook needs to be connected (the dock says `Rook is listening`); if it is not, your messages wait for it.
 The commands Rook uses are in [CONTROL.md](CONTROL.md).
 
-## 18. The tour
+## 17. The tour
 
 ![The tour on the Synth page, OCTAVE selected](shots/20-tour-synth.png)
 
@@ -692,8 +490,8 @@ never changes your sound or settings, and the keys do not reach the synth while 
 app starts it offers the tour in a banner at the top (`Enter` takes it, `Esc` or waiting says later; it is only
 offered once). Rook can also open it for you. It reopens on the page you left it on.
 
-**Reading it.** The chips under the title pick the page (Track, Chop, Clip, Mix, Synth, Sound, Edit, Beat,
-Bkng, Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
+**Reading it.** The chips under the title pick the page (Synth, Sound, Edit, Beat,
+Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
 the rest dims, and the card on the right says what it does, how to use it by touch and by keys, and **Recall**,
 which is where to find it again. **Related** chips jump to the next card. Readouts that are not buttons (the
 level strip, scope readouts, the step grid, the Listen result, the status box, the key list rows) have cards
@@ -701,18 +499,16 @@ too. Tap empty space to clear. **Concepts** lists the ideas behind the controls 
 The Edit chip is the All parameters editor; its Prev and Next flip through the four parameter pages.
 
 **Keys.** Arrows move between controls, `Tab` / `Shift`+`Tab` go in reading order, `,` and `.` change page,
-`C` opens Concepts, `V` switches picture variant where a page has two (for example the sound picker on a beat
-clip), `Space` or `Page Down` scrolls a long card, `Home` clears the selection, `Esc` closes a card, then the
+`C` opens Concepts, `V` switches picture variant where a page has more than one (the All parameters
+editor), `Space` or `Page Down` scrolls a long card, `Home` clears the selection, `Esc` closes a card, then the
 concept list, then the selection, then the tour.
 
-**Start here.** The first time, or from the banner, the tour walks ten pages in order (Synth, Sound, Tune,
-Backing, Beat, Track, Mixer, System, Help, Chat) with Back, Next and **Explore freely**.
+**Start here.** The first time, or from the banner, the tour walks seven pages in order (Synth, Sound, Tune,
+Beat, System, Help, Chat) with Back, Next and **Explore freely**.
 
 **Ask Rook.** The button at the bottom right leaves the tour, goes to the real page the card belongs to, and
 opens the chat dock with a question already written (not sent). Press `Enter` to send it; Rook is told the
 page and which control you were reading (`via` is `tour`).
-
-![A mixer fader card](shots/22-tour-mixer.png)
 
 ![A concept card, with Recall](shots/23-tour-concept-recall.png)
 

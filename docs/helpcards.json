@@ -1,2150 +1,6 @@
 {
  "version": 1,
  "pages": {
-  "track": {
-   "title": "Track",
-   "intro": "Arrange kept beats, chords and loops on four lanes of bars, edit them, mix them and export a WAV. Letters are commands here, not notes.",
-   "cards": {
-    "tab_track": {
-     "title": "TRACK TAB",
-     "kind": "tab",
-     "summary": "Arrange beats, chords and loops into a piece.",
-     "does": "Opens the Track page: keep what you made as clips, place them on four lanes of bars, edit and export to a WAV file.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [
-      "Tab"
-     ],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Track page?"
-    },
-    "tab_synth": {
-     "title": "SYNTH TAB",
-     "kind": "tab",
-     "summary": "The instrument: scope, strings, chords, loop.",
-     "does": "Goes to the Synth page where you play. Esc does the same from anywhere.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [
-      "Esc"
-     ],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Synth page?"
-    },
-    "tab_sound": {
-     "title": "SOUND TAB",
-     "kind": "tab",
-     "summary": "Pick and shape the current sound.",
-     "does": "Goes to the Sound page: ten slots, quick sliders, All parameters, favourites, Store and Save.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Sound page?"
-    },
-    "tab_beat": {
-     "title": "BEAT TAB",
-     "kind": "tab",
-     "summary": "Drum machine: pads, kits, kept beats.",
-     "does": "Goes to the Beat page: eight pads, one bar of 16 steps, three kits and a row of kept beats.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Beat page?"
-    },
-    "tab_backing": {
-     "title": "BACKING TAB",
-     "kind": "tab",
-     "summary": "Backing chords and how they play.",
-     "does": "Goes to the Backing page: chord mode, style, progression, chord length and volume.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Backing page?"
-    },
-    "tab_tune": {
-     "title": "TUNE TAB",
-     "kind": "tab",
-     "summary": "Key, scale, octave, tempo, Listen.",
-     "does": "Goes to the Tune page: choose the key and scale that lock your notes, set tempo and slide speed.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Tune page?"
-    },
-    "tab_system": {
-     "title": "SYSTEM TAB",
-     "kind": "tab",
-     "summary": "Volume, recording, sessions, status.",
-     "does": "Goes to the System page: master volume, touch pad mapping, record, save session, key test, Panic, Quit.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the System page?"
-    },
-    "tab_help": {
-     "title": "HELP TAB",
-     "kind": "tab",
-     "summary": "Built-in key lists.",
-     "does": "Goes to the Help page: four pages of default keys for playing, commands, the beat and the Track. Ctrl+H toggles it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [
-      "Ctrl+H"
-     ],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Help page?"
-    },
-    "tab_chat": {
-     "title": "CHAT TAB",
-     "kind": "tab",
-     "summary": "Talk with the AI copilot.",
-     "does": "Goes to the Chat page. Shows a count like Chat 2 when copilot messages are unread. Ctrl+Y jumps there and back.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the tab; the page you are on is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page in this order."
-      }
-     ],
-     "keys": [
-      "Ctrl+Y"
-     ],
-     "recall": "Tab strip along the top of every page except Synth. Tab cycles forward; Esc returns to Synth.",
-     "tips": [],
-     "related": [
-      "synth.menu",
-      "concepts.q20-layers"
-     ],
-     "ask": "What can I do on the Chat page?"
-    },
-    "shelf_clip0": {
-     "title": "CLIP SHELF",
-     "kind": "list",
-     "summary": "Your kept clips. Tap one to pick it up.",
-     "does": "A clip is a copy of a beat, a chord progression or a loop you made. The shelf shows five at a time, with name and length. Tap one to take it in hand (inverted), then tap a bar in its lane or Place. Tap it again to put it down.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a clip, then a bar in its lane."
-      },
-      {
-       "how": "Keys",
-       "text": "Press 1 to 5 to take the shelf clip with that number."
-      }
-     ],
-     "keys": [
-      "1..5",
-      "Esc (put down)"
-     ],
-     "recall": "Track page, left column. + Keep adds clips; Remove with a clip in hand deletes it and its copies (asks twice).",
-     "tips": [
-      "Keeping again after changing the beat makes a new clip: Beat 2."
-     ],
-     "related": [
-      "track.track_keep",
-      "track.track_lanes",
-      "track.track_place",
-      "concepts.track-flow"
-     ],
-     "ask": "What is a clip, and how is it different from the beat?",
-     "match": [
-      "shelf_clip0",
-      "shelf_clip1",
-      "shelf_clip2",
-      "shelf_clip3",
-      "shelf_clip4"
-     ]
-    },
-    "track_keep": {
-     "title": "+ KEEP",
-     "kind": "button",
-     "summary": "Copies the live beat, chords and loop onto the shelf.",
-     "does": "Copies what exists now (the beat, the backing chords and the loop) onto the shelf as clips: Beat 1, Chords 1, Loop 1. Anything already kept is skipped. The last one added goes in your hand. Originals are untouched.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap + Keep after making something."
-      },
-      {
-       "how": "Keys",
-       "text": "K."
-      }
-     ],
-     "keys": [
-      "K"
-     ],
-     "recall": "Track page, bottom of the shelf. K on this page. Up to 40 clips; Remove deletes one.",
-     "tips": [
-      "Nothing to keep? Make a beat, tap chords or record a loop first."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_lanes",
-      "concepts.track-flow"
-     ],
-     "ask": "Why does + Keep say there is nothing to keep?"
-    },
-    "track_shelf_page": {
-     "title": "SHELF PAGE",
-     "kind": "button",
-     "summary": "Shows the next five clips on the shelf.",
-     "does": "Appears when you have more than five clips. Shows the page and total like 1/2; each tap goes on and wraps round to the first page.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to step through shelf pages."
-      }
-     ],
-     "keys": [],
-     "recall": "Track page, beside + Keep, once there are over five clips.",
-     "tips": [
-      "Clips are numbered 1 to 5 on every page; keys 1 to 5 pick from the shown page."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_keep"
-     ],
-     "ask": "Where are my other clips?"
-    },
-    "track_ruler": {
-     "title": "BAR RULER / PLAY LINE",
-     "kind": "area",
-     "summary": "The numbered bars above the lanes. Tap to set the play line.",
-     "does": "Tap or drag on a bar number to put the play line there. If the track is playing it jumps to that bar. The bar numbers inverted show the cycle range. Place, Split and Play start from the line.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap or drag along the numbers."
-      },
-      {
-       "how": "Keys",
-       "text": "Shift+Left / Right, or , and ., move the line a bar."
-      }
-     ],
-     "keys": [
-      "Shift+Left",
-      "Shift+Right",
-      ",",
-      ".",
-      "Enter (to bar 1)"
-     ],
-     "recall": "Track page, strip above the lanes. Enter sends the line back to bar 1.",
-     "tips": [
-      "Eight bars show at once; Shown - / + scrolls by four."
-     ],
-     "related": [
-      "track.track_view-",
-      "track.track_cycle",
-      "track.track_play"
-     ],
-     "ask": "How do I start playing from a later bar?"
-    },
-    "track_lanes": {
-     "title": "LANES",
-     "kind": "area",
-     "summary": "Four lanes of bars: Beat, Chords, Loop A, Loop B.",
-     "does": "Beats go on Beat, chord clips on Chords, loops on Loop A or B (so two loops can play at once). Tap a clip to choose it (double frame); drag it to move it, even between loop lanes. With a clip in hand, tap an empty bar to place it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose or place; drag a chosen clip to move it."
-      },
-      {
-       "how": "Keys",
-       "text": "Arrows choose; Alt+arrows move a bar or lane; Ctrl+V pastes."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right",
-      "Up",
-      "Down",
-      "Alt+arrows",
-      "Ctrl+V"
-     ],
-     "recall": "Track page, the grid in the middle. Clips snap to whole bars. Ctrl+Z undoes a move.",
-     "tips": [
-      "A clip will not go where bars are taken or the lane is the wrong kind."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_place",
-      "track.track_undo",
-      "concepts.track-flow"
-     ],
-     "ask": "Why will my clip not go where I drop it?"
-    },
-    "track_place": {
-     "title": "PLACE",
-     "kind": "toggle",
-     "summary": "Puts the clip in your hand at the play line.",
-     "does": "Places the clip you picked up on its lane at the play line, then moves the line on, so tapping Place four times lays four in a row. A dashed box shows where it will go; the button says at bar N or no room.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Pick a clip on the shelf, then tap Place."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+V pastes the clip in hand at the line."
-      }
-     ],
-     "keys": [
-      "Ctrl+V"
-     ],
-     "recall": "Track page, tools row, first button. Esc puts the clip down. Ctrl+Z undoes a placement.",
-     "tips": [],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_ruler",
-      "track.track_lanes"
-     ],
-     "ask": "How do I lay clips down one after another?"
-    },
-    "track_chop": {
-     "title": "CHOP",
-     "kind": "button",
-     "summary": "Cuts the chosen clip into pieces you can reorder.",
-     "does": "Opens the Chop panel for the chosen clip: cut it at the beat lines, then move, mute or repeat the pieces so it plays in a new order. Only that placed copy changes, and it stays in time and the same length.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a placed clip, then tap Chop."
-      },
-      {
-       "how": "Keys",
-       "text": "E; E again or Esc closes it."
-      }
-     ],
-     "keys": [
-      "E",
-      "Esc"
-     ],
-     "recall": "Track page, tools row. Reset in the Chop panel undoes every cut. Ctrl+Z also undoes.",
-     "tips": [
-      "Chopping never changes the clip on the shelf."
-     ],
-     "related": [
-      "track-chop.chop_strip",
-      "track-chop.chop_beats",
-      "concepts.track-flow"
-     ],
-     "ask": "What is chopping good for?"
-    },
-    "track_sound": {
-     "title": "SOUND",
-     "kind": "button",
-     "summary": "Gives a placed clip another instrument.",
-     "does": "Opens the sound picker for the chosen clip: Keys, Guitar, Bass, your own sounds, or another drum kit for a beat. What you recorded is untouched; As recorded brings it back. The line under shows what it plays now.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a placed clip, then tap Sound."
-      },
-      {
-       "how": "Keys",
-       "text": "I; I, Enter or Esc closes it."
-      }
-     ],
-     "keys": [
-      "I",
-      "Enter",
-      "Esc"
-     ],
-     "recall": "Track page, tools row. As recorded (in the picker) puts the original sound back.",
-     "tips": [
-      "The Hear button plays the clip alone so you can audition."
-     ],
-     "related": [
-      "track-sound.sound_kind0",
-      "track-sound.sound_hear",
-      "concepts.track-flow"
-     ],
-     "ask": "How do I make a loop sound like a guitar or bass?"
-    },
-    "track_repeat": {
-     "title": "REPEAT",
-     "kind": "button",
-     "summary": "Puts a copy right after the chosen clip.",
-     "does": "Adds another copy of the chosen clip on the same lane, in the bars straight after it. If the bars are taken it says no room.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a clip, tap Repeat."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+R."
-      }
-     ],
-     "keys": [
-      "Ctrl+R"
-     ],
-     "recall": "Track page, tools row. Ctrl+R on this page (it is New sound elsewhere). Ctrl+Z undoes it.",
-     "tips": [
-      "Repeat several times to fill a lane quickly."
-     ],
-     "related": [
-      "track.track_join",
-      "track.track_lanes"
-     ],
-     "ask": "How do I repeat a clip a few times?"
-    },
-    "track_remove": {
-     "title": "REMOVE",
-     "kind": "button",
-     "summary": "Takes the chosen clip off the track.",
-     "does": "Removes the chosen placed clip. With a shelf clip in hand and nothing chosen it deletes the clip and every copy of it, and asks twice (the button says again to delete). Undo brings placed clips back.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a clip, tap Remove."
-      },
-      {
-       "how": "Keys",
-       "text": "Backspace deletes the chosen clip."
-      }
-     ],
-     "keys": [
-      "Backspace"
-     ],
-     "recall": "Track page, tools row, last button. Ctrl+Z undoes removing a placed clip; deleting from the shelf is final.",
-     "tips": [
-      "With nothing chosen, Backspace on this page is still Panic."
-     ],
-     "related": [
-      "track.track_undo",
-      "track.shelf_clip0"
-     ],
-     "ask": "How do I delete a clip from the shelf?"
-    },
-    "track_play": {
-     "title": "PLAY / STOP TRACK",
-     "kind": "toggle",
-     "summary": "Plays the track from the play line.",
-     "does": "Plays round and round from the play line (or the cycle). The live beat, backing and loop are stopped, but you can still play the strings over it. The button shows the bar number while playing.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Play or Stop."
-      },
-      {
-       "how": "Keys",
-       "text": "Space here; Ctrl+Space from any page."
-      }
-     ],
-     "keys": [
-      "Space",
-      "Ctrl+Space"
-     ],
-     "recall": "Track page, bottom left of the tools; Ctrl+Space anywhere. Enter sends the line to bar 1.",
-     "tips": [
-      "Go to the Synth page while it plays to record a loop in time with it."
-     ],
-     "related": [
-      "track.track_ruler",
-      "track.track_cycle",
-      "track.track_export"
-     ],
-     "ask": "Can I play along while the track plays?"
-    },
-    "track_cycle": {
-     "title": "CYCLE",
-     "kind": "toggle",
-     "summary": "Loops just a few bars.",
-     "does": "Turns on a loop region: the chosen clip's bars, or four bars from the play line if none is chosen. The cycled bars show inverted in the ruler. Play goes round inside it. Tap again to turn it off. Export ignores it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a clip (optional), tap Cycle."
-      },
-      {
-       "how": "Keys",
-       "text": "C."
-      }
-     ],
-     "keys": [
-      "C"
-     ],
-     "recall": "Track page, beside Play. C on this page. Tap again to switch off.",
-     "tips": [],
-     "related": [
-      "track.track_play",
-      "track.track_ruler"
-     ],
-     "ask": "How do I loop one part while I work on it?"
-    },
-    "track_length-": {
-     "title": "LENGTH",
-     "kind": "stepper",
-     "summary": "How many bars the track has.",
-     "does": "Sets the track length, 1 to 64 bars. It grows by itself when you place past the end. Shrinking is blocked while a clip sits in the bars to be cut off.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or +."
-      }
-     ],
-     "keys": [],
-     "recall": "Track page, beside Cycle. A message says if a clip is in the way.",
-     "tips": [],
-     "related": [
-      "track.track_view-",
-      "track.track_play"
-     ],
-     "ask": "How long can a track be?",
-     "match": [
-      "track_length-",
-      "track_length+"
-     ]
-    },
-    "track_export": {
-     "title": "EXPORT",
-     "kind": "button",
-     "summary": "Writes the whole track to a WAV audio file.",
-     "does": "Plays the track once, bar 1 to the end, at full master volume with the lane mix, ignoring the cycle, and keeps going until the echoes die. Done in the background much faster than real time. The button shows percent.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Export; wait for the message."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+B on this page."
-      }
-     ],
-     "keys": [
-      "Ctrl+B"
-     ],
-     "recall": "Track page, tools row. File goes to ~/vrequency/recordings/track-....wav. System > Play last plays it.",
-     "tips": [
-      "Ctrl+B means Backing mode on other pages."
-     ],
-     "related": [
-      "system.playlast",
-      "track-mixer.mixer_fader0"
-     ],
-     "ask": "Where does my exported track go?"
-    },
-    "track_split": {
-     "title": "SPLIT",
-     "kind": "button",
-     "summary": "Cuts the chosen clip in two at the play line.",
-     "does": "Splits the chosen clip where the play line stands. The line must be inside the clip on a bar line. Each half can then be moved, muted, removed or given its own sound.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a clip, set the line on a bar, tap Split."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+T."
-      }
-     ],
-     "keys": [
-      "Ctrl+T"
-     ],
-     "recall": "Track page, second row, first button. Ctrl+T (it is Tap tempo elsewhere). Join mends it.",
-     "tips": [],
-     "related": [
-      "track.track_join",
-      "track.track_ruler"
-     ],
-     "ask": "How do I cut a clip at a certain bar?"
-    },
-    "track_join": {
-     "title": "JOIN",
-     "kind": "button",
-     "summary": "Joins the chosen clip with the one after it.",
-     "does": "Mends two clips back into one, but only if the next one carries on from it: a repeat, or the other half of a split. Otherwise it explains that it only joins what continues.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose the first clip, tap Join."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+J."
-      }
-     ],
-     "keys": [
-      "Ctrl+J"
-     ],
-     "recall": "Track page, second row. Ctrl+J (it is Beat play elsewhere).",
-     "tips": [],
-     "related": [
-      "track.track_split",
-      "track.track_repeat"
-     ],
-     "ask": "Why will Join not work on my two clips?"
-    },
-    "track_mute": {
-     "title": "MUTE CLIP",
-     "kind": "toggle",
-     "summary": "Silences the chosen clip without removing it.",
-     "does": "Turns the chosen placed clip off: it stays on the track, drawn hatched, but is not heard. Tap again to bring it back.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a clip, tap Mute."
-      },
-      {
-       "how": "Keys",
-       "text": "M."
-      }
-     ],
-     "keys": [
-      "M"
-     ],
-     "recall": "Track page, second row. M on this page. To mute a whole lane, use the Mix panel.",
-     "tips": [],
-     "related": [
-      "track-mixer.mixer_mute0",
-      "track-chop.chop_mute_piece"
-     ],
-     "ask": "How do I mute one clip but keep it?"
-    },
-    "track_undo": {
-     "title": "UNDO",
-     "kind": "button",
-     "summary": "Takes back the last track edit.",
-     "does": "Steps back through track edits, up to 40: placing, moving, splitting, chopping, picked sounds, mixer changes. A whole drag or fader move is one step. The button shows how many steps exist.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Undo, repeat for more steps."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+Z; Shift+Ctrl+Z redoes."
-      }
-     ],
-     "keys": [
-      "Ctrl+Z",
-      "Ctrl+Shift+Z"
-     ],
-     "recall": "Track page, second row. Ctrl+Z, and Shift+Ctrl+Z for redo. Only the Track; sounds have their own undo.",
-     "tips": [],
-     "related": [
-      "concepts.undo-map",
-      "track.track_remove"
-     ],
-     "ask": "How do I undo a move on the track?"
-    },
-    "track_mixer": {
-     "title": "MIX",
-     "kind": "button",
-     "summary": "Opens the lane mixer.",
-     "does": "Swaps the tools for a mixer: a fader, meter, mute and solo for each lane. The button says lanes changed if any differ from the default. Levels are saved with the track and heard in an export.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Mix."
-      },
-      {
-       "how": "Keys",
-       "text": "X; X, Esc or Enter closes it."
-      }
-     ],
-     "keys": [
-      "X"
-     ],
-     "recall": "Track page, second row, fifth button. X on this page.",
-     "tips": [],
-     "related": [
-      "track-mixer.mixer_fader0",
-      "track-mixer.mixer_done"
-     ],
-     "ask": "How do I set the balance between the lanes?"
-    },
-    "track_view-": {
-     "title": "SHOWN (BARS ON SCREEN)",
-     "kind": "stepper",
-     "summary": "Scrolls which eight bars are visible.",
-     "does": "The lanes show eight bars at a time. − and + shift the window back or on by four bars. It also follows the play line while the track plays.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or +."
-      }
-     ],
-     "keys": [],
-     "recall": "Track page, bottom right of the tools. Shown reads like 1-8.",
-     "tips": [],
-     "related": [
-      "track.track_ruler",
-      "track.track_length-"
-     ],
-     "ask": "How do I see later bars?",
-     "match": [
-      "track_view-",
-      "track_view+"
-     ]
-    }
-   },
-   "recall": "Track tab. Ctrl+Space plays or stops the track from any page."
-  },
-  "track-chop": {
-   "title": "Track: Chop",
-   "intro": "Cut one placed clip into pieces, then move, mute or repeat them. The clip stays in time and the same length.",
-   "cards": {
-    "tab_track": {
-     "title": "PAGE TABS",
-     "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a tab to go there."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page; Esc goes to Synth."
-      }
-     ],
-     "keys": [
-      "Tab",
-      "Esc"
-     ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
-     "tips": [
-      "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
-     ],
-     "related": [
-      "track.tab_track",
-      "synth.menu"
-     ],
-     "ask": "What is on each of the pages?",
-     "match": [
-      "tab_track",
-      "tab_synth",
-      "tab_sound",
-      "tab_beat",
-      "tab_backing",
-      "tab_tune",
-      "tab_system",
-      "tab_help",
-      "tab_chat"
-     ]
-    },
-    "shelf_clip0": {
-     "title": "CLIP SHELF",
-     "kind": "list",
-     "summary": "Your kept clips. Tap one to pick it up.",
-     "does": "A clip is a copy of a beat, a chord progression or a loop you made. The shelf shows five at a time, with name and length. Tap one to take it in hand (inverted), then tap a bar in its lane or Place. Tap it again to put it down.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a clip, then a bar in its lane."
-      },
-      {
-       "how": "Keys",
-       "text": "Press 1 to 5 to take the shelf clip with that number."
-      }
-     ],
-     "keys": [
-      "1..5",
-      "Esc (put down)"
-     ],
-     "recall": "Track page, left column. + Keep adds clips; Remove with a clip in hand deletes it and its copies (asks twice).",
-     "tips": [
-      "Keeping again after changing the beat makes a new clip: Beat 2."
-     ],
-     "related": [
-      "track.track_keep",
-      "track.track_lanes",
-      "track.track_place",
-      "concepts.track-flow"
-     ],
-     "ask": "What is a clip, and how is it different from the beat?",
-     "match": [
-      "shelf_clip0",
-      "shelf_clip1",
-      "shelf_clip2",
-      "shelf_clip3",
-      "shelf_clip4"
-     ]
-    },
-    "track_keep": {
-     "title": "+ KEEP",
-     "kind": "button",
-     "summary": "Copies the live beat, chords and loop onto the shelf.",
-     "does": "Copies what exists now (the beat, the backing chords and the loop) onto the shelf as clips: Beat 1, Chords 1, Loop 1. Anything already kept is skipped. The last one added goes in your hand. Originals are untouched.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap + Keep after making something."
-      },
-      {
-       "how": "Keys",
-       "text": "K."
-      }
-     ],
-     "keys": [
-      "K"
-     ],
-     "recall": "Track page, bottom of the shelf. K on this page. Up to 40 clips; Remove deletes one.",
-     "tips": [
-      "Nothing to keep? Make a beat, tap chords or record a loop first."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_lanes",
-      "concepts.track-flow"
-     ],
-     "ask": "Why does + Keep say there is nothing to keep?"
-    },
-    "track_shelf_page": {
-     "title": "SHELF PAGE",
-     "kind": "button",
-     "summary": "Shows the next five clips on the shelf.",
-     "does": "Appears when you have more than five clips. Shows the page and total like 1/2; each tap goes on and wraps round to the first page.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to step through shelf pages."
-      }
-     ],
-     "keys": [],
-     "recall": "Track page, beside + Keep, once there are over five clips.",
-     "tips": [
-      "Clips are numbered 1 to 5 on every page; keys 1 to 5 pick from the shown page."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_keep"
-     ],
-     "ask": "Where are my other clips?"
-    },
-    "track_ruler": {
-     "title": "BAR RULER / PLAY LINE",
-     "kind": "area",
-     "summary": "The numbered bars above the lanes. Tap to set the play line.",
-     "does": "Tap or drag on a bar number to put the play line there. If the track is playing it jumps to that bar. The bar numbers inverted show the cycle range. Place, Split and Play start from the line.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap or drag along the numbers."
-      },
-      {
-       "how": "Keys",
-       "text": "Shift+Left / Right, or , and ., move the line a bar."
-      }
-     ],
-     "keys": [
-      "Shift+Left",
-      "Shift+Right",
-      ",",
-      ".",
-      "Enter (to bar 1)"
-     ],
-     "recall": "Track page, strip above the lanes. Enter sends the line back to bar 1.",
-     "tips": [
-      "Eight bars show at once; Shown - / + scrolls by four."
-     ],
-     "related": [
-      "track.track_view-",
-      "track.track_cycle",
-      "track.track_play"
-     ],
-     "ask": "How do I start playing from a later bar?"
-    },
-    "track_lanes": {
-     "title": "LANES",
-     "kind": "area",
-     "summary": "Four lanes of bars: Beat, Chords, Loop A, Loop B.",
-     "does": "Beats go on Beat, chord clips on Chords, loops on Loop A or B (so two loops can play at once). Tap a clip to choose it (double frame); drag it to move it, even between loop lanes. With a clip in hand, tap an empty bar to place it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose or place; drag a chosen clip to move it."
-      },
-      {
-       "how": "Keys",
-       "text": "Arrows choose; Alt+arrows move a bar or lane; Ctrl+V pastes."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right",
-      "Up",
-      "Down",
-      "Alt+arrows",
-      "Ctrl+V"
-     ],
-     "recall": "Track page, the grid in the middle. Clips snap to whole bars. Ctrl+Z undoes a move.",
-     "tips": [
-      "A clip will not go where bars are taken or the lane is the wrong kind."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_place",
-      "track.track_undo",
-      "concepts.track-flow"
-     ],
-     "ask": "Why will my clip not go where I drop it?"
-    },
-    "chop_strip": {
-     "title": "CHOP STRIP",
-     "kind": "area",
-     "summary": "One pass of the clip. Tap a dotted line to cut there.",
-     "does": "Shows the clip as lettered pieces A, B, C... Dotted lines are the places a cut may fall. Tap near one to cut; tap an existing cut to mend it. Tap anywhere inside a piece to choose it (inverted header). Muted pieces are hatched.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a dotted line to cut or mend; tap a piece to choose it."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right choose a piece; Ctrl+T cuts it in half, Ctrl+J mends."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right",
-      "Ctrl+T",
-      "Ctrl+J"
-     ],
-     "recall": "Track page: choose a placed clip, then Chop (E). Reset undoes every cut.",
-     "tips": [
-      "Pieces always stay in time; the clip keeps its length."
-     ],
-     "related": [
-      "track-chop.chop_beats",
-      "track-chop.chop_reset",
-      "track.track_chop"
-     ],
-     "ask": "How do I cut a clip into pieces?"
-    },
-    "chop_halves": {
-     "title": "HALVES",
-     "kind": "button",
-     "summary": "Cuts the clip in two, down the middle.",
-     "does": "Makes one cut at the halfway point of the clip's pass.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Halves."
-      }
-     ],
-     "keys": [],
-     "recall": "Chop panel, first button. Reset undoes it.",
-     "tips": [],
-     "related": [
-      "track-chop.chop_beats",
-      "track-chop.chop_reset"
-     ],
-     "ask": "What does Halves do?"
-    },
-    "chop_beats": {
-     "title": "BEATS / BARS",
-     "kind": "button",
-     "summary": "Cuts at every beat (or bar for long clips).",
-     "does": "Makes a cut at every grid line at once. The grid is finer for short clips: every beat up to 4 bars, every 2 beats up to 8 bars, then every bar; the label says Beats or Bars and the line under says which.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to cut the whole strip evenly."
-      }
-     ],
-     "keys": [],
-     "recall": "Chop panel, second button. Reset undoes every cut.",
-     "tips": [
-      "Use it first, then mute or move the pieces you want to change."
-     ],
-     "related": [
-      "track-chop.chop_halves",
-      "track-chop.chop_move_left"
-     ],
-     "ask": "How do I cut a clip into equal pieces?"
-    },
-    "chop_reset": {
-     "title": "RESET",
-     "kind": "button",
-     "summary": "Undoes every cut in this placed clip.",
-     "does": "Puts the clip back into one whole piece in its original order, and unmutes any muted pieces. Only this placed copy is affected.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Reset."
-      }
-     ],
-     "keys": [],
-     "recall": "Chop panel, third button. Ctrl+Z also steps back.",
-     "tips": [],
-     "related": [
-      "track-chop.chop_strip",
-      "track.track_undo"
-     ],
-     "ask": "How do I start the chopping over?"
-    },
-    "chop_done": {
-     "title": "DONE",
-     "kind": "button",
-     "summary": "Closes the Chop panel.",
-     "does": "Returns to the track tools. Your chops stay on that placed clip. E or Esc does the same.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Done."
-      },
-      {
-       "how": "Keys",
-       "text": "E or Esc."
-      }
-     ],
-     "keys": [
-      "E",
-      "Esc"
-     ],
-     "recall": "Chop panel, last button of the first row.",
-     "tips": [],
-     "related": [
-      "track.track_chop"
-     ],
-     "ask": "How do I leave the Chop panel?"
-    },
-    "chop_move_left": {
-     "title": "‹ MOVE",
-     "kind": "button",
-     "summary": "Moves the chosen piece earlier.",
-     "does": "Swaps the chosen piece with the one before it, so the clip plays in a new order. The line under names the piece (for example piece B earlier). The clip keeps its length.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a piece, tap ‹ Move."
-      },
-      {
-       "how": "Keys",
-       "text": "Alt+Left."
-      }
-     ],
-     "keys": [
-      "Alt+Left"
-     ],
-     "recall": "Chop panel, bottom row. Pieces may only swap with a neighbour.",
-     "tips": [],
-     "related": [
-      "track-chop.chop_move_right",
-      "track-chop.chop_strip"
-     ],
-     "ask": "How do I reorder pieces?"
-    },
-    "chop_move_right": {
-     "title": "MOVE ›",
-     "kind": "button",
-     "summary": "Moves the chosen piece later.",
-     "does": "Swaps the chosen piece with the one after it. The line under names the piece. Repeat to carry a piece to the end.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a piece, tap Move ›."
-      },
-      {
-       "how": "Keys",
-       "text": "Alt+Right."
-      }
-     ],
-     "keys": [
-      "Alt+Right"
-     ],
-     "recall": "Chop panel, bottom row.",
-     "tips": [],
-     "related": [
-      "track-chop.chop_move_left",
-      "track-chop.chop_strip"
-     ],
-     "ask": "How do I send a piece to the end?"
-    },
-    "chop_mute_piece": {
-     "title": "MUTE PIECE",
-     "kind": "toggle",
-     "summary": "Leaves a gap where the chosen piece was.",
-     "does": "Silences just that piece, hatched in the strip; the other pieces keep playing in time. Tap again to bring it back.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a piece, tap Mute piece."
-      },
-      {
-       "how": "Keys",
-       "text": "M."
-      }
-     ],
-     "keys": [
-      "M"
-     ],
-     "recall": "Chop panel, bottom row. Reset un-mutes every piece.",
-     "tips": [],
-     "related": [
-      "track-chop.chop_repeat_piece",
-      "track.track_mute"
-     ],
-     "ask": "How do I drop out part of a loop?"
-    },
-    "chop_repeat_piece": {
-     "title": "REPEAT PIECE",
-     "kind": "button",
-     "summary": "Makes the next piece play this one again.",
-     "does": "Makes the next piece play the same material as the chosen one (including a mute), so the same bit plays twice in a row. The clip keeps its length; what the next piece held is no longer played.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Choose a piece, tap Repeat piece."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+R."
-      }
-     ],
-     "keys": [
-      "Ctrl+R"
-     ],
-     "recall": "Chop panel, bottom row. Reset puts everything back.",
-     "tips": [
-      "Chop a loop into beats, then repeat one hit for a stutter."
-     ],
-     "related": [
-      "track-chop.chop_mute_piece",
-      "track-chop.chop_reset"
-     ],
-     "ask": "How do I make a stutter effect?"
-    }
-   },
-   "recall": "Track page: choose a clip, then Chop (or E). Done or Esc comes back."
-  },
-  "track-sound": {
-   "title": "Track: Sound picker",
-   "intro": "Give a placed clip another instrument: Keys, Guitar, Bass, your own sounds, or another drum kit. What you recorded is never lost.",
-   "cards": {
-    "tab_track": {
-     "title": "PAGE TABS",
-     "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a tab to go there."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page; Esc goes to Synth."
-      }
-     ],
-     "keys": [
-      "Tab",
-      "Esc"
-     ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
-     "tips": [
-      "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
-     ],
-     "related": [
-      "track.tab_track",
-      "synth.menu"
-     ],
-     "ask": "What is on each of the pages?",
-     "match": [
-      "tab_track",
-      "tab_synth",
-      "tab_sound",
-      "tab_beat",
-      "tab_backing",
-      "tab_tune",
-      "tab_system",
-      "tab_help",
-      "tab_chat"
-     ]
-    },
-    "shelf_clip0": {
-     "title": "CLIP SHELF",
-     "kind": "list",
-     "summary": "Your kept clips. Tap one to pick it up.",
-     "does": "A clip is a copy of a beat, a chord progression or a loop you made. The shelf shows five at a time, with name and length. Tap one to take it in hand (inverted), then tap a bar in its lane or Place. Tap it again to put it down.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a clip, then a bar in its lane."
-      },
-      {
-       "how": "Keys",
-       "text": "Press 1 to 5 to take the shelf clip with that number."
-      }
-     ],
-     "keys": [
-      "1..5",
-      "Esc (put down)"
-     ],
-     "recall": "Track page, left column. + Keep adds clips; Remove with a clip in hand deletes it and its copies (asks twice).",
-     "tips": [
-      "Keeping again after changing the beat makes a new clip: Beat 2."
-     ],
-     "related": [
-      "track.track_keep",
-      "track.track_lanes",
-      "track.track_place",
-      "concepts.track-flow"
-     ],
-     "ask": "What is a clip, and how is it different from the beat?",
-     "match": [
-      "shelf_clip0",
-      "shelf_clip1",
-      "shelf_clip2",
-      "shelf_clip3",
-      "shelf_clip4"
-     ]
-    },
-    "track_keep": {
-     "title": "+ KEEP",
-     "kind": "button",
-     "summary": "Copies the live beat, chords and loop onto the shelf.",
-     "does": "Copies what exists now (the beat, the backing chords and the loop) onto the shelf as clips: Beat 1, Chords 1, Loop 1. Anything already kept is skipped. The last one added goes in your hand. Originals are untouched.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap + Keep after making something."
-      },
-      {
-       "how": "Keys",
-       "text": "K."
-      }
-     ],
-     "keys": [
-      "K"
-     ],
-     "recall": "Track page, bottom of the shelf. K on this page. Up to 40 clips; Remove deletes one.",
-     "tips": [
-      "Nothing to keep? Make a beat, tap chords or record a loop first."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_lanes",
-      "concepts.track-flow"
-     ],
-     "ask": "Why does + Keep say there is nothing to keep?"
-    },
-    "track_shelf_page": {
-     "title": "SHELF PAGE",
-     "kind": "button",
-     "summary": "Shows the next five clips on the shelf.",
-     "does": "Appears when you have more than five clips. Shows the page and total like 1/2; each tap goes on and wraps round to the first page.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to step through shelf pages."
-      }
-     ],
-     "keys": [],
-     "recall": "Track page, beside + Keep, once there are over five clips.",
-     "tips": [
-      "Clips are numbered 1 to 5 on every page; keys 1 to 5 pick from the shown page."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_keep"
-     ],
-     "ask": "Where are my other clips?"
-    },
-    "track_ruler": {
-     "title": "BAR RULER / PLAY LINE",
-     "kind": "area",
-     "summary": "The numbered bars above the lanes. Tap to set the play line.",
-     "does": "Tap or drag on a bar number to put the play line there. If the track is playing it jumps to that bar. The bar numbers inverted show the cycle range. Place, Split and Play start from the line.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap or drag along the numbers."
-      },
-      {
-       "how": "Keys",
-       "text": "Shift+Left / Right, or , and ., move the line a bar."
-      }
-     ],
-     "keys": [
-      "Shift+Left",
-      "Shift+Right",
-      ",",
-      ".",
-      "Enter (to bar 1)"
-     ],
-     "recall": "Track page, strip above the lanes. Enter sends the line back to bar 1.",
-     "tips": [
-      "Eight bars show at once; Shown - / + scrolls by four."
-     ],
-     "related": [
-      "track.track_view-",
-      "track.track_cycle",
-      "track.track_play"
-     ],
-     "ask": "How do I start playing from a later bar?"
-    },
-    "track_lanes": {
-     "title": "LANES",
-     "kind": "area",
-     "summary": "Four lanes of bars: Beat, Chords, Loop A, Loop B.",
-     "does": "Beats go on Beat, chord clips on Chords, loops on Loop A or B (so two loops can play at once). Tap a clip to choose it (double frame); drag it to move it, even between loop lanes. With a clip in hand, tap an empty bar to place it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose or place; drag a chosen clip to move it."
-      },
-      {
-       "how": "Keys",
-       "text": "Arrows choose; Alt+arrows move a bar or lane; Ctrl+V pastes."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right",
-      "Up",
-      "Down",
-      "Alt+arrows",
-      "Ctrl+V"
-     ],
-     "recall": "Track page, the grid in the middle. Clips snap to whole bars. Ctrl+Z undoes a move.",
-     "tips": [
-      "A clip will not go where bars are taken or the lane is the wrong kind."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_place",
-      "track.track_undo",
-      "concepts.track-flow"
-     ],
-     "ask": "Why will my clip not go where I drop it?"
-    },
-    "sound_kind0": {
-     "title": "KEYS KIND",
-     "kind": "tab",
-     "summary": "Sound kind: pianos organs.",
-     "does": "Six keyboard-style sounds: E-piano, Soft keys, Organ, Toy keys, Clav and Strings. Shaped from the synth voice to suggest each instrument; they are not recordings.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to show its sounds in the six cells."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right step the kind."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right"
-     ],
-     "recall": "Track page: choose a placed clip, tap Sound (or I). Done or I closes it.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_cell0",
-      "track.track_sound"
-     ],
-     "ask": "What are the keys sounds like?"
-    },
-    "sound_kind1": {
-     "title": "SYNTH KIND",
-     "kind": "tab",
-     "summary": "Sound kind: your own sounds.",
-     "does": "Your own sounds: the ten slots, then your favourites. Turn the page with the sixth cell when there are more than six. A pick copies the sound, so later edits to the slot do not change the clip.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to show its sounds in the six cells."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right step the kind."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right"
-     ],
-     "recall": "Track page: choose a placed clip, tap Sound (or I). Done or I closes it.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_cell0",
-      "track.track_sound"
-     ],
-     "ask": "What are the synth sounds like?"
-    },
-    "sound_kind2": {
-     "title": "GUITAR KIND",
-     "kind": "tab",
-     "summary": "Sound kind: plucked, driven.",
-     "does": "Six guitar-like sounds: Pluck, Steel, Clean, Drive, Mute and Twelve. A synth's imitation of a guitar, not a string model.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to show its sounds in the six cells."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right step the kind."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right"
-     ],
-     "recall": "Track page: choose a placed clip, tap Sound (or I). Done or I closes it.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_cell0",
-      "track.track_sound"
-     ],
-     "ask": "What are the guitar sounds like?"
-    },
-    "sound_kind3": {
-     "title": "BASS KIND",
-     "kind": "tab",
-     "summary": "Sound kind: low end.",
-     "does": "Six bass sounds: Sub, Round, Pick, Acid, Growl and Hollow. Picking one drops the clip an octave.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to show its sounds in the six cells."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right step the kind."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right"
-     ],
-     "recall": "Track page: choose a placed clip, tap Sound (or I). Done or I closes it.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_cell0",
-      "track.track_sound"
-     ],
-     "ask": "What are the bass sounds like?"
-    },
-    "sound_kind4": {
-     "title": "DRUMS KIND",
-     "kind": "tab",
-     "summary": "Sound kind: three kits.",
-     "does": "For beat clips only: the three drum kits Soft, Crunchy and Glitchy. Beat clips can use only this kind; other kinds are greyed out.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to show its sounds in the six cells."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right step the kind."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right"
-     ],
-     "recall": "Track page: choose a placed clip, tap Sound (or I). Done or I closes it.",
-     "tips": [
-      "Notes-only kinds are greyed for a beat clip, and Drums for the rest."
-     ],
-     "related": [
-      "track-sound.sound_cell0",
-      "track.track_sound"
-     ],
-     "ask": "What are the drums sounds like?"
-    },
-    "sound_cell0": {
-     "title": "SOUND CELLS",
-     "kind": "list",
-     "summary": "The sounds of the chosen kind. Tap one to use it.",
-     "does": "Six cells hold the sounds of that kind. With more than six (Synth plus favourites) the sixth turns the page. Tapping a cell makes the clip play in that sound; if nothing plays, the clip starts going round so you hear it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a cell."
-      },
-      {
-       "how": "Keys",
-       "text": "Press 1 to 6."
-      }
-     ],
-     "keys": [
-      "1..6"
-     ],
-     "recall": "Sound picker, middle block. As recorded (button) puts the original back; Ctrl+Z undoes a pick.",
-     "tips": [
-      "The cell with the clip's current sound is inverted."
-     ],
-     "related": [
-      "track-sound.sound_scope",
-      "track-sound.sound_as_recorded",
-      "track-sound.sound_hear"
-     ],
-     "ask": "How do I pick a new sound for a clip?",
-     "match": [
-      "sound_cell0",
-      "sound_cell1",
-      "sound_cell2",
-      "sound_cell3",
-      "sound_cell4",
-      "sound_cell5"
-     ]
-    },
-    "sound_hear": {
-     "title": "HEAR",
-     "kind": "toggle",
-     "summary": "Plays the chosen clip alone, going round.",
-     "does": "Plays only the chosen clip in a loop; everything else is silent meanwhile, whatever the mixer says. Starts by itself when you pick a sound while nothing plays. Closing the picker stops it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Hear, tap again to stop."
-      },
-      {
-       "how": "Keys",
-       "text": "Space."
-      }
-     ],
-     "keys": [
-      "Space"
-     ],
-     "recall": "Sound picker, bottom left. Not the same as solo: the rest of the track is simply off.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_cell0",
-      "track.track_play"
-     ],
-     "ask": "How do I hear just this clip?"
-    },
-    "sound_octave-": {
-     "title": "OCTAVE",
-     "kind": "stepper",
-     "summary": "Moves the clip's notes up or down.",
-     "does": "Shifts the clip's notes by octaves, -2 to +2. Works with the recorded sound too. Not for beat clips (no notes). Bass picks start an octave down.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or +."
-      },
-      {
-       "how": "Keys",
-       "text": "Down / Up."
-      }
-     ],
-     "keys": [
-      "Down",
-      "Up"
-     ],
-     "recall": "Sound picker, bottom row. As recorded puts it back to the original octave.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_as_recorded",
-      "track-sound.sound_scope"
-     ],
-     "ask": "How do I move a loop down an octave?",
-     "match": [
-      "sound_octave-",
-      "sound_octave+"
-     ]
-    },
-    "sound_scope": {
-     "title": "EVERY / ONLY THIS ONE",
-     "kind": "toggle",
-     "summary": "Who gets the sound: every copy, or just this one.",
-     "does": "Every <clip>: every placed copy of this clip and the shelf clip take the sound. Only this one: just the chosen copy. The chosen copy keeps its sound either way. Tap to switch.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to switch between the two."
-      }
-     ],
-     "keys": [],
-     "recall": "Sound picker, bottom row, middle. The line under says which tap comes next.",
-     "tips": [
-      "Set Only this one before picking if two copies need different sounds."
-     ],
-     "related": [
-      "track-sound.sound_cell0",
-      "track-sound.sound_as_recorded"
-     ],
-     "ask": "How do I give only one copy a different sound?"
-    },
-    "sound_as_recorded": {
-     "title": "AS RECORDED",
-     "kind": "button",
-     "summary": "Back to the clip's original sound.",
-     "does": "Undoes any picked sound, kit and octave for the chosen copy (or every copy, per the switch), returning to what was kept. The line under names the recorded sound.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap As recorded."
-      },
-      {
-       "how": "Keys",
-       "text": "Backspace."
-      }
-     ],
-     "keys": [
-      "Backspace"
-     ],
-     "recall": "Sound picker, bottom row. Ctrl+Z also undoes a pick.",
-     "tips": [],
-     "related": [
-      "track-sound.sound_cell0",
-      "track-sound.sound_scope"
-     ],
-     "ask": "How do I get the original sound back?"
-    },
-    "sound_done": {
-     "title": "DONE",
-     "kind": "button",
-     "summary": "Closes the sound picker.",
-     "does": "Returns to the track tools and stops Hear. The picked sound stays on the clip, and its name shows beside the clip's name on the lane.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Done."
-      },
-      {
-       "how": "Keys",
-       "text": "Enter, Esc or I."
-      }
-     ],
-     "keys": [
-      "Enter",
-      "Esc",
-      "I"
-     ],
-     "recall": "Sound picker, bottom right.",
-     "tips": [],
-     "related": [
-      "track.track_sound"
-     ],
-     "ask": "How do I close the sound picker?"
-    }
-   },
-   "recall": "Track page: choose a clip, then Sound (or I). Done or Enter comes back."
-  },
-  "track-mixer": {
-   "title": "Track: Mixer",
-   "intro": "A level fader, meter, mute and solo for each of the four lanes. Saved with the track and heard in an export.",
-   "cards": {
-    "tab_track": {
-     "title": "PAGE TABS",
-     "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a tab to go there."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page; Esc goes to Synth."
-      }
-     ],
-     "keys": [
-      "Tab",
-      "Esc"
-     ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
-     "tips": [
-      "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
-     ],
-     "related": [
-      "track.tab_track",
-      "synth.menu"
-     ],
-     "ask": "What is on each of the pages?",
-     "match": [
-      "tab_track",
-      "tab_synth",
-      "tab_sound",
-      "tab_beat",
-      "tab_backing",
-      "tab_tune",
-      "tab_system",
-      "tab_help",
-      "tab_chat"
-     ]
-    },
-    "shelf_clip0": {
-     "title": "CLIP SHELF",
-     "kind": "list",
-     "summary": "Your kept clips. Tap one to pick it up.",
-     "does": "A clip is a copy of a beat, a chord progression or a loop you made. The shelf shows five at a time, with name and length. Tap one to take it in hand (inverted), then tap a bar in its lane or Place. Tap it again to put it down.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a clip, then a bar in its lane."
-      },
-      {
-       "how": "Keys",
-       "text": "Press 1 to 5 to take the shelf clip with that number."
-      }
-     ],
-     "keys": [
-      "1..5",
-      "Esc (put down)"
-     ],
-     "recall": "Track page, left column. + Keep adds clips; Remove with a clip in hand deletes it and its copies (asks twice).",
-     "tips": [
-      "Keeping again after changing the beat makes a new clip: Beat 2."
-     ],
-     "related": [
-      "track.track_keep",
-      "track.track_lanes",
-      "track.track_place",
-      "concepts.track-flow"
-     ],
-     "ask": "What is a clip, and how is it different from the beat?",
-     "match": [
-      "shelf_clip0",
-      "shelf_clip1",
-      "shelf_clip2",
-      "shelf_clip3",
-      "shelf_clip4"
-     ]
-    },
-    "track_keep": {
-     "title": "+ KEEP",
-     "kind": "button",
-     "summary": "Copies the live beat, chords and loop onto the shelf.",
-     "does": "Copies what exists now (the beat, the backing chords and the loop) onto the shelf as clips: Beat 1, Chords 1, Loop 1. Anything already kept is skipped. The last one added goes in your hand. Originals are untouched.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap + Keep after making something."
-      },
-      {
-       "how": "Keys",
-       "text": "K."
-      }
-     ],
-     "keys": [
-      "K"
-     ],
-     "recall": "Track page, bottom of the shelf. K on this page. Up to 40 clips; Remove deletes one.",
-     "tips": [
-      "Nothing to keep? Make a beat, tap chords or record a loop first."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_lanes",
-      "concepts.track-flow"
-     ],
-     "ask": "Why does + Keep say there is nothing to keep?"
-    },
-    "track_shelf_page": {
-     "title": "SHELF PAGE",
-     "kind": "button",
-     "summary": "Shows the next five clips on the shelf.",
-     "does": "Appears when you have more than five clips. Shows the page and total like 1/2; each tap goes on and wraps round to the first page.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to step through shelf pages."
-      }
-     ],
-     "keys": [],
-     "recall": "Track page, beside + Keep, once there are over five clips.",
-     "tips": [
-      "Clips are numbered 1 to 5 on every page; keys 1 to 5 pick from the shown page."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_keep"
-     ],
-     "ask": "Where are my other clips?"
-    },
-    "track_ruler": {
-     "title": "BAR RULER / PLAY LINE",
-     "kind": "area",
-     "summary": "The numbered bars above the lanes. Tap to set the play line.",
-     "does": "Tap or drag on a bar number to put the play line there. If the track is playing it jumps to that bar. The bar numbers inverted show the cycle range. Place, Split and Play start from the line.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap or drag along the numbers."
-      },
-      {
-       "how": "Keys",
-       "text": "Shift+Left / Right, or , and ., move the line a bar."
-      }
-     ],
-     "keys": [
-      "Shift+Left",
-      "Shift+Right",
-      ",",
-      ".",
-      "Enter (to bar 1)"
-     ],
-     "recall": "Track page, strip above the lanes. Enter sends the line back to bar 1.",
-     "tips": [
-      "Eight bars show at once; Shown - / + scrolls by four."
-     ],
-     "related": [
-      "track.track_view-",
-      "track.track_cycle",
-      "track.track_play"
-     ],
-     "ask": "How do I start playing from a later bar?"
-    },
-    "track_lanes": {
-     "title": "LANES",
-     "kind": "area",
-     "summary": "Four lanes of bars: Beat, Chords, Loop A, Loop B.",
-     "does": "Beats go on Beat, chord clips on Chords, loops on Loop A or B (so two loops can play at once). Tap a clip to choose it (double frame); drag it to move it, even between loop lanes. With a clip in hand, tap an empty bar to place it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose or place; drag a chosen clip to move it."
-      },
-      {
-       "how": "Keys",
-       "text": "Arrows choose; Alt+arrows move a bar or lane; Ctrl+V pastes."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right",
-      "Up",
-      "Down",
-      "Alt+arrows",
-      "Ctrl+V"
-     ],
-     "recall": "Track page, the grid in the middle. Clips snap to whole bars. Ctrl+Z undoes a move.",
-     "tips": [
-      "A clip will not go where bars are taken or the lane is the wrong kind."
-     ],
-     "related": [
-      "track.shelf_clip0",
-      "track.track_place",
-      "track.track_undo",
-      "concepts.track-flow"
-     ],
-     "ask": "Why will my clip not go where I drop it?"
-    },
-    "mixer_lane0": {
-     "title": "LANE HEADER",
-     "kind": "tab",
-     "summary": "Chooses a lane in the mixer.",
-     "does": "Each strip is one lane: Beat, Chords, Loop A, Loop B. Tap a strip's name to choose it (inverted). The chosen lane takes the keys. A lane muted or switched off by solo is drawn faint.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a lane's name."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right, or 1 to 4."
-      }
-     ],
-     "keys": [
-      "Left",
-      "Right",
-      "1..4"
-     ],
-     "recall": "Track page, Mix button (or X). Esc, Enter or X closes the mixer.",
-     "tips": [],
-     "related": [
-      "track-mixer.mixer_fader0",
-      "track-mixer.mixer_mute0"
-     ],
-     "ask": "How do I pick the lane to adjust?",
-     "match": [
-      "mixer_lane0",
-      "mixer_lane1",
-      "mixer_lane2",
-      "mixer_lane3"
-     ]
-    },
-    "mixer_fader0": {
-     "title": "FADER",
-     "kind": "slider",
-     "summary": "A lane's level, with a live meter beside it.",
-     "does": "Level from 0 (silent) to 100. 80 plays the lane as recorded; 100 is about 4 dB louder. The small notch marks 80 and dragging near it snaps there. The meter beside it shows loudness while the track plays.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap or drag up and down the fader."
-      },
-      {
-       "how": "Keys",
-       "text": "Up / Down move five at a time; 0 resets to 80."
-      }
-     ],
-     "keys": [
-      "Up",
-      "Down",
-      "0"
-     ],
-     "recall": "Mix panel. Reset puts every lane back to 80. A whole drag is one Ctrl+Z step.",
-     "tips": [
-      "Mix levels are heard in an export."
-     ],
-     "related": [
-      "track-mixer.mixer_reset",
-      "track.track_export"
-     ],
-     "ask": "What does the number on the fader mean?",
-     "match": [
-      "mixer_fader0",
-      "mixer_fader1",
-      "mixer_fader2",
-      "mixer_fader3"
-     ]
-    },
-    "mixer_mute0": {
-     "title": "M (MUTE)",
-     "kind": "toggle",
-     "summary": "Silences a lane.",
-     "does": "The lane goes quiet and its name on the lanes above says muted. Its clips go faint. Mute wins over solo: a muted lane stays silent even if soloed.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap M on the lane's strip."
-      },
-      {
-       "how": "Keys",
-       "text": "M mutes the chosen lane."
-      }
-     ],
-     "keys": [
-      "M"
-     ],
-     "recall": "Mix panel, under each fader. Tap again to unmute. Reset clears all.",
-     "tips": [],
-     "related": [
-      "track-mixer.mixer_solo0",
-      "track.track_mute"
-     ],
-     "ask": "How do I silence a whole lane?",
-     "match": [
-      "mixer_mute0",
-      "mixer_mute1",
-      "mixer_mute2",
-      "mixer_mute3"
-     ]
-    },
-    "mixer_solo0": {
-     "title": "S (SOLO)",
-     "kind": "toggle",
-     "summary": "Plays only the soloed lanes.",
-     "does": "Only lanes with S lit are heard; the others read off. Solo two lanes to hear just those two. Tap again to release.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap S on the lane's strip."
-      },
-      {
-       "how": "Keys",
-       "text": "S solos the chosen lane."
-      }
-     ],
-     "keys": [
-      "S"
-     ],
-     "recall": "Mix panel, beside M. Reset clears all solos.",
-     "tips": [],
-     "related": [
-      "track-mixer.mixer_mute0"
-     ],
-     "ask": "How do I hear only the drums?",
-     "match": [
-      "mixer_solo0",
-      "mixer_solo1",
-      "mixer_solo2",
-      "mixer_solo3"
-     ]
-    },
-    "mixer_play": {
-     "title": "PLAY (MIXER)",
-     "kind": "toggle",
-     "summary": "Starts and stops the track from the mixer.",
-     "does": "Works as Play on the tools: plays from the play line (or the cycle). Meters move while it plays, so set levels while you listen.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Play or Stop."
-      },
-      {
-       "how": "Keys",
-       "text": "Space."
-      }
-     ],
-     "keys": [
-      "Space"
-     ],
-     "recall": "Mix panel, right column, top. Ctrl+Space plays from any page.",
-     "tips": [],
-     "related": [
-      "track.track_play"
-     ],
-     "ask": "Can I play the track while I mix?"
-    },
-    "mixer_reset": {
-     "title": "RESET",
-     "kind": "button",
-     "summary": "Puts every lane back to 80, unmuted and unsoloed.",
-     "does": "Clears the whole mix in one tap. It is one step of Undo.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Reset."
-      }
-     ],
-     "keys": [],
-     "recall": "Mix panel, right column. Ctrl+Z restores the mix you had.",
-     "tips": [],
-     "related": [
-      "track-mixer.mixer_fader0",
-      "track.track_undo"
-     ],
-     "ask": "How do I clear all my mixer changes?"
-    },
-    "mixer_done": {
-     "title": "DONE",
-     "kind": "button",
-     "summary": "Closes the mixer.",
-     "does": "Returns to the track tools. The mix stays with the track and is saved with it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Done."
-      },
-      {
-       "how": "Keys",
-       "text": "Esc, Enter or X."
-      }
-     ],
-     "keys": [
-      "Esc",
-      "Enter",
-      "X"
-     ],
-     "recall": "Mix panel, right column, bottom.",
-     "tips": [],
-     "related": [
-      "track.track_mixer"
-     ],
-     "ask": "How do I close the mixer?"
-    }
-   },
-   "recall": "Track page: Mix button (or X). Done or Esc comes back."
-  },
   "synth": {
    "title": "Synth",
    "intro": "The instrument: scope, three strings, chord pads and the loop pedal. This is the page the app opens on.",
@@ -2388,7 +244,7 @@
      "title": "LOW STRING (S1)",
      "kind": "pad",
      "summary": "Bottom string: Z to M. Seven notes, the lowest range.",
-     "does": "The lowest string. It starts one key in on screen to line up with the Q20 keyboard. With the chord row on (the $ key) or Alt held, these keys play backing chords instead of notes.",
+     "does": "The lowest string. It starts one key in on screen to line up with the Q20 keyboard. With the chord row on (the $ key) or Alt held, these keys play the chord pads instead of notes.",
      "use": [
       {
        "how": "Touch",
@@ -2420,7 +276,7 @@
      "title": "CHORD PADS I-VII",
      "kind": "pad",
      "summary": "The seven chords of your key; what a tap does depends on mode.",
-     "does": "Each pad shows a chord and its numeral (small = minor). Prog: a tap adds it to a looping progression of up to eight. Hold: latches one chord. Drone: toggles its root as a held note.",
+     "does": "Each pad shows a chord and its numeral (small = minor). Hold: a tap latches that chord until you tap it again or pick another. Drone: a tap switches its root on or off as a held note.",
      "use": [
       {
        "how": "Touch",
@@ -2432,18 +288,16 @@
       }
      ],
      "keys": [
-      "Alt+Z..M",
-      "Ctrl+B mode",
-      "Ctrl+P play"
+      "Alt+Z..M"
      ],
-     "recall": "Synth and Backing pages. Ctrl+X clears; Ctrl+Backspace removes the last chord.",
+     "recall": "Synth page, below the strings. Tap a held chord again to let it go.",
      "tips": [
       "Chords follow the key and scale."
      ],
      "related": [
-      "synth.backmode",
-      "backing.bmode0",
-      "concepts.backing-modes"
+      "synth.padmode",
+      "synth.padplay",
+      "concepts.chord-modes"
      ],
      "ask": "What do the chord pads do in each mode?",
      "match": [
@@ -2456,98 +310,47 @@
       "chord6"
      ]
     },
-    "pslot0": {
-     "title": "PROGRESSION SLOTS",
-     "kind": "list",
-     "summary": "The chords you queued, up to eight. Tap to select one.",
-     "does": "Each filled slot shows a chord name; the playing one is inverted. Tap a slot to select it (double frame), then tap a chord pad to replace it. Tap the selected slot again to deselect.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a filled slot, then a chord pad to swap it."
-      }
-     ],
-     "keys": [
-      "Ctrl+Backspace"
-     ],
-     "recall": "Synth page, strip above the chord pads; also Backing page. Ctrl+Backspace removes the last chord.",
-     "tips": [
-      "Empty slots show only their number and cannot be tapped."
-     ],
-     "related": [
-      "synth.chord0",
-      "backing.bremove",
-      "backing.chordbeats-"
-     ],
-     "ask": "How do I change one chord in my progression?",
-     "match": [
-      "pslot0",
-      "pslot1",
-      "pslot2",
-      "pslot3",
-      "pslot4",
-      "pslot5",
-      "pslot6",
-      "pslot7"
-     ]
-    },
-    "backmode": {
+    "padmode": {
      "title": "CHORD MODE",
      "kind": "button",
-     "summary": "Prog, Hold or Drone: what a chord tap does.",
-     "does": "Prog adds taps to a looping progression. Hold plays one chord until you pick another (tap it again to stop). Drone switches a held bass note for each chord you tap on and off.",
+     "summary": "Hold or Drone: what a chord tap does.",
+     "does": "Hold plays one chord until you pick another (tap it again to stop). Drone switches a held bass note for each chord you tap on and off. A held chord and drones can sound together.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap to step Prog, Hold, Drone."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+B steps the mode."
+       "text": "Tap to switch between Hold and Drone."
       }
      ],
-     "keys": [
-      "Ctrl+B"
-     ],
-     "recall": "Synth page, beside the pads; three buttons on the Backing page. Ctrl+B steps it.",
+     "keys": [],
+     "recall": "Synth page, the upper button beside the chord pads.",
      "tips": [
-      "Mode names appear as a toast when you use Ctrl+B."
+      "Switching the mode keeps what is already sounding."
      ],
      "related": [
-      "backing.bmode0",
       "synth.chord0",
-      "concepts.backing-modes"
+      "concepts.chord-modes"
      ],
-     "ask": "What is the difference between Prog, Hold and Drone?"
+     "ask": "What is the difference between Hold and Drone?"
     },
-    "backplay": {
-     "title": "BACKING PLAY / STOP",
+    "padplay": {
+     "title": "CHORD PADS PLAY / STOP",
      "kind": "toggle",
-     "summary": "Starts and stops the backing chords.",
-     "does": "Plays the progression (or held chord or drones) in time with the tempo, on the chord length set in Backing. Tapping a chord in Prog mode already starts it, so Play then stops it.",
+     "summary": "Stops the held chord and the drones, or brings them back.",
+     "does": "Stop silences the held chord and the drones but remembers them; Play brings them back. Tapping a chord pad starts the pads by itself.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap to start or stop; inverted while playing."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+P toggles it from any page."
+       "text": "Tap to stop or start; inverted while the pads sound."
       }
      ],
-     "keys": [
-      "Ctrl+P"
-     ],
-     "recall": "Synth page and Backing page, beside the chord pads. Ctrl+P. Ignored while the Track plays.",
-     "tips": [
-      "Backing joins the bar in progress if a beat or loop is already running."
-     ],
+     "keys": [],
+     "recall": "Synth page, the lower button beside the chord pads. Panic stops them too.",
+     "tips": [],
      "related": [
       "synth.chord0",
-      "backing.chordbeats-",
-      "concepts.bar-lines"
+      "synth.padmode"
      ],
-     "ask": "Why does the backing start when I tap a chord?"
+     "ask": "How do I stop a held chord?"
     },
     "loop_pedal": {
      "title": "LOOP PEDAL",
@@ -2585,7 +388,7 @@
      "title": "LOOP UNDO",
      "kind": "button",
      "summary": "Removes the last recorded layer.",
-     "does": "Takes off the newest overdub layer, one tap per layer, back to the first take. Only affects the loop, not your sound or the track.",
+     "does": "Takes off the newest overdub layer, one tap per layer, back to the first take. Only affects the loop, not your sound.",
      "use": [
       {
        "how": "Touch",
@@ -2735,7 +538,7 @@
      "title": "MENU",
      "kind": "button",
      "summary": "Opens the Sound page and the tab strip to other pages.",
-     "does": "The Synth page has no tab strip, so Menu takes you to the Sound page, which shows the tabs for Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat.",
+     "does": "The Synth page has no tab strip, so Menu takes you to the Sound page, which shows the tabs for Synth, Sound, Beat, Tune, System, Help and Chat.",
      "use": [
       {
        "how": "Touch",
@@ -2753,7 +556,7 @@
      "recall": "Synth page, bottom right. Esc from any page returns to Synth.",
      "tips": [],
      "related": [
-      "track.tab_track",
+      "sound.tab_synth",
       "sound.slot0"
      ],
      "ask": "How do I get to the other pages from here?"
@@ -2791,8 +594,8 @@
     "tempo_readout": {
      "title": "TEMPO READOUT",
      "kind": "readout",
-     "summary": "The speed of the beat, backing and loop, in beats per minute.",
-     "does": "Shows the tempo. The small square beside it blinks on the beat while anything is running. One tempo drives the beat, the backing, the loop pedal and the track.",
+     "summary": "The speed of the beat and the loop, in beats per minute.",
+     "does": "Shows the tempo. The small square beside it blinks on the beat while anything is running. One tempo drives the beat, the loop pedal, the delay and the click.",
      "use": [
       {
        "how": "Touch",
@@ -2806,7 +609,7 @@
      "keys": [
       "Ctrl+T"
      ],
-     "recall": "Top of the Synth page, between key and octave. Also Tune, Backing and Beat.",
+     "recall": "Top of the Synth page, between key and octave. Also Tune and Beat.",
      "tips": [
       "Two taps already set it; more taps average out (within 2 seconds)."
      ],
@@ -2855,11 +658,11 @@
    "title": "Sound",
    "intro": "Pick a sound, make a new one and shape it. Ten slots, five quick-change sliders on one page, favourites below, and all parameters on request.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -2874,21 +677,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -3357,11 +1157,11 @@
    "title": "Sound editor",
    "intro": "Every parameter of a sound, twelve to a page, with Prev and Next. Reached from the Sound tab: All parameters.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -3376,21 +1176,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -4596,11 +2393,11 @@
    "title": "Beat",
    "intro": "A drum machine: eight pads, three kits, one bar of 16 steps written by playing, and a row of kept beats.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -4615,21 +2412,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -5023,7 +2817,7 @@
      "title": "PLAY / STOP BEAT",
      "kind": "toggle",
      "summary": "Starts and stops the beat.",
-     "does": "Plays the 16-step bar on a loop at the current tempo, sharing bar lines with the backing chords and loop pedal so everything stays together. Stopping also turns Rec off.",
+     "does": "Plays the 16-step bar on a loop at the current tempo, sharing bar lines with the loop pedal so everything stays together. Stopping also turns Rec off.",
      "use": [
       {
        "how": "Touch",
@@ -5038,7 +2832,7 @@
       "Space",
       "Ctrl+J"
      ],
-     "recall": "Beat page, transport row. Ctrl+J anywhere. Starting the Track stops the live beat.",
+     "recall": "Beat page, transport row. Ctrl+J anywhere.",
      "tips": [],
      "related": [
       "beat.beatrec",
@@ -5080,13 +2874,12 @@
       }
      ],
      "keys": [],
-     "recall": "Beat page, right of Erase. In the Track, change a beat clip's kit with Sound.",
+     "recall": "Beat page, right of Erase.",
      "tips": [
-      "A beat clip on the Track keeps its own kit; change it there with Sound."
+      "Each kept beat keeps its own kit."
      ],
      "related": [
-      "beat.beatslot0",
-      "track-sound.sound_kind4"
+      "beat.beatslot0"
      ],
      "ask": "What is the difference between the three kits?",
      "match": [
@@ -5112,7 +2905,7 @@
      ],
      "related": [
       "system.volume",
-      "backing.backvol"
+      "system.loopvol"
      ],
      "ask": "How do I make the drums quieter than the synth?"
     },
@@ -5120,7 +2913,7 @@
      "title": "TEMPO",
      "kind": "stepper",
      "summary": "The tempo in beats per minute.",
-     "does": "Sets the speed of everything: beat, backing, loop and track. 40 to 240 bpm; each tap changes it by 1. It is the same setting as on the Tune and Backing pages.",
+     "does": "Sets the speed of everything: beat, loop, delay and click. 40 to 240 bpm; each tap changes it by 1. It is the same setting as on the Tune page.",
      "use": [
       {
        "how": "Touch",
@@ -5150,637 +2943,15 @@
    },
    "recall": "Beat tab. Ctrl+J starts or stops the beat from any page; Ctrl+I toggles Rec."
   },
-  "backing": {
-   "title": "Backing",
-   "intro": "Backing chords from your key: pick what a chord tap does, how they play, and how long each lasts.",
-   "cards": {
-    "tab_track": {
-     "title": "PAGE TABS",
-     "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a tab to go there."
-      },
-      {
-       "how": "Keys",
-       "text": "Tab steps to the next page; Esc goes to Synth."
-      }
-     ],
-     "keys": [
-      "Tab",
-      "Esc"
-     ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
-     "tips": [
-      "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
-     ],
-     "related": [
-      "track.tab_track",
-      "synth.menu"
-     ],
-     "ask": "What is on each of the pages?",
-     "match": [
-      "tab_track",
-      "tab_synth",
-      "tab_sound",
-      "tab_beat",
-      "tab_backing",
-      "tab_tune",
-      "tab_system",
-      "tab_help",
-      "tab_chat"
-     ]
-    },
-    "bmode0": {
-     "title": "PROGRESSION MODE",
-     "kind": "toggle",
-     "summary": "Chord taps build a looping progression.",
-     "does": "A chord tap adds to a looping sequence of up to eight chords. Tap Play (or the first chord) to hear it loop.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap chords in order to fill the strip."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+B cycles the mode."
-      }
-     ],
-     "keys": [
-      "Ctrl+B"
-     ],
-     "recall": "Backing page, top row; Synth page, mode button by the pads. Ctrl+B cycles Prog, Hold, Drone.",
-     "tips": [],
-     "related": [
-      "backing.chord0",
-      "synth.backmode",
-      "concepts.backing-modes"
-     ],
-     "ask": "When would I use progression mode?"
-    },
-    "bmode1": {
-     "title": "HOLD MODE",
-     "kind": "toggle",
-     "summary": "Chord taps latch a single chord.",
-     "does": "A chord tap plays that one chord until you pick another. Tap the same chord again to stop it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a chord pad to latch it."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+B cycles the mode."
-      }
-     ],
-     "keys": [
-      "Ctrl+B"
-     ],
-     "recall": "Backing page, top row; Synth page, mode button by the pads. Ctrl+B cycles Prog, Hold, Drone.",
-     "tips": [],
-     "related": [
-      "backing.chord0",
-      "synth.backmode",
-      "concepts.backing-modes"
-     ],
-     "ask": "When would I use hold mode?"
-    },
-    "bmode2": {
-     "title": "DRONE MODE",
-     "kind": "toggle",
-     "summary": "Chord taps latch a drone note.",
-     "does": "A chord tap switches a held bass note for that chord on or off. Several drones can sound at once.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap pads to add or remove drone notes."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+B cycles the mode."
-      }
-     ],
-     "keys": [
-      "Ctrl+B"
-     ],
-     "recall": "Backing page, top row; Synth page, mode button by the pads. Ctrl+B cycles Prog, Hold, Drone.",
-     "tips": [
-      "A drone is the chord's root note, an octave up."
-     ],
-     "related": [
-      "backing.chord0",
-      "synth.backmode",
-      "concepts.backing-modes"
-     ],
-     "ask": "When would I use drone mode?"
-    },
-    "bstyle0": {
-     "title": "SUSTAIN STYLE",
-     "kind": "toggle",
-     "summary": "Chord notes ring continuously, gliding to the next chord.",
-     "does": "All notes of the chord are held for the whole chord length; when the chord changes the notes slide to the new ones. The calmest style, good under slow playing.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose it; the active style is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+A steps through the five styles."
-      }
-     ],
-     "keys": [
-      "Ctrl+A"
-     ],
-     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
-     "tips": [],
-     "related": [
-      "backing.arprate-",
-      "backing.chordbeats-",
-      "backing.bseventh"
-     ],
-     "ask": "How do the backing styles differ?"
-    },
-    "bstyle1": {
-     "title": "PULSE STYLE",
-     "kind": "toggle",
-     "summary": "The chord re-strikes on every beat.",
-     "does": "The root is held while the upper notes of the chord are struck short on every beat, like a steady organ or guitar chop.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose it; the active style is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+A steps through the five styles."
-      }
-     ],
-     "keys": [
-      "Ctrl+A"
-     ],
-     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
-     "tips": [],
-     "related": [
-      "backing.arprate-",
-      "backing.chordbeats-",
-      "backing.bseventh"
-     ],
-     "ask": "How do the backing styles differ?"
-    },
-    "bstyle2": {
-     "title": "ARP UP STYLE",
-     "kind": "toggle",
-     "summary": "Chord notes play one by one, upward.",
-     "does": "An arpeggio: the chord's notes are played one at a time, climbing across two octaves and starting over. Speed is set by steps per beat.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose it; the active style is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+A steps through the five styles."
-      }
-     ],
-     "keys": [
-      "Ctrl+A"
-     ],
-     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
-     "tips": [
-      "Arp steps per beat is the stepper below."
-     ],
-     "related": [
-      "backing.arprate-",
-      "backing.chordbeats-",
-      "backing.bseventh"
-     ],
-     "ask": "How do the backing styles differ?"
-    },
-    "bstyle3": {
-     "title": "ARP DOWN STYLE",
-     "kind": "toggle",
-     "summary": "Chord notes play one by one, downward.",
-     "does": "An arpeggio running downward through the chord's notes across two octaves, then starting again. Speed is steps per beat.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose it; the active style is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+A steps through the five styles."
-      }
-     ],
-     "keys": [
-      "Ctrl+A"
-     ],
-     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
-     "tips": [
-      "Arp steps per beat is the stepper below."
-     ],
-     "related": [
-      "backing.arprate-",
-      "backing.chordbeats-",
-      "backing.bseventh"
-     ],
-     "ask": "How do the backing styles differ?"
-    },
-    "bstyle4": {
-     "title": "ARP UP-DN STYLE",
-     "kind": "toggle",
-     "summary": "Chord notes climb then fall, back and forth.",
-     "does": "An arpeggio that climbs to the top of the two-octave span, turns round and falls back down, repeating. Speed is steps per beat.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to choose it; the active style is inverted."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+A steps through the five styles."
-      }
-     ],
-     "keys": [
-      "Ctrl+A"
-     ],
-     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
-     "tips": [
-      "Arp steps per beat is the stepper below."
-     ],
-     "related": [
-      "backing.arprate-",
-      "backing.chordbeats-",
-      "backing.bseventh"
-     ],
-     "ask": "How do the backing styles differ?"
-    },
-    "bslot0": {
-     "title": "PROGRESSION SLOTS",
-     "kind": "list",
-     "summary": "The chords you queued, up to eight. Tap to select one.",
-     "does": "Each filled slot shows a chord name; the playing one is inverted. Tap a slot to select it (double frame), then tap a chord pad to replace it. Tap the selected slot again to deselect.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a filled slot, then a chord pad to swap it."
-      }
-     ],
-     "keys": [
-      "Ctrl+Backspace"
-     ],
-     "recall": "Backing page, progression row; also Synth page. Ctrl+Backspace removes the last chord.",
-     "tips": [
-      "Empty slots show only their number and cannot be tapped."
-     ],
-     "related": [
-      "backing.chord0",
-      "backing.bremove"
-     ],
-     "ask": "How do I change one chord in my progression?",
-     "match": [
-      "bslot0",
-      "bslot1",
-      "bslot2",
-      "bslot3",
-      "bslot4",
-      "bslot5",
-      "bslot6",
-      "bslot7"
-     ]
-    },
-    "bremove": {
-     "title": "REMOVE LAST",
-     "kind": "button",
-     "summary": "Takes the last chord off the progression.",
-     "does": "Deletes the last chord in the queue, one per tap. The rest keep playing. Does not touch the held chord or drones.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Remove last."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+Backspace."
-      }
-     ],
-     "keys": [
-      "Ctrl+Backspace"
-     ],
-     "recall": "Backing page, first row of buttons. Ctrl+Backspace. To replace instead, tap a slot then a chord.",
-     "tips": [],
-     "related": [
-      "backing.bclear",
-      "backing.bslot0"
-     ],
-     "ask": "How do I drop the last chord I added?"
-    },
-    "bclear": {
-     "title": "CLEAR ALL",
-     "kind": "button",
-     "summary": "Empties the backing completely.",
-     "does": "Removes every chord, the held chord and all drones, and stops the backing. Does not touch the loop, beat or track.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Clear all."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+X."
-      }
-     ],
-     "keys": [
-      "Ctrl+X"
-     ],
-     "recall": "Backing page. Ctrl+X anywhere (on the Track page Ctrl+X cuts a clip instead). No undo: tap the chords again.",
-     "tips": [],
-     "related": [
-      "backing.bremove",
-      "backing.backplay"
-     ],
-     "ask": "How do I start the backing chords over?"
-    },
-    "bseventh": {
-     "title": "7TH CHORDS",
-     "kind": "toggle",
-     "summary": "Chords get a fourth note.",
-     "does": "Off: three-note triads. On: four-note seventh chords, which sound richer and more jazzy. Pad names update to match. Applies to everything the backing plays.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to switch; inverted means on."
-      }
-     ],
-     "keys": [],
-     "recall": "Backing page, third button. Tap again to go back to triads.",
-     "tips": [],
-     "related": [
-      "backing.chord0",
-      "backing.bstyle0"
-     ],
-     "ask": "What does 7th chords change in the sound?"
-    },
-    "bmetro": {
-     "title": "METRONOME",
-     "kind": "toggle",
-     "summary": "A click on every beat.",
-     "does": "Plays a quiet click in time with the tempo, louder on the first beat of each bar. The count-in click always sounds regardless, and Rec on the Beat page clicks too.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to switch; also Click on the Tune page."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+M."
-      }
-     ],
-     "keys": [
-      "Ctrl+M"
-     ],
-     "recall": "Backing page and Tune page (Click); Ctrl+M. It is one shared setting.",
-     "tips": [],
-     "related": [
-      "tune.metro",
-      "concepts.tempo"
-     ],
-     "ask": "How do I turn the click on?"
-    },
-    "chord0": {
-     "title": "CHORD PADS I-VII",
-     "kind": "pad",
-     "summary": "The seven chords of your key; what a tap does depends on mode.",
-     "does": "Each pad shows a chord and its numeral (small = minor). Prog: a tap adds it to a looping progression of up to eight. Hold: latches one chord. Drone: toggles its root as a held note.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap a pad. Mode: the button beside the pads."
-      },
-      {
-       "how": "Keys",
-       "text": "Alt+Z..M: chords I to VII."
-      }
-     ],
-     "keys": [
-      "Alt+Z..M",
-      "Ctrl+B mode",
-      "Ctrl+P play"
-     ],
-     "recall": "Synth and Backing pages. Ctrl+X clears; Ctrl+Backspace removes the last chord.",
-     "tips": [
-      "Chords follow the key and scale."
-     ],
-     "related": [
-      "synth.backmode",
-      "backing.bmode0",
-      "concepts.backing-modes"
-     ],
-     "ask": "What do the chord pads do in each mode?",
-     "match": [
-      "chord0",
-      "chord1",
-      "chord2",
-      "chord3",
-      "chord4",
-      "chord5",
-      "chord6"
-     ]
-    },
-    "backmode": {
-     "title": "CHORD MODE",
-     "kind": "button",
-     "summary": "Prog, Hold or Drone: what a chord tap does.",
-     "does": "Prog adds taps to a looping progression. Hold plays one chord until you pick another (tap it again to stop). Drone switches a held bass note for each chord you tap on and off.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to step Prog, Hold, Drone."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+B steps the mode."
-      }
-     ],
-     "keys": [
-      "Ctrl+B"
-     ],
-     "recall": "Synth page, beside the pads; three buttons on the Backing page. Ctrl+B steps it.",
-     "tips": [
-      "Mode names appear as a toast when you use Ctrl+B."
-     ],
-     "related": [
-      "backing.bmode0",
-      "synth.chord0",
-      "concepts.backing-modes"
-     ],
-     "ask": "What is the difference between Prog, Hold and Drone?"
-    },
-    "backplay": {
-     "title": "BACKING PLAY / STOP",
-     "kind": "toggle",
-     "summary": "Starts and stops the backing chords.",
-     "does": "Plays the progression (or held chord or drones) in time with the tempo, on the chord length set in Backing. Tapping a chord in Prog mode already starts it, so Play then stops it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to start or stop; inverted while playing."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+P toggles it from any page."
-      }
-     ],
-     "keys": [
-      "Ctrl+P"
-     ],
-     "recall": "Synth page and Backing page, beside the chord pads. Ctrl+P. Ignored while the Track plays.",
-     "tips": [
-      "Backing joins the bar in progress if a beat or loop is already running."
-     ],
-     "related": [
-      "synth.chord0",
-      "backing.chordbeats-",
-      "concepts.bar-lines"
-     ],
-     "ask": "Why does the backing start when I tap a chord?"
-    },
-    "chordbeats-": {
-     "title": "BEATS PER CHORD",
-     "kind": "stepper",
-     "summary": "How long each chord lasts, in beats.",
-     "does": "From 1 to 8 beats; 4 is one bar of 4/4. Shorter means the progression moves faster. Changes how long each slot plays and when arpeggios turn over.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or +."
-      }
-     ],
-     "keys": [],
-     "recall": "Backing page, left of the second row of steppers. Default 4.",
-     "tips": [],
-     "related": [
-      "backing.arprate-",
-      "backing.backplay"
-     ],
-     "ask": "How do I make the chords change faster?",
-     "match": [
-      "chordbeats-",
-      "chordbeats+"
-     ]
-    },
-    "arprate-": {
-     "title": "ARP STEPS PER BEAT",
-     "kind": "stepper",
-     "summary": "How fast arpeggios play.",
-     "does": "How many notes an arpeggio plays per beat, 1 to 4. At 2 you hear eighth notes. It only changes the Arp styles; Sustain and Pulse ignore it.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or +."
-      }
-     ],
-     "keys": [],
-     "recall": "Backing page, right of Beats per chord. Default 2.",
-     "tips": [
-      "Pulse always plays once per beat, whatever this says."
-     ],
-     "related": [
-      "backing.bstyle2",
-      "backing.chordbeats-"
-     ],
-     "ask": "How do I speed up the arpeggio?",
-     "match": [
-      "arprate-",
-      "arprate+"
-     ]
-    },
-    "bpm2-": {
-     "title": "TEMPO",
-     "kind": "stepper",
-     "summary": "The tempo in beats per minute.",
-     "does": "Sets the speed of the beat, backing, loop and track together: 40 to 240 bpm, 1 per tap. It is the same setting as on the Tune and Beat pages.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or +."
-      },
-      {
-       "how": "Keys",
-       "text": "Ctrl+T taps a tempo."
-      }
-     ],
-     "keys": [
-      "Ctrl+T"
-     ],
-     "recall": "Backing page, below the progression; also Tune and Beat pages. Ctrl+T.",
-     "tips": [],
-     "related": [
-      "tune.bpm-",
-      "beat.bpm3-",
-      "concepts.tempo"
-     ],
-     "ask": "How do I change the tempo?",
-     "match": [
-      "bpm2-",
-      "bpm2+"
-     ]
-    },
-    "backvol": {
-     "title": "BACKING VOLUME",
-     "kind": "slider",
-     "summary": "How loud the backing chords are.",
-     "does": "The chords' level, 0 to 100%, separate from the lead and loop. Master volume on System sets the overall level.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap or drag along the bar."
-      }
-     ],
-     "keys": [],
-     "recall": "Backing page, right of Tempo. Loop and master volumes are on System.",
-     "tips": [],
-     "related": [
-      "system.volume",
-      "beat.beatvol"
-     ],
-     "ask": "How do I make the backing quieter than my lead?"
-    },
-    "bresync": {
-     "title": "USE CURRENT LEAD SOUND",
-     "kind": "button",
-     "summary": "Makes the backing play the lead's sound.",
-     "does": "The backing keeps the sound it started with, so you can change the lead freely. Tap this when you want the chords to use the sound you are playing now. The line inside shows both names.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap the wide button."
-      }
-     ],
-     "keys": [],
-     "recall": "Backing page, full-width button. The backing otherwise keeps its old sound until cleared and restarted.",
-     "tips": [],
-     "related": [
-      "backing.bclear",
-      "sound.slot0"
-     ],
-     "ask": "Why does the backing not change when I change my sound?"
-    }
-   },
-   "recall": "Backing tab. On Synth the Prog and Play buttons are the same chord controls."
-  },
   "tune": {
    "title": "Tune",
    "intro": "Key, scale, octave, tempo and slide speed: the settings that make everything you play fit together. Listen can guess a song's key.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -5795,21 +2966,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -5837,7 +3005,7 @@
      ],
      "recall": "Tune page, top block; Synth header shows it. Ctrl+K steps up, Ctrl+Shift+K down. Listen can set it too.",
      "tips": [
-      "Backing chords follow the new key straight away."
+      "The chord pads follow the new key straight away."
      ],
      "related": [
       "tune.scale0",
@@ -6176,7 +3344,7 @@
      "title": "TEMPO",
      "kind": "stepper",
      "summary": "The tempo in beats per minute (bpm).",
-     "does": "Sets the speed of beat, backing, loop and track together: 40 to 240 bpm, one per tap here. Delay times and the metronome follow it.",
+     "does": "Sets the speed of the beat and the loop together: 40 to 240 bpm, one per tap here. Delay times and the metronome follow it.",
      "use": [
       {
        "how": "Touch",
@@ -6190,7 +3358,7 @@
      "keys": [
       "Ctrl+T"
      ],
-     "recall": "Tune page; the Backing and Beat pages have the same control in steps of 2. Ctrl+T taps a tempo.",
+     "recall": "Tune page; the Beat page has the same control. Ctrl+T taps a tempo.",
      "tips": [],
      "related": [
       "tune.tap",
@@ -6247,11 +3415,11 @@
      "keys": [
       "Ctrl+M"
      ],
-     "recall": "Tune page and Backing page (Metronome); Ctrl+M anywhere.",
+     "recall": "Tune page; Ctrl+M anywhere.",
      "tips": [],
      "related": [
-      "backing.bmetro",
-      "tune.bpm-"
+      "tune.bpm-",
+      "concepts.bar-lines"
      ],
      "ask": "How do I play along with a click?"
     },
@@ -6391,11 +3559,11 @@
    "title": "System",
    "intro": "Master volume, touch pad mapping, recording and saving, key test, device status, and Panic.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -6410,21 +3578,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -6443,14 +3608,13 @@
       }
      ],
      "keys": [],
-     "recall": "System page, top left. Beat, backing and loop have their own sliders; sound LEVEL is separate.",
+     "recall": "System page, top left. Beat and loop have their own sliders; sound LEVEL is separate.",
      "tips": [
       "If the sound is distorted or quiet with Limit showing, lower this."
      ],
      "related": [
       "system.loopvol",
-      "beat.beatvol",
-      "backing.backvol"
+      "beat.beatvol"
      ],
      "ask": "Why is it quiet, or why does Limit show?"
     },
@@ -6629,7 +3793,7 @@
      ],
      "recall": "System page, Touch pad mapping row; Synth page scope corner. Ctrl+G steps on. Panic clears Glitch.",
      "tips": [
-      "Glitch affects lead, backing, loop and drums together."
+      "Glitch affects lead, chord pads, loop and drums together."
      ],
      "related": [
       "synth.xy",
@@ -6661,7 +3825,7 @@
      "title": "CHORD ROW",
      "kind": "toggle",
      "summary": "The bottom letter row plays chords, not notes.",
-     "does": "On: Z to M play backing chords I to VII instead of the low string, and labels show on those keys. Off: it is a string again. The Alt key does the same while held.",
+     "does": "On: Z to M play the chord pads I to VII instead of the low string, and labels show on those keys. Off: it is a string again. The Alt key does the same while held.",
      "use": [
       {
        "how": "Touch",
@@ -6690,7 +3854,7 @@
      "title": "RECORD",
      "kind": "toggle",
      "summary": "Records what you hear to a WAV file.",
-     "does": "Starts recording the full output (lead, backing, loop, beat) into a WAV audio file in recordings/. Press again to stop; the file name shows. A REC timer blinks on the Synth page.",
+     "does": "Starts recording the full output (lead, chord pads, loop, beat) into a WAV audio file in recordings/. Press again to stop; the file name shows. A REC timer blinks on the Synth page.",
      "use": [
       {
        "how": "Touch",
@@ -6706,11 +3870,10 @@
      ],
      "recall": "System page; Ctrl+E anywhere. Files are in ~/vrequency/recordings/. Play last plays the newest.",
      "tips": [
-      "Only the Track page's Export renders offline; Record is real time."
+      "Recording runs in real time: play the take you want to keep."
      ],
      "related": [
-      "system.playlast",
-      "track.track_export"
+      "system.playlast"
      ],
      "ask": "How do I record a take?"
     },
@@ -6732,11 +3895,10 @@
      "keys": [
       "Ctrl+W"
      ],
-     "recall": "System page; Ctrl+W anywhere. It also plays an exported track, since that is the newest file.",
+     "recall": "System page; Ctrl+W anywhere.",
      "tips": [],
      "related": [
-      "system.recwav",
-      "track.track_export"
+      "system.recwav"
      ],
      "ask": "How do I hear my last recording?"
     },
@@ -6744,7 +3906,7 @@
      "title": "SAVE SESSION",
      "kind": "button",
      "summary": "Saves the whole setup as a session file.",
-     "does": "Writes your sounds, key, tempo, backing, loop, the beat shown and the track into a timestamped file in sessions/. It does not stop anything. The list below shows the four newest.",
+     "does": "Writes your sounds, key, tempo, chord pads, loop and the beat shown into a timestamped file in sessions/. It does not stop anything. The list below shows the four newest.",
      "use": [
       {
        "how": "Touch",
@@ -6752,7 +3914,7 @@
       }
      ],
      "keys": [],
-     "recall": "System page. Load from the list below the buttons, then press play on the loop, backing or beat.",
+     "recall": "System page. Load from the list below the buttons, then press play on the loop or beat.",
      "tips": [
       "Quitting saves your setup automatically; sessions are for keeping versions."
      ],
@@ -6785,7 +3947,7 @@
      "title": "SAVED SESSIONS",
      "kind": "list",
      "summary": "Your four newest sessions. Tap to load one.",
-     "does": "Loads that session: sounds, key, tempo, backing, loop, the beat shown and the track replace what you have. Sounds do not start by themselves; press play on the loop, backing or beat.",
+     "does": "Loads that session: sounds, key, tempo, chord pads, loop and the beat shown replace what you have. Sounds do not start by themselves; press play on the loop or beat, or tap a chord.",
      "use": [
       {
        "how": "Touch",
@@ -6795,7 +3957,7 @@
      "keys": [],
      "recall": "System page, Saved sessions. Only the four newest show. Save first if you want to keep your current setup.",
      "tips": [
-      "Loading replaces the track too, but the track's own undo can bring it back."
+      "Sessions saved by older versions load too; their track and chord progression are left out."
      ],
      "related": [
       "system.savesession",
@@ -6813,7 +3975,7 @@
      "title": "PANIC",
      "kind": "button",
      "summary": "Stops every sound at once.",
-     "does": "Silences all notes and stops the backing, beat, loop playback and the track. Clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept. Use it when a note sticks.",
+     "does": "Silences all notes and stops the chord pads, beat and loop playback. Clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept. Use it when a note sticks.",
      "use": [
       {
        "how": "Touch",
@@ -6827,7 +3989,7 @@
      "keys": [
       "Backspace"
      ],
-     "recall": "System page, bottom left; Backspace anywhere. On the Track page Backspace deletes a chosen clip instead.",
+     "recall": "System page, bottom left; Backspace anywhere.",
      "tips": [],
      "related": [
       "concepts.panic"
@@ -6884,7 +4046,7 @@
      "title": "QUIT",
      "kind": "button",
      "summary": "Saves your setup and closes the app.",
-     "does": "Quits venv-vrequency. Your sounds, key, tempo, settings, kept beats and track are saved first and come back next time.",
+     "does": "Quits venv-vrequency. Your sounds, key, tempo, settings, and kept beats are saved first and come back next time.",
      "use": [
       {
        "how": "Touch",
@@ -6944,13 +4106,13 @@
   },
   "help": {
    "title": "Help",
-   "intro": "The key lists built into the app: four pages for playing, commands, the beat and the Track. The list follows your keymap.",
+   "intro": "The key lists built into the app: three pages for playing, commands and the beat. The list follows your keymap.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -6965,21 +4127,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -6989,8 +4148,8 @@
     "help_next": {
      "title": "HELP PAGE BUTTON",
      "kind": "button",
-     "summary": "Cycles through the four key lists.",
-     "does": "The Help page lists keys in four pages: Playing, Commands (hold Ctrl), Beat and recording, and Track. Each tap moves on to the next page, then wraps back to Playing.",
+     "summary": "Cycles through the three key lists.",
+     "does": "The Help page lists keys in three pages: Playing, Commands (hold Ctrl), and Beat and recording. Each tap moves on to the next page, then wraps back to Playing.",
      "use": [
       {
        "how": "Touch",
@@ -7038,8 +4197,8 @@
     "help_section": {
      "title": "SECTION TITLE",
      "kind": "area",
-     "summary": "Names which of the four key lists you are reading.",
-     "does": "Help has four lists: Playing, Commands, Beat and recording, and Track. The title says which one is open; Next steps to the following list.",
+     "summary": "Names which of the three key lists you are reading.",
+     "does": "Help has three lists: Playing, Commands, and Beat and recording. The title says which one is open; Next steps to the following list.",
      "use": [
       {
        "how": "Touch",
@@ -7120,11 +4279,11 @@
    "title": "Chat",
    "intro": "Talk with the AI copilot connected to the app. It can play, change sounds and set up beats while you chat.",
    "cards": {
-    "tab_track": {
+    "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of nine tabs along the top.",
-     "does": "Track, Synth, Sound, Beat, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -7139,21 +4298,18 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
      "related": [
-      "track.tab_track",
       "synth.menu"
      ],
      "ask": "What is on each of the pages?",
      "match": [
-      "tab_track",
       "tab_synth",
       "tab_sound",
       "tab_beat",
-      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -7344,7 +4500,7 @@
    ],
    "recall": "Synth page, the three strings. Tune page, String gap changes the spacing.",
    "tips": [
-    "On Track, letters are commands: Esc returns."
+    "Shapes across the rows make chords without the chord pads."
    ],
    "related": [
     "synth.string2",
@@ -7424,7 +4580,7 @@
    "title": "BAR LINES AND QUANTISE",
    "kind": "area",
    "summary": "Things start and change on the bar so they stay in time.",
-   "does": "A bar is a group of beats (4 here). The beat, backing, loop and track share bar lines. Recorded loops end on a bar; a beat you tap waits for the next bar; drum hits are quantised: snapped to the nearest of 16 steps in the bar.",
+   "does": "A bar is a group of beats (4 here). The beat and the loop share bar lines. Recorded loops end on a bar; a beat you tap waits for the next bar; drum hits are quantised: snapped to the nearest of 16 steps in the bar.",
    "use": [
     {
      "how": "Touch",
@@ -7448,7 +4604,7 @@
    "title": "SESSIONS, FAVOURITES, SETUP",
    "kind": "area",
    "summary": "Three ways your work is kept.",
-   "does": "Your setup (slots, key, tempo, settings, kept beats, track) saves itself on quit. A favourite is one saved sound. A session is a snapshot: sounds, key, tempo, backing, loop, the beat shown and the track.",
+   "does": "Your setup (slots, key, tempo, settings, kept beats) saves itself on quit. A favourite is one saved sound. A session is a snapshot: sounds, key, tempo, chord pads, loop and the beat shown.",
    "use": [
     {
      "how": "Touch",
@@ -7478,7 +4634,7 @@
    "title": "COMMAND LAYER (CTRL)",
    "kind": "area",
    "summary": "Hold Ctrl and press a letter for a command instead of a note.",
-   "does": "Ctrl is the command key. Held, letters run actions: R new sound, N mutate, Z undo, F favourite, K key up, S scale, T tap tempo, M click, G pad mapping, E record, W play last, H help, Y chat, Q quit. Some change on the Track page.",
+   "does": "Ctrl is the command key. Held, letters run actions: R new sound, N mutate, Z undo, F favourite, K key up, S scale, T tap tempo, M click, G pad mapping, E record, W play last, H help, Y chat, Q quit.",
    "use": [
     {
      "how": "Keys",
@@ -7498,7 +4654,7 @@
    ],
    "recall": "Help tab, Commands page lists them all. Edit keymap.json to rebind; delete it to reset.",
    "tips": [
-    "On Track: Ctrl+T split, J join, R repeat, X/C/V cut copy paste, B export."
+    "Ctrl+V switches the scope's 3D view; hold Ctrl+C or Ctrl+X to sweep the filter."
    ],
    "related": [
     "help.help_next",
@@ -7576,7 +4732,7 @@
    "title": "GLITCH",
    "kind": "area",
    "summary": "Crushes everything you hear into a rough digital sound.",
-   "does": "While your finger is on the pad (or Hold is on) lead, backing, loop and drums are crushed into a blocky, lo-fi sound. Right is coarser, up is rougher. Coloured streaks trail the scope wave. Lift to restore; Backspace clears it.",
+   "does": "While your finger is on the pad (or Hold is on) lead, chord pads, loop and drums are crushed into a blocky, lo-fi sound. Right is coarser, up is rougher. Coloured streaks trail the scope wave. Lift to restore; Backspace clears it.",
    "use": [
     {
      "how": "Touch",
@@ -7600,11 +4756,11 @@
    ],
    "ask": "What does Glitch do to my sound?"
   },
-  "backing-modes": {
-   "title": "BACKING MODES",
+  "chord-modes": {
+   "title": "CHORD PAD MODES",
    "kind": "area",
-   "summary": "What a chord tap does: Prog, Hold or Drone.",
-   "does": "Prog queues up to eight chords that loop, each lasting its Beats per chord. Hold plays one chord until you pick another. Drone switches held bass notes on and off. A chord tap in Prog starts the backing at once.",
+   "summary": "What a chord tap does: Hold or Drone.",
+   "does": "Hold plays one chord until you pick another or tap it again. Drone switches held bass notes on and off, one per chord. The pads take the sound that is live when they start.",
    "use": [
     {
      "how": "Touch",
@@ -7612,24 +4768,21 @@
     },
     {
      "how": "Keys",
-     "text": "Ctrl+B changes mode; Alt + Z..M plays a chord."
+     "text": "Alt + Z..M taps a chord."
     }
    ],
    "keys": [
-    "Ctrl+B",
-    "Alt+Z..M",
-    "Ctrl+P"
+    "Alt+Z..M"
    ],
-   "recall": "Backing page, three buttons at the top. Ctrl+X clears the backing.",
+   "recall": "Synth page, the upper button beside the chord pads.",
    "tips": [
-    "The backing keeps the sound it started with; use Use current lead sound to match."
+    "For a new pad sound: stop the pads, change the sound, then tap a chord."
    ],
    "related": [
     "synth.chord0",
-    "backing.bmode0",
-    "backing.bresync"
+    "synth.padmode"
    ],
-   "ask": "How do I build a chord progression?"
+   "ask": "How do the chord pads' modes work?"
   },
   "kept-beats": {
    "title": "KEPT BEATS",
@@ -7654,45 +4807,9 @@
    "tips": [],
    "related": [
     "beat.beatslot0",
-    "beat.beatnew",
-    "track.track_keep"
+    "beat.beatnew"
    ],
    "ask": "How do I keep more than one beat?"
-  },
-  "track-flow": {
-   "title": "TRACK: CLIPS, LANES, BARS",
-   "kind": "area",
-   "summary": "Make something, keep it, place it, play it, export it.",
-   "does": "1 Make a beat, chords or a loop. 2 Track tab: + Keep. 3 Tap a clip on the shelf, then a bar in its lane. 4 Split, chop, mute, repeat, change sound, mix. 5 Play, then Export to a WAV.",
-   "use": [
-    {
-     "how": "Touch",
-     "text": "Shelf, then lane. Tap a placed clip to choose; drag to move."
-    },
-    {
-     "how": "Keys",
-     "text": "Space plays, K keeps, E chops, I sound, X mix, Ctrl+B exports."
-    }
-   ],
-   "keys": [
-    "Space",
-    "K",
-    "E",
-    "I",
-    "X",
-    "Ctrl+B"
-   ],
-   "recall": "Track tab. Ctrl+Space plays from any page. Ctrl+Z undoes (40 steps).",
-   "tips": [
-    "Letters are commands on this page; Esc returns to Synth."
-   ],
-   "related": [
-    "track.shelf_clip0",
-    "track.track_keep",
-    "track.track_lanes",
-    "track.track_export"
-   ],
-   "ask": "How do I turn my beat and loop into a song?"
   },
   "scope-readouts": {
    "title": "SCOPE READOUTS",
@@ -7783,7 +4900,7 @@
    "title": "PANIC",
    "kind": "key",
    "summary": "Backspace silences everything at once.",
-   "does": "Stops all notes, the backing, beat, loop playback and track, and clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept. On the Track page Backspace first deletes a chosen clip.",
+   "does": "Stops all notes, the chord pads, the beat and loop playback, and clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept.",
    "use": [
     {
      "how": "Keys",
@@ -7797,7 +4914,7 @@
    "keys": [
     "Backspace"
    ],
-   "recall": "System page, Panic; Backspace anywhere. Ctrl+L restarts the loop; chord taps restart the backing.",
+   "recall": "System page, Panic; Backspace anywhere. Ctrl+L restarts the loop; a chord tap starts the pads again.",
    "tips": [],
    "related": [
     "system.panic"
@@ -7807,8 +4924,8 @@
   "tempo": {
    "title": "TEMPO (BPM)",
    "kind": "area",
-   "summary": "One tempo for the beat, backing, loop and track.",
-   "does": "Beats per minute, 40 to 240, shared by everything: backing, beat, loop and track, plus delay times and the metronome. It appears on the Synth header, and on the Tune (steps of 1), Backing and Beat pages (steps of 2).",
+   "summary": "One tempo for the beat and the loop.",
+   "does": "Beats per minute, 40 to 240, shared by the beat and the loop, plus delay times and the metronome. It appears on the Synth header, and on the Tune and Beat pages.",
    "use": [
     {
      "how": "Touch",
@@ -7828,8 +4945,7 @@
    "related": [
     "tune.bpm-",
     "tune.tap",
-    "beat.bpm3-",
-    "backing.bpm2-"
+    "beat.bpm3-"
    ],
    "ask": "How do I set the tempo?"
   },
@@ -7837,7 +4953,7 @@
    "title": "THE COPILOT (ROOK)",
    "kind": "area",
    "summary": "An AI helper that can play and edit the app with you.",
-   "does": "A copilot connects through a local control socket (off with --no-control). It can play notes, change the sound, set a beat or backing, and look at the screen. Its messages show in Chat, or in a strip at the bottom of any page.",
+   "does": "A copilot connects through a local control socket (off with --no-control). It can play notes, change the sound, set a beat, and look at the screen. Its messages show in Chat, or in a strip at the bottom of any page.",
    "use": [
     {
      "how": "Keys",
@@ -7865,31 +4981,28 @@
    "title": "WHAT UNDOES WHAT",
    "kind": "area",
    "summary": "Each part of the app has its own undo.",
-   "does": "Sounds: Ctrl+Z (24 steps): New, Mutate, slots, favourites; not slider moves or Store. Loop: Ctrl+U per layer. Track: Ctrl+Z on the Track page (40 steps; Shift for redo). Backing: Remove last or Clear. Beat: Erase.",
+   "does": "Sounds: Ctrl+Z (24 steps): New, Mutate, slots, favourites; not slider moves or Store. Loop: Ctrl+U per layer. Beat: Erase. Chord pads: tap a held chord or drone again.",
    "use": [
     {
      "how": "Keys",
-     "text": "Ctrl+Z (Sound or Track), Ctrl+U (loop)."
+     "text": "Ctrl+Z (sound), Ctrl+U (loop)."
     },
     {
      "how": "Touch",
-     "text": "Undo buttons on Sound, Synth and Track pages."
+     "text": "Undo buttons on the Sound and Synth pages."
     }
    ],
    "keys": [
     "Ctrl+Z",
-    "Ctrl+U",
-    "Ctrl+Backspace",
-    "Ctrl+X"
+    "Ctrl+U"
    ],
-   "recall": "Sound page Undo; Synth page Undo (loop); Track page Undo. Final: Store, Delete, deleting a shelf clip.",
+   "recall": "Sound page Undo; Synth page Undo (loop). Final: Store, Delete.",
    "tips": [
-    "Ctrl+Z means sound undo everywhere except the Track page."
+    "Ctrl+Z is sound undo on every page."
    ],
    "related": [
     "sound.undosound",
     "synth.loop_undo",
-    "track.track_undo",
     "concepts.recall"
    ],
    "ask": "Which Undo button undoes what?"
@@ -7988,7 +5101,7 @@
    "title": "KEY LIST ROWS",
    "kind": "list",
    "summary": "A key (left) and what it does (right), for your keymap.",
-   "does": "Each row names a key or key combination and says what it does. The list follows your keymap, so if you remapped keys it shows your keys. Four lists: playing, commands, beat, track.",
+   "does": "Each row names a key or key combination and says what it does. The list follows your keymap, so if you remapped keys it shows your keys. Three lists: playing, commands, beat.",
    "use": [
     {
      "how": "Touch",

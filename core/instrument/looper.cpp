@@ -28,8 +28,8 @@ void Instrument::resetLayerPart(int li) {
 void Instrument::loopPedal() {
     switch (loopState) {
     case L_EMPTY:
-        if (backingActive() || beatPlaying || trackPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
-        else { beat = 0; progOrigin = 0; recStartBeat = 4; lastPulseStep = lastArpStep = -1; }
+        if (padsActive() || beatPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
+        else { beat = 0; recStartBeat = 4; }
         loopState = L_COUNTIN;
         break;
     case L_COUNTIN:
@@ -93,21 +93,21 @@ void Instrument::loopPlayStop() {
         for (int i = 0; i < kLayers; ++i) partOff(2 + i, false);
         loopState = L_STOPPED;
     } else if (loopState == L_STOPPED && nLayers > 0) {
-        loopStart = (backingActive() || beatPlaying || trackPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
+        loopStart = (padsActive() || beatPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
         for (int i = 0; i < nLayers; ++i) resetLayerPart(i);
         loopState = L_PLAY;
     }
 }
 
-void Instrument::applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches, bool keepSound) {
+void Instrument::applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches) {
     switch (e.op) {
     case OP_ON: opOn(part, e.slot, e.a, e.b); break;
     case OP_GLIDE: opGlide(part, e.slot, e.a); break;
     case OP_OFF: opOff(part, e.slot); break;
     case OP_BEND: bendTarget[part] = e.a; break;
     case OP_XY: applyXY(part, e.slot & 0x0f, e.a, e.b, (e.slot & 0x80) != 0, (e.slot & 0x40) != 0); break;
-    case OP_PATCH: if (!keepSound && e.slot < nPatches) parts[part].patch = patches[e.slot]; break;
-    case OP_PARAM: if (!keepSound && e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
+    case OP_PATCH: if (e.slot < nPatches) parts[part].patch = patches[e.slot]; break;
+    case OP_PARAM: if (e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
     }
 }
 

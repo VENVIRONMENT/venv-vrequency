@@ -85,9 +85,7 @@ private:
     QJsonObject cmdFavourite(const QJsonObject &a, QString &e);
     QJsonObject cmdPlayControls(const QString &cmd, const QJsonObject &a, QString &e); // scale tempo octave bend sustain
     QJsonObject cmdLoop(const QJsonObject &a, QString &e);
-    QJsonObject cmdBacking(const QJsonObject &a, QString &e);
     QJsonObject cmdBeat(const QJsonObject &a, QString &e);
-    QJsonObject cmdTrack(const QJsonObject &a, QString &e);
     QJsonObject cmdPage(const QJsonObject &a, QString &e);
     QJsonObject cmdTour(const QJsonObject &a, QString &e);
     QJsonObject cmdGuide(const QString &cmd, const QJsonObject &a, QString &e); // highlight, unhighlight, zones

@@ -1,8 +1,6 @@
 # app/pages
 target_sources(vrequency PRIVATE
   page.h
-  backing/backing_page.cpp
-  backing/backing_page.h
   beat/beat_grid.cpp
   beat/beat_page.cpp
   beat/beat_page.h
@@ -40,20 +38,6 @@ target_sources(vrequency PRIVATE
   system/system_page.cpp
   system/system_page.h
   system/system_status.cpp
-  track/track_arrange.cpp
-  track/track_chop.cpp
-  track/track_clips.cpp
-  track/track_draw.cpp
-  track/track_edit.cpp
-  track/track_export.cpp
-  track/track_keys.cpp
-  track/track_mixer.cpp
-  track/track_page.cpp
-  track/track_sound.cpp
-  track/track_sound_view.cpp
-  track/track_tools.cpp
-  track/track_layout.h
-  track/track_page.h
   tune/listener.cpp
   tune/listener.h
   tune/tune_listen.cpp

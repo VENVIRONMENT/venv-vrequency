@@ -17,7 +17,7 @@ void SystemPage::paintSessions() {
         if (k >= sessions.size()) { ui.frame(r, GRAT); continue; }
         QString path = sessions[k];
         ui.button(r, QString("session%1").arg(k), QFileInfo(path).completeBaseName(), false, [this, path] {
-            sh.toast(sh.loadSession(path) ? QString("Loaded %1: press play on the loop / backing").arg(QFileInfo(path).completeBaseName()) : QString("Could not read that session"), 2600);
+            sh.toast(sh.loadSession(path) ? QString("Loaded %1: press play on the loop or tap a chord").arg(QFileInfo(path).completeBaseName()) : QString("Could not read that session"), 2600);
         });
     }
 }

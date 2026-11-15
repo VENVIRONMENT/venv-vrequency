@@ -32,7 +32,6 @@ void ctrl(MainWindow &w, int k);                                  // the same wi
 // A press and release in one place. Each kind of tap keeps the finger number it has always used.
 void tapAt(MainWindow &w, QPointF at, int finger);
 void tap(MainWindow &w, const QString &zone);                     // the middle of a zone (finger 7)
-void touch(MainWindow &w, QPointF at);                            // a point on the Track page (finger 3)
 void tourTapAt(MainWindow &w, QPointF at);                        // the tour checks' own finger (9)
 void tourTap(MainWindow &w, const QString &zone);
 
@@ -42,19 +41,6 @@ struct Context {
     td::Instrument &inst;
     AudioOut &audio;
     const QString &shotsDir;   // where --shots wants its pictures, or empty
-};
-
-// ---- the Track page ----
-// Its lane area as it was when read: the middle of a bar on a lane, for a touch there.
-struct LaneGrid {
-    QRectF r;
-    QPointF cell(int lane, double bar) const { return QPointF(r.left() + (bar + 0.5) * r.width() / 8.0, r.top() + 2 + lane * 70 + 33); }
-};
-// What the parts of the Track checks hand on.
-struct TrackState {
-    LaneGrid lanes;
-    int loopClip = -1, beatClip = -1;   // the clips the sound picker worked on
-    int otherKit = 0;                   // the kit it picked for the beat clip
 };
 
 // ---- the control socket: a real client in this process, talking over the real socket ----
