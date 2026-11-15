@@ -30,6 +30,7 @@ void testLooper();
 void testSessionRoundTrip();
 void testPatchSwitchClicks();
 void testAnalysis();
+void testWarpGolden();
 
 int main(int argc, char **argv) {
     if (argc > 1 && std::strcmp(argv[1], "--bench") == 0) { bench(); return 0; }
@@ -51,6 +52,7 @@ int main(int argc, char **argv) {
     testSessionRoundTrip();
     testPatchSwitchClicks();
     testAnalysis();
+    testWarpGolden();
     std::printf("\n%d checks passed, %d failed\n", g_pass, g_fail);
     return g_fail ? 1 : 0;
 }
