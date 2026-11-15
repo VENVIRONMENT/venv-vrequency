@@ -1,10 +1,12 @@
 // venv-vrequency — the oscilloscope on the Synth page. It shows the instrument's real output:
 // triggered so the wave stands still, with its own time and voltage scales (they follow the signal
-// automatically and never affect the pitch), measured frequency and level, and either a 3D stack
-// of the latest cycles or a fading white-phosphor trace. Touching it is the X-Y sound control.
-// This file lays the screen out; scope_measure.cpp measures, scope_trace.cpp draws the trace and
-// scope_stack.cpp the stack.
+// automatically and never affect the pitch), measured frequency and level, in one of six views
+// that the 3D button cycles: the 3D stack of the latest cycles, the spectrum, the waterfall of
+// spectra, the phase figure, the level history, or the fading white-phosphor line. Touching it
+// is the X-Y sound control. This file lays the screen out and switches the views; the others
+// draw the views (see scope.h).
 #include "app/pages/synth/scope.h"
+#include "app/sounds/sounds.h"
 #include "app/ui/palette.h"
 #include "audio/audio.h"
 #include <QPainter>
@@ -29,6 +31,18 @@ QString noteText(float midi) {
     return QString("%1%2").arg(noteName(n)).arg(n / 12 - 1);
 }
 } // namespace
+
+const char *Scope::modeShort(Mode m) {
+    static const char *names[M_COUNT] = {"3D", "SPEC", "FALL", "PHASE", "LEVEL", "LINE"};
+    return names[m];
+}
+
+const char *Scope::cycleMode() {
+    static const char *longNames[M_COUNT] = {"3D stack", "spectrum", "waterfall", "phase", "level", "line"};
+    mode = (Mode)((mode + 1) % M_COUNT);
+    layerCount = 0; figCount = 0; lvlClock.invalidate();
+    return longNames[mode];
+}
 
 // The graticule is drawn once: a dotted grid, ticks on the centre axes.
 void Scope::paintGraticule(QRectF gr, qreal div) {
@@ -57,7 +71,7 @@ void Scope::paintMarkers(QRectF xy, QRectF gr) {
     ui.g->setPen(Qt::NoPen);
     ui.g->setBrush(INK);
     qreal gy = gr.center().y();
-    if (!stackView) { // trigger and ground markers belong to the moving line
+    if (mode == M_LINE) { // trigger and ground markers belong to the moving line
         QPainterPath tm;
         tm.moveTo(gr.center().x() - 5, gr.y() + 1); tm.lineTo(gr.center().x() + 5, gr.y() + 1); tm.lineTo(gr.center().x(), gr.y() + 8); tm.closeSubpath();
         ui.g->drawPath(tm);
@@ -93,8 +107,12 @@ void Scope::paintReadouts(QRectF xy, QRectF gr) {
     ui.g->fillRect(band, INK);
     ui.g->fillRect(QRectF(band.x() + 3, band.y() + 2, 14, 14), BG);
     ui.txt(QRectF(band.x() + 3, band.y() + 2, 14, 14), "1", 12, INK, Qt::AlignCenter, true);
-    ui.txt(QRectF(band.x() + 24, band.y(), 80, 18), vdText(vdIdx), 13, BG, L, true);
-    const QString tb = !stackView ? tbText(tbIdx) : (period > 8 ? QString("1 cycle") : QString("20ms"));
+    const QString vd = mode == M_SPECTRUM || mode == M_WATERFALL ? QString("90dB") : mode == M_LEVEL ? QString("54dB")
+                     : mode == M_PHASE ? QString("Auto") : vdText(vdIdx);
+    ui.txt(QRectF(band.x() + 24, band.y(), 80, 18), vd, 13, BG, L, true);
+    const QString tb = mode == M_LINE ? tbText(tbIdx) : mode == M_SPECTRUM ? QString("Spectrum") : mode == M_WATERFALL ? QString("Waterfall")
+                     : mode == M_PHASE ? QString("T/4") : mode == M_LEVEL ? QString("4 s")
+                     : (period > 8 ? QString("1 cycle") : QString("20ms"));
     ui.txt(QRectF(band.x() + 104, band.y(), 90, 18), tb, 13, BG, L, true);
     QString trg = !sh.audio.streaming() ? "Stop" : (trigd ? "Trig'd" : "Auto");
     ui.txt(QRectF(band.x() + 200, band.y(), 70, 18), trg, 13, BG, L, true);
@@ -106,6 +124,10 @@ void Scope::paintReadouts(QRectF xy, QRectF gr) {
     QString nt = "--";
     for (int r = kStrings - 1; r >= 0; --r)
         if (u.str[r].gate) { nt = noteText(u.str[r].note + u.bend); break; }
+    if (mode == M_SPECTRUM || mode == M_WATERFALL || mode == M_PHASE || mode == M_LEVEL) {
+        paintViewReadouts(ml, fq, nt);
+        return;
+    }
     ui.txt(ml, QString("Freq(1): %1").arg(fq), 13, INK, L);
     ui.txt(ml.adjusted(170, 0, 0, 0), QString("Pk-Pk(1): %1").arg(pk), 13, INK, L);
     ui.txt(ml.adjusted(340, 0, 0, 0), QString("Note: %1").arg(nt), 13, INK, L);
@@ -113,14 +135,40 @@ void Scope::paintReadouts(QRectF xy, QRectF gr) {
         ui.txt(ml, QString("X %1%  Y %2%").arg((int)(u.xyX * 100)).arg((int)(u.xyY * 100)), 13, INK, Qt::AlignRight | Qt::AlignVCenter);
 }
 
+// The measurement line of the spectrum, waterfall, phase and level views.
+void Scope::paintViewReadouts(QRectF ml, const QString &freq, const QString &note) {
+    QString b, c;
+    if (mode == M_PHASE) {
+        b = QString("Delay: %1ms").arg(figDelayMs, 0, 'f', 2);
+        c = ratioText();
+    } else if (mode == M_LEVEL) {
+        const float pk = lvl[Scope::kLvl - 1];
+        b = pk > 1e-4f ? QString("Peak: %1dB").arg(20.0f * std::log10(pk), 0, 'f', 1) : QString("Peak: --");
+        c = QString("Note: %1").arg(note);
+    } else {
+        b = peakHz > 0 ? QString("Peak: %1").arg(hzText(peakHz)) : QString("Peak: ----");
+        c = QString("Cutoff: %1").arg(hzText(sh.soundShelf().lead.p[P_CUTOFF]));
+    }
+    ui.txt(ml, QString("Freq(1): %1").arg(freq), 13, INK, L);
+    ui.txt(ml.adjusted(170, 0, 0, 0), b, 13, INK, L);
+    ui.txt(ml.adjusted(340, 0, 0, 0), c, 13, INK, L);
+}
+
 void Scope::draw(QRectF xy) {
     const qreal div = 46;
     const QRectF gr(xy.x() + 22, xy.y() + 21, kTraceW, kTraceH);
     ui.frame(xy, ui.isDown("xy") ? INK : LOW, BG);
-    if (!stackView) paintGraticule(gr, div);
+    if (mode == M_LINE) paintGraticule(gr, div);
+    if (mode != M_LEVEL) lvlClock.invalidate();
     const View v = acquire();
-    if (stackView) { captureCycle(v); paintStack(gr, div); }
-    else paintTrace(v, gr, div);
+    switch (mode) {
+    case M_STACK: captureCycle(v); paintStack(gr, div); break;
+    case M_SPECTRUM: computeSpectrum(v); paintSpectrum(gr); break;
+    case M_WATERFALL: computeSpectrum(v); captureSpectrumRow(); paintStack(gr, div, true); paintFallLabels(gr); break;
+    case M_PHASE: capturePhase(v); paintPhase(gr, div); break;
+    case M_LEVEL: updateLevel(); paintLevel(gr); break;
+    default: paintTrace(v, gr, div); break;
+    }
     paintMarkers(xy, gr);
     paintReadouts(xy, gr);
 }

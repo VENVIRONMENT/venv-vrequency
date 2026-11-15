@@ -26,7 +26,10 @@ target_sources(vrequency PRIVATE
   synth/chord_pads.h
   synth/scope.cpp
   synth/scope.h
+  synth/scope_level.cpp
   synth/scope_measure.cpp
+  synth/scope_phase.cpp
+  synth/scope_spectrum.cpp
   synth/scope_stack.cpp
   synth/scope_trace.cpp
   synth/synth_header.cpp

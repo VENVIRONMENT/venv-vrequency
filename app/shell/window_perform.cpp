@@ -46,7 +46,7 @@ void MainWindow::perform(int act, bool shift) {
     case A_TOUR: if (tourView) { if (tourView->isOpen()) tourView->close(); else tourView->open(QString(), QString(), false, nullptr, true); } break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
-    case A_SCOPE_VIEW: toast(synthPage.toggleScopeView() ? "Scope: 3D stack" : "Scope: line", 900); break;
+    case A_SCOPE_VIEW: toast(QString("Scope: ") + synthPage.cycleScopeView(), 900); break;
     case A_POLY:
         releaseAllKeys(); // the held keys belong to the old way of playing
         set(S_POLY, u.set.poly ? 0 : 1);
