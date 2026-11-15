@@ -12,10 +12,18 @@ target_sources(vrequency PRIVATE
   help/help_page.cpp
   help/help_page.h
   help/help_rows.cpp
+  sound/sound_curves.cpp
+  sound/sound_deep.cpp
+  sound/sound_env_curve.cpp
   sound/sound_favourites.cpp
   sound/sound_page.cpp
   sound/sound_page.h
+  sound/sound_pictures.h
+  sound/sound_curves.h
+  sound/sound_pictures_draw.h
   sound/sound_params.cpp
+  sound/sound_pictures.cpp
+  sound/sound_pictures_filter.cpp
   synth/chord_pads.cpp
   synth/chord_pads.h
   synth/scope.cpp

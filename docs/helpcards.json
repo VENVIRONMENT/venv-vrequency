@@ -3157,7 +3157,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.1/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "Attack above 300 ms makes quick playing disappear."
      ],
@@ -3201,7 +3201,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.3/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "0 gives instant jumps without a slide."
      ],
@@ -3223,7 +3223,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.3/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "Drive adds loudness; watch the Limit tag."
      ],
@@ -3245,7 +3245,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.3/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "Slow, sparse playing sounds best with echoes."
      ],
@@ -3765,7 +3765,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Needs SPREAD above 0 to be audible."
      ],
@@ -3787,7 +3787,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Pair high UNISON with 10 to 20 cents."
      ],
@@ -3831,7 +3831,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 1/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Short decay plus noise makes percussion."
      ],
@@ -3897,7 +3897,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.1/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.2/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "Attack above 300 ms makes quick playing disappear."
      ],
@@ -4073,7 +4073,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -4095,7 +4095,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -4117,7 +4117,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -4139,7 +4139,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Only audible when F.ENV is not 0."
      ],
@@ -4161,7 +4161,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 2/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Low K.TRACK makes high notes dull."
      ],
@@ -4271,7 +4271,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Slow LFO HZ with LFO>CUT 1 sounds like a pad breathing."
      ],
@@ -4293,7 +4293,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Keep it under 30% for a subtle shimmer."
      ],
@@ -4315,7 +4315,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Set WAVE A to SQUARE first."
      ],
@@ -4337,7 +4337,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.3/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "0 gives instant jumps without a slide."
      ],
@@ -4359,7 +4359,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.3/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "Drive adds loudness; watch the Limit tag."
      ],
@@ -4381,7 +4381,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "Chorus and reverb together sound big."
      ],
@@ -4403,7 +4403,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound page, quick sliders (also All parameters p.3/4). Re-tap the sound's slot to reload it.",
+     "recall": "Sound page, quick sliders (also All parameters p.4/4). Re-tap the sound's slot to reload it.",
      "tips": [
       "Slow, sparse playing sounds best with echoes."
      ],
@@ -4425,7 +4425,7 @@
       }
      ],
      "keys": [],
-     "recall": "Sound > All parameters, page 3/4. Re-tap the sound's slot to reload the saved version.",
+     "recall": "Sound > All parameters, page 4/4. Re-tap the sound's slot to reload the saved version.",
      "tips": [
       "1/8 dotted is the classic rhythmic echo."
      ],
@@ -4522,6 +4522,72 @@
       "sound.newsound"
      ],
      "ask": "What does LEVEL do to the sound?"
+    },
+    "picosc": {
+     "title": "Oscillators picture",
+     "kind": "readout",
+     "summary": "One cycle of the tone, before the filter.",
+     "does": "Drawn from the sound's own settings: wave A filled to its centre line, wave B dashed over it at its mix and pitch. FM bends A; SUB adds a deeper sine. It moves as you drag.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Nothing to tap. Drag WAVE, B MIX, B PITCH, WIDTH or FM and watch it change."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound > All parameters, page 1/4. It only shows; it is not touchable.",
+     "tips": [
+      "Two near-equal pitches make a slow beat: try DETUNE."
+     ],
+     "related": [
+      "sound-deep.param0",
+      "sound-deep.param2"
+     ],
+     "ask": "What does the oscillators picture show?"
+    },
+    "picenv": {
+     "title": "Envelope picture",
+     "kind": "readout",
+     "summary": "How loud a note is, from press to fade.",
+     "does": "Attack, decay, sustain, then release after the key is let go, on a square-root time scale so short attacks stay visible. Dotted rules mark the stage ends. A dot follows a note sounding now, roughly.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Nothing to tap. Drag ATTACK, DECAY, SUSTAIN or RELEASE and watch it change."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound > All parameters, page 2/4. It only shows; it is not touchable.",
+     "tips": [
+      "The dot is timed from when the screen saw the key go down."
+     ],
+     "related": [
+      "sound-deep.param11",
+      "sound-deep.param14"
+     ],
+     "ask": "What does the envelope picture show?"
+    },
+    "picfilter": {
+     "title": "Filter picture",
+     "kind": "readout",
+     "summary": "What the filter lets through, low to high.",
+     "does": "The filter's real response from 30 Hz to 16 kHz; the dot is the cutoff. The dashed curve is the cutoff at the top of the filter envelope (F.ENV).",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Nothing to tap. Drag FILTER, CUTOFF, RESO or F.ENV and watch it change."
+      }
+     ],
+     "keys": [],
+     "recall": "Sound > All parameters, page 2/4. It only shows; it is not touchable.",
+     "tips": [
+      "Raise RESO for a peak at the dot; F.ENV opens the dashed curve."
+     ],
+     "related": [
+      "sound-deep.param16",
+      "sound-deep.param17"
+     ],
+     "ask": "What does the filter picture show?"
     }
    },
    "recall": "Sound tab, then All parameters. Prev and Next turn the four pages."

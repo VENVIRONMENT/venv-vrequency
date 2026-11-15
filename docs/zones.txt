@@ -187,6 +187,9 @@ sound-deep param6
 sound-deep param7
 sound-deep param8
 sound-deep param9
+sound-deep picenv
+sound-deep picfilter
+sound-deep picosc
 sound-deep slot0
 sound-deep slot1
 sound-deep slot2

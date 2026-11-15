@@ -53,16 +53,3 @@ void SoundPage::paintQuick() {
     static const int macro[8] = {P_CUTOFF, P_RESO, P_ATK, P_REL, P_GLIDE, P_DRIVE, P_DLYMIX, P_REVMIX};
     for (int k = 0; k < 8; ++k) paramSlider(QRectF(16 + (k % 2) * 348, 296 + (k / 2) * 58, 340, 52), macro[k]);
 }
-
-void SoundPage::paintDeep() {
-    const int per = 12, pages = (P_COUNT + per - 1) / per;
-    deepPage = qBound(0, deepPage, pages - 1);
-    for (int k = 0; k < per; ++k) {
-        int p = deepPage * per + k;
-        if (p >= P_COUNT) break;
-        paramSlider(QRectF(16 + (k % 2) * 348, 296 + (k / 2) * 58, 340, 52), p);
-    }
-    ui.button(QRectF(16, 650, 160, 54), "deepprev", QString::fromUtf8("‹ Prev"), false, [this, pages] { deepPage = (deepPage + pages - 1) % pages; });
-    ui.txt(QRectF(176, 650, 368, 54), QString("Page %1 / %2").arg(deepPage + 1).arg(pages), 14, MID);
-    ui.button(QRectF(544, 650, 160, 54), "deepnext", QString::fromUtf8("Next ›"), false, [this, pages] { deepPage = (deepPage + 1) % pages; });
-}

@@ -7,7 +7,7 @@
 using namespace td;
 using namespace pal;
 
-SoundPage::SoundPage(Shell &s) : Page(s), sounds(s.soundShelf()) {}
+SoundPage::SoundPage(Shell &s) : Page(s), sounds(s.soundShelf()), pics(s.ui) {}
 
 void SoundPage::disarm() { deepEdit = false; favDelete = false; sounds.slotSave = false; }
 
