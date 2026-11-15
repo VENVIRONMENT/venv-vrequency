@@ -55,7 +55,8 @@ void FreqPage::paintRow(int i, QRectF r) {
     ui.zone(ob, zn::at(zn::freqon, i), [this, i, on](QPointF, int ph) { if (ph == PH_PRESS) { select(i); setField(i, FF_ON, on ? 0 : 1); } });
 }
 
-// One warp cell: a name, its value and a bar; a touch sets it by where it lands (and drags).
+// One warp cell: a name, its value and a bar. A drag sets it by where the finger is; a tap with no drag
+// sets it to 0 (Filter: open).
 void FreqPage::cell(QRectF r, const char *zone, const QString &label, const QString &value, float norm, int field,
                     float lo, float hi, bool logScale) {
     const bool dn = ui.isDown(zone);
@@ -67,9 +68,14 @@ void FreqPage::cell(QRectF r, const char *zone, const QString &label, const QStr
     ui.g->fillRect(QRectF(bar.x(), bar.y(), std::floor(bar.width() * qBound(0.0f, norm, 1.0f)), bar.height()), INK);
     if (field < 0) return; // the caller registers the zone
     ui.zone(r, zone, [this, bar, field, lo, hi, logScale](QPointF p, int ph) {
-        if (ph == PH_RELEASE) return;
-        const float n = qBound(0.0f, (float)((p.x() - bar.x()) / bar.width()), 1.0f);
-        setField(-1, field, logScale ? fromLog(n, lo, hi) : lo + n * (hi - lo));
+        if (ph == PH_PRESS) { cellX = (float)p.x(); cellDragged = false; return; }
+        if (ph == PH_MOVE && (cellDragged || std::fabs((float)p.x() - cellX) > 6)) {
+            cellDragged = true;
+            const float n = qBound(0.0f, (float)((p.x() - bar.x()) / bar.width()), 1.0f);
+            setField(-1, field, logScale ? fromLog(n, lo, hi) : lo + n * (hi - lo));
+        } else if (ph == PH_RELEASE && !cellDragged) {
+            setField(-1, field, logScale ? hi : lo);
+        }
     });
 }
 

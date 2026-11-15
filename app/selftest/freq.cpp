@@ -43,8 +43,16 @@ void testFreq(Context &ctx) {
     check(!F().tone[2].on, "ON / off switches a tone out");
     w.shot(); tap(w, zn::freqmod); wait(60);
     check(F().mod == FM_FM, "a tap on 2 > 1 goes from OFF to FM");
-    w.shot(); tap(w, zn::freqfilter); wait(60);
-    check(F().warp.cutoff > 500 && F().warp.cutoff < 1500, QString("FILTER moves in octaves: its middle is about 850 Hz (%1)").arg(F().warp.cutoff, 0, 'f', 0));
+    { // a drag sets a warp cell where the finger is; a tap with no drag sets it to 0
+        const QRectF fz = w.zoneRect(zn::freqfilter);
+        w.pointer(7, fz.center() - QPointF(30, 0), PH_PRESS); w.pointer(7, fz.center(), PH_MOVE);
+        w.shot(); w.pointer(7, fz.center(), PH_RELEASE); wait(60);
+        check(F().warp.cutoff > 500 && F().warp.cutoff < 1500, QString("FILTER moves in octaves: its middle is about 850 Hz (%1)").arg(F().warp.cutoff, 0, 'f', 0));
+        tap(w, zn::freqfilter); wait(60);
+        check(F().warp.cutoff >= kWarpCutMax - 1, "a tap on FILTER opens it again");
+        inst.freqSet(-1, FF_DRIVE, 0.6f); wait(30); tap(w, zn::freqdrive); wait(60);
+        check(F().warp.drive == 0, "and a tap on DRIVE sets it to 0");
+    }
     tap(w, zn::freqmod); wait(60); w.shot(); tap(w, zn::freqmod); wait(60); w.shot();
     inst.freqSet(-1, FF_FILTER, kWarpCutMax); wait(30);
     check(F().mod == FM_OFF, "and two more taps go round through RING to OFF");

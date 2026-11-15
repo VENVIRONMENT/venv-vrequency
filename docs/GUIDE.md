@@ -628,7 +628,7 @@ is a peak.
 never clicks. Try this: Hold, select tone 2, and press `Right` a few times. The beat speeds up by half a
 swell a second each time.
 
-**Bend and warp.** Six cells; tap or drag across each one.
+**Bend and warp.** Six cells. Drag across one to set it; a tap on any but 2 > 1 sets it back to 0 (Filter: open).
 
 | Cell | Does |
 |---|---|

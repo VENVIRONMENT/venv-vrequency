@@ -42,6 +42,8 @@ private:
     float scale = 0.05f, peak = 0;           // the views' full height (from the 1.5 s envelope), its peak
     float modDragX = -1, modDragAmt = 0;     // "2 > 1": a drag sets the amount, a tap cycles the mode
     bool modDragged = false;
+    float cellX = -1;                        // the other warp cells: a drag sets the value, a tap sets it to 0
+    bool cellDragged = false;
 
     void paintScope(QRectF r);               // freq_views.cpp
     void paintCycles(QRectF r);

@@ -3550,7 +3550,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap or drag across the cell."
+       "text": "Drag across the cell to set it. A tap sets it to 0."
       }
      ],
      "keys": [],
@@ -3570,7 +3570,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap or drag across the cell: left is dark, right is open."
+       "text": "Drag across the cell: left is dark, right is open. A tap opens it."
       }
      ],
      "keys": [],
@@ -3592,7 +3592,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap or drag across the cell."
+       "text": "Drag across the cell to set it. A tap sets it to 0."
       }
      ],
      "keys": [],
@@ -3612,7 +3612,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap or drag across the cell; the far left is off."
+       "text": "Drag across the cell; the far left is off. A tap turns it off."
       }
      ],
      "keys": [],
@@ -3634,7 +3634,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap or drag across the cell."
+       "text": "Drag across the cell to set it. A tap sets it to 0."
       }
      ],
      "keys": [],
