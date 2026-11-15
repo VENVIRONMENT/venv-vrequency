@@ -19,6 +19,7 @@ public:
     void paint() override;
     bool key(int qtKey, int plainAct) override;
     void tick() override;
+    void disarm() override { hzEdit = -1; }  // leaving the page drops a half-typed Hz
 
     // what the window, the tour and the self-test reach
     void select(int tone);                   // 0..3
@@ -29,6 +30,8 @@ public:
     void toggle(int field);                  // FF_HOLD, FF_GATE or FF_KEYS
     void stepRate(int dir);                  // GATE's rate, one step up or down
     void snap() { setField(sel, td::FF_SNAP, 0); }
+    void typeHz(int tone);                   // the tone's Hz is typed: digits, Enter sets it, Esc leaves it
+    int typingHz() const { return hzEdit; }
     void load(const QJsonObject &state);
     void save(QJsonObject &state) const;
 
@@ -44,6 +47,11 @@ private:
     bool modDragged = false;
     float cellX = -1;                        // the other warp cells: a drag sets the value, a tap sets it to 0
     bool cellDragged = false;
+    int hzEdit = -1;                         // the tone whose Hz is being typed, or -1
+    QString hzText;                          // what has been typed so far
+    float hzDragX = -1, hzDragHz = 0;        // a drag across a tone's Hz scrubs it (40 px a semitone)
+    bool hzDragged = false;
+    bool hzKey(int qtKey);                   // a key while typing an Hz
 
     void paintScope(QRectF r);               // freq_views.cpp
     void paintCycles(QRectF r);

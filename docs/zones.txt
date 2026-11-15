@@ -61,6 +61,10 @@ freq freqfilter
 freq freqfold
 freq freqgate
 freq freqhold
+freq freqhz0
+freq freqhz1
+freq freqhz2
+freq freqhz3
 freq freqkeys
 freq freqlevel0
 freq freqlevel1

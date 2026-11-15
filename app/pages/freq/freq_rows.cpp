@@ -33,7 +33,24 @@ void FreqPage::paintRow(int i, QRectF r) {
     ui.frame(wave, wd ? INK : (on ? MID : GRAT), wd ? INK : BG);
     ui.txt(wave, freqWaveName(t.wave), 12, wd ? BG : tc, Qt::AlignCenter, true);
     ui.zone(wave, zn::at(zn::freqwave, i), [this, i](QPointF, int ph) { if (ph == PH_PRESS) cycleWave(i); });
-    ui.txt(QRectF(x + 128, cy, 118, h), freqHz(t.hz), 14, tc, kRight, true);
+    const QRectF hzr(x + 126, cy + 4, 124, h - 8);
+    if (hzEdit == i) { // typing: the digits so far, white on black
+        ui.g->fillRect(hzr, INK);
+        ui.txt(hzr.adjusted(0, 0, -4, 0), QString("%1_ Hz").arg(hzText), 14, BG, kRight, true);
+    } else {
+        if (ui.isDown(zn::at(zn::freqhz, i))) ui.frame(hzr, INK, BG);
+        ui.txt(QRectF(x + 128, cy, 118, h), freqHz(t.hz), 14, tc, kRight, true);
+    }
+    ui.zone(hzr, zn::at(zn::freqhz, i), [this, i](QPointF p, int ph) { // a drag scrubs, a tap types
+        if (ph == PH_PRESS) { select(i); hzDragX = (float)p.x(); hzDragHz = u.freq.tone[i].hz; hzDragged = false; return; }
+        const float dx = (float)p.x() - hzDragX;
+        if (ph == PH_MOVE && (hzDragged || std::fabs(dx) > 6)) {
+            hzDragged = true; hzEdit = -1;
+            setField(i, FF_HZ, hzDragHz * std::pow(2.0f, dx / 480.0f));
+        } else if (ph == PH_RELEASE && !hzDragged) {
+            if (hzEdit == i) hzKey(Qt::Key_Return); else typeHz(i);
+        }
+    });
     QString note;
     if (i > 0 && std::fabs(t.hz - t1.hz) <= kFreqNear) note = QString("%1%2").arg(t.hz >= t1.hz ? "+" : "-").arg(std::fabs(t.hz - t1.hz), 0, 'f', 2);
     else { char n[8]; freqNoteName(t.hz, n, sizeof n); note = n; }

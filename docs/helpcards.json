@@ -3462,6 +3462,44 @@
       "freqwave3"
      ]
     },
+    "freqhz0": {
+     "title": "HZ",
+     "kind": "slider",
+     "summary": "The tone's frequency: tap to type it, drag to scrub.",
+     "does": "Tap the Hz and type a number (a point for decimals), then Enter; Esc leaves it as it was. Drag sideways across it instead to scrub: 40 px is a semitone. 20 Hz to 18 kHz.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap the Hz, type e.g. 432, press Enter."
+      },
+      {
+       "how": "Touch",
+       "text": "Drag across the Hz: right is higher, left lower."
+      }
+     ],
+     "keys": [
+      "0..9",
+      ".",
+      "Backspace",
+      "Enter",
+      "Esc"
+     ],
+     "recall": "Freq page, the Hz in each tone row.",
+     "tips": [
+      "Type 221.5 under a 220 Hz tone 1 for a 1.5 Hz beat."
+     ],
+     "related": [
+      "freq.freqtone0",
+      "concepts.beating"
+     ],
+     "ask": "How do I set a tone to an exact Hz?",
+     "match": [
+      "freqhz0",
+      "freqhz1",
+      "freqhz2",
+      "freqhz3"
+     ]
+    },
     "freqlevel0": {
      "title": "LEVEL",
      "kind": "slider",

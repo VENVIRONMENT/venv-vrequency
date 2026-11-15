@@ -15,10 +15,12 @@ namespace {
 const float kRates[] = {0.25f, 0.5f, 1, 1.5f, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 25, 30, 40, 50};
 } // namespace
 
-// Arrows move the selected tone, 1-4 select one, and with KEYS on the letters set tone 1.
+// Arrows move the selected tone, 1-4 select one, and with KEYS on the letters set tone 1. While an Hz is
+// being typed the digits, Backspace, Enter and Esc go to it first.
 // Everything else (Ctrl, Enter, Backspace, Space, Tab, Esc, 5-0) is left to the window.
 bool FreqPage::key(int qtKey, int plainAct) {
     if (sh.keys.command) return false;       // Ctrl+key belongs to the command layer
+    if (hzEdit >= 0 && hzKey(qtKey)) return true;
     const bool shift = sh.keys.chromatic;
     if (plainAct == A_BEND_DOWN || plainAct == A_BEND_UP) {
         setField(sel, FF_NUDGE, (plainAct == A_BEND_UP ? 1.0f : -1.0f) * (shift ? 10.0f : 0.5f));
@@ -36,6 +38,46 @@ bool FreqPage::key(int qtKey, int plainAct) {
         sh.redraw();
         return true;
     }
+    return false;
+}
+
+void FreqPage::typeHz(int t) {
+    if (t < 0 || t >= kFreqTones) return;
+    select(t);
+    hzEdit = t;
+    hzText.clear();
+    sh.redraw();
+}
+
+// Typing an Hz: digits and a point add, Backspace takes one off, Enter sets it, Esc leaves it.
+// Any other key ends the typing and then does what it always does.
+bool FreqPage::hzKey(int k) {
+    const QString tx = sh.keys.text;
+    if (k == Qt::Key_Return || k == Qt::Key_Enter) {
+        bool ok = false;
+        const float v = hzText.toFloat(&ok);
+        const int t = hzEdit;
+        hzEdit = -1;
+        if (ok && v > 0) {
+            const float hz = qBound(kFreqHzMin, v, kFreqHzMax);
+            setField(t, FF_HZ, hz);
+            sh.toast(QString("Tone %1: %2").arg(t + 1).arg(freqHz(hz)), 900);
+        }
+        sh.redraw();
+        return true;
+    }
+    if (k == Qt::Key_Escape) { hzEdit = -1; sh.redraw(); return true; }
+    if (k == Qt::Key_Backspace) { hzText.chop(1); sh.redraw(); return true; }
+    const bool digit = (k >= Qt::Key_0 && k <= Qt::Key_9) || (tx.size() == 1 && tx[0].isDigit());
+    const bool point = k == Qt::Key_Period || tx == ".";
+    if (digit || (point && !hzText.contains('.'))) {
+        if (hzText.size() < 8) hzText += digit ? (tx.size() == 1 && tx[0].isDigit() ? tx : QString(QChar('0' + (k - Qt::Key_0)))) : QString(".");
+        sh.redraw();
+        return true;
+    }
+    if (point) return true;
+    hzEdit = -1;
+    sh.redraw();
     return false;
 }
 
@@ -116,7 +158,8 @@ void FreqPage::paint() {
     paintScope(QRectF(16, 84, 688, 170));
     paintCycles(QRectF(16, 260, 342, 74));
     paintSpectrum(QRectF(362, 260, 342, 74));
-    ui.section(340, QString("Tones  tap a row; 1-4 select, arrows move it (Shift: 10 Hz, up/down a semitone)"));
+    ui.section(340, hzEdit >= 0 ? QString("Tone %1  type the Hz, Enter sets it, Esc leaves it").arg(hzEdit + 1)
+                                : QString("Tones  tap an Hz to type it, drag it to scrub; arrows move the selected one"));
     for (int i = 0; i < kFreqTones; ++i) paintRow(i, QRectF(16, 362 + i * 42, 688, 38));
     paintWarp(530);
     paintSoftKeys(QRectF(16, 642, 688, 70));

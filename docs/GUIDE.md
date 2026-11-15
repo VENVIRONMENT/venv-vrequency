@@ -623,6 +623,8 @@ is a peak.
 | Level | Tap or drag the bar |
 | ON / off | Switches the tone in or out (its settings are kept) |
 
+**Typing or scrubbing an Hz.** Tap a tone's Hz and type the number you want (`.` for decimals, `Backspace` to fix), then `Enter`; `Esc` leaves it as it was. Or drag sideways across the Hz: 40 px is a semitone.
+
 **Moving a tone.** Select it (tap it, or press `1` to `4`), then `Left` / `Right` move it by 0.5 Hz
 (hold `Shift` for 10 Hz) and `Up` / `Down` by a semitone. Every change glides over about 20 ms, so it
 never clicks. Try this: Hold, select tone 2, and press `Right` a few times. The beat speeds up by half a

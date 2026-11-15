@@ -69,6 +69,23 @@ void testFreq(Context &ctx) {
     w.freqPage.select(1); inst.freqSet(1, FF_HZ, 331); w.shot(); tap(w, zn::freqsnap); wait(40);
     check(std::fabs(F().tone[1].hz - 330) < 0.01f, "SNAP puts tone 2 at 3:2 of tone 1 (331 Hz to 330)");
 
+    { // an Hz: tap it and type, or drag across it
+        w.shot(); tap(w, zn::at(zn::freqhz, 2)); wait(40);
+        for (int k : {Qt::Key_4, Qt::Key_3, Qt::Key_3, Qt::Key_Backspace, Qt::Key_2, Qt::Key_Period, Qt::Key_5}) press(w, k);
+        wait(40);
+        const QImage typing = w.shot();
+        if (!ctx.shotsDir.isEmpty()) typing.save(ctx.shotsDir + "/31-freq-type-hz.png");
+        check(w.freqPage.typingHz() == 2, "a tap on tone 3's Hz types into it");
+        press(w, Qt::Key_Return); wait(60);
+        check(std::fabs(F().tone[2].hz - 432.5f) < 1e-3f && w.freqPage.typingHz() < 0 && F().hold,
+              QString("4 3 3 Backspace 2 . 5 Enter sets it to 432.5 Hz, and Backspace did not panic (%1)").arg(F().tone[2].hz));
+        tap(w, zn::at(zn::freqhz, 2)); press(w, Qt::Key_9); press(w, Qt::Key_Escape); wait(40);
+        check(std::fabs(F().tone[2].hz - 432.5f) < 1e-3f && w.freqPage.typingHz() < 0, "Esc leaves it as it was");
+        const QPointF c = w.zoneRect(zn::at(zn::freqhz, 2)).center();
+        w.pointer(7, c, PH_PRESS); w.pointer(7, c + QPointF(40, 0), PH_MOVE); w.pointer(7, c + QPointF(40, 0), PH_RELEASE); wait(60);
+        check(std::fabs(F().tone[2].hz - 432.5f * std::pow(2.0f, 1 / 12.0f)) < 0.05f && w.freqPage.typingHz() < 0,
+              QString("a drag 40 px right scrubs it a semitone up (%1 Hz)").arg(F().tone[2].hz));
+    }
     key(w, Qt::Key_Q, true); wait(80);
     check(inst.uiState().voices > 0 && F().tone[0].hz == 220, "with KEYS off a letter plays the synth as on every page");
     key(w, Qt::Key_Q, false);

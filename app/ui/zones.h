@@ -80,6 +80,7 @@ inline constexpr char freqfilter[] = "freqfilter";
 inline constexpr char freqfold[] = "freqfold";
 inline constexpr char freqgate[] = "freqgate";
 inline constexpr char freqhold[] = "freqhold";
+inline constexpr char freqhz[] = "freqhz";   // family: a tone's Hz (drag scrubs it, tap types it)
 inline constexpr char freqkeys[] = "freqkeys";
 inline constexpr char freqlevel[] = "freqlevel";   // family: a tone's level bar
 inline constexpr char freqmod[] = "freqmod";
