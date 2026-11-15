@@ -10,8 +10,7 @@
 using namespace td;
 
 int PulsePicture::windowSamples(const PulsePad &p, float sr) {
-    const int len = PulseVoice::lengthSamples(p, sr);
-    return p.type == PT_TICK ? std::max(len, 24) : len;
+    return std::max(PulseVoice::lengthSamples(p, sr), 24);
 }
 
 const QImage &PulsePicture::get(const PulsePad &p, float rateHz, float sr, QSize size, bool centreLine) {

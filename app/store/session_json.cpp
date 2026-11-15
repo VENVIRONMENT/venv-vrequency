@@ -86,6 +86,7 @@ void pulseFromJson(const QJsonArray &a, td::PulsePad *pads) {
         if (p >= a.size() || !a[p].isObject()) continue;
         const QJsonObject o = a[p].toObject();
         const int t = td::pulseTypeFromKey(o["type"].toString().toUtf8().constData());
+        if (t < 0 && o.contains("type")) continue; // a kind that is gone (tick, hiss...): the whole default pad
         if (t >= 0) pads[p].type = t;
         pads[p].tone = (float)o["tone"].toDouble(pads[p].tone);
         pads[p].lengthMs = (float)o["length"].toDouble(pads[p].lengthMs);

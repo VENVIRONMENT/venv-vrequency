@@ -46,12 +46,13 @@ void testPulse(Context &ctx) {
     w.shot(); tap(w, zn::pulselevel); wait(60);
     check(std::fabs(inst.uiState().pulse[5].level - 0.5f) < 0.02f, "the LEVEL slider sets the level");
 
+    inst.pulseSet(5, PF_RATE, 40); wait(30);  // a fast repeat, so the strip fills quickly
     w.shot(); tap(w, zn::pulselatch); wait(300);
     check(inst.uiState().pulseLatched[5] && inst.uiState().pulsing, "LATCH keeps the selected pad going");
     const size_t kept = w.pulsePage.ticksKept();
     wait(300); w.shot();
-    check(w.pulsePage.ticksKept() > kept + 5, "a latched pulse train keeps adding clicks to the strip");
-    {   // the busiest the page gets: a 200 Hz train latched beside it fills the strip
+    check(w.pulsePage.ticksKept() > kept + 5, "a latched pad keeps adding hits to the strip");
+    {   // the busiest the page gets: a pad repeating at 200 Hz latched beside it fills the strip
         w.pulsePage.setLatch(1, true); inst.pulseSet(1, PF_RATE, 200); wait(1500); w.shot();
         QElapsedTimer t; t.start();
         for (int i = 0; i < 20; ++i) w.shot();
@@ -62,6 +63,7 @@ void testPulse(Context &ctx) {
     }
     tap(w, zn::at(zn::pad, 5)); wait(150);
     check(!inst.uiState().pulseLatched[5], "tapping the latched pad lets it go");
+    inst.pulseSet(5, PF_RATE, pulseDefault(5).rate);
     w.shot(); tap(w, zn::pulsesync); wait(60);
     check(inst.uiState().set.pulseSync, "SYNC switches tempo sync on");
     w.shot(); tap(w, zn::pulsesync); wait(60);
@@ -78,6 +80,16 @@ void testPulse(Context &ctx) {
     const QJsonArray pa = sj["pulse"].toArray();
     check(pa.size() == kPulsePads && std::fabs(pa[5].toObject()["tone"].toDouble() - tone) < 1 && sj["pulseSelected"].toInt() == 5 && !sj.contains("beat"),
           "the pads' settings and the selected pad are kept in the saved state (and no beat)");
+    {   // a state file from before the new kinds: a pad naming a kind that is gone loads as the default pad
+        QJsonArray old;
+        QJsonObject tick; tick["type"] = "tick"; tick["tone"] = 12000; tick["length"] = 1; tick["rate"] = 8; tick["level"] = 0.7;
+        QJsonObject thump; thump["type"] = "thump"; thump["tone"] = 50; thump["length"] = 300; thump["rate"] = 1; thump["level"] = 0.9;
+        old.append(tick); old.append(thump);
+        PulsePad got[kPulsePads];
+        store::pulseFromJson(old, got);
+        check(samePulse(got[0], pulseDefault(0)) && got[1].type == PT_THUMP && got[1].tone == 50,
+              "an old tick pad loads as the default pad; a kind that stayed keeps its settings");
+    }
     inst.set(S_VOLUME, vol0); inst.set(S_BPM, bpm0);
     w.setPage(PG_PLAY); wait(60);
 }

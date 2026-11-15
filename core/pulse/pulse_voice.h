@@ -27,21 +27,20 @@ public:
     float next(bool &onset, int &dur);
 
     static int lengthSamples(const PulsePad &p, float sr);   // how long one hit lasts
-    static int tickWidth(float tone, float sr);              // the tick's 1..3 samples
 
 private:
     bool on = false, runOn = false, fading = false;
     int padNo = 0, type = 0, pos = 0, len = 1, wait = 0, fadeLen = 1;
     float sr = 48000, tone = 1000, rate = 4, level = 0.8f, relGain = 1, relCoef = 0.99f;
-    float decay = 1, decayCoef = 1;   // exponential envelope, multiplied each sample
-    double ph = 0, gatePh = 0;        // sine phase, gate / click phase (0..1)
-    float gate = 0, gateK = 0.05f;    // the smoothed gate of the gated tone
-    float clickTau = 0.001f;
-    int clickAt = 0;                  // the sample the current click of a train began
-    float lp = 0, lpA = 1, lpNorm = 1;            // noise burst: one-pole low-pass
-    float ic1 = 0, ic2 = 0, svA1 = 0, svA2 = 0, svA3 = 0, svK = 0.5f, svNorm = 1; // hiss: band-pass
+    float decay = 1, decayCoef = 1;   // the main exponential envelope, multiplied each sample
+    float decay2 = 1, decay2Coef = 1; // a second one: the snap's noise, the ping's index, the knock's upper mode
+    double ph = 0, ph2 = 0;           // sine phases (0..1): the body, and the modulator or upper mode
+    double sq[6] = {0};               // metal: the six squares' phases
+    float hpA = 0, hp[4] = {0};       // metal: two one-pole high-passes (in and out of each)
+    float ic1 = 0, ic2 = 0, svA1 = 0, svA2 = 0, svA3 = 0, svK = 0.5f, svNorm = 1; // a band-pass (metal, snap, clap)
     Rng rng;
     void setFilters();
+    float band(float x);              // one sample through the band-pass
 };
 
 // The sound of a pad offline, as the audio thread would play it: n samples into out (the rest is

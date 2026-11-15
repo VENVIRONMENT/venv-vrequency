@@ -2451,7 +2451,7 @@
   },
   "pulse": {
    "title": "Pulse",
-   "intro": "Eight pulse pads: clicks, ticks, noise, pure tones and pulses. Pick a pad, shape it with four sliders, latch it, sync it, loop it.",
+   "intro": "Eight pulse pads: clicks, metal, snaps, claps, pings, zaps, thumps and knocks. Pick a pad, shape it with four sliders, latch it, sync it, loop it.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
@@ -2528,8 +2528,8 @@
     "pad1": {
      "title": "PAD 2",
      "kind": "pad",
-     "summary": "Plays pad 2 and selects it. Starts as tick.",
-     "does": "One to three samples at full height, nothing else. TONE sets the width. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 2 and selects it. Starts as metal.",
+     "does": "Six square waves at clashing ratios in a high band, like a hi-hat. TONE is the lowest square. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2562,8 +2562,8 @@
     "pad2": {
      "title": "PAD 3",
      "kind": "pad",
-     "summary": "Plays pad 3 and selects it. Starts as noise burst.",
-     "does": "White noise that dies at once. TONE is a low-pass: lower is darker. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 3 and selects it. Starts as snap.",
+     "does": "A short pitched body at TONE under a burst of bright noise, like a snare. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2596,8 +2596,8 @@
     "pad3": {
      "title": "PAD 4",
      "kind": "pad",
-     "summary": "Plays pad 4 and selects it. Starts as sine blip.",
-     "does": "A short pure sine at TONE for LENGTH, with soft edges. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 4 and selects it. Starts as FM ping.",
+     "does": "A sine at TONE bent by another at 1.4 times it, fading fast: a glassy strike. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2630,8 +2630,8 @@
     "pad4": {
      "title": "PAD 5",
      "kind": "pad",
-     "summary": "Plays pad 5 and selects it. Starts as gated tone.",
-     "does": "A pure sine switched on and off RATE times a second, for LENGTH. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 5 and selects it. Starts as clap.",
+     "does": "Noise in a band at TONE, in three quick bursts 11 ms apart, then a tail. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2664,8 +2664,8 @@
     "pad5": {
      "title": "PAD 6",
      "kind": "pad",
-     "summary": "Plays pad 6 and selects it. Starts as pulse train.",
-     "does": "Clicks RATE times a second for LENGTH. TONE is each click's ring. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 6 and selects it. Starts as zap.",
+     "does": "A sine that sweeps down from 25 times TONE to TONE: a laser-like drop. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2732,8 +2732,8 @@
     "pad7": {
      "title": "PAD 8",
      "kind": "pad",
-     "summary": "Plays pad 8 and selects it. Starts as hiss.",
-     "does": "Band-passed noise that swells, then fades, over LENGTH. TONE is the band. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 8 and selects it. Starts as knock.",
+     "does": "Two sine modes, TONE and 2.7 times TONE, struck: wood or a rim. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2767,7 +2767,7 @@
      "title": "SOUND PICTURE",
      "kind": "readout",
      "summary": "The selected pad's sound over its whole length.",
-     "does": "Drawn by running the pad's own generator, the code the audio uses, so it is what you hear. Top left: its length. Top right: clicks, gates or samples it holds, or its tone. It redraws when a setting changes.",
+     "does": "Drawn by running the pad's own generator, the code the audio uses, so it is what you hear. Top left: its length. Top right: its tone, band or sweep. It redraws when a setting changes.",
      "use": [
       {
        "how": "Touch",
@@ -2775,7 +2775,7 @@
       }
      ],
      "keys": [],
-     "recall": "Pulse page, left of the sliders. A tick is shown over 24 samples so its 1 to 3 can be seen.",
+     "recall": "Pulse page, left of the sliders. Every kind is drawn over at least 24 samples.",
      "tips": [
       "Level makes the picture taller or shorter: it is drawn to full scale."
      ],
@@ -2789,8 +2789,8 @@
     "pulsetone": {
      "title": "TONE",
      "kind": "slider",
-     "summary": "Hz: pitch, ring, filter or width, by kind.",
-     "does": "Pitch for sine blip, gated tone and sub thump (where it falls to). Ring for click and pulse train. Low-pass for noise burst, band for hiss. Tick: width, 1 sample at 16 kHz and up, 3 at 8 kHz and below. 20 Hz to 18 kHz.",
+     "summary": "Hz: pitch, ring or band, by kind.",
+     "does": "Pitch for FM ping, sub thump and zap (where they land), snap's body and knock's low mode. Ring for click. Band for clap; metal's squares start at it, their band 20 times higher. 20 Hz to 18 kHz.",
      "use": [
       {
        "how": "Touch",
@@ -2800,7 +2800,7 @@
      "keys": [],
      "recall": "Pulse page, first of the four sliders. It sets the selected pad only.",
      "tips": [
-      "The tick shows its width in samples beside the value."
+      "Metal and snap brighten as TONE rises: their noise and squares follow it."
      ],
      "related": [
       "pulse.pulsewave",
@@ -2812,7 +2812,7 @@
      "title": "LENGTH",
      "kind": "slider",
      "summary": "How long one hit lasts, 1 ms to 2 s.",
-     "does": "The time from start to silence of one hit of the selected pad. A click or noise burst decays inside it; a blip, gated tone or pulse train lasts all of it; hiss swells and fades over it. The tick has no length: not used.",
+     "does": "The time from start to silence of one hit of the selected pad. Every kind fits its decay to it: a short length is a tight hit, a long one rings or sweeps out slowly.",
      "use": [
       {
        "how": "Touch",
@@ -2820,7 +2820,7 @@
       }
      ],
      "keys": [],
-     "recall": "Pulse page, second slider. A latched gated tone or pulse train ignores it and runs on.",
+     "recall": "Pulse page, second slider. It sets the selected pad only.",
      "tips": [
       "The picture's axis shows the length."
      ],
@@ -2833,8 +2833,8 @@
     "pulserate": {
      "title": "RATE",
      "kind": "slider",
-     "summary": "Gates or clicks a second; or a latched pad's repeat.",
-     "does": "Gated tone: gates a second. Pulse train: clicks a second. For every other kind, how often a latched pad is hit again. 0.25 to 200 Hz. With SYNC on it snaps to a division of the tempo, shown beside the value (1/16...).",
+     "summary": "How often a latched pad is hit again.",
+     "does": "How often a latched pad is hit again, 0.25 to 200 Hz. With SYNC on it snaps to a division of the tempo, shown beside the value (1/16...).",
      "use": [
       {
        "how": "Touch",
@@ -2844,7 +2844,7 @@
      "keys": [],
      "recall": "Pulse page, third slider. SYNC changes what it snaps to, not the value you set.",
      "tips": [
-      "Above about 20 Hz a pulse train stops being a rhythm and becomes a buzz."
+      "Above about 20 Hz repeats stop being a rhythm and become a buzz."
      ],
      "related": [
       "pulse.pulsesync",
@@ -2879,7 +2879,7 @@
      "title": "LAST 4 S",
      "kind": "readout",
      "summary": "Every hit of the last four seconds, one lane a pad.",
-     "does": "One lane per pad, oldest on the left, now on the right. Each hit, each click of a pulse train and each gate is a tick at the moment the engine played it; something long (hiss, a blip) is a thin bar for its length.",
+     "does": "One lane per pad, oldest on the left, now on the right. Each hit is a tick at the moment the engine played it, with a thin bar for its length.",
      "use": [
       {
        "how": "Touch",
@@ -2929,7 +2929,7 @@
      "title": "LATCH",
      "kind": "toggle",
      "summary": "The selected pad keeps going until you tap it again.",
-     "does": "A latched gated tone or pulse train runs without end. Any other kind is hit again RATE times a second. Tap the pad, or Latch again, to stop it. Several pads can be latched at once; Backspace stops them all.",
+     "does": "The selected pad is hit again RATE times a second until you stop it. Tap the pad, or Latch again, to stop it. Several pads can be latched at once; Backspace stops them all.",
      "use": [
       {
        "how": "Touch",
@@ -2977,7 +2977,7 @@
      "title": "TYPE",
      "kind": "button",
      "summary": "The selected pad's kind: the next of eight.",
-     "does": "Steps the selected pad through click, tick, noise burst, sine blip, gated tone, pulse train, sub thump and hiss. The pad keeps its tone, length, rate and level; their meaning follows the new kind.",
+     "does": "Steps the selected pad through click, metal, snap, FM ping, clap, zap, sub thump and knock. The pad keeps its tone, length, rate and level; their meaning follows the new kind.",
      "use": [
       {
        "how": "Touch",
@@ -5780,7 +5780,7 @@
    "title": "PULSE KINDS",
    "kind": "area",
    "summary": "The eight sounds a pulse pad can be.",
-   "does": "Click, tick, noise burst, sine blip: short one-shots. Gated tone and pulse train: a tone or clicks at a rate. Sub thump: a falling low sine. Hiss: noise that swells and fades. Pure tones, clicks, noise and silence.",
+   "does": "Click and knock: short struck sounds. Metal, snap and clap: noise and squares, like hats, snares and claps. FM ping: a glassy strike. Zap and sub thump: sines that fall in pitch.",
    "use": [
     {
      "how": "Touch",
@@ -5790,7 +5790,7 @@
    "keys": [],
    "recall": "Pulse page. Pad n starts as the n-th kind; TONE means something different for each.",
    "tips": [
-    "Silence between hits is part of the sound: try long rates."
+    "Silence between hits is part of the sound: try slow rates."
    ],
    "related": [
     "pulse.pulsetype",
@@ -5802,7 +5802,7 @@
    "title": "LATCH AND SYNC",
    "kind": "area",
    "summary": "Pads that keep going, in time or free.",
-   "does": "LATCH keeps the selected pad going: a gated tone or pulse train runs on, other kinds repeat at RATE. SYNC snaps every RATE to the tempo so latched pads fall on the beat; off, rates are exact Hz and drift against the loop.",
+   "does": "LATCH keeps the selected pad going: it is hit again RATE times a second. SYNC snaps every RATE to the tempo so latched pads fall on the beat; off, rates are exact Hz and drift against the loop.",
    "use": [
     {
      "how": "Touch",

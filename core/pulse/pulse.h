@@ -1,21 +1,24 @@
-// venv-vrequency — pulse pads: eight short, exact sounds (clicks, ticks, noise, pure tones, pulses).
+// venv-vrequency — pulse pads: eight short, exact percussive sounds built from sines, squares and noise.
 //
-// Every pad is one of eight kinds and has four numbers. What TONE means depends on the kind:
-//   CLICK        a damped cosine: TONE is the click's ring (Hz); LENGTH its decay
-//   TICK         1 to 3 samples at full height: TONE sets the width (16 kHz and up 1 sample,
-//                about 12 kHz 2, 8 kHz and below 3); LENGTH is not used
-//   NOISE BURST  white noise with a fast decay: TONE is a low-pass on the noise
-//   SINE BLIP    a pure sine for LENGTH: TONE is its pitch
-//   GATED TONE   a pure sine switched on and off RATE times a second: TONE is its pitch
-//   PULSE TRAIN  clicks RATE times a second for LENGTH: TONE is each click's ring
-//   SUB THUMP    a low sine that falls from four times TONE to TONE in about 15 ms
-//   HISS         band-passed noise that swells and fades over LENGTH: TONE is the band
-// RATE also sets how often a latched one-shot repeats. LEVEL is 0..1.
+// Every pad is one of eight kinds and has four numbers. What TONE means depends on the kind;
+// LENGTH is how long the hit lasts (its decay is scaled to fit):
+//   CLICK      a damped cosine: TONE is the click's ring (Hz)
+//   METAL      six square waves at clashing ratios through a high band, like a hi-hat: TONE is
+//              the lowest square (the band sits twenty times above it)
+//   SNAP       a short pitched body (TONE, dropping from twice it) under a burst of bright noise
+//              (band at 25 times TONE), like a snare
+//   FM PING    a sine carrier at TONE, phase-modulated at 1.4 times TONE by an index that fades
+//              faster than the ping: a glassy, bell-like strike
+//   CLAP       band-passed noise (band at TONE) in three quick bursts 11 ms apart, then a tail
+//   ZAP        a sine that sweeps down from 25 times TONE to TONE: a laser-like drop
+//   SUB THUMP  a low sine that falls from four times TONE to TONE in about 15 ms
+//   KNOCK      two sine modes (TONE and 2.7 times TONE) with a tiny pitch drop: wood or a rim
+// RATE sets how often a latched pad repeats. LEVEL is 0..1.
 #pragma once
 
 namespace td {
 
-enum PulseType { PT_CLICK, PT_TICK, PT_NOISE, PT_BLIP, PT_GATED, PT_TRAIN, PT_THUMP, PT_HISS, kPulseTypes };
+enum PulseType { PT_CLICK, PT_METAL, PT_SNAP, PT_PING, PT_CLAP, PT_ZAP, PT_THUMP, PT_KNOCK, kPulseTypes };
 enum PulseField { PF_TYPE, PF_TONE, PF_LENGTH, PF_RATE, PF_LEVEL, PF_COUNT };
 constexpr int kPulsePads = 8;
 
@@ -38,8 +41,8 @@ const char *pulseTypeName(int type);       // "CLICK", "NOISE BURST"...
 const char *pulseTypeKey(int type);        // "click", "noise"...: for files and the control socket
 const char *pulseTypeLine(int type);       // one short line on what it does
 int pulseTypeFromKey(const char *key);     // -1 when unknown
-bool pulseContinuous(int type);            // gated tone and pulse train: latched, they run without end
-bool pulseUsesLength(int type);            // every kind but the tick
+bool pulseContinuous(int type);            // a kind that runs without end when latched (none at present)
+bool pulseUsesLength(int type);            // every kind
 
 // SYNC: the rate moved to the nearest whole division of the beat (in octaves). `perBeat` gets the
 // hits per beat it chose (1 = quarter notes, 4 = sixteenths, 0.25 = once a bar).

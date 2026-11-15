@@ -73,7 +73,7 @@ QJsonObject ControlServer::cmdBacking(const QJsonObject &a, QString &e) {
     return r;
 }
 
-// {"cmd":"pulse","pad":5,"type":"train","tone":1000,"length":250,"rate":40,"level":0.8,"latch":true,"hit":true,"sync":false}
+// {"cmd":"pulse","pad":5,"type":"zap","tone":1000,"length":250,"rate":40,"level":0.8,"latch":true,"hit":true,"sync":false}
 // Every field is optional, but there must be one; all but sync need a pad (0 to 7).
 QJsonObject ControlServer::cmdPulse(const QJsonObject &a, QString &e) {
     Args A{a, e};
@@ -88,7 +88,7 @@ QJsonObject ControlServer::cmdPulse(const QJsonObject &a, QString &e) {
     const double rate = A.num("rate", kPulseRateMin, kPulseRateMax, -1), level = A.num("level", 0, 1, -1);
     if (!e.isEmpty()) return {};
     const int t = type.isEmpty() ? -1 : pulseTypeFromKey(type.toLower().toUtf8().constData());
-    if (!type.isEmpty() && t < 0) { e = "type must be click, tick, noise, blip, gated, train, thump or hiss"; return {}; }
+    if (!type.isEmpty() && t < 0) { e = "type must be click, metal, snap, ping, clap, zap, thump or knock"; return {}; }
     if (A.has("sync")) inst.set(S_PULSESYNC, sync ? 1 : 0);
     if (t >= 0) inst.pulseSet(pad, PF_TYPE, (float)t);
     if (tone >= 0) inst.pulseSet(pad, PF_TONE, (float)tone);

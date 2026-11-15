@@ -29,15 +29,16 @@ QString division(float perBeat) { // hits per beat as a note value
 // sliders: tone, length and rate move in octaves, level in a straight line
 float toNorm(float v, float lo, float hi) { return std::log(v / lo) / std::log(hi / lo); }
 float fromNorm(float n, float lo, float hi) { return lo * std::pow(hi / lo, qBound(0.0f, n, 1.0f)); }
-QString what(const PulsePad &p, int onsets, float sr) { // the top right of the big picture
+QString what(const PulsePad &p, int /*onsets*/, float sr) { // the top right of the big picture
+    const float top = 0.45f * sr;
     switch (p.type) {
-    case PT_TICK: return QString("%1 sample%2").arg(PulseVoice::tickWidth(p.tone, sr)).arg(PulseVoice::tickWidth(p.tone, sr) == 1 ? "" : "s");
-    case PT_NOISE: return QString("low-pass %1").arg(hz(p.tone));
-    case PT_BLIP: return hz(p.tone);
-    case PT_GATED: return QString("%1 gate%2").arg(onsets).arg(onsets == 1 ? "" : "s");
-    case PT_TRAIN: return QString("%1 click%2").arg(onsets).arg(onsets == 1 ? "" : "s");
+    case PT_METAL: return QString("band %1").arg(hz(std::min(p.tone * 20, top)));
+    case PT_SNAP: return QString("body %1").arg(hz(p.tone));
+    case PT_PING: return QString("%1, fm x1.4").arg(hz(p.tone));
+    case PT_CLAP: return QString("band %1").arg(hz(p.tone));
+    case PT_ZAP: return QString("%1 > %2").arg(hz(std::min(p.tone * 25, top))).arg(hz(p.tone));
     case PT_THUMP: return QString("%1 > %2").arg((int)std::round(p.tone * 4)).arg(hz(p.tone));
-    case PT_HISS: return QString("band %1").arg(hz(p.tone));
+    case PT_KNOCK: return QString("%1 + %2").arg(hz(p.tone)).arg(hz(std::min(p.tone * 2.7f, top)));
     default: return QString("ring %1").arg(hz(p.tone));
     }
 }
@@ -82,10 +83,8 @@ void PulsePage::paintSelected(qreal y) {
 
 void PulsePage::paintSliders(QRectF r) {
     const PulsePad &d = u.pulse[sel];
-    const float sr = inst.sampleRate();
     auto row = [&](int i) { return QRectF(r.x(), r.y() + i * 50, r.width(), 46); };
-    QString toneText = hz(d.tone);
-    if (d.type == PT_TICK) toneText += QString(", %1 smp").arg(PulseVoice::tickWidth(d.tone, sr));
+    const QString toneText = hz(d.tone);
     ui.slider(row(0), zn::pulsetone, "Tone", toNorm(d.tone, kPulseToneMin, kPulseToneMax), toneText,
               [this](float n) { setField(PF_TONE, fromNorm(n, kPulseToneMin, kPulseToneMax)); });
     ui.slider(row(1), zn::pulselength, "Length", toNorm(d.lengthMs, kPulseLenMin, kPulseLenMax),

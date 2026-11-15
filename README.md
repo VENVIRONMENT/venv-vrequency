@@ -63,8 +63,8 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Backing**: diatonic triads/sevenths from the scale. Tap up to eight chords for a looping
   progression, or latch one chord, or latch drone notes. Sustain / pulse / arpeggio styles.
   The backing keeps the sound it started with while you change the lead. `Ctrl`+`Space` starts and stops it.
-- **Pulse**: eight pulse pads, made for pure tones, clicks, noise and silence: click, tick (1-3
-  samples), noise burst, sine blip, gated tone, pulse train, sub thump and hiss, any pad any kind,
+- **Pulse**: eight percussive pulse pads built from sines, squares and noise: click, metal, snap,
+  FM ping, clap, zap, sub thump and knock, any pad any kind,
   each with Tone, Length, Rate and Level. Each pad shows a picture of its real sound (drawn by its own
   generator); a strip shows every hit of the last four seconds. Latch keeps a pad going, Sync snaps
   rates to the tempo, and pad taps are recorded by the loop pedal.

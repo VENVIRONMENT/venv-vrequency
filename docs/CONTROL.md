@@ -134,12 +134,12 @@ arp down, arp up-dn), `seventh` (bool), `beats` per chord 1-8.
 ```
 
 ### pulse
-The pulse pads. Any of: `type` (click, tick, noise, blip, gated, train, thump, hiss), `tone` (Hz, 20-18000),
+The pulse pads. Any of: `type` (click, metal, snap, ping, clap, zap, thump, knock), `tone` (Hz, 20-18000),
 `length` (ms, 1-2000), `rate` (Hz, 0.25-200), `level` (0-1), `latch` (true / false), `hit` (true: plays it now)
 for one pad, `pad` 0-7 (required with any of those); and `sync` (true / false: every pad's rate follows the
 tempo). Settings are applied before `latch` and `hit`. What each field means per kind is in GUIDE chapter 8.
 ```
-{"id":23,"cmd":"pulse","pad":5,"type":"train","tone":1000,"length":250,"rate":40,"level":0.8,"hit":true}
+{"id":23,"cmd":"pulse","pad":5,"type":"zap","tone":1000,"length":250,"rate":40,"level":0.8,"hit":true}
 {"id":24,"cmd":"pulse","pad":4,"latch":true}
 {"id":25,"cmd":"pulse","sync":true}
 ```

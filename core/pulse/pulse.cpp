@@ -7,20 +7,20 @@
 namespace td {
 
 namespace {
-const char *const kNames[kPulseTypes] = {"CLICK", "TICK", "NOISE BURST", "SINE BLIP", "GATED TONE", "PULSE TRAIN", "SUB THUMP", "HISS"};
-const char *const kKeys[kPulseTypes] = {"click", "tick", "noise", "blip", "gated", "train", "thump", "hiss"};
+const char *const kNames[kPulseTypes] = {"CLICK", "METAL", "SNAP", "FM PING", "CLAP", "ZAP", "SUB THUMP", "KNOCK"};
+const char *const kKeys[kPulseTypes] = {"click", "metal", "snap", "ping", "clap", "zap", "thump", "knock"};
 const char *const kLines[kPulseTypes] = {
-    "A SHORT RINGING CLICK", "ONE TO THREE SAMPLES, NOTHING ELSE", "WHITE NOISE THAT DIES AT ONCE", "A SHORT PURE SINE",
-    "A SINE SWITCHED ON AND OFF", "CLICKS AT A STEADY RATE", "A LOW SINE THAT DROPS IN PITCH", "NOISE THAT SWELLS AND FADES"};
+    "A SHORT RINGING CLICK", "CLASHING SQUARES, HIGH AND BRIGHT", "A PITCHED BODY UNDER BRIGHT NOISE", "A GLASSY FM STRIKE",
+    "THREE QUICK NOISE BURSTS AND A TAIL", "A SINE THAT SWEEPS DOWN FAST", "A LOW SINE THAT DROPS IN PITCH", "TWO WOODEN SINE MODES"};
 int clampType(int t) { return t < 0 ? 0 : (t >= kPulseTypes ? kPulseTypes - 1 : t); }
 } // namespace
 
 PulsePad pulseDefault(int pad) {
     //                       type      tone    length  rate  level
     static const PulsePad D[kPulsePads] = {
-        {PT_CLICK, 3000, 3, 4, 0.8f},   {PT_TICK, 12000, 1, 8, 0.7f},     {PT_NOISE, 9000, 60, 2, 0.6f},
-        {PT_BLIP, 1000, 50, 2, 0.5f},   {PT_GATED, 2000, 500, 12, 0.4f},  {PT_TRAIN, 1000, 250, 40, 0.8f},
-        {PT_THUMP, 45, 350, 1, 0.9f},   {PT_HISS, 6000, 1500, 0.5f, 0.45f}};
+        {PT_CLICK, 3000, 3, 4, 0.8f},   {PT_METAL, 400, 80, 8, 0.7f},     {PT_SNAP, 190, 180, 2, 0.9f},
+        {PT_PING, 880, 700, 2, 0.6f},   {PT_CLAP, 1200, 260, 2, 0.7f},    {PT_ZAP, 110, 160, 4, 0.6f},
+        {PT_THUMP, 45, 350, 1, 0.9f},   {PT_KNOCK, 800, 60, 4, 0.7f}};
     return D[pad < 0 ? 0 : (pad >= kPulsePads ? kPulsePads - 1 : pad)];
 }
 
@@ -44,8 +44,8 @@ int pulseTypeFromKey(const char *k) {
     for (int i = 0; i < kPulseTypes; ++i) if (std::strcmp(k, kKeys[i]) == 0) return i;
     return -1;
 }
-bool pulseContinuous(int t) { return t == PT_GATED || t == PT_TRAIN; }
-bool pulseUsesLength(int t) { return t != PT_TICK; }
+bool pulseContinuous(int) { return false; }
+bool pulseUsesLength(int) { return true; }
 
 float pulseSyncRate(float rate, float bpm, float *perBeat) {
     static const float K[] = {0.0625f, 0.125f, 0.25f, 0.5f, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128};

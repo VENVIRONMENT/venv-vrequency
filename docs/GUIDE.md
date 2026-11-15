@@ -248,8 +248,8 @@ bottom row into chord keys until you press it again.
 
 ![The Pulse page](shots/9-pulse.png)
 
-The Pulse page has eight **pulse pads**: short, exact sounds made of clicks, ticks, noise, pure
-sine tones, pulses and the silence between them. There is no step sequencer; you play them, latch
+The Pulse page has eight **pulse pads**: short, exact percussive sounds built from sines, square
+waves and noise. There is no step sequencer; you play them, latch
 them, sync them to the tempo and record them with the loop pedal.
 
 **Play the pads.** Tap a pad, or use the keyboard: `Q` `W` `E` `R` (or `U` `I` `O` `P`) are pads 1
@@ -262,32 +262,34 @@ setting changes).
 **The eight kinds.** Pad *n* starts as the *n*-th kind, but any pad can be any kind (**Type**).
 What **Tone** means depends on the kind:
 
-| Kind | What it is | Tone | Length | Rate |
-|---|---|---|---|---|
-| Click | a damped cosine: one spike and a short ring | the ring, Hz | how fast it dies | latch repeat |
-| Tick | 1 to 3 samples at full height, nothing else | width: 16 kHz and up 1 sample, 8 kHz and below 3 | not used | latch repeat |
-| Noise burst | white noise with a fast decay | low-pass on the noise | its decay | latch repeat |
-| Sine blip | a pure sine with soft edges | pitch | how long | latch repeat |
-| Gated tone | a pure sine switched on and off | pitch | how long | gates a second |
-| Pulse train | clicks at a steady rate | each click's ring | how long | clicks a second |
-| Sub thump | a low sine falling from four times Tone to Tone in about 15 ms | where it falls to | its decay | latch repeat |
-| Hiss | band-passed noise that swells (first 35 %) and fades | the band | the whole swell | latch repeat |
+| Kind | What it is | Tone |
+|---|---|---|
+| Click | a damped cosine: one spike and a short ring | the ring, Hz |
+| Metal | six square waves at the clashing ratios of an analogue hi-hat, through a high band and two high-passes | the lowest square; the band sits 20 times higher |
+| Snap | a short body dropping from twice Tone to Tone in 8 ms, under a burst of band-passed noise, like a snare | the body; the noise band sits 25 times higher |
+| FM ping | a sine at Tone phase-modulated by a sine at 1.4 times Tone; the modulation fades three times faster than the ping, so it starts glassy and rings out pure | pitch |
+| Clap | band-passed noise in three 3.5 ms bursts 11 ms apart, then a tail | the band |
+| Zap | a sine sweeping down from 25 times Tone to Tone | where it lands |
+| Sub thump | a low sine falling from four times Tone to Tone in about 15 ms | where it falls to |
+| Knock | two sine modes, Tone and 2.7 times Tone, a touch sharp at the strike, the upper one dying faster | the low mode |
+
+**Length** is how long one hit lasts; every kind fits its decay into it. **Rate** is how often a
+latched pad is hit again.
 
 **The selected pad.** The big picture shows its sound over its whole length, with the length at the
-top left and, at the top right, what it holds (clicks, gates, samples, or its tone). The four
+top left and, at the top right, its tone, band or sweep. The four
 sliders beside it set **Tone** (20 Hz to 18 kHz), **Length** (1 ms to 2 s), **Rate** (0.25 to 200 Hz)
 and **Level**; the first three move in octaves.
 
-**Last 4 s.** The strip under it has one lane per pad. Every hit, every click of a pulse train and
-every gate of a gated tone is a tick at the moment the engine played it, oldest on the left; a long
-sound (a hiss, a blip) is a thin bar for its length.
+**Last 4 s.** The strip under it has one lane per pad. Every hit is a tick at the moment the engine
+played it, oldest on the left, with a thin bar for its length.
 
 **The soft keys.**
 
 | Key | Does |
 |---|---|
 | Loop | the loop pedal (the same as `Enter`): pad taps made while it records go into the loop and play back with the pad's settings of the moment |
-| Latch | the selected pad keeps going until you tap it (or Latch) again. A gated tone or pulse train runs without end; any other kind is hit again Rate times a second. Several pads can be latched; `Backspace` stops them all |
+| Latch | the selected pad is hit again Rate times a second until you tap it (or Latch) again. Several pads can be latched; `Backspace` stops them all |
 | Sync | every pad's Rate snaps to the nearest division of the tempo (from four bars to 1/512), shown beside the rate; latched one-shots then fall on the beat clock's grid, in time with the loop |
 | Type | the selected pad's next kind |
 

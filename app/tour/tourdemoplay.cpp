@@ -31,7 +31,7 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     w.setPage(PG_PULSE); rig.settle(2);
     for (int p : {0, 2, 6, 3, 7}) { w.pulsePage.hitPad(p); pump(inst, 180); rig.settle(1); } // a few hits for the strip
     w.pulsePage.setLatch(1, true); pump(inst, 600); rig.settle(1); w.pulsePage.setLatch(1, false);
-    w.pulsePage.hitPad(5); pump(inst, 400);                                  // the pulse train, selected
+    w.pulsePage.hitPad(5); pump(inst, 400);                                  // the zap, selected
     rig.settle(3);
     QThread::msleep(300);                                                     // the pads that just sounded fade
     C("pulse");

@@ -12,25 +12,29 @@ inline float sine(double ph) { return (float)std::sin(kTwoPi * ph); }
 inline double wrap(double ph) { return ph >= 1.0 ? ph - 1.0 : ph; }
 } // namespace
 
-int PulseVoice::tickWidth(float tone, float sr) {
-    return std::clamp((int)(0.5f * sr / std::max(tone, 1.0f)), 1, 3);
-}
-
 int PulseVoice::lengthSamples(const PulsePad &p, float sr) {
-    if (p.type == PT_TICK) return tickWidth(p.tone, sr);
     return std::max(1, (int)std::lround(p.lengthMs * 0.001 * sr));
 }
 
+// The band-pass (a TPT state-variable filter) that metal, snap and clap colour their source with.
 void PulseVoice::setFilters() {
-    const float fc = std::min(tone, 0.45f * sr);
-    lpA = 1.0f - std::exp(-2.0f * kPi * fc / sr);              // noise burst: one pole
-    lpNorm = std::min(8.0f, std::sqrt((2.0f - lpA) / lpA));    // keeps its loudness when the tone is low
-    const float g = std::tan(kPi * fc / sr), Q = 2.0f;          // hiss: a band-pass (TPT state-variable filter)
+    float fc = tone, Q = 1.0f;
+    if (type == PT_METAL) { fc = tone * 20.0f; Q = 1.2f; }
+    else if (type == PT_SNAP) { fc = tone * 25.0f; Q = 0.8f; }
+    else if (type == PT_CLAP) { fc = tone; Q = 1.5f; }
+    fc = std::clamp(fc, 20.0f, 0.45f * sr);
+    const float g = std::tan(kPi * fc / sr);
     svK = 1.0f / Q;
     svA1 = 1.0f / (1.0f + g * (g + svK)); svA2 = g * svA1; svA3 = g * svA2;
-    svNorm = std::min(12.0f, std::sqrt(Q * sr / (kPi * fc)));
-    gateK = 1.0f - std::exp(-1.0f / (0.0003f * sr));           // gate edges of about a third of a millisecond
-    clickTau = std::min(3.0f / fc, 0.2f / rate);               // one click of a train: three cycles of its ring
+    svNorm = std::min(12.0f, std::sqrt(Q * sr / (kPi * fc))); // white noise in, about the same loudness out
+    hpA = std::exp(-2.0f * kPi * std::min(tone * 10.0f, 0.4f * sr) / sr); // metal: cuts below ten times TONE
+}
+
+float PulseVoice::band(float x) {
+    const float v3 = x - ic2;
+    const float v1 = svA1 * ic1 + svA2 * v3, v2 = ic2 + svA2 * ic1 + svA3 * v3;
+    ic1 = 2 * v1 - ic1; ic2 = 2 * v2 - ic2;
+    return svK * v1;
 }
 
 void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rateHz, bool endlessRun, int delay) {
@@ -43,13 +47,26 @@ void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rate
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     len = lengthSamples(p, sr);
     fadeLen = std::max(1, std::min((int)(0.001f * sr), len / 4));
-    ph = 0; gatePh = 0; gate = 0; clickAt = 0; lp = 0; ic1 = ic2 = 0;
+    ph = ph2 = 0; ic1 = ic2 = 0;
+    for (float &h : hp) h = 0;
+    for (double &q : sq) q = 0;
     rng.s = kSeed;
     setFilters();
-    decay = 1;
     const float sec = len / sr;
-    const float tau = type == PT_CLICK ? sec / 5.0f : (type == PT_TRAIN ? clickTau : sec / 4.0f);
+    float tau = sec / 4.0f, tau2 = sec / 4.0f; // each kind's decays, fitted to its LENGTH
+    switch (type) {
+    case PT_CLICK: tau = sec / 5.0f; break;
+    case PT_METAL: tau = sec / 5.0f; break;
+    case PT_SNAP: tau = sec / 6.0f; tau2 = sec / 3.5f; break;
+    case PT_PING: tau = sec / 4.0f; tau2 = sec / 12.0f; break;
+    case PT_CLAP: tau = sec / 3.5f; break;
+    case PT_ZAP: tau = sec / 3.0f; tau2 = sec / 14.0f; break;
+    case PT_KNOCK: tau = sec / 4.0f; tau2 = sec / 9.0f; break;
+    default: break;
+    }
+    decay = decay2 = 1;
     decayCoef = std::exp(-1.0f / (std::max(tau, 1e-5f) * sr));
+    decay2Coef = std::exp(-1.0f / (std::max(tau2, 1e-5f) * sr));
 }
 
 void PulseVoice::retune(const PulsePad &p0, float rateHz) {
@@ -59,7 +76,6 @@ void PulseVoice::retune(const PulsePad &p0, float rateHz) {
     tone = std::min(p.tone, 0.45f * sr); level = p.level;
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     setFilters();
-    if (type == PT_TRAIN) decayCoef = std::exp(-1.0f / (std::max(clickTau, 1e-5f) * sr));
 }
 
 void PulseVoice::release(float ms) {
@@ -73,52 +89,65 @@ float PulseVoice::next(bool &onset, int &dur) {
     if (!on) return 0;
     if (wait > 0) { --wait; return 0; }
     if (!runOn && pos >= len) { on = false; return 0; }
-    if (pos == 0) { onset = true; dur = type == PT_CLICK || type == PT_TICK ? 0 : len; }
+    if (pos == 0) { onset = true; dur = type == PT_CLICK ? 0 : len; }
+    const float t = pos / sr; // seconds into the hit
     float y = 0;
     switch (type) {
     case PT_CLICK: // a cosine starts at its peak: the first sample is the impulse, the ring follows
-        y = (float)std::cos(kTwoPi * ph) * decay; decay *= decayCoef; ph = wrap(ph + tone / sr);
+        y = (float)std::cos(kTwoPi * ph) * decay; ph = wrap(ph + tone / sr);
         break;
-    case PT_TICK:
-        y = 1.0f;
-        break;
-    case PT_NOISE:
-        lp += lpA * (rng.bipolar() - lp);
-        y = clampf(lp * lpNorm * decay, -1, 1); decay *= decayCoef;
-        break;
-    case PT_BLIP:
-        y = sine(ph) * std::min(1.0f, pos / (0.0005f * sr)); ph = wrap(ph + tone / sr);
-        break;
-    case PT_GATED: {
-        if (pos == 0 || gatePh < rate / sr) { onset = true; dur = (int)(0.5f * sr / rate); }
-        gate += gateK * ((gatePh < 0.5 ? 1.0f : 0.0f) - gate);
-        y = sine(ph) * gate;
-        ph = wrap(ph + tone / sr); gatePh = wrap(gatePh + rate / sr);
+    case PT_METAL: { // the 808's six clashing ratios, as squares, through a high band
+        static const float R[6] = {1.0f, 1.3420f, 1.2312f, 1.6532f, 1.9523f, 2.1523f};
+        float x = 0;
+        for (int k = 0; k < 6; ++k) { x += sq[k] < 0.5 ? 1.0f : -1.0f; sq[k] = wrap(sq[k] + std::min(tone * R[k], 0.45f * sr) / sr); }
+        float b = band(x / 6.0f);
+        for (int k = 0; k < 2; ++k) { const float o = hpA * (hp[2 * k + 1] + b - hp[2 * k]); hp[2 * k] = b; hp[2 * k + 1] = o; b = o; }
+        y = clampf(b * svNorm * 6.0f, -1, 1) * decay;
         break;
     }
-    case PT_TRAIN:
-        if (pos == 0 || gatePh < rate / sr) { onset = true; dur = 0; decay = 1; clickAt = 0; }
-        y = (float)std::cos(kTwoPi * tone * clickAt / sr) * decay;
-        decay *= decayCoef; ++clickAt;
-        gatePh = wrap(gatePh + rate / sr);
+    case PT_SNAP: { // a body dropping from twice TONE in 8 ms, under bright noise
+        const float body = sine(ph) * decay;
+        ph = wrap(ph + tone * (1.0f + std::exp(-t / 0.008f)) / sr);
+        const float hiss = clampf(band(rng.bipolar()) * svNorm * 0.7f, -1, 1) * decay2;
+        y = 0.45f * body + 0.55f * hiss;
+        decay2 *= decay2Coef;
+        break;
+    }
+    case PT_PING: { // phase modulation: the index (up to 3.5) fades three times faster than the ping
+        y = (float)std::sin(kTwoPi * ph + 3.5 * decay2 * std::sin(kTwoPi * ph2)) * decay;
+        ph = wrap(ph + tone / sr); ph2 = wrap(ph2 + std::min(tone * 1.4f, 0.45f * sr) / sr);
+        decay2 *= decay2Coef;
+        break;
+    }
+    case PT_CLAP: { // bursts at 0, 11 and 22 ms (3.5 ms each), then a tail from 33 ms
+        const float x = clampf(band(rng.bipolar()) * svNorm, -1, 1);
+        float env;
+        if (t < 0.033f) env = std::exp(-(t - std::floor(t / 0.011f) * 0.011f) / 0.0035f);
+        else { env = 0.75f * decay; decay *= decayCoef; }
+        y = x * env;
+        break;
+    }
+    case PT_ZAP: // the pitch falls from 25 times TONE towards TONE
+        y = sine(ph) * decay;
+        ph = wrap(ph + std::min(tone * (1.0f + 24.0f * decay2), 0.45f * sr) / sr);
+        decay2 *= decay2Coef;
         break;
     case PT_THUMP: { // the pitch falls from four times the tone to the tone, time constant 15 ms
-        const float drop = std::exp(-(pos / sr) / 0.015f);
-        y = sine(ph) * decay; decay *= decayCoef;
+        const float drop = std::exp(-t / 0.015f);
+        y = sine(ph) * decay;
         ph = wrap(ph + tone * (1.0f + 3.0f * drop) / sr);
         break;
     }
-    case PT_HISS: { // swells for the first 35 % of its length, then fades
-        const float v0 = rng.bipolar() * 0.6f, v3 = v0 - ic2;
-        const float v1 = svA1 * ic1 + svA2 * v3, v2 = ic2 + svA2 * ic1 + svA3 * v3;
-        ic1 = 2 * v1 - ic1; ic2 = 2 * v2 - ic2;
-        const float x = pos / (float)len;
-        const float s = x < 0.35f ? std::sin(0.5f * kPi * x / 0.35f) : std::cos(0.5f * kPi * (x - 0.35f) / 0.65f);
-        y = clampf(svK * v1 * svNorm, -1, 1) * s * s;
+    case PT_KNOCK: { // two modes of a struck block, both a touch sharp at the strike
+        const float bend = 1.0f + 0.3f * std::exp(-t / 0.003f);
+        y = 0.75f * sine(ph) * decay + 0.35f * sine(ph2) * decay2;
+        ph = wrap(ph + tone * bend / sr); ph2 = wrap(ph2 + std::min(tone * 2.7f * bend, 0.45f * sr) / sr);
+        decay2 *= decay2Coef;
         break;
     }
     }
-    if (!runOn && type != PT_TICK) { // a short fade at the end, so every hit stops in silence
+    if (type != PT_CLAP) decay *= decayCoef;
+    if (!runOn) { // a short fade at the end, so every hit stops in silence
         const int left = len - pos;
         if (left < fadeLen) y *= (float)left / fadeLen;
     }
