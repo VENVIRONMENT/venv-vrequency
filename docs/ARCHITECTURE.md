@@ -62,7 +62,7 @@ window services. **A page never includes `app/shell/mainwindow.h`.** If a page n
 from the window, add a small virtual to `Shell` and implement it in `MainWindow`.
 
 The window keeps what belongs to every page: the string keys and chord rows, the key map's actions,
-the tab row, toasts, saving state, and the table `pageOf` that lists the eight pages.
+the tab row, toasts, saving state, and the table `pageOf` that lists the nine pages.
 
 ## Audio thread and the engine lock
 
