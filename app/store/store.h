@@ -4,7 +4,7 @@
 //     state.json               last settings, the ten sound slots, current sound
 //     keymap.json              editable key bindings
 //     favourites/*.json        saved sounds
-//     sessions/*.json          saved sessions (settings, sounds, chord pads, loops, the beat)
+//     sessions/*.json          saved sessions (settings, sounds, chord pads, loops, the pulse pads)
 //     recordings/*.wav         exported audio
 #pragma once
 #include "core/instrument/instrument.h"
@@ -27,8 +27,8 @@ QJsonObject settingsToJson(const td::Settings &s);
 td::Settings settingsFromJson(const QJsonObject &o);
 QJsonObject sessionToJson(const td::SessionData &s);
 bool sessionFromJson(const QJsonObject &o, td::SessionData &s);
-QJsonArray beatToJson(const uint16_t *beat);
-void beatFromJson(const QJsonArray &a, uint16_t *beat);
+QJsonArray pulseToJson(const td::PulsePad *pads);                       // the eight pulse pads' settings
+void pulseFromJson(const QJsonArray &a, td::PulsePad *pads);
 QJsonArray layersToJson(const std::vector<td::LayerData> &src);          // a loop's recorded layers
 std::vector<td::LayerData> layersFromJson(const QJsonArray &src);
 

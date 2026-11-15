@@ -46,15 +46,15 @@ void tourHostileArguments(TourContext &ctx) {
     check(!ctx.call(big)["ok"].toBool(), "a 5000-character page name is refused");
     const QByteArray big2 = QByteArray(R"({"cmd":"tour","element":")") + QByteArray(5000, 'y') + "\"}";
     check(!ctx.call(big2)["ok"].toBool(), "a 5000-character element is refused");
-    QJsonObject r = ctx.call(R"({"cmd":"tour","page":"beat","element":"no_such_control"})");
+    QJsonObject r = ctx.call(R"({"cmd":"tour","page":"pulse","element":"no_such_control"})");
     settleTour(w);
-    check(r["ok"].toBool() && ctx.tourState()["page"].toString() == "beat" && ctx.tourState()["selected"].isNull(), "an unknown element opens the page with nothing selected");
-    r = ctx.call(R"({"cmd":"tour","page":"beat","element":"pad0","extra":{"x":1}})");
+    check(r["ok"].toBool() && ctx.tourState()["page"].toString() == "pulse" && ctx.tourState()["selected"].isNull(), "an unknown element opens the page with nothing selected");
+    r = ctx.call(R"({"cmd":"tour","page":"pulse","element":"pad0","extra":{"x":1}})");
     settleTour(w);
     check(r["ok"].toBool() && ctx.tourState()["selected"].toString() == zn::at(zn::pad, 0), "unknown extra fields are ignored");
-    r = ctx.call(R"({"cmd":"tour","page":"  BEAT  "})");
+    r = ctx.call(R"({"cmd":"tour","page":"  PULSE  "})");
     settleTour(w);
-    check(r["ok"].toBool() && ctx.tourState()["page"].toString() == "beat", "page names are not case or space sensitive");
+    check(r["ok"].toBool() && ctx.tourState()["page"].toString() == "pulse", "page names are not case or space sensitive");
     for (int i = 0; i < 6; ++i) { ctx.call(R"({"cmd":"tour","action":"open"})"); ctx.call(R"({"cmd":"tour","action":"close"})"); }
     check(!t.isOpen(), "opening and closing over and over leaves it closed");
     t.close();

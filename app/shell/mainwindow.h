@@ -9,9 +9,9 @@
 #include "app/store/store.h"
 #include "app/chat/chat.h"
 #include "app/guide/guide.h"
-#include "app/pages/beat/beat_page.h"
 #include "app/pages/chat/chat_page.h"
 #include "app/pages/help/help_page.h"
+#include "app/pages/pulse/pulse_page.h"
 #include "app/pages/sound/sound_page.h"
 #include "app/pages/synth/chord_pads.h"
 #include "app/pages/synth/synth_page.h"
@@ -56,7 +56,7 @@ public:
     ChordPads chordPads{*this};              // drawn on the Synth page
     SynthPage synthPage{*this, chordPads};
     SoundPage soundPage{*this};
-    BeatPage beatPage{*this};
+    PulsePage pulsePage{*this};
     TunePage tunePage{*this};
     SystemPage systemPage{*this};
     HelpPage helpPage{*this, chat, guide};
@@ -89,8 +89,8 @@ public:
     void saveState() override;
     void perform(int act, bool shift = false) override;
     void setKeyTest(bool on) { keys.testOpen = on; }
-    QString armedModes() const { QStringList l; if (soundPage.favDelete) l << "delete"; if (sounds.slotSave) l << "store"; if (beatPage.erase) l << "erase"; return l.join(","); }
-    void armAllModes() { soundPage.favDelete = sounds.slotSave = beatPage.erase = true; }
+    QString armedModes() const { QStringList l; if (soundPage.favDelete) l << "delete"; if (sounds.slotSave) l << "store"; return l.join(","); }
+    void armAllModes() { soundPage.favDelete = sounds.slotSave = true; }
     QString zoneAt(QPointF c) const { return ui.zoneAt(c); }
     int maxKeysHeld() const { return keys.maxHeld; }
     QString lastToast() const { return toastText; }

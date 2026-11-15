@@ -21,15 +21,10 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     // demo favourites and sessions, so those lists are not empty
     w.sounds.favs.clear();
     for (int i = 0; i < kExtraCount; ++i) { store::NamedPatch np; np.file = "demo"; np.patch = extraPatch(i); w.sounds.favs.push_back(np); }
-    w.systemPage.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/beat-practice.json"};
+    w.systemPage.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/pulse-practice.json"};
 
-    // ---- a beat, a held chord and a loop ----
+    // ---- a held chord and a loop ----
     inst.set(S_VOLUME, 0.5f);
-    static const char *pat[kDrums] = {"x......x..x.....", "....x.......x...", "x.x.x.x.x.x.x.x.", "...............x",
-                                      "............x...", "..x......x......", "..............x.", "................"};
-    for (int d = 0; d < kDrums; ++d)
-        for (int st = 0; st < kDrumSteps; ++st) inst.beatDo(BT_STEP, d, st, pat[d][st] == 'x');
-    inst.set(S_BEATVOL, 0.7f);
     pump(inst, 60);
     SessionData sd; inst.snapshot(sd);
     sd.pads = extraPatch(1);

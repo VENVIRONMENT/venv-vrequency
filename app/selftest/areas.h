@@ -20,8 +20,7 @@ void testChordPads(Context &ctx);        // chord_pads.cpp
 void testLooper(Context &ctx);           // looper.cpp
 void testTouch(Context &ctx);            // touch.cpp
 void testSaving(Context &ctx);           // saving.cpp
-void testBeat(Context &ctx);             // beat.cpp
-void testKeptBeats(Context &ctx);        // kept_beats.cpp
+void testPulse(Context &ctx);            // pulse.cpp
 void testListeningBack(Context &ctx);    // listening.cpp
 void testControlSocket(Context &ctx);    // socket.cpp, which runs:
 void socketNotes(Context &ctx, Link &link);                // socket_notes.cpp

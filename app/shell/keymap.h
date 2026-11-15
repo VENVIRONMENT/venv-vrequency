@@ -13,7 +13,7 @@ enum Act {
     // command-layer actions (hold the command key, default Ctrl)
     A_KEY_UP, A_SCALE_NEXT, A_RANDOM, A_MUTATE, A_UNDO_SOUND, A_FAVOURITE, A_METRO, A_TAP,
     A_LOOP_UNDO, A_LOOP_PLAY, A_LOOP_CLEAR, A_RECORD, A_HELP, A_XYMAP, A_QUIT,
-    A_BEAT_PLAY, A_BEAT_REC, A_PLAY_LAST, A_CHAT, A_TOUR,
+    A_PLAY_LAST, A_CHAT, A_TOUR,
     A_SCOPE_VIEW, A_FILTER_OPEN, A_FILTER_CLOSE, // the scope's 3D/line switch; held: sweep the cutoff
     A_POLY,                                      // the letter keys: three strings or every key its own note
     A_COUNT
@@ -30,8 +30,8 @@ struct KeyMap {
 
     static KeyMap defaults();
     bool stringKey(int qtKey, int &row, int &col) const;
-    bool drumKey(int qtKey, int &drum) const;   // Beat page: Q W E R / A S D F (and U I O P / H J K L) are pads 1-8
-    QString drumKeys(int drum) const;           // e.g. "Q U"
+    bool pulseKey(int qtKey, int &pad) const;   // Pulse page: Q W E R / A S D F (and U I O P / H J K L) are pads 1-8
+    QString pulseKeys(int pad) const;           // e.g. "Q U"
     QString keyFor(int act, bool commandLayer) const; // for the on-screen guide
 
     // Loads `path` over the defaults; writes a fresh file when none exists.

@@ -36,7 +36,7 @@ void PulseVoice::setFilters() {
 void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rateHz, bool endlessRun, int delay) {
     PulsePad p = p0;
     pulseClamp(p);
-    on = true; forever = endlessRun && pulseContinuous(p.type); fading = false;
+    on = true; runOn = endlessRun && pulseContinuous(p.type); fading = false;
     padNo = pad; type = p.type; sr = sampleRate;
     pos = 0; wait = std::max(0, delay); relGain = 1;
     tone = std::min(p.tone, 0.45f * sr); level = p.level;
@@ -72,7 +72,7 @@ float PulseVoice::next(bool &onset, int &dur) {
     onset = false; dur = 0;
     if (!on) return 0;
     if (wait > 0) { --wait; return 0; }
-    if (!forever && pos >= len) { on = false; return 0; }
+    if (!runOn && pos >= len) { on = false; return 0; }
     if (pos == 0) { onset = true; dur = type == PT_CLICK || type == PT_TICK ? 0 : len; }
     float y = 0;
     switch (type) {
@@ -118,7 +118,7 @@ float PulseVoice::next(bool &onset, int &dur) {
         break;
     }
     }
-    if (!forever && type != PT_TICK) { // a short fade at the end, so every hit stops in silence
+    if (!runOn && type != PT_TICK) { // a short fade at the end, so every hit stops in silence
         const int left = len - pos;
         if (left < fadeLen) y *= (float)left / fadeLen;
     }
@@ -127,7 +127,7 @@ float PulseVoice::next(bool &onset, int &dur) {
         if (relGain < 1e-4f) on = false;
     }
     ++pos;
-    if (forever && pos > (1 << 30)) pos = 1 << 29; // an endless voice never runs its counter out
+    if (runOn && pos > (1 << 30)) pos = 1 << 29; // an endless voice never runs its counter out
     return y * level * relGain;
 }
 

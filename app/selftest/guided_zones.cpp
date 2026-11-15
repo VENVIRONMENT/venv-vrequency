@@ -32,11 +32,11 @@ void guideZoneListing(Context &ctx, Link &link) {
     check(allSame && total > 150, QString("zones lists every named zone of every page, with a rectangle and a label (%1 in all%2)").arg(total).arg(bad.isEmpty() ? QString() : " - differs on " + bad.join(",")));
     w.setPage(PG_PLAY); w.shot();
     // another page is listed without leaving this one
-    const QJsonObject r = c.call(R"({"cmd":"zones","page":"beat"})");
+    const QJsonObject r = c.call(R"({"cmd":"zones","page":"pulse"})");
     check(okOf(r) && w.page() == PG_PLAY && w.zoneNames().contains(zn::octave_up), "listing another page does not move the player off the page they are on");
     QStringList names; QHash<QString, QString> labels;
     for (const QJsonValue &v : result(r)["zones"].toArray()) { names << v.toObject()["name"].toString(); labels[v.toObject()["name"].toString()] = v.toObject()["label"].toString(); }
-    check(names.contains(zn::at(zn::pad, 0)) && names.contains(zn::beatrec) && labels[zn::beatrec].contains("Rec"), "labels come from the text drawn on the control (Rec)");
+    check(names.contains(zn::at(zn::pad, 0)) && names.contains(zn::pulselatch) && labels[zn::pulselatch].contains("Latch"), "labels come from the text drawn on the control (Latch)");
     QStringList synth = strs(QJsonArray::fromStringList(w.zoneNames()));
     check(synth.contains(zn::octave_down) && synth.contains(zn::octave_up) && synth.contains(zn::loop_pedal) && synth.contains(zn::xy) && synth.contains(zn::octave_readout) && synth.contains(zn::hdr_tune),
           "the Synth page names its octave buttons, loop pedal, pad and tabs readably");
@@ -52,7 +52,7 @@ void guideZoneListing(Context &ctx, Link &link) {
         }
         rowsPer[sub] = n;
     }
-    check(rowsPer[0] == 16 && rowsPer[1] == 12 && rowsPer[2] == 14 && unique, QString("every help row on all three sections is a named zone (%1/%2/%3)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]));
+    check(rowsPer[0] == 16 && rowsPer[1] == 12 && rowsPer[2] == 12 && unique, QString("every help row on all three sections is a named zone (%1/%2/%3)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]));
     w.setPage(PG_HELP); w.shot();
     QStringList hz = w.zoneNames();
     check(hz.contains(zn::help_ask) && hz.contains(zn::help_next) && hz.contains(zn::help_back) && hz.contains(zn::help_section), "the Help page has Ask Rook, next section, back and its section title as zones");
@@ -115,7 +115,7 @@ void guideHostileArguments(Context &ctx, Link &link) {
         if (!rr.contains("ok")) ++malformed; else if (!rr["ok"].toBool()) ++refused;
     }
     w.setPage(PG_PLAY); w.guide.clearHighlight();
-    for (const char *p : pv) for (const char *s : {"null", "\"beat\"", "7", "[]", "\"x\""}) {
+    for (const char *p : pv) for (const char *s : {"null", "\"pulse\"", "7", "[]", "\"x\""}) {
         const QByteArray req = QByteArray("{\"cmd\":\"zones\",\"page\":") + p + ",\"sub\":" + s + "}";
         const QJsonObject rr = gctl.handle(QJsonDocument::fromJson(req).object());
         ++total;

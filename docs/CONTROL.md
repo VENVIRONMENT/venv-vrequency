@@ -39,8 +39,8 @@ the same string: both can sound, and a key pressed on a sounding string slides i
 
 ### state
 Everything at a glance: `page`, `sound` (name, `slot` 1-10 or null, `slots`, `favourites`, `params` by key),
-`scale` (name, index, root, octave), `tempo`, `volume`, `looper`, `beat` (playing, rec, kit, `steps` per drum
-as 16 characters), `chord_pads` (`playing`, `mode` hold or drone, `held`: the held chord's name or null), `playing`, `voices`, `toast` (the last message the app showed), `chat`
+`scale` (name, index, root, octave), `tempo`, `volume`, `looper`, `pulse` (`sync`, and `pads`: for each of the eight
+`type`, `tone`, `length`, `rate`, `level`, `latched`), `chord_pads` (`playing`, `mode` hold or drone, `held`: the held chord's name or null), `playing`, `voices`, `toast` (the last message the app showed), `chat`
 (`listening`, `last_seq`, `unread`) and `chat_tail` (last ten messages).
 ```
 {"id":1,"cmd":"state"}
@@ -71,7 +71,7 @@ required; `unit` `"degree"` (default) or `"midi"`; `ms` 50..30000 total (default
 
 ### release / panic
 `release` lets go of the notes played over the socket (optionally one `string`). `panic` silences everything,
-as `Backspace` does (also stops the beat, the chord pads and the loop).
+as `Backspace` does (also drops every pulse latch and stops the chord pads and the loop).
 ```
 {"id":7,"cmd":"release","string":1}
 {"id":8,"cmd":"panic"}
@@ -124,17 +124,20 @@ Saves the current sound as a favourite under `name` (1-24 characters). A favouri
 {"id":20,"cmd":"loop","action":"record"}
 ```
 
-### beat
-Any of: `kit` (soft, crunchy, glitchy), `set_step` (one `{drum, step, on}` or a list; `drum` 0-7 or a name:
-kick, snare, hat, openhat, clap, rim, tom, cowbell; `step` 0-15, `on` default true), `hit` (`{drum}` or just
-the drum: plays it now), `action` `play` | `stop` | `clear`.
+### pulse
+The pulse pads. Any of: `type` (click, tick, noise, blip, gated, train, thump, hiss), `tone` (Hz, 20-18000),
+`length` (ms, 1-2000), `rate` (Hz, 0.25-200), `level` (0-1), `latch` (true / false), `hit` (true: plays it now)
+for one pad, `pad` 0-7 (required with any of those); and `sync` (true / false: every pad's rate follows the
+tempo). Settings are applied before `latch` and `hit`. What each field means per kind is in GUIDE chapter 8.
 ```
-{"id":23,"cmd":"beat","kit":"crunchy","set_step":[{"drum":"kick","step":0},{"drum":"snare","step":4}],"action":"play"}
-{"id":24,"cmd":"beat","hit":{"drum":"clap"}}
+{"id":23,"cmd":"pulse","pad":5,"type":"train","tone":1000,"length":250,"rate":40,"level":0.8,"hit":true}
+{"id":24,"cmd":"pulse","pad":4,"latch":true}
+{"id":25,"cmd":"pulse","sync":true}
 ```
+The `beat` command of earlier versions is gone (the step sequencer was removed in 1.0); it is refused as unknown.
 
 ### page
-`name`: synth, sound, beat, tune, system, help or chat. Changing page clears any highlight.
+`name`: synth, sound, pulse, tune, system, help or chat (`beat`, the old name, still works). Changing page clears any highlight.
 ```
 {"id":28,"cmd":"page","name":"chat"}
 ```
@@ -183,14 +186,14 @@ While any chat_wait is pending, the Chat page says `copilot: listening`.
 
 ### tour
 Opens or closes the player's tour (see GUIDE chapter 17). It only draws; it never changes sound or settings.
-`action`: `open` (default) or `close`. `page`: tour page id (synth, sound, sound-deep, beat, tune, system,
+`action`: `open` (default) or `close`. `page`: tour page id (synth, sound, sound-deep, pulse, tune, system,
 key-test, help, chat; the aliases play, sys and params are accepted; case and spaces ignored). `element`: a control or zone name to select on that page
 (unknown names open the page with nothing selected). `guided`: true starts the seven-page walk. Bad types, unknown
 pages, or a page over 24 or element over 64 characters, are refused. The pictures are built after the reply, so the reply shows
 `"building":true` the first time. The reply carries the tour state (`open`, `building`, `page`, `selected`, `concept`, `concepts_open`, `guided`, `step`), which is also `state.tour`:
 ```
-{"id":30,"cmd":"tour","page":"beat","element":"pad0"}
--> {"ok":true,"open":true,"building":true,"page":"beat","selected":"pad0","guided":false,...}
+{"id":30,"cmd":"tour","page":"pulse","element":"pad0"}
+-> {"ok":true,"open":true,"building":true,"page":"pulse","selected":"pad0","guided":false,...}
 {"id":31,"cmd":"tour","action":"close"}
 ```
 The `page` and `highlight` commands close the tour first. The player can also open it with `Ctrl`+`O` or the Help
@@ -207,7 +210,7 @@ player is on (`Ctrl`+`Y`), together with where the player was when they asked.
 `zones`: 1-16 zone names (each up to 48 characters); `label`: optional caption up to 40 characters (control
 characters become spaces); `ms`: how long, 100-30000 (default 8000); `page`: optional page to switch to
 **first, in the same step** (any page name as for `page`); `sub`: with `help`, which section of the Help page
-(`playing`, `commands`, `beat` or 0-2).
+(`playing`, `commands`, `pulse` or 0-2).
 
 The named zones of the page being shown get a pulsing double rule (two white lines, 2 px clear of the control).
 With a `label` a small caption tag sits next to the first one: always on screen, never over a highlighted zone,
@@ -277,10 +280,10 @@ lowest, `pad0` first drum, `chord0` first chord pad...). The authoritative list 
 
 | Page | Zones |
 |---|---|
-| every page but Synth | `tab_synth` `tab_sound` `tab_beat` `tab_tune` `tab_system` `tab_help` `tab_chat` |
+| every page but Synth | `tab_synth` `tab_sound` `tab_pulse` `tab_tune` `tab_system` `tab_help` `tab_chat` |
 | synth | `hdr_sound` (name) `hdr_tune` (key, tempo, octave) `key_readout` `tempo_readout` `octave_readout` `xy` (scope pad) `xymap` `xyhold` `string0` `string1` `string2` `chord0`-`chord6` `padmode` `padplay` `loop_pedal` `loop_undo` `loop_playstop` `sustain` `octave_down` `octave_up` `new_sound` `menu` |
 | sound | `slot0`-`slot9` `newsound` `mutate` `undosound` `slotsave` `fav` `deep` `param<N>` `deepprev` `deepnext` `favitem0`-`favitem5` `favprev` `favdel` |
-| beat | `pad0`-`pad7` `beatrec` `beatplay` `beaterase` `kit-` `kit+` `beatvol` `bpm3-` `bpm3+` `beatslot0`... `beatnew` `beatmore` |
+| pulse | `pad0`-`pad7` `pulsewave` (the selected pad's picture) `pulsetone` `pulselength` `pulserate` `pulselevel` `pulselast` (the strip) `pulseloop` `pulselatch` `pulsesync` `pulsetype` |
 | tune | `root0`-`root11` `scale0`-`scale7` `oct-/+` `rowint-/+` `bendr-/+` `bpm-/+` `tap` `glidescale` `listen` `lkey` `ltempo` `lboth` `lnext` |
 | system | `volume` `loopvol` `xymap0`-`xymap5` `xyhold2` `chordrow` `recwav` `playlast` `savesession` `keytest` `session0`... `panic` `latency-/+` `factory` `quit` |
 | help | `help_section` `help_next` `help_ask` `help_back` and one `help_row_<description>` per row, e.g. `help_row_loop_pedal_count_in_record_play_ov`; three sections (`sub`), list them with `zones` |

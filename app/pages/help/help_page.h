@@ -12,7 +12,7 @@ class Guide;
 
 struct HelpRow { QString k, d; };            // the keys, and what they do
 constexpr int kHelpParts = 3;
-std::vector<HelpRow> helpRows(const KeyMap &km, int part);   // part 0 playing, 1 commands, 2 beat
+std::vector<HelpRow> helpRows(const KeyMap &km, int part);   // part 0 playing, 1 commands, 2 pulse
 
 class HelpPage : public Page {
 public:

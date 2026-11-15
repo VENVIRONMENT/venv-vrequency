@@ -14,7 +14,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 5. [The scope and touch pad](#5-the-scope-and-touch-pad)
 6. [Sounds](#6-sounds)
 7. [Chord pads](#7-chord-pads)
-8. [Beat](#8-beat)
+8. [Pulse](#8-pulse)
 9. [The loop pedal](#9-the-loop-pedal)
 10. [Key, scale and tempo](#10-key-scale-and-tempo)
 11. [Saving and recording](#11-saving-and-recording)
@@ -78,7 +78,7 @@ The bottom row:
 - **− / +**: octave down or up.
 - **New**: invents a new random sound.
 - **Menu**: opens the Sound page, which has the tab strip along the top for all the other pages:
-  Synth, Sound, Beat, Tune, System, Help and Chat, in that order.
+  Synth, Sound, Pulse, Tune, System, Help and Chat, in that order.
 
 `Tab` steps through the pages and `Esc` returns to Synth.
 
@@ -136,7 +136,7 @@ returns to normal when you let go.
 
 ![The Glitch mapping](shots/7-glitch.png)
 
-Glitch crushes everything you hear (lead, chord pads, loop and drums) into a rough, low-quality digital
+Glitch crushes everything you hear (lead, chord pads, loop and pulses) into a rough, low-quality digital
 sound for as long as your finger is on the pad.
 
 - **Left to right (Coarse):** the sound gets blockier and more metallic.
@@ -219,61 +219,55 @@ the chords. To give them a new sound, stop them, choose the sound, then tap a ch
 From the keyboard, hold `Alt` and press `Z` to `M` for chords one to seven. `$` turns the whole
 bottom row into chord keys until you press it again.
 
-## 8. Beat
+## 8. Pulse
 
-![The Beat page](shots/9-beat.png)
+![The Pulse page](shots/9-pulse.png)
 
-The Beat page is a small drum machine: eight drums, one bar of sixteen steps, three kits.
+The Pulse page has eight **pulse pads**: short, exact sounds made of clicks, ticks, noise, pure
+sine tones, pulses and the silence between them. There is no step sequencer; you play them, latch
+them, sync them to the tempo and record them with the loop pedal.
 
-**Play the pads.** Tap a pad, or use the keyboard:
+**Play the pads.** Tap a pad, or use the keyboard: `Q` `W` `E` `R` (or `U` `I` `O` `P`) are pads 1
+to 4, `A` `S` `D` `F` (or `H` `J` `K` `L`) pads 5 to 8. The bottom row still plays the low string.
+A tap also **selects** the pad; `Left` / `Right` select the pad before or after without playing it.
+Each pad shows a small picture of its sound. The picture is made by running the pad's own
+generator, the same code the audio uses, so it is the sound you hear (drawn again whenever a
+setting changes).
 
-| Pads | Left hand | Right hand |
-|---|---|---|
-| 1 to 4: Kick, Snare, Hat, Open hat | `Q` `W` `E` `R` | `U` `I` `O` `P` |
-| 5 to 8: Clap, Rim, Tom, Cowbell | `A` `S` `D` `F` | `H` `J` `K` `L` |
+**The eight kinds.** Pad *n* starts as the *n*-th kind, but any pad can be any kind (**Type**).
+What **Tone** means depends on the kind:
 
-Each pad shows its two keys in the corner. Two keys per pad let you play fast repeats with two
-fingers. While you are on this page the bottom row (`Z`‥`M`) still plays the low string.
+| Kind | What it is | Tone | Length | Rate |
+|---|---|---|---|---|
+| Click | a damped cosine: one spike and a short ring | the ring, Hz | how fast it dies | latch repeat |
+| Tick | 1 to 3 samples at full height, nothing else | width: 16 kHz and up 1 sample, 8 kHz and below 3 | not used | latch repeat |
+| Noise burst | white noise with a fast decay | low-pass on the noise | its decay | latch repeat |
+| Sine blip | a pure sine with soft edges | pitch | how long | latch repeat |
+| Gated tone | a pure sine switched on and off | pitch | how long | gates a second |
+| Pulse train | clicks at a steady rate | each click's ring | how long | clicks a second |
+| Sub thump | a low sine falling from four times Tone to Tone in about 15 ms | where it falls to | its decay | latch repeat |
+| Hiss | band-passed noise that swells (first 35 %) and fades | the band | the whole swell | latch repeat |
 
-**Make a beat.**
+**The selected pad.** The big picture shows its sound over its whole length, with the length at the
+top left and, at the top right, what it holds (clicks, gates, samples, or its tone). The four
+sliders beside it set **Tone** (20 Hz to 18 kHz), **Length** (1 ms to 2 s), **Rate** (0.25 to 200 Hz)
+and **Level**; the first three move in octaves.
 
-1. Tap **Rec** (or press `Enter`). The beat starts and the metronome clicks.
-2. Play the pads in time. Each hit is written into the bar at the nearest step and plays back
-   the next time round. The strip at the top shows the whole bar; the box moving across it is
-   the step that is sounding.
-3. Tap **Rec** again to stop writing. The beat keeps playing, and the pads now play without
-   changing it.
+**Last 4 s.** The strip under it has one lane per pad. Every hit, every click of a pulse train and
+every gate of a gated tone is a tick at the moment the engine played it, oldest on the left; a long
+sound (a hiss, a blip) is a thin bar for its length.
 
-**Fix it.** Tap **Erase**, then the pad of the drum you want to clear. Only that drum's hits go.
+**The soft keys.**
 
-**Play / Stop** (`Space` on this page) starts and stops the beat. From any other page, `Ctrl`+`J`
-starts and stops it and `Ctrl`+`I` switches Rec.
-
-**Keep several beats.** The row under the pads holds every beat you have made, like the patterns
-of a drum machine. The beat shown at the top is the one lit in the row, and whatever you do to it is
-kept in its place as you go: there is nothing to save by hand.
-
-| To | Do |
+| Key | Does |
 |---|---|
-| Start a fresh beat and keep the one you have | Tap **+ New**. The new beat is empty and uses the kit you have now |
-| Go back to another beat | Tap it, or press `Left` / `Right` for the beat before or after |
-| See more than seven | Tap **More**: the row shows six beats a page, then More and + New |
+| Loop | the loop pedal (the same as `Enter`): pad taps made while it records go into the loop and play back with the pad's settings of the moment |
+| Latch | the selected pad keeps going until you tap it (or Latch) again. A gated tone or pulse train runs without end; any other kind is hit again Rate times a second. Several pads can be latched; `Backspace` stops them all |
+| Sync | every pad's Rate snaps to the nearest division of the tempo (from four bars to 1/512), shown beside the rate; latched one-shots then fall on the beat clock's grid, in time with the loop |
+| Type | the selected pad's next kind |
 
-When the beat is playing, the one you tap starts on the next bar line, so it stays in time; until
-then it shows "next bar". Stopped, it changes at once. Each beat keeps its own kit; the tempo and
-the beat volume are shared by all of them. There is no limit to how many you keep, and they are
-saved a moment after each change. A beat cannot be deleted or renamed yet.
-
-**Kit** chooses the drum sounds: Soft (round and quiet, with a little room), Crunchy (driven and
-lo-fi) or Glitchy (zaps and crushed noise). **Beat volume** and **Tempo** are underneath.
-
-The beat follows the tempo and shares its bar lines with the loop pedal, so
-they stay together whichever you start first. The Glitch touch-pad mapping crushes the drums along
-with everything else. Every kept beat is saved a moment after it changes; a saved session holds
-the beat shown, not the whole row.
-
-Things it does not do yet: more than one bar, placing a hit by tapping the strip, and louder or
-quieter hits. The loop pedal does not record the pads.
+The pads' settings and Sync are saved in your state and in sessions; latches are not, so nothing
+starts by itself. Latched repeats are not written into a loop, only taps.
 
 ## 9. The loop pedal
 
@@ -322,13 +316,13 @@ Everything is kept in the `vrequency` folder in your home folder.
 |---|---|---|
 | Your setup | Automatic when you quit | `state.json` |
 | A favourite sound | Sound page, Save, or `Ctrl`+`F` | `favourites/` |
-| A session: sounds, chord pads, loops and the beat together | System page, Save session | `sessions/` |
+| A session: sounds, chord pads, loops and the pulse pads together | System page, Save session | `sessions/` |
 | A recording of what you hear | System page, Record, or `Ctrl`+`E`. The same again stops it. | `recordings/` |
 
 **Listening back.** System page, **Play last** (or `Ctrl`+`W`) plays your newest recording through
 the speaker. The same again stops it. You can play along while it runs.
 
-To load a session, tap it in the list on the System page, then start the loop or the beat, or tap a chord.
+To load a session, tap it in the list on the System page, then start the loop, or tap a chord.
 Sessions saved by earlier versions load too; their track and chord progression are left out.
 
 ## 12. System page
@@ -378,18 +372,17 @@ Commands, with `Ctrl` held:
 | `T` | Tap tempo | `H` | Help |
 | `M` | Metronome | `O` | Tour |
 | `G` | Next touch-pad mapping | `V` | Scope: 3D stack or line |
-| `J` | Beat play / stop | `C` (hold) | Open the filter |
-| `I` | Beat Rec on / off | `X` (hold) | Close the filter |
+| `P` | Strings / Poly keyboard | `C` (hold) | Open the filter |
+| | | `X` (hold) | Close the filter |
 | `Y` | Chat dock: ask Rook on this page (`Shift`: the Chat page) | | |
 
-On the Beat page only:
+On the Pulse page only:
 
 | Key | Does |
 |---|---|
 | `Q` `W` `E` `R`, or `U` `I` `O` `P` | Pads 1 to 4 |
 | `A` `S` `D` `F`, or `H` `J` `K` `L` | Pads 5 to 8 |
-| `Space` | Beat play / stop |
-| `Enter` | Rec on / off |
+| `Left` / `Right` | Select the pad before / after |
 
 To change any binding, edit `keymap.json` in the `vrequency` folder and restart the app. Deleting
 that file restores the defaults.
@@ -405,7 +398,7 @@ that file restores the defaults.
 | Loops play back early or late | System page, Loop fix. Adjust in steps until a recorded bar lines up. |
 | Some keys do not sound when held together | Open Key test on the System page and hold the same keys. A key missing there is a limit of the keyboard, not the synth. |
 | A slot was overwritten by mistake | Storing to a slot cannot be undone. Factory sounds on the System page puts the ten originals back, replacing anything else you stored in slots. |
-| My drum hits land on the wrong step | The Bluetooth speaker is late, so you hit late. System page, Loop fix moves recorded hits earlier; raise it if hits land a step late, lower it if early. |
+| Pulse taps in a loop land late | The Bluetooth speaker is late, so you tap late. System page, Loop fix moves recorded taps earlier; raise it if they land late, lower it if early. |
 | The sound is distorted or quiet with "Limit" showing | Lower Master volume, or the sound's Drive. |
 
 To reconnect the speaker from a terminal, list the paired devices to find its address
@@ -425,7 +418,7 @@ bluetoothctl connect XX:XX:XX:XX:XX:XX
 
 The last tab, **Chat**, is a conversation between you and an AI copilot (for example the agent Rook, or
 Claude Code) that is connected to the app through its control socket. It can play notes, change the sound,
-set up a beat and look at the screen while you talk. The commands it uses are in
+shape and play the pulse pads and look at the screen while you talk. The commands it uses are in
 [CONTROL.md](CONTROL.md). The socket is a local file only your user can open; `vrequency --no-control`
 switches it off, and then the Chat page simply stays quiet.
 
@@ -490,11 +483,11 @@ never changes your sound or settings, and the keys do not reach the synth while 
 app starts it offers the tour in a banner at the top (`Enter` takes it, `Esc` or waiting says later; it is only
 offered once). Rook can also open it for you. It reopens on the page you left it on.
 
-**Reading it.** The chips under the title pick the page (Synth, Sound, Edit, Beat,
+**Reading it.** The chips under the title pick the page (Synth, Sound, Edit, Pulse,
 Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
 the rest dims, and the card on the right says what it does, how to use it by touch and by keys, and **Recall**,
 which is where to find it again. **Related** chips jump to the next card. Readouts that are not buttons (the
-level strip, scope readouts, the step grid, the Listen result, the status box, the key list rows) have cards
+level strip, scope readouts, the Listen result, the status box, the key list rows) have cards
 too. Tap empty space to clear. **Concepts** lists the ideas behind the controls (scale lock, tempo, bar lines...).
 The Edit chip is the All parameters editor; its Prev and Next flip through the four parameter pages.
 
@@ -504,7 +497,7 @@ editor), `Space` or `Page Down` scrolls a long card, `Home` clears the selection
 concept list, then the selection, then the tour.
 
 **Start here.** The first time, or from the banner, the tour walks seven pages in order (Synth, Sound, Tune,
-Beat, System, Help, Chat) with Back, Next and **Explore freely**.
+Pulse, System, Help, Chat) with Back, Next and **Explore freely**.
 
 **Ask Rook.** The button at the bottom right leaves the tour, goes to the real page the card belongs to, and
 opens the chat dock with a question already written (not sent). Press `Enter` to send it; Rook is told the

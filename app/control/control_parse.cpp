@@ -1,4 +1,4 @@
-// venv-vrequency — the control socket's small parsers: key names, drum names, chord degrees, chat lines.
+// venv-vrequency — the control socket's small parsers: key names, chord degrees, chat lines.
 #include "app/control/control_internal.h"
 
 using namespace td;
@@ -14,14 +14,6 @@ int parseRoot(const QJsonValue &v) {
     static const char *sharp[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
     static const char *flat[12] = {"C", "DB", "D", "EB", "E", "F", "GB", "G", "AB", "A", "BB", "B"};
     for (int i = 0; i < 12; ++i) if (s == sharp[i] || s == flat[i]) return i;
-    return -1;
-}
-
-int parseDrum(const QJsonValue &v) {
-    if (v.isDouble()) { const double d = v.toDouble(); return (d >= 0 && d < kDrums && d == std::floor(d)) ? (int)d : -1; }
-    if (!v.isString()) return -1;
-    const QString s = v.toString().toLower().remove(' ').remove('_').remove('-');
-    for (int i = 0; i < kDrums; ++i) if (s == QString(drumName(i)).toLower().remove(' ')) return i;
     return -1;
 }
 

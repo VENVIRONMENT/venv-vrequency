@@ -15,28 +15,25 @@ namespace selftest {
 namespace {
 // every page as it stands, while a slide is held
 void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
-    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-beat", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-pulse", "3-tune", "4-system", "5-help", "14-chat"};
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p);
-        if (p == PG_BEAT) { // a beat in progress, so the strip and the play line show something
-            static const char *pat[kDrums] = {"x......x..x.....", "....x.......x...", "x.x.x.x.x.x.x.x.", "...............x",
-                                              "............x...", "..x......x......", "..............x.", "................"};
-            for (int d = 0; d < kDrums; ++d)
-                for (int st = 0; st < kDrumSteps; ++st) inst.beatDo(BT_STEP, d, st, pat[d][st] == 'x');
-            inst.set(S_BEATVOL, 0.7f);
-            inst.beatDo(BT_PLAYSTOP);
+        if (p == PG_PULSE) { // hits in the strip, a latched pad, the pulse train selected
+            for (int k : {0, 2, 6, 3, 7, 1}) { w.pulsePage.hitPad(k); w.shot(); wait(160); }
+            w.pulsePage.setLatch(4, true); wait(500);
+            w.pulsePage.hitPad(5); wait(200);
         }
         if (p == PG_CHAT) { // a conversation, so the page has something to show
-            w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a beat under it?", "ask", false);
+            w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want some pulses under it?", "ask", false);
             w.chat.add("you", "yes, something slow with a soft pad", "say", true);
-            w.chat.add("rook", "On it: a slow beat on the soft kit, tempo down to 84. Play over it and I will listen.", "say", false);
+            w.chat.add("rook", "On it: a pulse train on pad 6, synced, tempo down to 84. Play over it and I will listen.", "say", false);
             w.chat.add("rook", "Tip: hold Space and slide between the top row keys for long glides.", "tip", false);
             w.chat.seen();
             w.chat.toggle(); w.chat.toggle(); w.setPage(PG_CHAT); // leaves the draft empty, unread cleared
         }
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
         w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
-        if (p == PG_BEAT) { inst.beatDo(BT_PLAYSTOP); inst.set(S_BEATVOL, 0.7f); wait(60); }
+        if (p == PG_PULSE) { w.pulsePage.setLatch(4, false); wait(60); }
     }
 }
 

@@ -70,11 +70,11 @@ void socketChat(Context &ctx, Link &link) {
     // the hotkey and Esc
     key(w, Qt::Key_Escape, true); key(w, Qt::Key_Escape, false);
     check(w.page() != PG_CHAT, "Esc leaves the Chat page");
-    w.setPage(PG_BEAT);
+    w.setPage(PG_PULSE);
     key(w, Qt::Key_Control, true); key(w, Qt::Key_Shift, true); press(w, Qt::Key_Y); key(w, Qt::Key_Shift, false); key(w, Qt::Key_Control, false);
     check(w.page() == PG_CHAT, "Ctrl+Shift+Y jumps to the Chat page");
     key(w, Qt::Key_Control, true); press(w, Qt::Key_Y); key(w, Qt::Key_Control, false);
-    check(w.page() == PG_BEAT, "and Ctrl+Y again goes back to where you were");
+    check(w.page() == PG_PULSE, "and Ctrl+Y again goes back to where you were");
     // history survives a restart
     w.saveState();
     QJsonObject sj; store::readJson(store::baseDir() + "/state.json", sj);

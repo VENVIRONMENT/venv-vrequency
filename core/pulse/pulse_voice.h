@@ -18,7 +18,7 @@ public:
     void retune(const PulsePad &p, float rateHz);   // live changes on an endless voice
     void release(float ms = 2.0f);                  // fade out quickly
     bool active() const { return on; }
-    bool endless() const { return forever; }
+    bool endless() const { return runOn; }
     bool releasing() const { return fading; }
     int pad() const { return padNo; }
     int age() const { return pos; }
@@ -30,7 +30,7 @@ public:
     static int tickWidth(float tone, float sr);              // the tick's 1..3 samples
 
 private:
-    bool on = false, forever = false, fading = false;
+    bool on = false, runOn = false, fading = false;
     int padNo = 0, type = 0, pos = 0, len = 1, wait = 0, fadeLen = 1;
     float sr = 48000, tone = 1000, rate = 4, level = 0.8f, relGain = 1, relCoef = 0.99f;
     float decay = 1, decayCoef = 1;   // exponential envelope, multiplied each sample

@@ -14,7 +14,7 @@ class Sounds;
 class SinkProbe;
 
 // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
-enum PageId { PG_PLAY, PG_SOUND, PG_BEAT, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
+enum PageId { PG_PLAY, PG_SOUND, PG_PULSE, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
 const char *pageName(int p);                 // "synth", "sound"...: the name the control socket and the zones use
 const char *pageTitle(int p);                // "Synth", "Sound"...: what the tab says
 int pageFromName(const QString &n);          // -1 when unknown; "play" is the Synth page
@@ -44,7 +44,7 @@ public:
     virtual const Recorder &recorderNow() const = 0;           // is it recording, and for how long
     virtual bool noAudioDevice() const = 0;                    // the output is the dummy device: nothing can be heard
     virtual const SinkProbe &sinkNow() const = 0;              // which output device the system says the sound goes to
-    virtual bool saveSession(const QString &path) = 0;         // settings, sounds, the beat and loops, to a file
+    virtual bool saveSession(const QString &path) = 0;         // settings, sounds, the pulse pads and loops, to a file
     virtual bool loadSession(const QString &path) = 0;         // false when the file cannot be read
     void set(int setting, float v) { inst.set(setting, v); }
 

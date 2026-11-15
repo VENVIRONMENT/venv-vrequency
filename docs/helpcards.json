@@ -44,7 +44,7 @@
     "hdr_tune": {
      "title": "KEY / SCALE / TEMPO",
      "kind": "readout",
-     "summary": "Root note, scale, tempo with a beat lamp, and octave.",
+     "summary": "Root note, scale, tempo with a lamp, and octave.",
      "does": "Left to right: the key's root note, the scale name (min pent = minor pentatonic), tempo in beats per minute with a lamp that flashes on each beat while something plays, and the octave shift.",
      "use": [
       {
@@ -267,7 +267,7 @@
      ],
      "recall": "Synth page, bottom string. Chord row on: label tags show on these keys; $ switches it off.",
      "tips": [
-      "On the Beat page this row still plays notes."
+      "On the Pulse page this row still plays notes."
      ],
      "related": [
       "synth.string1",
@@ -543,7 +543,7 @@
      "title": "MENU",
      "kind": "button",
      "summary": "Opens the Sound page and the tab strip to other pages.",
-     "does": "The Synth page has no tab strip, so Menu takes you to the Sound page, which shows the tabs for Synth, Sound, Beat, Tune, System, Help and Chat.",
+     "does": "The Synth page has no tab strip, so Menu takes you to the Sound page, which shows the tabs for Synth, Sound, Pulse, Tune, System, Help and Chat.",
      "use": [
       {
        "how": "Touch",
@@ -599,8 +599,8 @@
     "tempo_readout": {
      "title": "TEMPO READOUT",
      "kind": "readout",
-     "summary": "The speed of the beat and the loop, in beats per minute.",
-     "does": "Shows the tempo. The small square beside it blinks on the beat while anything is running. One tempo drives the beat, the loop pedal, the delay and the click.",
+     "summary": "The speed of the loop and the tempo sync, in bpm.",
+     "does": "Shows the tempo. The small square beside it blinks on the beat while anything is running. One tempo drives the loop pedal, the pulse pads' SYNC, the delay and the click.",
      "use": [
       {
        "how": "Touch",
@@ -614,7 +614,7 @@
      "keys": [
       "Ctrl+T"
      ],
-     "recall": "Top of the Synth page, between key and octave. Also Tune and Beat.",
+     "recall": "Top of the Synth page, between key and octave. Also on the Tune page.",
      "tips": [
       "Two taps already set it; more taps average out (within 2 seconds)."
      ],
@@ -667,7 +667,7 @@
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -693,7 +693,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -1166,7 +1166,7 @@
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -1192,7 +1192,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -2394,15 +2394,15 @@
    },
    "recall": "Sound tab, then All parameters. Prev and Next turn the four pages."
   },
-  "beat": {
-   "title": "Beat",
-   "intro": "A drum machine: eight pads, three kits, one bar of 16 steps written by playing, and a row of kept beats.",
+  "pulse": {
+   "title": "Pulse",
+   "intro": "Eight pulse pads: clicks, ticks, noise, pure tones and pulses. Pick a pad, shape it with four sliders, latch it, sync it, loop it.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -2428,7 +2428,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -2436,517 +2436,510 @@
      ]
     },
     "pad0": {
-     "title": "PAD 1: KICK",
+     "title": "PAD 1",
      "kind": "pad",
-     "summary": "The low bass drum thump.",
-     "does": "A short low thump: the bass drum that anchors the beat. Usually on steps 1 and 9 of the bar for a steady pulse. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 1 and selects it. Starts as click.",
+     "does": "A short ringing click: TONE is its ring, LENGTH how fast it dies. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press Q or U (two keys so you can repeat fast)."
+       "text": "Press Q or U (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "Q",
       "U"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the kick into my beat?"
+     "ask": "What can I do with pad 1?"
     },
     "pad1": {
-     "title": "PAD 2: SNARE",
+     "title": "PAD 2",
      "kind": "pad",
-     "summary": "The sharp backbeat crack.",
-     "does": "A bright crack with a short noisy tail. Classically on the second and fourth beats of the bar. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 2 and selects it. Starts as tick.",
+     "does": "One to three samples at full height, nothing else. TONE sets the width. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press W or I (two keys so you can repeat fast)."
+       "text": "Press W or I (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "W",
       "I"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the snare into my beat?"
+     "ask": "What can I do with pad 2?"
     },
     "pad2": {
-     "title": "PAD 3: HAT",
+     "title": "PAD 3",
      "kind": "pad",
-     "summary": "A short closed hi-hat tick.",
-     "does": "A very short, thin metallic tick. Played on every step it gives a steady ticking pulse; off-beat hits are a little quieter. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 3 and selects it. Starts as noise burst.",
+     "does": "White noise that dies at once. TONE is a low-pass: lower is darker. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press E or O (two keys so you can repeat fast)."
+       "text": "Press E or O (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "E",
       "O"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the hat into my beat?"
+     "ask": "What can I do with pad 3?"
     },
     "pad3": {
-     "title": "PAD 4: OPEN HAT",
+     "title": "PAD 4",
      "kind": "pad",
-     "summary": "A longer, ringing hi-hat.",
-     "does": "A hi-hat left open: a longer sizzle that rings out. Often placed between kicks, on the off-beats. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 4 and selects it. Starts as sine blip.",
+     "does": "A short pure sine at TONE for LENGTH, with soft edges. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press R or P (two keys so you can repeat fast)."
+       "text": "Press R or P (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "R",
       "P"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the open hat into my beat?"
+     "ask": "What can I do with pad 4?"
     },
     "pad4": {
-     "title": "PAD 5: CLAP",
+     "title": "PAD 5",
      "kind": "pad",
-     "summary": "A hand clap.",
-     "does": "A short burst of noise like hands clapping. Layer it with the snare or use it instead. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 5 and selects it. Starts as gated tone.",
+     "does": "A pure sine switched on and off RATE times a second, for LENGTH. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press A or H (two keys so you can repeat fast)."
+       "text": "Press A or H (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "A",
       "H"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the clap into my beat?"
+     "ask": "What can I do with pad 5?"
     },
     "pad5": {
-     "title": "PAD 6: RIM",
+     "title": "PAD 6",
      "kind": "pad",
-     "summary": "A rim click.",
-     "does": "A dry, sharp click like a stick on the rim of a snare. Good for quiet, sparse patterns. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 6 and selects it. Starts as pulse train.",
+     "does": "Clicks RATE times a second for LENGTH. TONE is each click's ring. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press S or J (two keys so you can repeat fast)."
+       "text": "Press S or J (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "S",
       "J"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the rim into my beat?"
+     "ask": "What can I do with pad 6?"
     },
     "pad6": {
-     "title": "PAD 7: TOM",
+     "title": "PAD 7",
      "kind": "pad",
-     "summary": "A pitched drum.",
-     "does": "A rounded, pitched drum hit, lower than the snare. Good for fills and rolls around the bar's end. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 7 and selects it. Starts as sub thump.",
+     "does": "A low sine that drops from four times TONE to TONE in about 15 ms. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press D or K (two keys so you can repeat fast)."
+       "text": "Press D or K (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "D",
       "K"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the tom into my beat?"
+     "ask": "What can I do with pad 7?"
     },
     "pad7": {
-     "title": "PAD 8: COWBELL",
+     "title": "PAD 8",
      "kind": "pad",
-     "summary": "A metallic cowbell clank.",
-     "does": "A bright metallic ringing clank. Use it sparingly as an accent or on the off-beats. Tap or press its key to hear it. With Rec on, each hit is written into the bar at the nearest of 16 steps.",
+     "summary": "Plays pad 8 and selects it. Starts as hiss.",
+     "does": "Band-passed noise that swells, then fades, over LENGTH. TONE is the band. Tap: it plays and is selected, so the picture and sliders show it. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap the pad; it flashes when its drum sounds."
+       "text": "Tap the pad: it plays, lights and is selected."
       },
       {
        "how": "Keys",
-       "text": "Press F or L (two keys so you can repeat fast)."
+       "text": "Press F or L (two keys so both hands can play)."
       },
       {
-       "how": "Touch",
-       "text": "With Erase armed, tap the pad to clear that drum's hits."
+       "how": "Both",
+       "text": "The small picture is the pad's real sound, drawn from its own generator."
       }
      ],
      "keys": [
       "F",
       "L"
      ],
-     "recall": "Beat page, pad grid. Keys work only on the Beat page. Erase then this pad clears just its hits.",
+     "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, taps go into the loop.",
      "tips": [
-      "The pad row of the grid above lights where its hits sit."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
-      "beat.beatrec",
-      "beat.beaterase",
-      "concepts.bar-lines"
+      "pulse.pulsetype",
+      "pulse.pulselatch",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I get the cowbell into my beat?"
+     "ask": "What can I do with pad 8?"
     },
-    "beatslot0": {
-     "title": "KEPT BEATS",
-     "kind": "list",
-     "summary": "Your beats in a row. Tap one to switch to it.",
-     "does": "Every beat you make is kept in this row, each with its own kit; changes are saved as you go. While the beat plays, a tapped beat waits for the next bar line, then takes over in time. Stopped, it switches at once.",
+    "pulsewave": {
+     "title": "SOUND PICTURE",
+     "kind": "readout",
+     "summary": "The selected pad's sound over its whole length.",
+     "does": "Drawn by running the pad's own generator, the code the audio uses, so it is what you hear. Top left: its length. Top right: clicks, gates or samples it holds, or its tone. It redraws when a setting changes.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap a beat; it waits for the next bar."
-      },
-      {
-       "how": "Keys",
-       "text": "Left / Right: the beat before or after."
-      }
-     ],
-     "keys": [
-      "Left / Right",
-      "[ / ]"
-     ],
-     "recall": "Beat page, row under the pads. A beat cannot be deleted or renamed yet; Left/Right moves along the row.",
-     "tips": [
-      "The tempo and beat volume are shared by every beat."
-     ],
-     "related": [
-      "beat.beatnew",
-      "concepts.kept-beats",
-      "concepts.bar-lines"
-     ],
-     "ask": "How do I keep several beats and switch between them?",
-     "match": [
-      "beatslot0",
-      "beatslot1",
-      "beatslot2",
-      "beatslot3",
-      "beatslot4",
-      "beatslot5",
-      "beatslot6"
-     ]
-    },
-    "beatnew": {
-     "title": "+ NEW BEAT",
-     "kind": "button",
-     "summary": "Starts an empty beat and keeps the one you have.",
-     "does": "Adds a fresh empty beat to the row, using the kit you have now, and switches to it. Your previous beat is kept. If the beat shown is already empty it does nothing, so you cannot stack empty beats.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap + New, then play pads with Rec on."
+       "text": "Nothing to press: move the sliders and watch it change."
       }
      ],
      "keys": [],
-     "recall": "Beat page, at the end of the kept-beats row. Go back by tapping the older beat or pressing Left.",
+     "recall": "Pulse page, left of the sliders. A tick is shown over 24 samples so its 1 to 3 can be seen.",
      "tips": [
-      "Nothing to save by hand: beats are kept for you a moment after each change."
+      "Level makes the picture taller or shorter: it is drawn to full scale."
      ],
      "related": [
-      "beat.beatslot0",
-      "beat.beatrec"
+      "pulse.pulsetone",
+      "pulse.pulselength",
+      "concepts.pulse-kinds"
      ],
-     "ask": "How do I start a second beat without losing the first?"
+     "ask": "Why does the picture look like that?"
     },
-    "beatmore": {
-     "title": "MORE BEATS",
-     "kind": "button",
-     "summary": "Shows the next page of kept beats.",
-     "does": "With more than seven beats the row shows six a page, plus More and + New. More turns the page and wraps back to the first after the last.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap More to step through the pages."
-      }
-     ],
-     "keys": [],
-     "recall": "Beat page, row under the pads, only once you have more than seven beats.",
-     "tips": [],
-     "related": [
-      "beat.beatslot0",
-      "beat.beatnew"
-     ],
-     "ask": "Where do my older beats go once the row fills?"
-    },
-    "beatrec": {
-     "title": "REC",
-     "kind": "toggle",
-     "summary": "Writes the pads you play into the bar.",
-     "does": "On: the beat starts, the metronome clicks, and each pad hit is written at the nearest of the 16 steps in the bar (that is quantising: snapping to the grid). Next time round it plays back. Off: pads play without changing the beat.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Rec; inverted means recording."
-      },
-      {
-       "how": "Keys",
-       "text": "Enter here, or Ctrl+I anywhere."
-      }
-     ],
-     "keys": [
-      "Enter",
-      "Ctrl+I"
-     ],
-     "recall": "Beat page, transport row. Ctrl+I anywhere. Stopping the beat also switches Rec off. Erase fixes mistakes.",
-     "tips": [
-      "Late on Bluetooth? System page, Loop fix."
-     ],
-     "related": [
-      "beat.beaterase",
-      "system.latency-",
-      "concepts.bar-lines"
-     ],
-     "ask": "How do I record a drum pattern in time?"
-    },
-    "beatplay": {
-     "title": "PLAY / STOP BEAT",
-     "kind": "toggle",
-     "summary": "Starts and stops the beat.",
-     "does": "Plays the 16-step bar on a loop at the current tempo, sharing bar lines with the loop pedal so everything stays together. Stopping also turns Rec off.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Play or Stop."
-      },
-      {
-       "how": "Keys",
-       "text": "Space on this page, or Ctrl+J from any page."
-      }
-     ],
-     "keys": [
-      "Space",
-      "Ctrl+J"
-     ],
-     "recall": "Beat page, transport row. Ctrl+J anywhere.",
-     "tips": [],
-     "related": [
-      "beat.beatrec",
-      "concepts.bar-lines"
-     ],
-     "ask": "Why does the beat start in time with my loop?"
-    },
-    "beaterase": {
-     "title": "ERASE",
-     "kind": "toggle",
-     "summary": "Clears one drum's hits from the bar.",
-     "does": "Tap Erase (pads now say erase), then tap the pad of the drum to clear. Only that drum's hits go; the other drums stay. It disarms after one use.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap Erase, then tap a pad. Tap Erase again to cancel."
-      }
-     ],
-     "keys": [],
-     "recall": "Beat page, transport row. No undo: re-record the hits. Tapping a tab disarms it.",
-     "tips": [
-      "To clear everything, start a + New beat instead."
-     ],
-     "related": [
-      "beat.pad0",
-      "beat.beatnew"
-     ],
-     "ask": "How do I remove just the hi-hats?"
-    },
-    "kit-": {
-     "title": "KIT",
-     "kind": "stepper",
-     "summary": "Chooses the drum sounds: Soft, Crunchy or Glitchy.",
-     "does": "Soft is round and quiet with a little room. Crunchy is driven and lo-fi. Glitchy has zaps and crushed noise. − and + step through them and wrap around. A kept beat remembers its kit.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap − or + to change kit."
-      }
-     ],
-     "keys": [],
-     "recall": "Beat page, right of Erase.",
-     "tips": [
-      "Each kept beat keeps its own kit."
-     ],
-     "related": [
-      "beat.beatslot0"
-     ],
-     "ask": "What is the difference between the three kits?",
-     "match": [
-      "kit-",
-      "kit+"
-     ]
-    },
-    "beatvol": {
-     "title": "BEAT VOLUME",
+    "pulsetone": {
+     "title": "TONE",
      "kind": "slider",
-     "summary": "How loud the drums are.",
-     "does": "Volume of the drum machine only, 0-100%, shared by all kept beats. Master volume on the System page sets the overall level.",
+     "summary": "Hz: pitch, ring, filter or width, by kind.",
+     "does": "Pitch for sine blip, gated tone and sub thump (where it falls to). Ring for click and pulse train. Low-pass for noise burst, band for hiss. Tick: width, 1 sample at 16 kHz and up, 3 at 8 kHz and below. 20 Hz to 18 kHz.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap or drag along the bar."
+       "text": "Drag along the slider; it moves in octaves."
       }
      ],
      "keys": [],
-     "recall": "Beat page, bottom left. Master volume: System page.",
+     "recall": "Pulse page, first of the four sliders. It sets the selected pad only.",
      "tips": [
-      "Loud pads with Glitch? Glitch also crushes the drums."
+      "The tick shows its width in samples beside the value."
+     ],
+     "related": [
+      "pulse.pulsewave",
+      "concepts.pulse-kinds"
+     ],
+     "ask": "What does TONE do on this kind of pad?"
+    },
+    "pulselength": {
+     "title": "LENGTH",
+     "kind": "slider",
+     "summary": "How long one hit lasts, 1 ms to 2 s.",
+     "does": "The time from start to silence of one hit of the selected pad. A click or noise burst decays inside it; a blip, gated tone or pulse train lasts all of it; hiss swells and fades over it. The tick has no length: not used.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Drag along the slider; it moves in octaves."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, second slider. A latched gated tone or pulse train ignores it and runs on.",
+     "tips": [
+      "The picture's axis shows the length."
+     ],
+     "related": [
+      "pulse.pulsewave",
+      "pulse.pulselatch"
+     ],
+     "ask": "How long should a pad be?"
+    },
+    "pulserate": {
+     "title": "RATE",
+     "kind": "slider",
+     "summary": "Gates or clicks a second; or a latched pad's repeat.",
+     "does": "Gated tone: gates a second. Pulse train: clicks a second. For every other kind, how often a latched pad is hit again. 0.25 to 200 Hz. With SYNC on it snaps to a division of the tempo, shown beside the value (1/16...).",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Drag along the slider; it moves in octaves."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, third slider. SYNC changes what it snaps to, not the value you set.",
+     "tips": [
+      "Above about 20 Hz a pulse train stops being a rhythm and becomes a buzz."
+     ],
+     "related": [
+      "pulse.pulsesync",
+      "pulse.pulselatch",
+      "concepts.latch-sync"
+     ],
+     "ask": "What rate should I use?"
+    },
+    "pulselevel": {
+     "title": "LEVEL",
+     "kind": "slider",
+     "summary": "The selected pad's loudness, 0 to 100 %.",
+     "does": "How loud the selected pad is. Every pad has its own level; the master volume on the System page is on top of it. The picture is drawn to full scale, so it grows and shrinks with the level.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Drag along the slider."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, last slider.",
+     "tips": [
+      "Pure tones sound louder than clicks at the same level."
      ],
      "related": [
       "system.volume",
-      "system.loopvol"
+      "pulse.pulsewave"
      ],
-     "ask": "How do I make the drums quieter than the synth?"
+     "ask": "Why is one pad louder than the others?"
     },
-    "bpm3-": {
-     "title": "TEMPO",
-     "kind": "stepper",
-     "summary": "The tempo in beats per minute.",
-     "does": "Sets the speed of everything: beat, loop, delay and click. 40 to 240 bpm; each tap changes it by 1. It is the same setting as on the Tune page.",
+    "pulselast": {
+     "title": "LAST 4 S",
+     "kind": "readout",
+     "summary": "Every hit of the last four seconds, one lane a pad.",
+     "does": "One lane per pad, oldest on the left, now on the right. Each hit, each click of a pulse train and each gate is a tick at the moment the engine played it; something long (hiss, a blip) is a thin bar for its length.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap − or +."
+       "text": "Nothing to press: it is a display."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, the strip above the soft keys. The selected pad's lane is a little brighter.",
+     "tips": [
+      "Loop playback and latched pads show here too."
+     ],
+     "related": [
+      "pulse.pulselatch",
+      "pulse.pulseloop"
+     ],
+     "ask": "What is the strip showing me?"
+    },
+    "pulseloop": {
+     "title": "LOOP",
+     "kind": "button",
+     "summary": "The loop pedal, here: pulse taps are recorded too.",
+     "does": "The same loop pedal as Enter and the Synth page's Loop: count-in, record, play, overdub. Pad taps while it records go into the loop and play back with the pad's settings of the moment. Latched repeats are not recorded.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to start the count-in, again to close the loop."
       },
       {
        "how": "Keys",
-       "text": "Ctrl+T taps a tempo."
+       "text": "Enter does the same on every page."
       }
      ],
      "keys": [
-      "Ctrl+T"
+      "Enter"
      ],
-     "recall": "Beat page bottom right; Tune page, Tempo (steps of 1) or Tap. Ctrl+T.",
-     "tips": [],
+     "recall": "Pulse page, first soft key. Ctrl+U undoes a layer, Ctrl+D clears.",
+     "tips": [
+      "Change a pad after recording and the loop plays the new sound."
+     ],
      "related": [
-      "tune.bpm-",
-      "tune.tap",
-      "concepts.tempo"
+      "concepts.loop-pedal",
+      "synth.loop_pedal"
      ],
-     "ask": "How do I change the tempo?",
-     "match": [
-      "bpm3-",
-      "bpm3+"
-     ]
+     "ask": "How do I loop pulses?"
+    },
+    "pulselatch": {
+     "title": "LATCH",
+     "kind": "toggle",
+     "summary": "The selected pad keeps going until you tap it again.",
+     "does": "A latched gated tone or pulse train runs without end. Any other kind is hit again RATE times a second. Tap the pad, or Latch again, to stop it. Several pads can be latched at once; Backspace stops them all.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Select a pad, tap Latch; tap the pad to stop it."
+      }
+     ],
+     "keys": [
+      "Backspace"
+     ],
+     "recall": "Pulse page, second soft key. Latches are not saved: nothing plays by itself at start.",
+     "tips": [
+      "With SYNC on, a latched one-shot falls on the beat grid."
+     ],
+     "related": [
+      "pulse.pulserate",
+      "pulse.pulsesync",
+      "concepts.latch-sync"
+     ],
+     "ask": "How do I make a pad repeat?"
+    },
+    "pulsesync": {
+     "title": "SYNC",
+     "kind": "toggle",
+     "summary": "Every pad's RATE follows the tempo.",
+     "does": "On: each pad's rate snaps to the nearest division of the tempo (from 4 bars to 1/512), and latched one-shots land on the beat clock's grid, in time with the loop. Off: the rate is exactly the Hz you set.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to switch it on or off."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, third soft key; the tempo is on the Tune page. It is saved with your settings.",
+     "tips": [
+      "The RATE slider shows the division it snapped to."
+     ],
+     "related": [
+      "pulse.pulserate",
+      "tune.bpm-",
+      "concepts.latch-sync"
+     ],
+     "ask": "What does SYNC snap to?"
+    },
+    "pulsetype": {
+     "title": "TYPE",
+     "kind": "button",
+     "summary": "The selected pad's kind: the next of eight.",
+     "does": "Steps the selected pad through click, tick, noise burst, sine blip, gated tone, pulse train, sub thump and hiss. The pad keeps its tone, length, rate and level; their meaning follows the new kind.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap until the kind you want; the label says the next one."
+      }
+     ],
+     "keys": [],
+     "recall": "Pulse page, last soft key. Any pad can be any kind, and two pads can be the same kind.",
+     "tips": [
+      "Two pads of one kind with different tones make an interval."
+     ],
+     "related": [
+      "concepts.pulse-kinds",
+      "pulse.pulsetone"
+     ],
+     "ask": "Which kind should I choose?"
     }
-   },
-   "recall": "Beat tab. Ctrl+J starts or stops the beat from any page; Ctrl+I toggles Rec."
+   }
   },
   "tune": {
    "title": "Tune",
@@ -2956,7 +2949,7 @@
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -2982,7 +2975,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -3349,7 +3342,7 @@
      "title": "TEMPO",
      "kind": "stepper",
      "summary": "The tempo in beats per minute (bpm).",
-     "does": "Sets the speed of the beat and the loop together: 40 to 240 bpm, one per tap here. Delay times and the metronome follow it.",
+     "does": "Sets the speed of the loop and the pulse pads' SYNC: 40 to 240 bpm, one per tap here. Delay times and the metronome follow it.",
      "use": [
       {
        "how": "Touch",
@@ -3363,11 +3356,11 @@
      "keys": [
       "Ctrl+T"
      ],
-     "recall": "Tune page; the Beat page has the same control. Ctrl+T taps a tempo.",
+     "recall": "Tune page. Ctrl+T taps a tempo; the Pulse page's SYNC follows it.",
      "tips": [],
      "related": [
       "tune.tap",
-      "beat.bpm3-",
+      "pulse.pulsesync",
       "concepts.tempo"
      ],
      "ask": "How do I match the tempo of a song?",
@@ -3406,7 +3399,7 @@
      "title": "CLICK",
      "kind": "toggle",
      "summary": "The metronome: a click on every beat.",
-     "does": "A soft click in time with the tempo, accented on beat one of each bar. Loop count-ins and Beat Rec click regardless.",
+     "does": "A soft click in time with the tempo, accented on beat one of each bar. Loop count-ins click regardless.",
      "use": [
       {
        "how": "Touch",
@@ -3568,7 +3561,7 @@
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -3594,7 +3587,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -3613,13 +3606,13 @@
       }
      ],
      "keys": [],
-     "recall": "System page, top left. Beat and loop have their own sliders; sound LEVEL is separate.",
+     "recall": "System page, top left. Each pulse pad and the loop have their own level too.",
      "tips": [
       "If the sound is distorted or quiet with Limit showing, lower this."
      ],
      "related": [
       "system.loopvol",
-      "beat.beatvol"
+      "pulse.pulselevel"
      ],
      "ask": "Why is it quiet, or why does Limit show?"
     },
@@ -3798,7 +3791,7 @@
      ],
      "recall": "System page, Touch pad mapping row; Synth page scope corner. Ctrl+G steps on. Panic clears Glitch.",
      "tips": [
-      "Glitch affects lead, chord pads, loop and drums together."
+      "Glitch affects lead, chord pads, loop and pulses together."
      ],
      "related": [
       "synth.xy",
@@ -3847,7 +3840,7 @@
      ],
      "recall": "System page, first button below the mapping row. $ toggles it; the toast says which state.",
      "tips": [
-      "The Beat page keeps the bottom row as the low string."
+      "The Pulse page keeps the bottom row as the low string."
      ],
      "related": [
       "synth.string0",
@@ -3859,7 +3852,7 @@
      "title": "RECORD",
      "kind": "toggle",
      "summary": "Records what you hear to a WAV file.",
-     "does": "Starts recording the full output (lead, chord pads, loop, beat) into a WAV audio file in recordings/. Press again to stop; the file name shows. A REC timer blinks on the Synth page.",
+     "does": "Starts recording the full output (lead, chord pads, loop, pulses) into a WAV audio file in recordings/. Press again to stop; the file name shows. A REC timer blinks on the Synth page.",
      "use": [
       {
        "how": "Touch",
@@ -3911,7 +3904,7 @@
      "title": "SAVE SESSION",
      "kind": "button",
      "summary": "Saves the whole setup as a session file.",
-     "does": "Writes your sounds, key, tempo, chord pads, loop and the beat shown into a timestamped file in sessions/. It does not stop anything. The list below shows the four newest.",
+     "does": "Writes your sounds, key, tempo, chord pads, loop and the pulse pads into a timestamped file in sessions/. It does not stop anything. The list below shows the four newest.",
      "use": [
       {
        "how": "Touch",
@@ -3919,7 +3912,7 @@
       }
      ],
      "keys": [],
-     "recall": "System page. Load from the list below the buttons, then press play on the loop or beat.",
+     "recall": "System page. Load from the list below the buttons, then press play on the loop.",
      "tips": [
       "Quitting saves your setup automatically; sessions are for keeping versions."
      ],
@@ -3952,7 +3945,7 @@
      "title": "SAVED SESSIONS",
      "kind": "list",
      "summary": "Your four newest sessions. Tap to load one.",
-     "does": "Loads that session: sounds, key, tempo, chord pads, loop and the beat shown replace what you have. Sounds do not start by themselves; press play on the loop or beat, or tap a chord.",
+     "does": "Loads that session: sounds, key, tempo, chord pads, loop and the pulse pads replace what you have. Sounds do not start by themselves; press play on the loop or beat, or tap a chord.",
      "use": [
       {
        "how": "Touch",
@@ -3980,7 +3973,7 @@
      "title": "PANIC",
      "kind": "button",
      "summary": "Stops every sound at once.",
-     "does": "Silences all notes and stops the chord pads, beat and loop playback. Clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept. Use it when a note sticks.",
+     "does": "Silences all notes and stops the chord pads, latched pulses and loop playback. Clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept. Use it when a note sticks.",
      "use": [
       {
        "how": "Touch",
@@ -4004,7 +3997,7 @@
     "latency-": {
      "title": "LOOP FIX",
      "kind": "stepper",
-     "summary": "Moves recorded loops and beats earlier or later.",
+     "summary": "Moves recorded loops earlier or later.",
      "does": "Milliseconds, 0 to 500 in steps of 10. Bluetooth speakers play about 0.2 s behind your fingers, so your recording lands late; this shifts recorded hits earlier to match. Raise it if hits land late, lower it if early.",
      "use": [
       {
@@ -4019,7 +4012,7 @@
      ],
      "related": [
       "synth.loop_pedal",
-      "beat.beatrec"
+      "pulse.pulseloop"
      ],
      "ask": "My loops play late. How do I fix the timing?",
      "match": [
@@ -4051,7 +4044,7 @@
      "title": "QUIT",
      "kind": "button",
      "summary": "Saves your setup and closes the app.",
-     "does": "Quits venv-vrequency. Your sounds, key, tempo, settings, and kept beats are saved first and come back next time.",
+     "does": "Quits venv-vrequency. Your sounds, key, tempo, settings and pulse pads are saved first and come back next time.",
      "use": [
       {
        "how": "Touch",
@@ -4111,13 +4104,13 @@
   },
   "help": {
    "title": "Help",
-   "intro": "The key lists built into the app: three pages for playing, commands and the beat. The list follows your keymap.",
+   "intro": "The key lists built into the app: three pages for playing, commands and the pulse pads. The list follows your keymap.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -4143,7 +4136,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -4154,7 +4147,7 @@
      "title": "HELP PAGE BUTTON",
      "kind": "button",
      "summary": "Cycles through the three key lists.",
-     "does": "The Help page lists keys in three pages: Playing, Commands (hold Ctrl), and Beat and recording. Each tap moves on to the next page, then wraps back to Playing.",
+     "does": "The Help page lists keys in three pages: Playing, Commands (hold Ctrl), and Pulse and recording. Each tap moves on to the next page, then wraps back to Playing.",
      "use": [
       {
        "how": "Touch",
@@ -4203,7 +4196,7 @@
      "title": "SECTION TITLE",
      "kind": "area",
      "summary": "Names which of the three key lists you are reading.",
-     "does": "Help has three lists: Playing, Commands, and Beat and recording. The title says which one is open; Next steps to the following list.",
+     "does": "Help has three lists: Playing, Commands, and Pulse and recording. The title says which one is open; Next steps to the following list.",
      "use": [
       {
        "how": "Touch",
@@ -4282,13 +4275,13 @@
   },
   "chat": {
    "title": "Chat",
-   "intro": "Talk with the AI copilot connected to the app. It can play, change sounds and set up beats while you chat.",
+   "intro": "Talk with the AI copilot connected to the app. It can play, change sounds and shape pulse pads while you chat.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
      "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -4314,7 +4307,7 @@
      "match": [
       "tab_synth",
       "tab_sound",
-      "tab_beat",
+      "tab_pulse",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -4585,7 +4578,7 @@
    "title": "BAR LINES AND QUANTISE",
    "kind": "area",
    "summary": "Things start and change on the bar so they stay in time.",
-   "does": "A bar is a group of beats (4 here). The beat and the loop share bar lines. Recorded loops end on a bar; a beat you tap waits for the next bar; drum hits are quantised: snapped to the nearest of 16 steps in the bar.",
+   "does": "A bar is a group of beats (4 here). Recorded loops end on a bar, and with SYNC latched pulse pads fall on the same beat grid.",
    "use": [
     {
      "how": "Touch",
@@ -4599,7 +4592,7 @@
    ],
    "related": [
     "tune.bpm-",
-    "beat.beatrec",
+    "pulse.pulsesync",
     "synth.loop_pedal",
     "system.latency-"
    ],
@@ -4609,7 +4602,7 @@
    "title": "SESSIONS, FAVOURITES, SETUP",
    "kind": "area",
    "summary": "Three ways your work is kept.",
-   "does": "Your setup (slots, key, tempo, settings, kept beats) saves itself on quit. A favourite is one saved sound. A session is a snapshot: sounds, key, tempo, chord pads, loop and the beat shown.",
+   "does": "Your setup (slots, key, tempo, settings, pulse pads) saves itself on quit. A favourite is one saved sound. A session is a snapshot: sounds, key, tempo, chord pads, loop and the beat shown.",
    "use": [
     {
      "how": "Touch",
@@ -4737,7 +4730,7 @@
    "title": "GLITCH",
    "kind": "area",
    "summary": "Crushes everything you hear into a rough digital sound.",
-   "does": "While your finger is on the pad (or Hold is on) lead, chord pads, loop and drums are crushed into a blocky, lo-fi sound. Right is coarser, up is rougher. Coloured streaks trail the scope wave. Lift to restore; Backspace clears it.",
+   "does": "While your finger is on the pad (or Hold is on) lead, chord pads, loop and pulses are crushed into a blocky, lo-fi sound. Right is coarser, up is rougher. Streaks trail the scope wave. Lift to restore; Backspace clears it.",
    "use": [
     {
      "how": "Touch",
@@ -4788,33 +4781,6 @@
     "synth.padmode"
    ],
    "ask": "How do the chord pads' modes work?"
-  },
-  "kept-beats": {
-   "title": "KEPT BEATS",
-   "kind": "area",
-   "summary": "A row of beats you can switch between.",
-   "does": "Every beat you make is kept in the Beats row, like patterns of a drum machine. + New starts a fresh one. Switching while playing waits for the next bar line. Each has its own kit; tempo and volume are shared. Saved as you go.",
-   "use": [
-    {
-     "how": "Touch",
-     "text": "Tap a beat; use More for older beats."
-    },
-    {
-     "how": "Keys",
-     "text": "Left / Right on the Beat page."
-    }
-   ],
-   "keys": [
-    "Left",
-    "Right"
-   ],
-   "recall": "Beat page, row under the pads. Beats cannot be deleted or renamed yet.",
-   "tips": [],
-   "related": [
-    "beat.beatslot0",
-    "beat.beatnew"
-   ],
-   "ask": "How do I keep more than one beat?"
   },
   "scope-readouts": {
    "title": "SCOPE READOUTS",
@@ -4905,7 +4871,7 @@
    "title": "PANIC",
    "kind": "key",
    "summary": "Backspace silences everything at once.",
-   "does": "Stops all notes, the chord pads, the beat and loop playback, and clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept.",
+   "does": "Stops all notes, the chord pads, latched pulses and loop playback, and clears Glitch and sustain. A loop being recorded is dropped; a finished loop is kept.",
    "use": [
     {
      "how": "Keys",
@@ -4929,8 +4895,8 @@
   "tempo": {
    "title": "TEMPO (BPM)",
    "kind": "area",
-   "summary": "One tempo for the beat and the loop.",
-   "does": "Beats per minute, 40 to 240, shared by the beat and the loop, plus delay times and the metronome. It appears on the Synth header, and on the Tune and Beat pages.",
+   "summary": "One tempo for the loop and the pulse pads' SYNC.",
+   "does": "Beats per minute, 40 to 240, shared by the loop and the pulse pads' SYNC, plus delay times and the metronome. It appears on the Synth header, and on the Tune and Beat pages.",
    "use": [
     {
      "how": "Touch",
@@ -4950,7 +4916,7 @@
    "related": [
     "tune.bpm-",
     "tune.tap",
-    "beat.bpm3-"
+    "pulse.pulsesync"
    ],
    "ask": "How do I set the tempo?"
   },
@@ -4958,7 +4924,7 @@
    "title": "THE COPILOT (ROOK)",
    "kind": "area",
    "summary": "An AI helper that can play and edit the app with you.",
-   "does": "A copilot connects through a local control socket (off with --no-control). It can play notes, change the sound, set a beat, and look at the screen. Its messages show in Chat, or in a strip at the bottom of any page.",
+   "does": "A copilot connects through a local control socket (off with --no-control). It can play notes, change the sound, shape pulse pads, and look at the screen. Its messages show in Chat, or in a strip at the bottom of any page.",
    "use": [
     {
      "how": "Keys",
@@ -4986,7 +4952,7 @@
    "title": "WHAT UNDOES WHAT",
    "kind": "area",
    "summary": "Each part of the app has its own undo.",
-   "does": "Sounds: Ctrl+Z (24 steps): New, Mutate, slots, favourites; not slider moves or Store. Loop: Ctrl+U per layer. Beat: Erase. Chord pads: tap a held chord or drone again.",
+   "does": "Sounds: Ctrl+Z (24 steps): New, Mutate, slots, favourites; not slider moves or Store. Loop: Ctrl+U per layer. Chord pads: tap a held chord or drone again.",
    "use": [
     {
      "how": "Keys",
@@ -5033,29 +4999,6 @@
     "concepts.copilot"
    ],
    "ask": "Why did a message appear over my buttons?"
-  },
-  "step-grid": {
-   "title": "STEP GRID",
-   "kind": "area",
-   "summary": "The 8 x 16 picture of every drum hit in the beat bar.",
-   "does": "Eight rows (one per drum) by sixteen columns (the steps of one bar). A lit cell is a hit; a line sweeps across while the beat plays. It is a display: you write hits by playing the pads.",
-   "use": [
-    {
-     "how": "Both",
-     "text": "Read only. Tap a pad, with Rec on, to write a hit on the nearest step."
-    }
-   ],
-   "keys": [],
-   "recall": "Top of the Beat page.",
-   "tips": [
-    "Erase then a pad clears that drum row."
-   ],
-   "related": [
-    "beat.beatrec",
-    "beat.beaterase",
-    "concepts.bar-lines"
-   ],
-   "ask": "How do I write a beat?"
   },
   "status-box": {
    "title": "STATUS BOX",
@@ -5160,6 +5103,51 @@
     "concepts.copilot"
    ],
    "ask": "Can you walk me through the tour?"
+  },
+  "pulse-kinds": {
+   "title": "PULSE KINDS",
+   "kind": "area",
+   "summary": "The eight sounds a pulse pad can be.",
+   "does": "Click, tick, noise burst, sine blip: short one-shots. Gated tone and pulse train: a tone or clicks at a rate. Sub thump: a falling low sine. Hiss: noise that swells and fades. Pure tones, clicks, noise and silence.",
+   "use": [
+    {
+     "how": "Touch",
+     "text": "TYPE on the Pulse page steps the selected pad through them."
+    }
+   ],
+   "keys": [],
+   "recall": "Pulse page. Pad n starts as the n-th kind; TONE means something different for each.",
+   "tips": [
+    "Silence between hits is part of the sound: try long rates."
+   ],
+   "related": [
+    "pulse.pulsetype",
+    "pulse.pulsetone"
+   ],
+   "ask": "What are the eight kinds of pulse?"
+  },
+  "latch-sync": {
+   "title": "LATCH AND SYNC",
+   "kind": "area",
+   "summary": "Pads that keep going, in time or free.",
+   "does": "LATCH keeps the selected pad going: a gated tone or pulse train runs on, other kinds repeat at RATE. SYNC snaps every RATE to the tempo so latched pads fall on the beat; off, rates are exact Hz and drift against the loop.",
+   "use": [
+    {
+     "how": "Touch",
+     "text": "Latch and Sync are soft keys on the Pulse page."
+    }
+   ],
+   "keys": [],
+   "recall": "Pulse page soft keys. Tap a latched pad to stop it; Backspace stops everything.",
+   "tips": [
+    "Two latched pads at nearly the same free rate phase slowly against each other."
+   ],
+   "related": [
+    "pulse.pulselatch",
+    "pulse.pulsesync",
+    "pulse.pulserate"
+   ],
+   "ask": "How do LATCH and SYNC work together?"
   }
  }
 }

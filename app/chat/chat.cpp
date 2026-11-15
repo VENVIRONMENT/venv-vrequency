@@ -81,7 +81,7 @@ int Chat::add(const QString &from, const QString &text, const QString &kind, boo
             tickerUntil = sh.clock.elapsed() + 7000;
         }
     }
-    sh.saveSoon(); // saved a moment later, like a beat edit
+    sh.saveSoon(); // saved a moment later, like a sound edit
     sh.redraw();
     return m.seq;
 }

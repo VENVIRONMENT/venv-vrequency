@@ -24,7 +24,7 @@ its own volts/div and time/div (they follow the signal and never change the pitc
 frequency and level. Touching it is the X-Y sound control.
 
 More pictures: [Sound](docs/shots/1-sound.png), [Tune](docs/shots/3-tune.png),
-[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Beat](docs/shots/9-beat.png), [Chat with a copilot](docs/shots/14-chat.png), [the chat dock on Synth](docs/shots/16-dock-synth.png), [the dock on Help](docs/shots/17-dock-help.png), [a highlight caption](docs/shots/18-caption.png), [the tour](docs/shots/20-tour-synth.png), [the tour's start-here walk](docs/shots/24-tour-start-here.png).
+[System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Pulse](docs/shots/9-pulse.png), [Chat with a copilot](docs/shots/14-chat.png), [the chat dock on Synth](docs/shots/16-dock-synth.png), [the dock on Help](docs/shots/17-dock-help.png), [a highlight caption](docs/shots/18-caption.png), [the tour](docs/shots/20-tour-synth.png), [the tour's start-here walk](docs/shots/24-tour-start-here.png).
 
 ## Play it in ten seconds
 
@@ -63,16 +63,17 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Chord pads**: the seven diatonic chords of the scale under the strings. **Hold** latches one
   chord, **Drone** latches drone notes; a held chord can sound over drones. Stop / Play silences and
   brings back what they hold. The pads keep the sound they started with while you change the lead.
-- **Beat**: a drum machine page. Eight synthesised drums (no samples) in three kits, eight big pads
-  played by touch or from the keyboard, one bar of sixteen steps written by playing with Rec on.
-  Keep as many beats as you like in a row under the pads and switch between them on the bar line.
-  Locked to the same bar lines as the looper.
+- **Pulse**: eight pulse pads, made for pure tones, clicks, noise and silence: click, tick (1-3
+  samples), noise burst, sine blip, gated tone, pulse train, sub thump and hiss, any pad any kind,
+  each with Tone, Length, Rate and Level. Each pad shows a picture of its real sound (drawn by its own
+  generator); a strip shows every hit of the last four seconds. Latch keeps a pad going, Sync snaps
+  rates to the tempo, and pad taps are recorded by the loop pedal.
 - **Tour**: an interactive picture of every page; tap any control to read what it does, how to use it by touch and keys, and how to find it again, with an **Ask Rook** button on every card. `Ctrl`+`O` or Help -> Tour; offered once on first run. See [GUIDE chapter 17](docs/GUIDE.md#17-the-tour).
 - **Copilot**: a Chat tab and a local control socket let an AI agent play and edit the app live while you talk to it
   (`Ctrl`+`Y` opens a chat dock on whatever page you are on, so you can ask about the control Rook is pointing at without leaving it). Local Unix socket only, off with `--no-control`. See [docs/CONTROL.md](docs/CONTROL.md).
 - **Looper**: event-based (notes, slides, bends, XY moves, sound changes), count-in, bar-snapped,
   up to 64 bars, six layers, undo, stop/start, clear. Each layer keeps its own sound. Follows tempo.
-- **Saving**: sounds, favourites, sessions (settings + sounds + chord pads + loops + beat), WAV export and play-back of the last recording
+- **Saving**: sounds, favourites, sessions (settings + sounds + chord pads + loops + pulse pads), WAV export and play-back of the last recording
   under `~/vrequency/`. Key bindings are editable in `~/vrequency/keymap.json`.
 - **Listen** (optional): estimates key and tempo from the default audio input with confidence
   values. *This Hackberry has no microphone*, so it reports that instead of guessing.
@@ -103,7 +104,7 @@ QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   #
 
 | Path | What |
 |---|---|
-| `core/` | The engine, no GUI or device dependencies, in folders by domain: `synth`, `fx`, `instrument`, `drums`, `presets`, `analysis` |
+| `core/` | The engine, no GUI or device dependencies, in folders by domain: `synth`, `fx`, `instrument`, `pulse`, `presets`, `analysis` |
 | `audio/` | PipeWire backend (C), ALSA fallback, silent clock |
 | `app/` | Qt 6 interface, one custom-painted window: `shell` (the window and the services pages use), `pages/<name>` (one folder per page), `ui` (drawing toolkit), `control` (the control socket), `tour`, `guide`, `chat`, `store`, `sounds`, `selftest` |
 | `docs/ARCHITECTURE.md` | The layers, what lives where, and the size and layer rules (`scripts/check_sizes.sh`) |

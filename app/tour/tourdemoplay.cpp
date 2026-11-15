@@ -1,4 +1,4 @@
-// venv-vrequency — the tour's demo, playing pages: Synth, Sound, Beat, Tune, System, Help and Chat pictures.
+// venv-vrequency — the tour's demo, playing pages: Synth, Sound, Pulse, Tune, System, Help and Chat pictures.
 #include "app/tour/tour.h"
 #include "app/tour/tourdemo.h"
 #include "audio/audio.h"
@@ -28,16 +28,13 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     for (int dp = 1; dp < 4; ++dp) { w.soundPage.deepPage = dp; rig.settle(2); capture(rig, deep, pics[TourView::variantPic(deep, dp)]); } // the other parameters
     w.soundPage.deepEdit = false;
     rig.key(Qt::Key_F, false); rig.key(Qt::Key_A, false);
-    w.setPage(PG_BEAT); rig.settle(2);
-    for (int i = 0; i < 7; ++i) { // eight kept beats: the row pages, with More
-        w.beatPage.newBeat(); rig.settle(2);
-        inst.beatDo(BT_STEP, D_KICK, 0, 1); rig.settle(2);
-    }
-    w.beatPage.switchTo(0); rig.settle(3);
-    inst.beatDo(BT_PLAYSTOP); pump(inst, 700);
-    inst.beatDo(BT_PLAYSTOP); pump(inst, 60);
-    QThread::msleep(700);                                                     // the pads that just sounded fade
-    C("beat");
+    w.setPage(PG_PULSE); rig.settle(2);
+    for (int p : {0, 2, 6, 3, 7}) { w.pulsePage.hitPad(p); pump(inst, 180); rig.settle(1); } // a few hits for the strip
+    w.pulsePage.setLatch(1, true); pump(inst, 600); rig.settle(1); w.pulsePage.setLatch(1, false);
+    w.pulsePage.hitPad(5); pump(inst, 400);                                  // the pulse train, selected
+    rig.settle(3);
+    QThread::msleep(300);                                                     // the pads that just sounded fade
+    C("pulse");
     w.setPage(PG_TUNE); rig.settle(2);
     w.tunePage.listener.result = td::ListenResult();
     w.tunePage.listener.result.ok = true;
@@ -55,9 +52,9 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     w.keys.testOpen = false;
     w.setPage(PG_HELP); rig.settle(2);
     C("help");
-    w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a beat under it?", "ask", false);
+    w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want some pulses under it?", "ask", false);
     w.chat.add("you", "yes, something slow with a soft pad", "say", true);
-    w.chat.add("rook", "On it: a slow beat on the soft kit, tempo down to 84. Play over it and I will listen.", "say", false);
+    w.chat.add("rook", "On it: a pulse train on pad 6, synced, tempo down to 84. Play over it and I will listen.", "say", false);
     w.chat.seen();
     w.setPage(PG_CHAT); w.chat.draft.clear(); rig.settle(2);
     C("chat");

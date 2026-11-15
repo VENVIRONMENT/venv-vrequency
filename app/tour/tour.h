@@ -177,7 +177,7 @@ private:
 // ---------------------------------------------------------------------------------- the pictures
 
 // Draws every tour page off-screen in a scratch copy of the app with a demo state (a filled
-// chord, a beat, a loop, a lit scope). Touches no file and no live audio.
+// chord, a loop, pulse hits, a lit scope). Touches no file and no live audio.
 class SinkProbe;
 void tourBuildPictures(std::vector<TourView::Pic> &pics, SinkProbe *sink = nullptr);   // sink: the real window's output device, shown on the System page
 // `vrequency --dump-zones`: prints one "page zone" line per real zone of every tour page.

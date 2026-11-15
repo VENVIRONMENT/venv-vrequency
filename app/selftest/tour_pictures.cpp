@@ -33,7 +33,7 @@ void tourPictures(TourContext &ctx) {
         check(bad.isEmpty(), "every page and panel has a picture with hotspots" + (bad.isEmpty() ? QString() : ": " + bad.join(", ").left(300)));
         check(unresolved == 0 && totalHot > 300, QString("EVERY hotspot resolves to a card (%1 of %2)").arg(totalHot - unresolved).arg(totalHot));
         check(outside == 0 && tiny == 0, "every hotspot lies inside the screen and is big enough to see");
-        check(tourOnly >= 8, "controls with no zone (level strip, scope readouts, string brackets, step grid, status...) have hotspots too");
+        check(tourOnly >= 7, "controls with no zone (level strip, scope readouts, string brackets, status...) have hotspots too");
     }
     {   // the tour's pictures show the same controls the real pages have
         int missing = 0; QStringList bad;

@@ -39,22 +39,24 @@ QJsonObject ControlServer::cmdState() {
     lp["state"] = loopNames[qBound(0, u.loopState, 5)];
     lp["layers"] = u.layers; lp["bars"] = u.loopBars;
     o["looper"] = lp;
-    QJsonObject bt;
-    bt["playing"] = u.beatPlaying; bt["rec"] = u.beatRec; bt["kit"] = QString(kitName(u.set.kit)).toLower();
-    QJsonObject steps;
-    for (int d = 0; d < kDrums; ++d) {
-        QString s;
-        for (int k = 0; k < kDrumSteps; ++k) s += (u.beatPat[d] >> k) & 1 ? 'x' : '.';
-        steps[QString(drumName(d)).toLower().remove(' ')] = s;
+    QJsonObject pl;
+    pl["sync"] = u.set.pulseSync;
+    QJsonArray pp;
+    for (int p = 0; p < kPulsePads; ++p) {
+        const PulsePad &d = u.pulse[p];
+        QJsonObject po;
+        po["type"] = pulseTypeKey(d.type); po["tone"] = (double)d.tone; po["length"] = (double)d.lengthMs;
+        po["rate"] = (double)d.rate; po["level"] = (double)d.level; po["latched"] = u.pulseLatched[p];
+        pp.append(po);
     }
-    bt["steps"] = steps;
-    o["beat"] = bt;
+    pl["pads"] = pp;
+    o["pulse"] = pl;
     QJsonObject pads;
     pads["playing"] = u.padsPlaying;
     pads["mode"] = QString(padModeName(u.set.padMode)).toLower();
     pads["held"] = u.holdChord >= 0 ? QJsonValue(QString::fromUtf8(buildChord(u.set.tuning, u.holdChord, false).name)) : QJsonValue();
     o["chord_pads"] = pads;
-    o["playing"] = u.voices > 0 || u.padsPlaying || u.beatPlaying || u.loopState == L_PLAY || u.loopState == L_OVERDUB;
+    o["playing"] = u.voices > 0 || u.padsPlaying || u.pulsing || u.loopState == L_PLAY || u.loopState == L_OVERDUB;
     o["voices"] = u.voices;
     o["toast"] = w.lastToast();
     QJsonObject cp;

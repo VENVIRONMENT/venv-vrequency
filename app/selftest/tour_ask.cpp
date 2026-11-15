@@ -31,9 +31,9 @@ void tourAskRook(TourContext &ctx) {
     check(carried, "chat_poll returns via and focus to the copilot");
     w.guide.dockClose();
     // from the Ask button by touch, on a different page, and for a concept
-    t.open("beat", zn::beatrec); settleTour(w);
+    t.open("pulse", zn::pulselatch); settleTour(w);
     tourTap(w, zn::tour_ask);
-    check(!t.isOpen() && w.page() == PG_BEAT && w.guide.dockIsOpen(), "the Ask Rook button works by touch and puts the player on the page the control lives on");
+    check(!t.isOpen() && w.page() == PG_PULSE && w.guide.dockIsOpen(), "the Ask Rook button works by touch and puts the player on the page the control lives on");
     w.guide.dockClose(); w.setPage(PG_PLAY); w.shot();
     t.open("synth", "concepts.recall"); settleTour(w);
     press(w, Qt::Key_Return);

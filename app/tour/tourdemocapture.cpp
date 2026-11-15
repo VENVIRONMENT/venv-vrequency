@@ -53,8 +53,7 @@ void TourDemo::extras(int page, TourView::Pic &pic) {
         add("scope_readouts_top", QRectF(18, 93, 470, 18), "concepts.scope-readouts");
         add("scope_readouts_bottom", QRectF(18, 298, 480, 18), "concepts.scope-readouts");
         add("string_brackets", QRectF(235, 400, 48, 40), "concepts.string-brackets");
-    } else if (id == "beat") add("step_grid", QRectF(16, 80, 688, 130), "concepts.step-grid");
-    else if (id == "tune") add("listen_result", QRectF(240, 494, 456, 72), "concepts.listen-result");
+    } else if (id == "tune") add("listen_result", QRectF(240, 494, 456, 72), "concepts.listen-result");
     else if (id == "system") add("status_box", QRectF(16, 424, 688, 206), "concepts.status-box");
     else if (id == "help") add("key_list_rows", QRectF(16, 100, 688, 474), "concepts.help-rows");
 }

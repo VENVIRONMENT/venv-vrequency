@@ -41,8 +41,8 @@ void socketHostileInput(Context &ctx, Link &link) {
     check(c.open(link.path) && okOf(c.call(R"({"cmd":"state"})")), "a client that vanishes mid-line does not disturb the server");
     // every command with every argument set to the wrong kind of value
     static const char *cmds[] = {"note", "notes", "chord", "slide", "release", "set_param", "sound", "save_favourite", "scale", "tempo", "octave", "bend", "sustain",
-                                 "loop", "beat", "page", "session", "chat_say", "chat_poll", "highlight", "unhighlight", "zones"};
-    static const char *argk[] = {"string", "degree", "midi", "dur_ms", "velocity", "from", "to", "ms", "name", "value", "slot", "action", "chords", "kit", "set_step", "hit",
+                                 "loop", "pulse", "page", "session", "chat_say", "chat_poll", "highlight", "unhighlight", "zones"};
+    static const char *argk[] = {"string", "degree", "midi", "dur_ms", "velocity", "from", "to", "ms", "name", "value", "slot", "action", "chords", "pad", "type", "tone", "length", "rate", "level", "latch", "sync", "hit",
                                  "clip", "bar", "lane", "text", "since", "notes", "degrees", "midis", "bpm", "root", "on", "delta", "style", "seventh", "beats", "kind", "limit", "zones", "label", "sub", "page"};
     static const char *argv[] = {"null", "\"x\"", "1e99", "-1e99", "[]", "{}", "true", "[[1]]", "{\"a\":1}", "0.5", "-1"};
     int refused = 0, total = 0, malformed = 0;

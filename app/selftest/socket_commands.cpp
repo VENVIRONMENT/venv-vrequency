@@ -72,18 +72,19 @@ const Case cases[] = {
     {R"({"cmd":"loop","action":"record"})", true, 100},
     {R"({"cmd":"loop","action":"dance"})", false, 0},
     {R"({"cmd":"loop","action":"clear"})", true, 100},
-    {R"({"cmd":"beat","kit":"crunchy"})", true, 0},
-    {R"({"cmd":"beat","kit":"disco"})", false, 0},
-    {R"({"cmd":"beat","set_step":{"drum":"kick","step":0,"on":true}})", true, 0},
-    {R"({"cmd":"beat","set_step":[{"drum":"snare","step":4},{"drum":2,"step":2}]})", true, 100},
-    {R"({"cmd":"beat","set_step":{"drum":"kick","step":16}})", false, 0},
-    {R"({"cmd":"beat","set_step":{"drum":"banjo","step":1}})", false, 0},
-    {R"({"cmd":"beat","hit":{"drum":"clap"}})", true, 0},
-    {R"({"cmd":"beat","hit":"nope"})", false, 0},
-    {R"({"cmd":"beat","action":"play"})", true, 100},
-    {R"({"cmd":"beat","action":"stop"})", true, 100},
-    {R"({"cmd":"beat"})", false, 0},
-    {R"({"cmd":"page","name":"beat"})", true, 0},
+    {R"({"cmd":"pulse","pad":0,"type":"train","tone":800,"length":120,"rate":30,"level":0.5})", true, 0},
+    {R"({"cmd":"pulse","pad":0,"type":"banjo"})", false, 0},
+    {R"({"cmd":"pulse","pad":8,"hit":true})", false, 0},
+    {R"({"cmd":"pulse","hit":true})", false, 0},
+    {R"({"cmd":"pulse","pad":2,"tone":5})", false, 0},
+    {R"({"cmd":"pulse","pad":2,"hit":true})", true, 100},
+    {R"({"cmd":"pulse","pad":3,"latch":true})", true, 100},
+    {R"({"cmd":"pulse","pad":3,"latch":false})", true, 100},
+    {R"({"cmd":"pulse","sync":true})", true, 0},
+    {R"({"cmd":"pulse","sync":"yes"})", false, 0},
+    {R"({"cmd":"pulse"})", false, 0},
+    {R"({"cmd":"beat","action":"play"})", false, 0},
+    {R"({"cmd":"page","name":"pulse"})", true, 0},
     {R"({"cmd":"page","name":"chat"})", true, 0},
     {R"({"cmd":"page","name":"synth"})", true, 0},
     {R"({"cmd":"page","name":"nowhere"})", false, 0},
@@ -131,10 +132,13 @@ void socketEveryCommand(Context &ctx, Link &link) {
     {
         const QJsonObject st = r["result"].toObject();
         check(st["chord_pads"].toObject().contains("playing") &&
-              st["beat"].toObject()["steps"].toObject()["kick"].toString().startsWith('x') && st["tempo"].toDouble() == 120 && st["page"].toString() == "synth",
-              "state reflects what the commands did (beat steps, tempo, page) and shows the chord pads");
+              st["pulse"].toObject()["pads"].toArray()[0].toObject()["type"].toString() == "train" && st["pulse"].toObject()["sync"].toBool() &&
+              st["tempo"].toDouble() == 120 && st["page"].toString() == "synth" && !st.contains("beat"),
+              "state reflects what the commands did (a pulse pad, sync, tempo, page) and shows the chord pads");
     }
     inst.set(S_BPM, 100);
-    inst.beatDo(BT_ERASE, -1);
+    inst.set(S_PULSESYNC, 0);
+    for (int p = 0; p < kPulsePads; ++p) inst.pulseSet(p, PF_TYPE, pulseDefault(p).type);
+    for (int p = 0; p < kPulsePads; ++p) { inst.pulseSet(p, PF_TONE, pulseDefault(p).tone); inst.pulseSet(p, PF_LENGTH, pulseDefault(p).lengthMs); inst.pulseSet(p, PF_RATE, pulseDefault(p).rate); inst.pulseSet(p, PF_LEVEL, pulseDefault(p).level); }
 }
 } // namespace selftest

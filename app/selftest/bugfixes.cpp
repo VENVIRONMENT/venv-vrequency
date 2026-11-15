@@ -22,7 +22,7 @@ void modesDropOnPageChange(Context &ctx, Client &c) {
     MainWindow &w = ctx.w;
     struct Route { const char *name; std::function<void()> go; };
     const Route routes[] = {
-        {"a tab tap", [&] { tap(w, zn::tab("beat")); }},
+        {"a tab tap", [&] { tap(w, zn::tab("pulse")); }},
         {"the Tab key", [&] { press(w, Qt::Key_Tab); }},
         {"Esc", [&] { press(w, Qt::Key_Escape); }},
         {"the control socket page command", [&] { c.call(R"({"cmd":"page","name":"tune"})"); }},
@@ -33,9 +33,9 @@ void modesDropOnPageChange(Context &ctx, Client &c) {
     for (const Route &r : routes) {
         w.setPage(PG_SOUND); w.shot();
         w.armAllModes();
-        check(w.armedModes() == "delete,store,erase", "all three modes can be armed");
+        check(w.armedModes() == "delete,store", "both modes can be armed");
         r.go(); w.shot();
-        check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete, Store and Erase").arg(r.name));
+        check(w.page() != PG_SOUND && w.armedModes().isEmpty(), QString("leaving the page by %1 clears Delete and Store").arg(r.name));
         w.guide.clearHighlight(); w.guide.dockClose();
     }
     w.setPage(PG_SOUND); w.shot();
@@ -101,10 +101,8 @@ void favouritesOverwriteAndPage(Context &ctx, Client &c) {
 void tempoStepsByOne(Context &ctx) {
     MainWindow &w = ctx.w; Instrument &inst = ctx.inst;
     inst.set(S_BPM, 100); wait(40);
-    w.setPage(PG_BEAT); w.shot(); tap(w, zn::minus(zn::bpm3)); wait(60);
-    check(std::lround(inst.uiState().set.bpm) == 99, "Beat page tempo steps by 1");
     w.setPage(PG_TUNE); w.shot(); tap(w, zn::plus(zn::bpm)); wait(60);
-    check(std::lround(inst.uiState().set.bpm) == 100, "Tune page tempo steps by 1");
+    check(std::lround(inst.uiState().set.bpm) == 101, "Tune page tempo steps by 1");
     w.setPage(PG_PLAY); w.shot();
 }
 } // namespace

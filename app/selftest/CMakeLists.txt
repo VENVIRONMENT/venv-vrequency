@@ -2,7 +2,6 @@
 target_sources(vrequency PRIVATE
   areas.h
   audio_layout.cpp
-  beat.cpp
   bugfixes.cpp
   chord_pads.cpp
   guided_dock.cpp
@@ -12,10 +11,10 @@ target_sources(vrequency PRIVATE
   harness.cpp
   harness.h
   health.cpp
-  kept_beats.cpp
   keys.cpp
   listening.cpp
   looper.cpp
+  pulse.cpp
   render_shots.cpp
   saving.cpp
   selftest.cpp

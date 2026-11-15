@@ -33,7 +33,7 @@ void testLayout(Context &ctx) {
     }
     QImage img = w.shot();
     check(img.width() == 720 && img.height() == 720, "interface renders at 720x720");
-    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-beat", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-pulse", "3-tune", "4-system", "5-help", "14-chat"};
     if (!shotsDir.isEmpty()) QDir().mkpath(shotsDir);
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p);
@@ -63,6 +63,7 @@ void testLayout(Context &ctx) {
             QElapsedTimer t; t.start();
             for (int i = 0; i < 20; ++i) w.shot();
             const double ms = t.nsecsElapsed() / 20e6;
+            std::printf("  info  %s page redraw with sound: %.1f ms\n", pageName(p), ms);
             if (ms > worst) { worst = ms; worstPage = p; }
         }
         key(w, Qt::Key_E, false); key(w, Qt::Key_S, false); key(w, Qt::Key_Z, false);

@@ -1,4 +1,4 @@
-// venv-vrequency — sounds, settings, the beat and a whole session as JSON (see store.h).
+// venv-vrequency — sounds, settings, the pulse pads and a whole session as JSON (see store.h).
 #include "app/store/store.h"
 #include <QJsonArray>
 #include <algorithm>
@@ -34,7 +34,7 @@ QJsonObject settingsToJson(const td::Settings &s) {
     o["padMode"] = s.padMode; o["metro"] = s.metro;
     o["bendRange"] = s.bendRange; o["bendTime"] = s.bendTime; o["glideScale"] = s.glideScale;
     o["loopVol"] = s.loopVol; o["latencyMs"] = s.latencyMs;
-    o["kit"] = s.kit; o["beatVol"] = s.beatVol;
+    o["pulseSync"] = s.pulseSync;
     return o;
 }
 
@@ -56,28 +56,36 @@ td::Settings settingsFromJson(const QJsonObject &o) {
     s.glideScale = (float)qBound(0.0, o["glideScale"].toDouble(1), 4.0);
     s.loopVol = (float)qBound(0.0, o["loopVol"].toDouble(0.9), 1.0);
     s.latencyMs = (float)qBound(0.0, o["latencyMs"].toDouble(0), 500.0);
-    s.kit = qBound(0, o["kit"].toInt(0), td::kKits - 1);
-    s.beatVol = (float)qBound(0.0, o["beatVol"].toDouble(0.7), 1.0);
+    s.pulseSync = o["pulseSync"].toBool(false); // files from before 1.0 have "kit" and "beatVol": left out
     return s;
 }
 
-// The beat: one string of sixteen characters per drum, "x" for a hit and "." for a rest.
-QJsonArray beatToJson(const uint16_t *beat) {
+// The pulse pads: one object per pad, {"type": "click", "tone": Hz, "length": ms, "rate": Hz, "level": 0..1}.
+QJsonArray pulseToJson(const td::PulsePad *pads) {
     QJsonArray a;
-    for (int d = 0; d < td::kDrums; ++d) {
-        QString row;
-        for (int s = 0; s < td::kDrumSteps; ++s) row += (beat[d] >> s) & 1 ? 'x' : '.';
-        a.append(row);
+    for (int p = 0; p < td::kPulsePads; ++p) {
+        QJsonObject o;
+        o["type"] = td::pulseTypeKey(pads[p].type);
+        o["tone"] = (double)pads[p].tone; o["length"] = (double)pads[p].lengthMs;
+        o["rate"] = (double)pads[p].rate; o["level"] = (double)pads[p].level;
+        a.append(o);
     }
     return a;
 }
 
-void beatFromJson(const QJsonArray &a, uint16_t *beat) {
-    for (int d = 0; d < td::kDrums; ++d) {
-        beat[d] = 0;
-        const QString row = d < a.size() ? a[d].toString() : QString();
-        for (int s = 0; s < td::kDrumSteps && s < row.size(); ++s)
-            if (row[s] == 'x') beat[d] |= (uint16_t)(1u << s);
+// A pad the file does not have (or an older file with none) keeps its default.
+void pulseFromJson(const QJsonArray &a, td::PulsePad *pads) {
+    for (int p = 0; p < td::kPulsePads; ++p) {
+        pads[p] = td::pulseDefault(p);
+        if (p >= a.size() || !a[p].isObject()) continue;
+        const QJsonObject o = a[p].toObject();
+        const int t = td::pulseTypeFromKey(o["type"].toString().toUtf8().constData());
+        if (t >= 0) pads[p].type = t;
+        pads[p].tone = (float)o["tone"].toDouble(pads[p].tone);
+        pads[p].lengthMs = (float)o["length"].toDouble(pads[p].lengthMs);
+        pads[p].rate = (float)o["rate"].toDouble(pads[p].rate);
+        pads[p].level = (float)o["level"].toDouble(pads[p].level);
+        td::pulseClamp(pads[p]);
     }
 }
 
@@ -111,7 +119,7 @@ std::vector<td::LayerData> layersFromJson(const QJsonArray &src) {
             td::LoopEv e;
             e.beat = a[0].toDouble(); e.op = (uint8_t)a[1].toInt(); e.slot = (uint8_t)a[2].toInt();
             e.a = (float)a[3].toDouble(); e.b = (float)a[4].toDouble(); e.seq = seq++;
-            if (e.beat < 0 || e.beat > td::kMaxLoopBeats || e.op > td::OP_PARAM) continue;
+            if (e.beat < 0 || e.beat > td::kMaxLoopBeats || e.op > td::OP_PULSE) continue;
             ld.ev.push_back(e);
         }
         out.push_back(std::move(ld));
@@ -129,7 +137,7 @@ QJsonObject sessionToJson(const td::SessionData &s) {
     o["droneMask"] = s.droneMask;
     o["loopBeats"] = s.loopBeats;
     o["layers"] = layersToJson(s.layers);
-    o["beat"] = beatToJson(s.beat);
+    o["pulse"] = pulseToJson(s.pulse);
     return o;
 }
 
@@ -142,7 +150,7 @@ bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
     s.holdChord = o["holdChord"].toInt(-1);
     s.droneMask = o["droneMask"].toInt(0);
     s.loopBeats = o["loopBeats"].toDouble(0);
-    beatFromJson(o["beat"].toArray(), s.beat);
+    pulseFromJson(o["pulse"].toArray(), s.pulse); // an old session's "beat" is left out
     s.layers = layersFromJson(o["layers"].toArray());
     return true;
 }

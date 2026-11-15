@@ -71,12 +71,12 @@ void tourFirstRunOffer(TourContext &ctx) {
 // the last page is remembered
 void tourRemembersLastPage(TourContext &ctx) {
     MainWindow &w = ctx.w; TourView &t = ctx.t; const auto &check = ctx.check;
-    t.open("beat"); settleTour(w); t.close();
+    t.open("pulse"); settleTour(w); t.close();
     w.saveState();
     QJsonObject st; store::readJson(store::baseDir() + "/state.json", st);
-    check(st["tourPage"].toString() == "beat", "the last tour page is saved in state.json");
+    check(st["tourPage"].toString() == "pulse", "the last tour page is saved in state.json");
     t.open(); settleTour(w);
-    check(t.pageId() == "beat", "and the tour reopens there");
+    check(t.pageId() == "pulse", "and the tour reopens there");
     t.close();
 }
 } // namespace selftest

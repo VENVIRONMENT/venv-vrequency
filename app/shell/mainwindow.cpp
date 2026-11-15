@@ -18,7 +18,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
     pageOf[PG_CHAT] = &chatPage;
     pageOf[PG_PLAY] = &synthPage;
     pageOf[PG_SOUND] = &soundPage;
-    pageOf[PG_BEAT] = &beatPage;
+    pageOf[PG_PULSE] = &pulsePage;
     pageOf[PG_TUNE] = &tunePage;
     pageOf[PG_SYS] = &systemPage;
     pageOf[PG_HELP] = &helpPage;
@@ -49,7 +49,7 @@ MainWindow::MainWindow(Instrument &i, AudioOut &a, bool scratch, SinkProbe *shar
         UiState s = inst.uiState();
         bool busy = s.voices > 0 || ui.touching() || s.padsPlaying || s.loopState != L_EMPTY || s.peak > 0.002f ||
                     clock.elapsed() < toastUntil + 200 || tunePage.listener.state == 1 || recorder.recording() || !keys.held.isEmpty() ||
-                    s.beatPlaying || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || tourOpen() || (tourView && tourView->promptShowing());
+                    s.pulsing || recorder.playingBack() || clock.elapsed() < chat.tickerEnds() + 200 || pg == PG_CHAT || guide.dockOpen || clock.elapsed() < guide.hl.until + 200 || tourOpen() || (tourView && tourView->promptShowing());
         if (busy || ++skip >= 12) { skip = 0; update(); }
     });
     frameTimer.start(40);

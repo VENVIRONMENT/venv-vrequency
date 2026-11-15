@@ -12,12 +12,12 @@ using namespace pal;
 void HelpPage::paint() {
     const KeyMap &km = sh.km;
     const std::vector<HelpRow> rows = helpRows(km, sub);
-    const QString title = sub == 0 ? QString("Playing") : (sub == 2 ? QString("Beat and recording") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false)));
+    const QString title = sub == 0 ? QString("Playing") : (sub == 2 ? QString("Pulse and recording") : QString("Commands: hold %1").arg(km.keyFor(A_COMMAND, false)));
     // header: what this page of the guide is, the tour, the next page, and the way to ask
     ui.tag(QRectF(16, 62, 242, 30), ui.fit(title, 14, 230), 14, Qt::AlignLeft | Qt::AlignVCenter);
     ui.zone(QRectF(16, 62, 242, 30), "help_section", [](QPointF, int) {});
     ui.button(QRectF(264, 62, 84, 30), "help_tour", "Tour", false, [this] { sh.perform(A_TOUR); });
-    ui.button(QRectF(354, 62, 178, 30), "help_next", sub == 0 ? QString::fromUtf8("Command keys ›") : (sub == 1 ? QString::fromUtf8("Beat keys ›") : QString::fromUtf8("‹ Playing keys")), false, [this] { sub = (sub + 1) % kHelpParts; sel.clear(); });
+    ui.button(QRectF(354, 62, 178, 30), "help_next", sub == 0 ? QString::fromUtf8("Command keys ›") : (sub == 1 ? QString::fromUtf8("Pulse keys ›") : QString::fromUtf8("‹ Playing keys")), false, [this] { sub = (sub + 1) % kHelpParts; sel.clear(); });
     ui.button(QRectF(538, 62, 166, 30), "help_ask", "Ask Rook", false, [this] { ask(); });
     // every row is a zone with a stable name built from its description, so Rook can point at it and a tap asks about it
     desc.clear();
@@ -48,7 +48,7 @@ void HelpPage::paint() {
 // Ask Rook from the Help page: opens the dock with the keyboard, and starts the question with the
 // row that was tapped (or the part of the guide being read).
 void HelpPage::ask() {
-    static const char *parts[kHelpParts] = {"the playing keys", "the command keys", "the beat keys"};
+    static const char *parts[kHelpParts] = {"the playing keys", "the command keys", "the pulse keys"};
     if (chat.draft.trimmed().isEmpty() || chat.draft == prefill) {
         prefill = sel.isEmpty() ? QString("About %1: ").arg(parts[sub]) : QString("What does \"%1\" do? ").arg(desc.value(sel));
         chat.draft = prefill.left(380);

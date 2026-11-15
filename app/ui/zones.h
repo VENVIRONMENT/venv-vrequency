@@ -53,17 +53,18 @@ inline constexpr char undosound[] = "undosound";
 inline constexpr char deepnext[] = "deepnext";
 inline constexpr char deepprev[] = "deepprev";
 
-// ---- Beat ----
-inline constexpr char beaterase[] = "beaterase";
-inline constexpr char beatmore[] = "beatmore";
-inline constexpr char beatnew[] = "beatnew";
-inline constexpr char beatplay[] = "beatplay";
-inline constexpr char beatrec[] = "beatrec";
-inline constexpr char beatslot[] = "beatslot";   // family
-inline constexpr char beatvol[] = "beatvol";
-inline constexpr char bpm3[] = "bpm3";
-inline constexpr char kit[] = "kit";
-inline constexpr char pad[] = "pad";   // family
+// ---- Pulse ----
+inline constexpr char pad[] = "pad";   // family: the eight pulse pads
+inline constexpr char pulselast[] = "pulselast";
+inline constexpr char pulselatch[] = "pulselatch";
+inline constexpr char pulselength[] = "pulselength";
+inline constexpr char pulselevel[] = "pulselevel";
+inline constexpr char pulseloop[] = "pulseloop";
+inline constexpr char pulserate[] = "pulserate";
+inline constexpr char pulsesync[] = "pulsesync";
+inline constexpr char pulsetone[] = "pulsetone";
+inline constexpr char pulsetype[] = "pulsetype";
+inline constexpr char pulsewave[] = "pulsewave";
 
 // ---- Tune ----
 inline constexpr char bendr[] = "bendr";

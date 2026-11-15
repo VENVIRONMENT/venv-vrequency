@@ -25,10 +25,10 @@ void tourWaysIn(TourContext &ctx) {
     tourTap(w, zn::tour_close);
     check(!t.isOpen(), "Leave tour closes it by touch");
     {
-        QJsonObject r = ctx.call(R"({"id":1,"cmd":"tour","action":"open","page":"beat","element":"beatrec"})");
+        QJsonObject r = ctx.call(R"({"id":1,"cmd":"tour","action":"open","page":"pulse","element":"pulselatch"})");
         settleTour(w);
         const QJsonObject st = ctx.tourState();
-        check(r["ok"].toBool() && st["open"].toBool() && st["page"].toString() == "beat" && st["selected"].toString() == zn::beatrec,
+        check(r["ok"].toBool() && st["open"].toBool() && st["page"].toString() == "pulse" && st["selected"].toString() == zn::pulselatch,
               "the control socket opens the tour on a page and a control (Rook: let me show you)");
         check(w.page() == PG_PLAY, "and the real page did not change");
         r = ctx.call(R"({"cmd":"tour","action":"close"})");

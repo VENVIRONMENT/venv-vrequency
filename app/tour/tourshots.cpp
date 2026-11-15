@@ -24,7 +24,7 @@ int renderTourShots(MainWindow &w, const QString &dir) {
     };
     w.setPage(PG_PLAY);
     t.open("synth", "octave_up");           save("20-tour-synth");
-    t.open("beat", "beatrec");              save("21-tour-beat");
+    t.open("pulse", "pulselatch");          save("21-tour-pulse");
     t.open("synth", "concepts.recall");     save("23-tour-concept-recall");
     t.open("synth", QString(), true);       save("24-tour-start-here");
     t.open("sound-deep", "param17");        save("25-tour-parameter");

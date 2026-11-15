@@ -5,20 +5,20 @@
 
 using namespace td;
 
-// The state file, read at start-up: settings, sounds, the beats and the chat. Nothing
-// in a scratch window, and the beats are set up even when there is no file.
+// The state file, read at start-up: settings, sounds, the pulse pads and the chat. Nothing
+// in a scratch window. An old file's "beat" and "beats" are left out.
 void MainWindow::loadState(SessionData &sd) {
     QJsonObject st;
     if (!scratchWindow && store::readJson(store::baseDir() + "/state.json", st)) {
         sd.settings = store::settingsFromJson(st["settings"].toObject());
         sounds.load(st);
         keys.chordRow = st["chordRow"].toBool(false);
-        store::beatFromJson(st["beat"].toArray(), sd.beat);
+        store::pulseFromJson(st["pulse"].toArray(), sd.pulse);
         chat.load(st);
         tourSeenFlag = st["tourSeen"].toBool(false);
         tourLastPageName = st["tourPage"].toString();
     }
-    beatPage.load(st, sd);
+    pulsePage.load(st);
 }
 
 void MainWindow::saveState() {
@@ -29,8 +29,8 @@ void MainWindow::saveState() {
     o["settings"] = store::settingsToJson(sd.settings);
     sounds.save(o);
     o["chordRow"] = keys.chordRow;
-    o["beat"] = store::beatToJson(sd.beat);
-    beatPage.save(o);
+    o["pulse"] = store::pulseToJson(sd.pulse);
+    pulsePage.save(o);
     chat.save(o);
     o["tourSeen"] = tourSeenFlag;
     if (!tourLastPageName.isEmpty()) o["tourPage"] = tourLastPageName;

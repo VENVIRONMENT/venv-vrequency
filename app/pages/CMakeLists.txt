@@ -1,15 +1,17 @@
 # app/pages
 target_sources(vrequency PRIVATE
   page.h
-  beat/beat_grid.cpp
-  beat/beat_page.cpp
-  beat/beat_page.h
-  beat/kept_beats.cpp
   chat/chat_page.cpp
   chat/chat_page.h
   help/help_page.cpp
   help/help_page.h
   help/help_rows.cpp
+  pulse/pulse_page.cpp
+  pulse/pulse_page.h
+  pulse/pulse_pads.cpp
+  pulse/pulse_picture.cpp
+  pulse/pulse_picture.h
+  pulse/pulse_strip.cpp
   sound/sound_curves.cpp
   sound/sound_deep.cpp
   sound/sound_env_curve.cpp
