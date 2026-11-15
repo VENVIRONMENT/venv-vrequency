@@ -2294,18 +2294,18 @@
      "ask": "When should I use Hold on the touch pad?"
     },
     "scopeview": {
-     "title": "3D",
-     "kind": "toggle",
-     "summary": "Switches the scope between the 3D stack and the moving line.",
-     "does": "Lit: the newest real cycle of your sound sits at the front and older ones move back and fade, so changes roll through the stack. Off: the classic moving line. Chords and noise show the last 20 ms.",
+     "title": "SCOPE VIEW",
+     "kind": "button",
+     "summary": "Cycles the scope: 3D, spectrum, waterfall, phase, level, line.",
+     "does": "Every view draws your real output. 3D: recent cycles stacked. SPEC: frequencies, with the filter cutoff. FALL: spectra stacked. PHASE: a loop figure. LEVEL: loudness, 4 s. LINE: the moving line.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap to switch; lit means 3D."
+       "text": "Tap for the next view; the key shows its name."
       },
       {
        "how": "Keys",
-       "text": "Ctrl+V switches. Hold Ctrl+C to open the filter, Ctrl+X to close it."
+       "text": "Ctrl+V next view. Hold Ctrl+C to open the filter, Ctrl+X to close it."
       }
      ],
      "keys": [
@@ -2315,13 +2315,13 @@
      ],
      "recall": "Synth page, top right of the scope, left of the mapping key.",
      "tips": [
-      "Hold a note with Space, then hold Ctrl+C and watch the cycles sharpen."
+      "Hold a note with Space, then hold Ctrl+C: in SPEC the peaks follow the cutoff."
      ],
      "related": [
       "synth.xy",
       "synth.xyhold"
      ],
-     "ask": "Why does the scope show waves stacked in 3D?"
+     "ask": "What do the scope views show?"
     },
     "string2": {
      "title": "HIGH STRING (S3)",

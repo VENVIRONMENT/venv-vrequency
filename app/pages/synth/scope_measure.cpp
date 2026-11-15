@@ -4,10 +4,11 @@
 #include "audio/audio.h"
 #include <QtGlobal>
 #include <cmath>
+#include <cstdlib>
 
 using namespace td;
 
-Scope::Scope(Shell &s) : Part(s), buf(kScopeSize, 0.0f) {}
+Scope::Scope(Shell &s) : Part(s), buf(kScopeSize, 0.0f) { if (getenv("SCOPE_MODE")) mode = (Mode)atoi(getenv("SCOPE_MODE")); } // TEMP
 
 // Frequency: autocorrelation of the last 85 ms (decimated by four). Counting zero crossings
 // misreads any wave with more than one wiggle per cycle. Returns the period in samples.

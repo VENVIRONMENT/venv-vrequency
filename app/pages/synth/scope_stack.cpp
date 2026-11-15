@@ -58,7 +58,7 @@ void Scope::captureCycle(const View &v) {
 // Back to front: each cycle first blacks out what lies under it (so nearer cycles hide farther
 // ones, like a landscape), then draws its line, greyer the older it is. The newest is filled to
 // its centre line and drawn brightest.
-void Scope::paintStack(QRectF gr, qreal div) {
+void Scope::paintStack(QRectF gr, qreal div, bool fall) {
     QPainter &g = *ui.g;
     g.save();
     g.setClipRect(gr.adjusted(1, 1, -1, -1));
@@ -68,7 +68,7 @@ void Scope::paintStack(QRectF gr, qreal div) {
     auto path = [&](const float *ys, const StackRow &l, QPolygonF &pts) {
         pts.resize(kPts);
         for (int k = 0; k < kPts; ++k)
-            pts[k] = QPointF(l.x + l.w * k / (kPts - 1), l.y - qBound(-2.2f, ys[k] / vdiv, 2.2f) * l.amp);
+            pts[k] = QPointF(l.x + l.w * k / (kPts - 1), l.y - (fall ? ys[k] * 2.4f - 1.2f : qBound(-2.2f, ys[k] / vdiv, 2.2f)) * l.amp);
     };
     QPolygonF pts;
     for (int i = layerCount - 1; i >= 0; --i) {
@@ -77,7 +77,8 @@ void Scope::paintStack(QRectF gr, qreal div) {
         path(layers[i], l, pts);
         if (i > 0) {
             QPolygonF under = pts; // hide what is behind this cycle
-            under << QPointF(l.x + l.w, l.y + 2.3 * l.amp) << QPointF(l.x, l.y + 2.3 * l.amp);
+            const qreal floorY = l.y + (fall ? 1.25 : 2.3) * l.amp;
+            under << QPointF(l.x + l.w, floorY) << QPointF(l.x, floorY);
             g.setRenderHint(QPainter::Antialiasing, false); // the hiding fill needs no smoothing: cheaper
             g.setPen(Qt::NoPen);
             g.setBrush(pal::BG);
@@ -93,12 +94,13 @@ void Scope::paintStack(QRectF gr, qreal div) {
         const StackRow l = place(0, div);
         path(layers[0], l, pts);
         QPolygonF fill = pts;
-        fill << QPointF(l.x + l.w, l.y) << QPointF(l.x, l.y);
+        const qreal baseY = fall ? l.y + 1.2 * l.amp : l.y;
+        fill << QPointF(l.x + l.w, baseY) << QPointF(l.x, baseY);
         g.setPen(Qt::NoPen);
         g.setBrush(QColor(255, 255, 255, 38));
         g.drawPolygon(fill);
         g.setPen(QPen(QColor(0x80, 0x80, 0x7d), 1, Qt::DotLine));
-        g.drawLine(QPointF(l.x, l.y), QPointF(l.x + l.w, l.y)); // the centre line, 0 V
+        g.drawLine(QPointF(l.x, baseY), QPointF(l.x + l.w, baseY)); // the centre line, 0 V (the floor, for spectra)
         g.setPen(QPen(QColor(255, 255, 251), 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         g.drawPolyline(pts);
     }

@@ -15,7 +15,7 @@ public:
     void paint() override;
     bool tabs() const override { return false; }   // this page has its own header instead of the tabs
     void releaseTouches();                   // let go of every string a finger holds (the window lost focus)
-    bool toggleScopeView() { scope.stackView = !scope.stackView; return scope.stackView; } // true: now the 3D stack
+    const char *cycleScopeView() { return scope.cycleMode(); } // the next scope view; its name
 
 private:
     Sounds &sounds;
