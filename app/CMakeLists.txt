@@ -9,6 +9,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DI
 
 add_executable(vrequency main.cpp ${CMAKE_BINARY_DIR}/tour.qrc)
 target_include_directories(vrequency PRIVATE ${CMAKE_SOURCE_DIR})   # includes are written from the repo root
+target_compile_definitions(vrequency PRIVATE VREQ_VERSION="${PROJECT_VERSION}")   # --version, from project() in the top CMakeLists
 target_link_libraries(vrequency PRIVATE vreqcore vreqaudio Qt6::Widgets Qt6::Network)
 
 add_subdirectory(ui)
