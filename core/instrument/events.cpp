@@ -19,12 +19,17 @@ void Instrument::applySetting(int s, float v) {
     case S_VOLUME: st.volume = clampf(v, 0, 1); break;
     case S_XYMAP: st.xyMap = std::clamp((int)v, 0, XY_COUNT - 1); applyXY(0, st.xyMap, xyX, xyY, false, false); break;
     case S_XYHOLD: st.xyHold = v > 0.5f; if (!st.xyHold && !xyTouch) applyXY(0, st.xyMap, xyX, xyY, false, false); break;
-    case S_PADMODE: st.padMode = std::clamp((int)v, 0, PM_COUNT - 1); break;
+    case S_BACKMODE: st.backMode = std::clamp((int)v, 0, BM_COUNT - 1); break;
+    case S_BACKSTYLE: st.backStyle = std::clamp((int)v, 0, BS_COUNT - 1); break;
+    case S_CHORDBEATS: st.chordBeats = std::clamp((int)v, 1, 8); break;
+    case S_ARPRATE: st.arpRate = std::clamp((int)v, 1, 4); break;
+    case S_SEVENTH: st.seventh = v > 0.5f; break;
     case S_METRO: st.metro = v > 0.5f; break;
     case S_POLY: setPoly(v > 0.5f); break;
     case S_BENDRANGE: st.bendRange = clampf(v, 1, 12); break;
     case S_BENDTIME: st.bendTime = clampf(v, 10, 1000); break;
     case S_GLIDESCALE: st.glideScale = clampf(v, 0, 4); break;
+    case S_BACKVOL: st.backVol = clampf(v, 0, 1); break;
     case S_LOOPVOL: st.loopVol = clampf(v, 0, 1); break;
     case S_LATENCY: st.latencyMs = clampf(v, 0, 500); break;
     case S_KIT: st.kit = std::clamp((int)v, 0, kKits - 1); break;
@@ -72,7 +77,27 @@ void Instrument::handle(const Event &e) {
         case LC_PLAYSTOP: loopPlayStop(); break;
         }
         break;
-    case EV_PADS: padsPlaying = !padsPlaying; break;
+    case EV_BACK:
+        switch (e.a) {
+        case BC_PLAYSTOP:
+            backPlaying = !backPlaying;
+            if (backPlaying) {
+                if (loopState == L_EMPTY && !beatPlaying) { beat = 0; progOrigin = 0; }
+                else progOrigin = std::floor(beat / st.chordBeats) * st.chordBeats;
+                lastPulseStep = lastArpStep = -1;
+            }
+            break;
+        case BC_CLEAR:
+            progLen = 0; holdChord = -1; droneMask = 0; selSlot = -1; backPlaying = false;
+            break;
+        case BC_REMOVE_LAST:
+            if (progLen > 0) --progLen;
+            if (selSlot >= progLen) selSlot = -1;
+            break;
+        case BC_RESYNC_SOUND: parts[1].patch = parts[0].patch; break;
+        case BC_SELECT_SLOT: selSlot = (e.b == selSlot || e.b < 0 || e.b >= progLen) ? -1 : e.b; break;
+        }
+        break;
     case EV_OCTAVE: shiftOctave(e.a); break;
     case EV_DRUM: drumHit(e.a, e.f > 0 ? e.f : 1.0f); break;
     case EV_BEAT: beatCmd(e.a, e.b, e.c, e.d); break;

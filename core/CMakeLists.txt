@@ -4,8 +4,8 @@ add_library(vreqcore STATIC
   analysis/analysis.cpp
   drums/drum_kit.cpp
   drums/kit_sounds.cpp
+  instrument/backing.cpp
   instrument/beat.cpp
-  instrument/chord_pads.cpp
   instrument/events.cpp
   instrument/instrument.cpp
   instrument/lead.cpp

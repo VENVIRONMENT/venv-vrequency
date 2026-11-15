@@ -21,10 +21,12 @@ struct UiState {
     StringUi str[kStrings];
     Settings set;
     double beat = 0;
-    // chord pads
-    bool padsPlaying = false;
+    // backing
+    bool backPlaying = false;
+    int prog[kProgMax] = {0};
+    int progLen = 0, progPos = -1, selSlot = -1;
     int holdChord = -1, droneMask = 0, curChord = -1;
-    char padsName[28] = {0};           // the sound they play
+    char backName[28] = {0};
     // looper
     int loopState = L_EMPTY;
     float loopPos = 0;

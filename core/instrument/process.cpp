@@ -24,12 +24,12 @@ void Instrument::block(float *l, float *r, int n) {
     }
     double b0 = beat, b1 = beat + (double)st.bpm / 60.0 / sr * n;
     tickLoop(b0, b1);
-    tickPads();
+    tickBacking(b0, b1);
     tickBeat(b0, b1);
     beat = b1;
 
     parts[0].gain = 1.0f;
-    parts[1].gain = 0.7f; // the chord pads sit under the lead
+    parts[1].gain = st.backVol;
     float bc = 1.0f - std::exp(-(float)n / (st.bendTime * 0.001f * sr * 0.33f));
     for (int p = 0; p < kParts; ++p) {
         parts[p].bend += bc * (bendTarget[p] - parts[p].bend);

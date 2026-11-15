@@ -28,19 +28,19 @@ void testSaving(Context &ctx) {
     check(a.layers.size() == 1 && !a.layers[0].ev.empty() && a.loopBeats >= 4, "the session holds the recorded loop");
     key(w, Qt::Key_Control, true);
     key(w, Qt::Key_Control, false);
-    inst.cmd(EV_PADS);                                    // the chord pads' Stop
+    w.perform(A_BACK_CLEAR);                              // backing clear (its page button; Ctrl+X sweeps the filter)
     key(w, Qt::Key_Control, true);
     key(w, Qt::Key_D, true); key(w, Qt::Key_D, false);   // Ctrl+D clear loop
     key(w, Qt::Key_Control, false);
     inst.set(S_ROOT, 3); wait(100);
-    check(!inst.uiState().padsPlaying && inst.uiState().layers == 0, "chord pads stopped and loop cleared");
+    check(inst.uiState().progLen == 0 && inst.uiState().layers == 0, "backing and loop cleared");
     check(w.loadSession(sp), "session loaded");
     wait(100);
     SessionData b; inst.snapshot(b);
-    bool same = b.settings.tuning.root == a.settings.tuning.root && b.holdChord == a.holdChord && b.droneMask == a.droneMask && b.layers.size() == a.layers.size() &&
-                b.loopBeats == a.loopBeats && QString(b.lead.name) == QString(a.lead.name) && QString(b.pads.name) == QString(a.pads.name);
+    bool same = b.settings.tuning.root == a.settings.tuning.root && b.progLen == a.progLen && b.layers.size() == a.layers.size() &&
+                b.loopBeats == a.loopBeats && QString(b.lead.name) == QString(a.lead.name) && QString(b.backing.name) == QString(a.backing.name);
     if (same && !a.layers.empty()) same = a.layers[0].ev.size() == b.layers[0].ev.size();
-    check(same, "loaded session matches what was saved (key, sounds, held chord, loop)");
+    check(same, "loaded session matches what was saved (key, sounds, progression, loop)");
     inst.set(S_VOLUME, 0.06f);
     w.saveState();
     check(QFile::exists(store::baseDir() + "/state.json") && QFile::exists(store::baseDir() + "/keymap.json"), "state and keymap files written");

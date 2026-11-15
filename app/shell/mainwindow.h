@@ -9,6 +9,7 @@
 #include "app/store/store.h"
 #include "app/chat/chat.h"
 #include "app/guide/guide.h"
+#include "app/pages/backing/backing_page.h"
 #include "app/pages/beat/beat_page.h"
 #include "app/pages/chat/chat_page.h"
 #include "app/pages/help/help_page.h"
@@ -53,10 +54,11 @@ public:
     Chat chat{*this};
     Guide guide{*this, chat};
     ChatPage chatPage{*this, chat};
-    ChordPads chordPads{*this};              // drawn on the Synth page
+    ChordPads chordPads{*this};              // shared by the Synth and Backing pages
     SynthPage synthPage{*this, chordPads};
     SoundPage soundPage{*this};
     BeatPage beatPage{*this};
+    BackingPage backingPage{*this, chordPads};
     TunePage tunePage{*this};
     SystemPage systemPage{*this};
     HelpPage helpPage{*this, chat, guide};

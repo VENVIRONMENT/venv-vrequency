@@ -25,6 +25,7 @@ inline constexpr char new_sound[] = "new_sound";
 inline constexpr char octave_down[] = "octave_down";
 inline constexpr char octave_readout[] = "octave_readout";
 inline constexpr char octave_up[] = "octave_up";
+inline constexpr char pslot[] = "pslot";   // family
 inline constexpr char string[] = "string";   // family
 inline constexpr char sustain[] = "sustain";
 inline constexpr char tempo_readout[] = "tempo_readout";
@@ -32,9 +33,6 @@ inline constexpr char scopeview[] = "scopeview";
 inline constexpr char xy[] = "xy";
 inline constexpr char xyhold[] = "xyhold";
 inline constexpr char xymap[] = "xymap";   // family
-inline constexpr char chord[] = "chord";   // family: the chord pads
-inline constexpr char padmode[] = "padmode";
-inline constexpr char padplay[] = "padplay";
 
 // ---- Sound ----
 inline constexpr char deep[] = "deep";
@@ -52,6 +50,23 @@ inline constexpr char undosound[] = "undosound";
 // ---- Sound: all parameters ----
 inline constexpr char deepnext[] = "deepnext";
 inline constexpr char deepprev[] = "deepprev";
+
+// ---- Backing ----
+inline constexpr char arprate[] = "arprate";
+inline constexpr char backmode[] = "backmode";
+inline constexpr char backplay[] = "backplay";
+inline constexpr char backvol[] = "backvol";
+inline constexpr char bclear[] = "bclear";
+inline constexpr char bmetro[] = "bmetro";
+inline constexpr char bmode[] = "bmode";   // family
+inline constexpr char bpm2[] = "bpm2";
+inline constexpr char bremove[] = "bremove";
+inline constexpr char bresync[] = "bresync";
+inline constexpr char bseventh[] = "bseventh";
+inline constexpr char bslot[] = "bslot";   // family
+inline constexpr char bstyle[] = "bstyle";   // family
+inline constexpr char chord[] = "chord";   // family
+inline constexpr char chordbeats[] = "chordbeats";
 
 // ---- Beat ----
 inline constexpr char beaterase[] = "beaterase";

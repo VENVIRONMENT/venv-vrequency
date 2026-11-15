@@ -31,6 +31,6 @@ void SynthPage::paint() {
     ui.button(QRectF(xy.right() - 72, xy.y() + 8, 64, 40), "xyhold", "Hold", u.set.xyHold, [this] { sh.set(S_XYHOLD, u.set.xyHold ? 0 : 1); });
 
     paintStrings(QRectF(16, 328, 688, 176));
-    pads.paint(QRectF(16, 512, 688, 106));
+    pads.paint(QRectF(16, 512, 688, 106), true);
     paintSoftKeys();
 }

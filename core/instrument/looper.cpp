@@ -28,8 +28,8 @@ void Instrument::resetLayerPart(int li) {
 void Instrument::loopPedal() {
     switch (loopState) {
     case L_EMPTY:
-        if (padsActive() || beatPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
-        else { beat = 0; recStartBeat = 4; }
+        if (backingActive() || beatPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
+        else { beat = 0; progOrigin = 0; recStartBeat = 4; lastPulseStep = lastArpStep = -1; }
         loopState = L_COUNTIN;
         break;
     case L_COUNTIN:
@@ -93,7 +93,7 @@ void Instrument::loopPlayStop() {
         for (int i = 0; i < kLayers; ++i) partOff(2 + i, false);
         loopState = L_STOPPED;
     } else if (loopState == L_STOPPED && nLayers > 0) {
-        loopStart = (padsActive() || beatPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
+        loopStart = (backingActive() || beatPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
         for (int i = 0; i < nLayers; ++i) resetLayerPart(i);
         loopState = L_PLAY;
     }

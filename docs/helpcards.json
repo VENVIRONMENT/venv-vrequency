@@ -281,7 +281,7 @@
      "title": "CHORD PADS I-VII",
      "kind": "pad",
      "summary": "The seven chords of your key; what a tap does depends on mode.",
-     "does": "Each pad shows a chord and its numeral (small = minor). Hold: a tap latches that chord until you tap it again or pick another. Drone: a tap switches its root on or off as a held note.",
+     "does": "Each pad shows a chord and its numeral (small = minor). Prog: a tap adds it to a looping progression of up to eight. Hold: latches one chord. Drone: toggles its root as a held note.",
      "use": [
       {
        "how": "Touch",
@@ -293,16 +293,18 @@
       }
      ],
      "keys": [
-      "Alt+Z..M"
+      "Alt+Z..M",
+      "Ctrl+B mode",
+      "Ctrl+Space play"
      ],
-     "recall": "Synth page, below the strings. Tap a held chord again to let it go.",
+     "recall": "Synth and Backing pages. Ctrl+X clears; Ctrl+Backspace removes the last chord.",
      "tips": [
       "Chords follow the key and scale."
      ],
      "related": [
-      "synth.padmode",
-      "synth.padplay",
-      "concepts.chord-modes"
+      "synth.backmode",
+      "backing.bmode0",
+      "concepts.backing-modes"
      ],
      "ask": "What do the chord pads do in each mode?",
      "match": [
@@ -314,48 +316,6 @@
       "chord5",
       "chord6"
      ]
-    },
-    "padmode": {
-     "title": "CHORD MODE",
-     "kind": "button",
-     "summary": "Hold or Drone: what a chord tap does.",
-     "does": "Hold plays one chord until you pick another (tap it again to stop). Drone switches a held bass note for each chord you tap on and off. A held chord and drones can sound together.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to switch between Hold and Drone."
-      }
-     ],
-     "keys": [],
-     "recall": "Synth page, the upper button beside the chord pads.",
-     "tips": [
-      "Switching the mode keeps what is already sounding."
-     ],
-     "related": [
-      "synth.chord0",
-      "concepts.chord-modes"
-     ],
-     "ask": "What is the difference between Hold and Drone?"
-    },
-    "padplay": {
-     "title": "CHORD PADS PLAY / STOP",
-     "kind": "toggle",
-     "summary": "Stops the held chord and the drones, or brings them back.",
-     "does": "Stop silences the held chord and the drones but remembers them; Play brings them back. Tapping a chord pad starts the pads by itself.",
-     "use": [
-      {
-       "how": "Touch",
-       "text": "Tap to stop or start; inverted while the pads sound."
-      }
-     ],
-     "keys": [],
-     "recall": "Synth page, the lower button beside the chord pads. Panic stops them too.",
-     "tips": [],
-     "related": [
-      "synth.chord0",
-      "synth.padmode"
-     ],
-     "ask": "How do I stop a held chord?"
     },
     "loop_pedal": {
      "title": "LOOP PEDAL",
@@ -655,6 +615,99 @@
       "tune.oct-"
      ],
      "ask": "How far can I shift the octave?"
+    },
+    "pslot0": {
+     "title": "PROGRESSION SLOTS",
+     "kind": "list",
+     "summary": "The chords you queued, up to eight. Tap to select one.",
+     "does": "Each filled slot shows a chord name; the playing one is inverted. Tap a slot to select it (double frame), then tap a chord pad to replace it. Tap the selected slot again to deselect.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a filled slot, then a chord pad to swap it."
+      }
+     ],
+     "keys": [
+      "Ctrl+Backspace"
+     ],
+     "recall": "Synth page, strip above the chord pads; also Backing page. Ctrl+Backspace removes the last chord.",
+     "tips": [
+      "Empty slots show only their number and cannot be tapped."
+     ],
+     "related": [
+      "synth.chord0",
+      "backing.bremove",
+      "backing.chordbeats-"
+     ],
+     "ask": "How do I change one chord in my progression?",
+     "match": [
+      "pslot0",
+      "pslot1",
+      "pslot2",
+      "pslot3",
+      "pslot4",
+      "pslot5",
+      "pslot6",
+      "pslot7"
+     ]
+    },
+    "backmode": {
+     "title": "CHORD MODE",
+     "kind": "button",
+     "summary": "Prog, Hold or Drone: what a chord tap does.",
+     "does": "Prog adds taps to a looping progression. Hold plays one chord until you pick another (tap it again to stop). Drone switches a held bass note for each chord you tap on and off.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to step Prog, Hold, Drone."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+B steps the mode."
+      }
+     ],
+     "keys": [
+      "Ctrl+B"
+     ],
+     "recall": "Synth page, beside the pads; three buttons on the Backing page. Ctrl+B steps it.",
+     "tips": [
+      "Mode names appear as a toast when you use Ctrl+B."
+     ],
+     "related": [
+      "backing.bmode0",
+      "synth.chord0",
+      "concepts.backing-modes"
+     ],
+     "ask": "What is the difference between Prog, Hold and Drone?"
+    },
+    "backplay": {
+     "title": "BACKING PLAY / STOP",
+     "kind": "toggle",
+     "summary": "Starts and stops the backing chords.",
+     "does": "Plays the progression (or held chord or drones) in time with the tempo, on the chord length set in Backing. Tapping a chord in Prog mode already starts it, so Play then stops it.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to start or stop; inverted while playing."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+Space toggles it from any page."
+      }
+     ],
+     "keys": [
+      "Ctrl+Space"
+     ],
+     "recall": "Synth page and Backing page, beside the chord pads. Ctrl+P. Ignored while the Track plays.",
+     "tips": [
+      "Backing joins the bar in progress if a beat or loop is already running."
+     ],
+     "related": [
+      "synth.chord0",
+      "backing.chordbeats-",
+      "concepts.bar-lines"
+     ],
+     "ask": "Why does the backing start when I tap a chord?"
     }
    },
    "recall": "The app opens here. From any other page press Esc, or tap the Synth tab."
@@ -694,6 +747,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -1193,6 +1247,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -2429,6 +2484,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -2948,6 +3004,626 @@
    },
    "recall": "Beat tab. Ctrl+J starts or stops the beat from any page; Ctrl+I toggles Rec."
   },
+  "backing": {
+   "title": "Backing",
+   "intro": "Backing chords from your key: pick what a chord tap does, how they play, and how long each lasts.",
+   "cards": {
+    "tab_synth": {
+     "title": "PAGE TABS",
+     "kind": "tab",
+     "summary": "The strip of seven tabs along the top.",
+     "does": "Synth, Sound, Beat, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a tab to go there."
+      },
+      {
+       "how": "Keys",
+       "text": "Tab steps to the next page; Esc goes to Synth."
+      }
+     ],
+     "keys": [
+      "Tab",
+      "Esc"
+     ],
+     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "tips": [
+      "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
+     ],
+     "related": [
+      "synth.menu"
+     ],
+     "ask": "What is on each of the pages?",
+     "match": [
+      "tab_synth",
+      "tab_sound",
+      "tab_beat",
+      "tab_backing",
+      "tab_tune",
+      "tab_system",
+      "tab_help",
+      "tab_chat"
+     ]
+    },
+    "bmode0": {
+     "title": "PROGRESSION MODE",
+     "kind": "toggle",
+     "summary": "Chord taps build a looping progression.",
+     "does": "A chord tap adds to a looping sequence of up to eight chords. Tap Play (or the first chord) to hear it loop.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap chords in order to fill the strip."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+B cycles the mode."
+      }
+     ],
+     "keys": [
+      "Ctrl+B"
+     ],
+     "recall": "Backing page, top row; Synth page, mode button by the pads. Ctrl+B cycles Prog, Hold, Drone.",
+     "tips": [],
+     "related": [
+      "backing.chord0",
+      "synth.backmode",
+      "concepts.backing-modes"
+     ],
+     "ask": "When would I use progression mode?"
+    },
+    "bmode1": {
+     "title": "HOLD MODE",
+     "kind": "toggle",
+     "summary": "Chord taps latch a single chord.",
+     "does": "A chord tap plays that one chord until you pick another. Tap the same chord again to stop it.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a chord pad to latch it."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+B cycles the mode."
+      }
+     ],
+     "keys": [
+      "Ctrl+B"
+     ],
+     "recall": "Backing page, top row; Synth page, mode button by the pads. Ctrl+B cycles Prog, Hold, Drone.",
+     "tips": [],
+     "related": [
+      "backing.chord0",
+      "synth.backmode",
+      "concepts.backing-modes"
+     ],
+     "ask": "When would I use hold mode?"
+    },
+    "bmode2": {
+     "title": "DRONE MODE",
+     "kind": "toggle",
+     "summary": "Chord taps latch a drone note.",
+     "does": "A chord tap switches a held bass note for that chord on or off. Several drones can sound at once.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap pads to add or remove drone notes."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+B cycles the mode."
+      }
+     ],
+     "keys": [
+      "Ctrl+B"
+     ],
+     "recall": "Backing page, top row; Synth page, mode button by the pads. Ctrl+B cycles Prog, Hold, Drone.",
+     "tips": [
+      "A drone is the chord's root note, an octave up."
+     ],
+     "related": [
+      "backing.chord0",
+      "synth.backmode",
+      "concepts.backing-modes"
+     ],
+     "ask": "When would I use drone mode?"
+    },
+    "bstyle0": {
+     "title": "SUSTAIN STYLE",
+     "kind": "toggle",
+     "summary": "Chord notes ring continuously, gliding to the next chord.",
+     "does": "All notes of the chord are held for the whole chord length; when the chord changes the notes slide to the new ones. The calmest style, good under slow playing.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to choose it; the active style is inverted."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+A steps through the five styles."
+      }
+     ],
+     "keys": [
+      "Ctrl+A"
+     ],
+     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
+     "tips": [],
+     "related": [
+      "backing.arprate-",
+      "backing.chordbeats-",
+      "backing.bseventh"
+     ],
+     "ask": "How do the backing styles differ?"
+    },
+    "bstyle1": {
+     "title": "PULSE STYLE",
+     "kind": "toggle",
+     "summary": "The chord re-strikes on every beat.",
+     "does": "The root is held while the upper notes of the chord are struck short on every beat, like a steady organ or guitar chop.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to choose it; the active style is inverted."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+A steps through the five styles."
+      }
+     ],
+     "keys": [
+      "Ctrl+A"
+     ],
+     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
+     "tips": [],
+     "related": [
+      "backing.arprate-",
+      "backing.chordbeats-",
+      "backing.bseventh"
+     ],
+     "ask": "How do the backing styles differ?"
+    },
+    "bstyle2": {
+     "title": "ARP UP STYLE",
+     "kind": "toggle",
+     "summary": "Chord notes play one by one, upward.",
+     "does": "An arpeggio: the chord's notes are played one at a time, climbing across two octaves and starting over. Speed is set by steps per beat.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to choose it; the active style is inverted."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+A steps through the five styles."
+      }
+     ],
+     "keys": [
+      "Ctrl+A"
+     ],
+     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
+     "tips": [
+      "Arp steps per beat is the stepper below."
+     ],
+     "related": [
+      "backing.arprate-",
+      "backing.chordbeats-",
+      "backing.bseventh"
+     ],
+     "ask": "How do the backing styles differ?"
+    },
+    "bstyle3": {
+     "title": "ARP DOWN STYLE",
+     "kind": "toggle",
+     "summary": "Chord notes play one by one, downward.",
+     "does": "An arpeggio running downward through the chord's notes across two octaves, then starting again. Speed is steps per beat.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to choose it; the active style is inverted."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+A steps through the five styles."
+      }
+     ],
+     "keys": [
+      "Ctrl+A"
+     ],
+     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
+     "tips": [
+      "Arp steps per beat is the stepper below."
+     ],
+     "related": [
+      "backing.arprate-",
+      "backing.chordbeats-",
+      "backing.bseventh"
+     ],
+     "ask": "How do the backing styles differ?"
+    },
+    "bstyle4": {
+     "title": "ARP UP-DN STYLE",
+     "kind": "toggle",
+     "summary": "Chord notes climb then fall, back and forth.",
+     "does": "An arpeggio that climbs to the top of the two-octave span, turns round and falls back down, repeating. Speed is steps per beat.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to choose it; the active style is inverted."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+A steps through the five styles."
+      }
+     ],
+     "keys": [
+      "Ctrl+A"
+     ],
+     "recall": "Backing page, second row. Ctrl+A steps Sustain, Pulse, Arp up, Arp down, Arp up-dn.",
+     "tips": [
+      "Arp steps per beat is the stepper below."
+     ],
+     "related": [
+      "backing.arprate-",
+      "backing.chordbeats-",
+      "backing.bseventh"
+     ],
+     "ask": "How do the backing styles differ?"
+    },
+    "bslot0": {
+     "title": "PROGRESSION SLOTS",
+     "kind": "list",
+     "summary": "The chords you queued, up to eight. Tap to select one.",
+     "does": "Each filled slot shows a chord name; the playing one is inverted. Tap a slot to select it (double frame), then tap a chord pad to replace it. Tap the selected slot again to deselect.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a filled slot, then a chord pad to swap it."
+      }
+     ],
+     "keys": [
+      "Ctrl+Backspace"
+     ],
+     "recall": "Backing page, progression row; also Synth page. Ctrl+Backspace removes the last chord.",
+     "tips": [
+      "Empty slots show only their number and cannot be tapped."
+     ],
+     "related": [
+      "backing.chord0",
+      "backing.bremove"
+     ],
+     "ask": "How do I change one chord in my progression?",
+     "match": [
+      "bslot0",
+      "bslot1",
+      "bslot2",
+      "bslot3",
+      "bslot4",
+      "bslot5",
+      "bslot6",
+      "bslot7"
+     ]
+    },
+    "bremove": {
+     "title": "REMOVE LAST",
+     "kind": "button",
+     "summary": "Takes the last chord off the progression.",
+     "does": "Deletes the last chord in the queue, one per tap. The rest keep playing. Does not touch the held chord or drones.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap Remove last."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+Backspace."
+      }
+     ],
+     "keys": [
+      "Ctrl+Backspace"
+     ],
+     "recall": "Backing page, first row of buttons. Ctrl+Backspace. To replace instead, tap a slot then a chord.",
+     "tips": [],
+     "related": [
+      "backing.bclear",
+      "backing.bslot0"
+     ],
+     "ask": "How do I drop the last chord I added?"
+    },
+    "bclear": {
+     "title": "CLEAR ALL",
+     "kind": "button",
+     "summary": "Empties the backing completely.",
+     "does": "Removes every chord, the held chord and all drones, and stops the backing. Does not touch the loop, beat or track.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap Clear all."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+X."
+      }
+     ],
+     "keys": [
+      "Ctrl+X"
+     ],
+     "recall": "Backing page. Ctrl+X anywhere (on the Track page Ctrl+X cuts a clip instead). No undo: tap the chords again.",
+     "tips": [],
+     "related": [
+      "backing.bremove",
+      "backing.backplay"
+     ],
+     "ask": "How do I start the backing chords over?"
+    },
+    "bseventh": {
+     "title": "7TH CHORDS",
+     "kind": "toggle",
+     "summary": "Chords get a fourth note.",
+     "does": "Off: three-note triads. On: four-note seventh chords, which sound richer and more jazzy. Pad names update to match. Applies to everything the backing plays.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to switch; inverted means on."
+      }
+     ],
+     "keys": [],
+     "recall": "Backing page, third button. Tap again to go back to triads.",
+     "tips": [],
+     "related": [
+      "backing.chord0",
+      "backing.bstyle0"
+     ],
+     "ask": "What does 7th chords change in the sound?"
+    },
+    "bmetro": {
+     "title": "METRONOME",
+     "kind": "toggle",
+     "summary": "A click on every beat.",
+     "does": "Plays a quiet click in time with the tempo, louder on the first beat of each bar. The count-in click always sounds regardless, and Rec on the Beat page clicks too.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to switch; also Click on the Tune page."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+M."
+      }
+     ],
+     "keys": [
+      "Ctrl+M"
+     ],
+     "recall": "Backing page and Tune page (Click); Ctrl+M. It is one shared setting.",
+     "tips": [],
+     "related": [
+      "tune.metro",
+      "concepts.tempo"
+     ],
+     "ask": "How do I turn the click on?"
+    },
+    "chord0": {
+     "title": "CHORD PADS I-VII",
+     "kind": "pad",
+     "summary": "The seven chords of your key; what a tap does depends on mode.",
+     "does": "Each pad shows a chord and its numeral (small = minor). Prog: a tap adds it to a looping progression of up to eight. Hold: latches one chord. Drone: toggles its root as a held note.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a pad. Mode: the button beside the pads."
+      },
+      {
+       "how": "Keys",
+       "text": "Alt+Z..M: chords I to VII."
+      }
+     ],
+     "keys": [
+      "Alt+Z..M",
+      "Ctrl+B mode",
+      "Ctrl+Space play"
+     ],
+     "recall": "Synth and Backing pages. Ctrl+X clears; Ctrl+Backspace removes the last chord.",
+     "tips": [
+      "Chords follow the key and scale."
+     ],
+     "related": [
+      "synth.backmode",
+      "backing.bmode0",
+      "concepts.backing-modes"
+     ],
+     "ask": "What do the chord pads do in each mode?",
+     "match": [
+      "chord0",
+      "chord1",
+      "chord2",
+      "chord3",
+      "chord4",
+      "chord5",
+      "chord6"
+     ]
+    },
+    "backmode": {
+     "title": "CHORD MODE",
+     "kind": "button",
+     "summary": "Prog, Hold or Drone: what a chord tap does.",
+     "does": "Prog adds taps to a looping progression. Hold plays one chord until you pick another (tap it again to stop). Drone switches a held bass note for each chord you tap on and off.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to step Prog, Hold, Drone."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+B steps the mode."
+      }
+     ],
+     "keys": [
+      "Ctrl+B"
+     ],
+     "recall": "Synth page, beside the pads; three buttons on the Backing page. Ctrl+B steps it.",
+     "tips": [
+      "Mode names appear as a toast when you use Ctrl+B."
+     ],
+     "related": [
+      "backing.bmode0",
+      "synth.chord0",
+      "concepts.backing-modes"
+     ],
+     "ask": "What is the difference between Prog, Hold and Drone?"
+    },
+    "backplay": {
+     "title": "BACKING PLAY / STOP",
+     "kind": "toggle",
+     "summary": "Starts and stops the backing chords.",
+     "does": "Plays the progression (or held chord or drones) in time with the tempo, on the chord length set in Backing. Tapping a chord in Prog mode already starts it, so Play then stops it.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to start or stop; inverted while playing."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+Space toggles it from any page."
+      }
+     ],
+     "keys": [
+      "Ctrl+Space"
+     ],
+     "recall": "Synth page and Backing page, beside the chord pads. Ctrl+P. Ignored while the Track plays.",
+     "tips": [
+      "Backing joins the bar in progress if a beat or loop is already running."
+     ],
+     "related": [
+      "synth.chord0",
+      "backing.chordbeats-",
+      "concepts.bar-lines"
+     ],
+     "ask": "Why does the backing start when I tap a chord?"
+    },
+    "chordbeats-": {
+     "title": "BEATS PER CHORD",
+     "kind": "stepper",
+     "summary": "How long each chord lasts, in beats.",
+     "does": "From 1 to 8 beats; 4 is one bar of 4/4. Shorter means the progression moves faster. Changes how long each slot plays and when arpeggios turn over.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap − or +."
+      }
+     ],
+     "keys": [],
+     "recall": "Backing page, left of the second row of steppers. Default 4.",
+     "tips": [],
+     "related": [
+      "backing.arprate-",
+      "backing.backplay"
+     ],
+     "ask": "How do I make the chords change faster?",
+     "match": [
+      "chordbeats-",
+      "chordbeats+"
+     ]
+    },
+    "arprate-": {
+     "title": "ARP STEPS PER BEAT",
+     "kind": "stepper",
+     "summary": "How fast arpeggios play.",
+     "does": "How many notes an arpeggio plays per beat, 1 to 4. At 2 you hear eighth notes. It only changes the Arp styles; Sustain and Pulse ignore it.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap − or +."
+      }
+     ],
+     "keys": [],
+     "recall": "Backing page, right of Beats per chord. Default 2.",
+     "tips": [
+      "Pulse always plays once per beat, whatever this says."
+     ],
+     "related": [
+      "backing.bstyle2",
+      "backing.chordbeats-"
+     ],
+     "ask": "How do I speed up the arpeggio?",
+     "match": [
+      "arprate-",
+      "arprate+"
+     ]
+    },
+    "bpm2-": {
+     "title": "TEMPO",
+     "kind": "stepper",
+     "summary": "The tempo in beats per minute.",
+     "does": "Sets the speed of the beat, backing, loop and track together: 40 to 240 bpm, 1 per tap. It is the same setting as on the Tune and Beat pages.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap − or +."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+T taps a tempo."
+      }
+     ],
+     "keys": [
+      "Ctrl+T"
+     ],
+     "recall": "Backing page, below the progression; also Tune and Beat pages. Ctrl+T.",
+     "tips": [],
+     "related": [
+      "tune.bpm-",
+      "beat.bpm3-",
+      "concepts.tempo"
+     ],
+     "ask": "How do I change the tempo?",
+     "match": [
+      "bpm2-",
+      "bpm2+"
+     ]
+    },
+    "backvol": {
+     "title": "BACKING VOLUME",
+     "kind": "slider",
+     "summary": "How loud the backing chords are.",
+     "does": "The chords' level, 0 to 100%, separate from the lead and loop. Master volume on System sets the overall level.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar."
+      }
+     ],
+     "keys": [],
+     "recall": "Backing page, right of Tempo. Loop and master volumes are on System.",
+     "tips": [],
+     "related": [
+      "system.volume",
+      "beat.beatvol"
+     ],
+     "ask": "How do I make the backing quieter than my lead?"
+    },
+    "bresync": {
+     "title": "USE CURRENT LEAD SOUND",
+     "kind": "button",
+     "summary": "Makes the backing play the lead's sound.",
+     "does": "The backing keeps the sound it started with, so you can change the lead freely. Tap this when you want the chords to use the sound you are playing now. The line inside shows both names.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap the wide button."
+      }
+     ],
+     "keys": [],
+     "recall": "Backing page, full-width button. The backing otherwise keeps its old sound until cleared and restarted.",
+     "tips": [],
+     "related": [
+      "backing.bclear",
+      "sound.slot0"
+     ],
+     "ask": "Why does the backing not change when I change my sound?"
+    }
+   },
+   "recall": "Backing tab. On Synth the Prog and Play buttons are the same chord controls."
+  },
   "tune": {
    "title": "Tune",
    "intro": "Key, scale, octave, tempo and slide speed: the settings that make everything you play fit together. Listen can guess a song's key.",
@@ -2983,6 +3659,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -3595,6 +4272,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -4144,6 +4822,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -4315,6 +4994,7 @@
       "tab_synth",
       "tab_sound",
       "tab_beat",
+      "tab_backing",
       "tab_tune",
       "tab_system",
       "tab_help",
@@ -4785,7 +5465,7 @@
    ],
    "related": [
     "synth.chord0",
-    "synth.padmode"
+    "synth.backmode"
    ],
    "ask": "How do the chord pads' modes work?"
   },
@@ -5160,6 +5840,37 @@
     "concepts.copilot"
    ],
    "ask": "Can you walk me through the tour?"
+  },
+  "backing-modes": {
+   "title": "BACKING MODES",
+   "kind": "area",
+   "summary": "What a chord tap does: Prog, Hold or Drone.",
+   "does": "Prog queues up to eight chords that loop, each lasting its Beats per chord. Hold plays one chord until you pick another. Drone switches held bass notes on and off. A chord tap in Prog starts the backing at once.",
+   "use": [
+    {
+     "how": "Touch",
+     "text": "Tap the mode button beside the chord pads."
+    },
+    {
+     "how": "Keys",
+     "text": "Ctrl+B changes mode; Alt + Z..M plays a chord."
+    }
+   ],
+   "keys": [
+    "Ctrl+B",
+    "Alt+Z..M",
+    "Ctrl+P"
+   ],
+   "recall": "Backing page, three buttons at the top. Ctrl+X clears the backing.",
+   "tips": [
+    "The backing keeps the sound it started with; use Use current lead sound to match."
+   ],
+   "related": [
+    "synth.chord0",
+    "backing.bmode0",
+    "backing.bresync"
+   ],
+   "ask": "How do I build a chord progression?"
   }
  }
 }

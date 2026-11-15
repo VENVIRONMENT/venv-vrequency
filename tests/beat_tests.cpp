@@ -109,16 +109,16 @@ void testBeat() {
         CHECK(!u.beatSwitching && u.beatPat[D_KICK] == 0 && u.set.kit == KIT_SOFT, "stopping the beat lets a waiting one arrive at once");
     }
 
-    SECTION("beat: with the chord pads, saved in a session, and never over full scale");
+    SECTION("beat: with backing, saved in a session, and never over full scale");
     {
         Rig r;
         r.inst.set(S_BPM, 120);
         r.inst.beatDo(BT_STEP, D_KICK, 0, 1);
         r.inst.beatDo(BT_PLAYSTOP);
         r.run(1.3);
-        r.inst.cmd(EV_CHORD, 0);  // a chord tap starts the pads while the beat runs
+        r.inst.cmd(EV_CHORD, 0);  // a chord tap starts the backing while the beat runs
         r.run(0.5);
-        CHECK(r.inst.uiState().drumHits[D_KICK] == 1 && r.inst.uiState().padsPlaying, "starting the chord pads does not restart the bar");
+        CHECK(r.inst.uiState().drumHits[D_KICK] == 1 && r.inst.uiState().backPlaying, "starting the backing does not restart the bar");
         r.run(0.3);
         CHECK(r.inst.uiState().drumHits[D_KICK] == 2, "the next bar still starts at 2.0 s");
     }

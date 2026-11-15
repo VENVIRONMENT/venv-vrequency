@@ -36,6 +36,6 @@ void testTouch(Context &ctx) {
     check(!inst.uiState().glitch, "and stops when the finger lifts");
     inst.set(S_XYMAP, XY_FILTER); wait(60);
     tap(w, zn::at(zn::chord, 4)); wait(60);
-    check(inst.uiState().holdChord == 4 && inst.uiState().padsPlaying, "touch chord pads work");
+    check(inst.uiState().progLen == 5, "touch chord pads work");
 }
 } // namespace selftest

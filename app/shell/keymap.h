@@ -12,6 +12,7 @@ enum Act {
     A_SOUND_1, A_SOUND_2, A_SOUND_3, A_SOUND_4, A_SOUND_5, A_SOUND_6, A_SOUND_7, A_SOUND_8, A_SOUND_9, A_SOUND_10,
     // command-layer actions (hold the command key, default Ctrl)
     A_KEY_UP, A_SCALE_NEXT, A_RANDOM, A_MUTATE, A_UNDO_SOUND, A_FAVOURITE, A_METRO, A_TAP,
+    A_BACK_STYLE, A_BACK_MODE, A_BACK_CLEAR, A_BACK_PLAY, A_BACK_REMOVE,
     A_LOOP_UNDO, A_LOOP_PLAY, A_LOOP_CLEAR, A_RECORD, A_HELP, A_XYMAP, A_QUIT,
     A_BEAT_PLAY, A_BEAT_REC, A_PLAY_LAST, A_CHAT, A_TOUR,
     A_SCOPE_VIEW, A_FILTER_OPEN, A_FILTER_CLOSE, // the scope's 3D/line switch; held: sweep the cutoff

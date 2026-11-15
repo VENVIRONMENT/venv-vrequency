@@ -46,9 +46,11 @@ void Instrument::publish() {
     }
     u.set = st;
     u.beat = beat;
-    u.padsPlaying = padsPlaying;
-    u.holdChord = holdChord; u.droneMask = droneMask; u.curChord = padsPlaying ? curChord : -1;
-    std::memcpy(u.padsName, parts[1].patch.name, sizeof u.padsName);
+    u.backPlaying = backPlaying;
+    for (int i = 0; i < kProgMax; ++i) u.prog[i] = prog[i];
+    u.progLen = progLen; u.progPos = backPlaying ? progPos : -1; u.selSlot = selSlot;
+    u.holdChord = holdChord; u.droneMask = droneMask; u.curChord = backPlaying ? curChord : -1;
+    std::memcpy(u.backName, parts[1].patch.name, sizeof u.backName);
     std::memcpy(u.leadName, parts[0].patch.name, sizeof u.leadName);
     u.loopState = loopState;
     u.loopBars = (int)(loopLen / 4.0 + 0.5);
