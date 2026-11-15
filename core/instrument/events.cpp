@@ -100,7 +100,6 @@ void Instrument::handle(const Event &e) {
     case EV_PULSE: pulseHit(e.a, e.f > 0 ? e.f : 1.0f, true); break;
     case EV_PULSESET: pulses.set(e.a, e.b, e.f, st.bpm); break;
     case EV_PULSELATCH: pulses.latch(e.a, e.b != 0, beat, st.bpm); break;
-    case EV_PULSEHOLD: holdPulse(e.a, e.b != 0, -1); break;
     }
 }
 

@@ -26,7 +26,6 @@ public:
     // the pulse pads: a tap, one setting (PulseField), latch on or off
     void hit(int pad, float vel = 1.0f) { Event e; e.type = EV_PULSE; e.a = (int16_t)pad; e.f = vel; push(e); }
     void pulseSet(int pad, int field, float v) { Event e; e.type = EV_PULSESET; e.a = (int16_t)pad; e.b = (int16_t)field; e.f = v; push(e); }
-    void pulseHold(int pad, bool down) { Event e; e.type = EV_PULSEHOLD; e.a = (int16_t)pad; e.b = down; push(e); }
     void pulseLatch(int pad, bool on) { Event e; e.type = EV_PULSELATCH; e.a = (int16_t)pad; e.b = on; push(e); }
 
 protected:

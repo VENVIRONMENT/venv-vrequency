@@ -31,10 +31,6 @@ void testPulse(Context &ctx) {
     check(inst.uiState().pulseHits[4] == a0 + 1 && w.pulsePage.selected() == 4, "A plays pad 5 and selects it");
     press(w, Qt::Key_Right); wait(40);
     check(w.pulsePage.selected() == 5, "Right selects the next pad");
-    key(w, Qt::Key_S, true); wait(300);               // pad 6, the pulse train: held like a synth key
-    check(inst.uiState().pulseHeld[5] && inst.uiState().pulsing, "holding S keeps pad 6 going");
-    key(w, Qt::Key_S, false); wait(400);
-    check(!inst.uiState().pulseHeld[5] && !inst.uiState().pulsing, "and letting go stops it");
     w.shot();
     check(w.pulsePage.ticksKept() >= 3, QString("the strip keeps every hit the engine logged (%1)").arg(w.pulsePage.ticksKept()));
 

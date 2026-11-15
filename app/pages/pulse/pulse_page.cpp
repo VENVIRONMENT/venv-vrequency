@@ -12,7 +12,7 @@ using namespace pal;
 bool PulsePage::key(int qtKey, int plainAct) {
     if (sh.keys.command) return false;       // Ctrl+key belongs to the command layer
     int pad, r, c;
-    if (sh.km.pulseKey(qtKey, pad)) { holdPad(pad, qtKey); return true; }
+    if (sh.km.pulseKey(qtKey, pad)) { hitPad(pad); return true; }
     if (sh.km.stringKey(qtKey, r, c) && r != 0) return true;   // between the pad keys: nothing
     if (plainAct == A_BEND_DOWN || plainAct == A_BEND_UP) {    // the pad before or after
         select((sel + (plainAct == A_BEND_UP ? 1 : kPulsePads - 1)) % kPulsePads);
@@ -27,26 +27,6 @@ void PulsePage::hitPad(int pad) {
     if (u.pulseLatched[pad]) { setLatch(pad, false); return; } // tapped again: a latched pad lets go
     inst.hit(pad);
     padLit[pad] = sh.clock.elapsed();
-    sh.redraw();
-}
-
-// Like a synth key: the pad sounds while its key is down (a one-shot again at RATE), and sustain
-// keeps it going after. A latched pad's key lets the latch go instead.
-void PulsePage::holdPad(int pad, int qtKey) {
-    if (pad < 0 || pad >= kPulsePads) return;
-    if (pad != sel) { sel = pad; sh.saveSoon(); }
-    if (u.pulseLatched[pad]) { setLatch(pad, false); return; }
-    inst.pulseHold(pad, true);
-    keyPad[qtKey] = pad;
-    padLit[pad] = sh.clock.elapsed();
-    sh.redraw();
-}
-
-void PulsePage::keyUp(int qtKey) {
-    auto it = keyPad.find(qtKey);
-    if (it == keyPad.end()) return;
-    inst.pulseHold(it.value(), false);
-    keyPad.erase(it);
     sh.redraw();
 }
 

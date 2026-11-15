@@ -108,10 +108,7 @@ void Instrument::applyOp(int part, const LoopEv &e, const Patch *patches, size_t
     case OP_XY: applyXY(part, e.slot & 0x0f, e.a, e.b, (e.slot & 0x80) != 0, (e.slot & 0x40) != 0); break;
     case OP_PATCH: if (e.slot < nPatches) parts[part].patch = patches[e.slot]; break;
     case OP_PARAM: if (e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
-    case OP_PULSE:
-        if (e.b > 0.5f) holdPulse(e.slot, e.b < 1.5f, part - 2);
-        else pulseHit(e.slot, e.a * st.loopVol, false);
-        break;
+    case OP_PULSE: pulseHit(e.slot, e.a * st.loopVol, false); break;
     }
 }
 

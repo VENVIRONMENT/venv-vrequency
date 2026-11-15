@@ -7,7 +7,6 @@ add_executable(vrequency_tests
   sound_tests.cpp
   pulse_tests.cpp
   pulse_pad_tests.cpp
-  pulse_hold_tests.cpp
   fx_tests.cpp
   backing_tests.cpp
   poly_tests.cpp

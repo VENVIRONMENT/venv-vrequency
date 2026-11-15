@@ -50,17 +50,14 @@ void PulsePage::paintPads(qint64 now) {
         const bool lit = now - padLit[p] < 110 || ui.isDown(zn::at(zn::pad, p)), on = p == sel;
         ui.frame(r, on ? INK : LOW, lit ? GRAT : BG);
         if (on) ui.frame(r.adjusted(1, 1, -1, -1), INK);
-        if (u.pulseLatched[p] || u.pulseHeld[p]) ui.frame(r.adjusted(4, 4, -4, -4), u.pulseLatched[p] ? INK : MID);
+        if (u.pulseLatched[p]) ui.frame(r.adjusted(4, 4, -4, -4), INK);
         ui.txt(QRectF(r.x() + 10, r.y() + 7, 30, 16), QString::number(p + 1), 12, on ? INK : MID, Qt::AlignLeft | Qt::AlignVCenter, true);
         ui.txt(QRectF(r.x() + 40, r.y() + 7, r.width() - 50, 16), u.pulseLatched[p] ? QString("latch") : sh.km.pulseKeys(p), 12,
                u.pulseLatched[p] ? INK : LOW, Qt::AlignRight | Qt::AlignVCenter, true);
         const QRect pic((int)r.x() + 10, (int)r.y() + 27, (int)r.width() - 20, 44);
         ui.g->drawImage(pic.topLeft(), small[p].get(u.pulse[p], rateNow(p), sr, pic.size(), false));
         ui.txt(QRectF(r.x() + 4, r.bottom() - 30, r.width() - 8, 22), pulseTypeName(u.pulse[p].type), 14, on ? INK : MID, Qt::AlignCenter, true);
-        ui.zone(r, zn::at(zn::pad, p), [this, p](QPointF, int ph) { // a finger holds a pad like its key
-            if (ph == PH_PRESS) holdPad(p, kTouchKey - p);
-            else if (ph == PH_RELEASE) keyUp(kTouchKey - p);
-        });
+        ui.zone(r, zn::at(zn::pad, p), [this, p](QPointF, int ph) { if (ph == PH_PRESS) hitPad(p); });
     }
 }
 

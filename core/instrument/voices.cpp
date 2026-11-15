@@ -54,7 +54,6 @@ void Instrument::opOff(int part, int slot) {
 }
 
 void Instrument::partOff(int part, bool hard) {
-    if (part >= 2) pulses.dropLoop(part - 2); // a loop layer going quiet lets its held pads go
     for (int s = 0; s < kSlots; ++s) {
         int v = slotVoice[part][s];
         if (v >= 0) { if (hard) voices[v].kill(sr); else voices[v].release(); }

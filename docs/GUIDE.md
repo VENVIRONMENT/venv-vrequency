@@ -252,12 +252,9 @@ The Pulse page has eight **pulse pads**: short, exact sounds made of clicks, tic
 sine tones, pulses and the silence between them. There is no step sequencer; you play them, latch
 them, sync them to the tempo and record them with the loop pedal.
 
-**Play the pads.** Hold a pad, or use the keyboard: `Q` `W` `E` `R` (or `U` `I` `O` `P`) are pads 1
+**Play the pads.** Tap a pad, or use the keyboard: `Q` `W` `E` `R` (or `U` `I` `O` `P`) are pads 1
 to 4, `A` `S` `D` `F` (or `H` `J` `K` `L`) pads 5 to 8. The bottom row still plays the low string.
-A pad works like a synth key: it plays while you hold it and stops when you let go. A one-shot
-kind (click, blip, thump...) is hit again Rate times a second while held, so a quick press is one
-hit; a gated tone or pulse train runs on until you let go. With sustain (`Space`) down, a pad you
-let go keeps going until sustain lifts. Pressing a pad also **selects** it; `Left` / `Right` select the pad before or after without playing it.
+A tap also **selects** the pad; `Left` / `Right` select the pad before or after without playing it.
 Each pad shows a small picture of its sound. The picture is made by running the pad's own
 generator, the same code the audio uses, so it is the sound you hear (drawn again whenever a
 setting changes).
@@ -289,13 +286,13 @@ sound (a hiss, a blip) is a thin bar for its length.
 
 | Key | Does |
 |---|---|
-| Loop | the loop pedal (the same as `Enter`): pads played while it records go into the loop for as long as you held them, and play back with the pad's settings of the moment |
+| Loop | the loop pedal (the same as `Enter`): pad taps made while it records go into the loop and play back with the pad's settings of the moment |
 | Latch | the selected pad keeps going until you tap it (or Latch) again. A gated tone or pulse train runs without end; any other kind is hit again Rate times a second. Several pads can be latched; `Backspace` stops them all |
 | Sync | every pad's Rate snaps to the nearest division of the tempo (from four bars to 1/512), shown beside the rate; latched one-shots then fall on the beat clock's grid, in time with the loop |
 | Type | the selected pad's next kind |
 
 The pads' settings and Sync are saved in your state and in sessions; latches are not, so nothing
-starts by itself. Latched repeats are not written into a loop; held pads are, from key down to key up.
+starts by itself. Latched repeats are not written into a loop, only taps.
 
 ## 9. The loop pedal
 

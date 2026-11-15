@@ -62,8 +62,7 @@ void Instrument::publish() {
     u.layers = nLayers; u.countBeat = countBeat;
     u.loopFull = loopFull; u.loopClosing = closing;
     for (int p = 0; p < kPulsePads; ++p) {
-        u.pulse[p] = pulses.pad[p]; u.pulseLatched[p] = pulses.latched[p];
-        u.pulseHeld[p] = !pulses.latched[p] && pulses.going(p); u.pulseHits[p] = pulses.hits[p];
+        u.pulse[p] = pulses.pad[p]; u.pulseLatched[p] = pulses.latched[p]; u.pulseHits[p] = pulses.hits[p];
     }
     u.pulsing = pulses.active();
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
