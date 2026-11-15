@@ -1,4 +1,4 @@
-// venv-vrequency — the instrument: string keyboard, scale lock, chord pads,
+// venv-vrequency — the instrument: string keyboard, scale lock, backing sequencer,
 // event looper, voice pool and master effects.
 //
 // Threading model: one real-time thread calls process(). One other thread (the app's GUI
@@ -77,6 +77,7 @@ private:
     bool sustain = false;
     // poly mode: which key holds each lead voice slot (-1 free), and slots waiting for sustain to lift
     int polyKey[kSlots];
+    int polySound[kSlots];                    // the key whose note a slot is sounding, until it is let go
     bool polyPending[kSlots];
     int polyNext = 0;
     float xyX = 0.5f, xyY = 0.5f;
@@ -84,10 +85,16 @@ private:
 
     // transport
     double beat = 0;
-    // chord pads
-    bool padsPlaying = false;
-    int holdChord = -1, droneMask = 0, curChord = -1;
-    int padDesired[kSlots];
+    // backing
+    bool backPlaying = false;
+    int prog[kProgMax] = {0};
+    int progLen = 0, selSlot = -1, holdChord = -1, droneMask = 0;
+    double progOrigin = 0;
+    int curChord = -1, progPos = -1;
+    int backDesired[kSlots];
+    long lastPulseStep = -1, lastArpStep = -1;
+    int arpIdx = 0, arpDir = 1;
+    double pulseOffBeat = -1, arpOffBeat = -1;
     // looper
     int loopState = L_EMPTY;
     double loopLen = 0, loopStart = 0, recStartBeat = 0;
@@ -131,6 +138,7 @@ private:
     void polyUp(int s, int col);
     void polyRelease();                       // sustain lifted: let pending poly notes go
     void polyOctave(int delta);
+    void polyMasks(int s, uint16_t &held, uint16_t &sound) const;
     void setSustain(bool on);
     void panic();
     void shiftOctave(int delta);
@@ -148,8 +156,8 @@ private:
     void applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches); // one recorded event played on a part
 
     void chordTap(int degree);
-    bool padsActive() const { return padsPlaying && (holdChord >= 0 || droneMask != 0); }
-    void tickPads();
+    bool backingActive() const { return backPlaying && (progLen > 0 || holdChord >= 0 || droneMask != 0); }
+    void tickBacking(double b0, double b1);
 
     void loopPedal();
     void loopCommit(bool atLoopEnd);
@@ -165,7 +173,8 @@ private:
     void trigClick(bool accent);
     void pulseHit(int pad, float vel, bool record);   // pulse_pads.cpp: a tap (recorded into the loop) or a loop's hit
     void renderPulses(float *l, float *r, int n, double b0, double b1);
-    bool barsRunning() const { return padsActive() || (st.pulseSync && pulses.active()); } // a new loop waits for a bar line
+    bool pulsesOnGrid() const { return st.pulseSync && pulses.active(); }  // synced latches follow the beat clock
+    bool barsRunning() const { return backingActive() || pulsesOnGrid(); }  // a new loop waits for a bar line
 
     void block(float *l, float *r, int n);
     void publish();

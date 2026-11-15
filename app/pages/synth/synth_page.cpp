@@ -26,11 +26,11 @@ void SynthPage::paint() {
         e.g = (float)qBound(0.0, (xy.bottom() - p.y()) / xy.height(), 1.0);
         inst.push(e);
     });
-    ui.button(QRectF(xy.right() - 266, xy.y() + 8, 64, 40), "scopeview", "3D", scope.stackView, [this] { sh.perform(A_SCOPE_VIEW); });
+    ui.button(QRectF(xy.right() - 266, xy.y() + 8, 64, 40), "scopeview", Scope::modeShort(scope.mode), scope.mode != Scope::M_LINE, [this] { sh.perform(A_SCOPE_VIEW); });
     ui.button(QRectF(xy.right() - 196, xy.y() + 8, 118, 40), "xymap", nice(xyMapName(u.set.xyMap)), false, [this] { sh.perform(A_XYMAP); });
     ui.button(QRectF(xy.right() - 72, xy.y() + 8, 64, 40), "xyhold", "Hold", u.set.xyHold, [this] { sh.set(S_XYHOLD, u.set.xyHold ? 0 : 1); });
 
     paintStrings(QRectF(16, 328, 688, 176));
-    pads.paint(QRectF(16, 512, 688, 106));
+    pads.paint(QRectF(16, 512, 688, 106), true);
     paintSoftKeys();
 }

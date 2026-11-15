@@ -50,6 +50,7 @@ struct Args {
 extern const char *loopNames[];     // the loop's states, by number
 
 int parseRoot(const QJsonValue &v);    // a key name or 0..11, else -1
+int parseDegree(const QJsonValue &v);  // a chord: 1..7 or a roman numeral, else -1
 QJsonObject msgJson(const ChatMsg &m);
 
 } // namespace ctl

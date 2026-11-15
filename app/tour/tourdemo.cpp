@@ -23,12 +23,12 @@ void TourDemo::build(std::vector<TourView::Pic> &pics, SinkProbe *sink) {
     for (int i = 0; i < kExtraCount; ++i) { store::NamedPatch np; np.file = "demo"; np.patch = extraPatch(i); w.sounds.favs.push_back(np); }
     w.systemPage.sessions = QStringList{"/demo/jam-friday.json", "/demo/slow-pad.json", "/demo/pulse-practice.json"};
 
-    // ---- a held chord and a loop ----
+    // ---- a progression and a loop ----
     inst.set(S_VOLUME, 0.5f);
     pump(inst, 60);
     SessionData sd; inst.snapshot(sd);
-    sd.pads = extraPatch(1);
-    sd.holdChord = 5;
+    sd.prog[0] = 5; sd.prog[1] = 3; sd.prog[2] = 0; sd.prog[3] = 4; sd.progLen = 4; sd.settings.chordBeats = 4;
+    sd.backing = extraPatch(1);
     sd.loopBeats = 8;
     sd.layers = {melody(extraPatch(0), {{0, 1.5, 64}, {1.5, 1.5, 67}, {3.5, 0.5, 69}, {4, 2, 72}, {6, 1, 71}, {7, 0.9, 67}})};
     inst.restore(sd);

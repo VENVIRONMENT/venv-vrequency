@@ -2,7 +2,7 @@
 # Includes are written from the repository root: #include "core/instrument/instrument.h".
 add_library(vreqcore STATIC
   analysis/analysis.cpp
-  instrument/chord_pads.cpp
+  instrument/backing.cpp
   instrument/events.cpp
   instrument/instrument.cpp
   instrument/lead.cpp

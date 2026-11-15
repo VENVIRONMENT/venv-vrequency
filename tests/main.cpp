@@ -22,7 +22,7 @@ void testPulsePads();
 void testLimiter();
 void testXY();
 void testGlitch();
-void testChordPads();
+void testBacking();
 void testPoly();
 void testLooper();
 void testSessionRoundTrip();
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     testLimiter();
     testXY();
     testGlitch();
-    testChordPads();
+    testBacking();
     testPoly();
     testLooper();
     testSessionRoundTrip();

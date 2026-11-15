@@ -85,7 +85,7 @@ void Instrument::shiftOctave(int delta) {
 void Instrument::panic() {
     crush.set(false, 0, 0); glitchOwner = -1;
     for (int s = 0; s < kStrings; ++s) { strings[s].n = 0; strings[s].pendingOff = false; }
-    for (int s = 0; s < kSlots; ++s) { polyKey[s] = -1; polyPending[s] = false; }
+    for (int s = 0; s < kSlots; ++s) { polyKey[s] = -1; polySound[s] = -1; polyPending[s] = false; }
     sustain = false;
     for (int p = 0; p < kParts; ++p) {
         bendTarget[p] = 0; parts[p].bend = 0;
@@ -93,7 +93,7 @@ void Instrument::panic() {
     }
     for (auto &v : voices)
         if (v.active()) v.kill(sr);
-    padsPlaying = false;
+    backPlaying = false;
     pulses.silence();
     if (loopState == L_COUNTIN || loopState == L_REC || closing) loopClear();
     else if (loopState == L_PLAY || loopState == L_OVERDUB) {

@@ -2,8 +2,8 @@
 target_sources(vrequency PRIVATE
   areas.h
   audio_layout.cpp
+  backing.cpp
   bugfixes.cpp
-  chord_pads.cpp
   guided_dock.cpp
   guided_focus.cpp
   guided_help.cpp

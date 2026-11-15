@@ -1,7 +1,7 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.13.0 with the
-Track and Backing pages taken out (the way to 1.0), and the default key bindings.
+A guide to playing the synth, page by page. Everything here describes version 0.14.0, with the
+Track page and the beat sequencer taken out (the way to 1.0), and the default key bindings.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
 
@@ -13,7 +13,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 4. [Playing the strings](#4-playing-the-strings)
 5. [The scope and touch pad](#5-the-scope-and-touch-pad)
 6. [Sounds](#6-sounds)
-7. [Chord pads](#7-chord-pads)
+7. [Backing chords](#7-backing-chords)
 8. [Pulse](#8-pulse)
 9. [The loop pedal](#9-the-loop-pedal)
 10. [Key, scale and tempo](#10-key-scale-and-tempo)
@@ -45,8 +45,9 @@ saves your setup (sounds, key, tempo, settings) and it comes back the same next 
    Let go of `F` and it slides back to `A`.
 3. Press `1` to `9` and `0` to try the ten sounds. On the Q20 the digits are on the number layer.
 4. Drag a finger across the scope at the top of the screen. That changes the tone.
-5. Tap one of the chord pads (Am, C, Em ...). It holds that chord so you can play over it; tap
-   another to change chord, or the same one again to let it go.
+5. Tap two or three of the chord pads (Am, C, Em ...). The first tap starts the backing, and the
+   chords loop as you add them, so you can play over them. (The Play button next to the pads stops
+   it, and starts it again.)
 6. Press `Backspace` if anything gets stuck. It silences everything.
 
 Every key is locked to a scale, so nothing you press is a wrong note.
@@ -66,7 +67,8 @@ From top to bottom:
 | Level strip | Output level, as a row of segments | Nothing |
 | Scope | The real output wave, with frequency and level readouts | Dragging is the touch pad (section 5) |
 | Strings | Three strings with each note's key letter above it | Press to play, drag to slide |
-| Chord pads | The seven chords of the current key, with their mode and Play / Stop | Holds a chord or a drone (section 7) |
+| Progression strip | The chords you have queued, up to eight | Tap a filled slot to select it |
+| Chord pads | The seven chords of the current key, with the mode and Play | Adds, holds or drones a chord (section 7) |
 | Bottom row | Loop, Undo, loop play/stop, Sus, octave − and +, New, Menu | See below |
 
 The bottom row:
@@ -78,7 +80,7 @@ The bottom row:
 - **− / +**: octave down or up.
 - **New**: invents a new random sound.
 - **Menu**: opens the Sound page, which has the tab strip along the top for all the other pages:
-  Synth, Sound, Pulse, Tune, System, Help and Chat, in that order.
+  Synth, Sound, Pulse, Backing, Tune, System, Help and Chat, in that order.
 
 `Tab` steps through the pages and `Esc` returns to Synth.
 
@@ -136,7 +138,7 @@ returns to normal when you let go.
 
 ![The Glitch mapping](shots/7-glitch.png)
 
-Glitch crushes everything you hear (lead, chord pads, loop and pulses) into a rough, low-quality digital
+Glitch crushes everything you hear (lead, backing, loop and pulses) into a rough, low-quality digital
 sound for as long as your finger is on the pad.
 
 - **Left to right (Coarse):** the sound gets blockier and more metallic.
@@ -198,23 +200,46 @@ strings more than fast playing. If the wash is too much, pull **Reverb** and **D
 To put one on a number key: tap it, tap **Store**, then tap a slot. If you delete one, it stays
 deleted until you use **Factory sounds** on the System page.
 
-## 7. Chord pads
+## 7. Backing chords
 
-The seven chord pads under the strings are the chords that belong to the current key (a small
-numeral is a minor chord). What a tap does depends on the mode, shown on the upper button beside
-the pads (tap it to change):
+![The Backing page](shots/2-backing.png)
+
+The seven chord pads are the chords that belong to the current key (a small numeral is a minor
+chord). They sit under the strings on the Synth page and again on the Backing page. What a tap does
+depends on the mode, shown on the button beside the pads on the Synth page (tap it to change, or
+`Ctrl`+`B`) and as three buttons at the top of the Backing page:
 
 | Mode | A chord tap ... |
 |---|---|
-| Hold | Plays that one chord until you pick another; tapping it again lets it go |
+| Progression | Adds the chord to a looping sequence of up to eight |
+| Hold | Plays that one chord until you pick another |
 | Drone | Switches a drone note for that chord on or off |
 
-A held chord and drones can sound together: set up the drones, switch to Hold and pick a chord over
-them. The lower button, **Stop**, silences the pads but remembers what they held, and **Play** brings
-it back. Panic (`Backspace`) stops them too.
+To build a progression:
 
-The pads take the sound that is live when they start, so you can change the lead without changing
-the chords. To give them a new sound, stop them, choose the sound, then tap a chord.
+1. Make sure the mode is Progression.
+2. Tap chords in the order you want. They fill the strip above the pads. The first chord tap
+   already starts the backing, and the loop grows as you add chords.
+3. **Play** (or `Ctrl`+`Space` from any page) stops the backing, and starts it again from the first
+   chord. Tapping it while the backing is already running stops it.
+
+To change one chord, tap its slot and then tap the new chord. **Remove last** (also
+`Ctrl`+`Backspace`) and **Clear all** are on the Backing page. Panic (`Backspace`) stops the
+backing too.
+
+Also on the Backing page:
+
+- **Style**: Sustain, Pulse, Arp up, Arp down, Arp up-dn (`Ctrl`+`A` steps through them). The Pulse
+  style re-strikes the chord on every beat; it is not the Pulse page.
+- **7th chords**: four-note chords instead of three.
+- **Beats per chord** and **Arp steps per beat** (the arpeggio styles only; the Pulse style always
+  strikes once per beat).
+- **Tempo**, **Metronome** and **Backing volume**.
+- **Use the current lead sound for the backing**. The backing keeps the sound it started with, so
+  you can change the lead without changing the chords. Tap this when you do want them to match.
+
+The backing shares its bar lines with the loop pedal (and, with Sync on, the pulse pads), so they
+stay together whichever you start first.
 
 From the keyboard, hold `Alt` and press `Z` to `M` for chords one to seven. `$` turns the whole
 bottom row into chord keys until you press it again.
@@ -316,14 +341,14 @@ Everything is kept in the `vrequency` folder in your home folder.
 |---|---|---|
 | Your setup | Automatic when you quit | `state.json` |
 | A favourite sound | Sound page, Save, or `Ctrl`+`F` | `favourites/` |
-| A session: sounds, chord pads, loops and the pulse pads together | System page, Save session | `sessions/` |
+| A session: sounds, the backing, loops and the pulse pads together | System page, Save session | `sessions/` |
 | A recording of what you hear | System page, Record, or `Ctrl`+`E`. The same again stops it. | `recordings/` |
 
 **Listening back.** System page, **Play last** (or `Ctrl`+`W`) plays your newest recording through
 the speaker. The same again stops it. You can play along while it runs.
 
 To load a session, tap it in the list on the System page, then start the loop, or tap a chord.
-Sessions saved by earlier versions load too; their track and chord progression are left out.
+Sessions saved by earlier versions load too; their track, beat and drum kit are left out.
 
 ## 12. System page
 
@@ -355,7 +380,7 @@ Playing:
 | `Left` / `Right`, or `[` / `]` | Bend down / up |
 | `Down` / `Up`, or `-` / `=` | Octave down / up |
 | `1`‥`9`, `0` | Sounds 1 to 10 |
-| `Alt` + `Z`‥`M` | Chord pads I to VII |
+| `Alt` + `Z`‥`M` | Chords I to VII |
 | `$` | Bottom row plays chords, on and off |
 | `Tab` / `Esc` | Next page / back to Synth |
 
@@ -373,7 +398,9 @@ Commands, with `Ctrl` held:
 | `M` | Metronome | `O` | Tour |
 | `G` | Next touch-pad mapping | `V` | Scope: 3D stack or line |
 | `P` | Strings / Poly keyboard | `C` (hold) | Open the filter |
-| | | `X` (hold) | Close the filter |
+| `Space` | Backing play / stop | `X` (hold) | Close the filter |
+| `B` | Backing mode | `A` | Backing style |
+| `Backspace` | Remove the last chord | | |
 | `Y` | Chat dock: ask Rook on this page (`Shift`: the Chat page) | | |
 
 On the Pulse page only:
@@ -484,7 +511,7 @@ app starts it offers the tour in a banner at the top (`Enter` takes it, `Esc` or
 offered once). Rook can also open it for you. It reopens on the page you left it on.
 
 **Reading it.** The chips under the title pick the page (Synth, Sound, Edit, Pulse,
-Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
+Bkng, Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
 the rest dims, and the card on the right says what it does, how to use it by touch and by keys, and **Recall**,
 which is where to find it again. **Related** chips jump to the next card. Readouts that are not buttons (the
 level strip, scope readouts, the Listen result, the status box, the key list rows) have cards
@@ -496,8 +523,8 @@ The Edit chip is the All parameters editor; its Prev and Next flip through the f
 editor), `Space` or `Page Down` scrolls a long card, `Home` clears the selection, `Esc` closes a card, then the
 concept list, then the selection, then the tour.
 
-**Start here.** The first time, or from the banner, the tour walks seven pages in order (Synth, Sound, Tune,
-Pulse, System, Help, Chat) with Back, Next and **Explore freely**.
+**Start here.** The first time, or from the banner, the tour walks eight pages in order (Synth, Sound, Tune,
+Backing, Pulse, System, Help, Chat) with Back, Next and **Explore freely**.
 
 **Ask Rook.** The button at the bottom right leaves the tour, goes to the real page the card belongs to, and
 opens the chat dock with a question already written (not sent). Press `Enter` to send it; Rook is told the

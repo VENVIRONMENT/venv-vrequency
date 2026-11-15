@@ -31,7 +31,7 @@ void tourPictures(TourContext &ctx) {
         }
         std::printf("  info  %d hotspots on %d pictures (%d are not real zones)\n", totalHot, TourView::picCount(), tourOnly);
         check(bad.isEmpty(), "every page and panel has a picture with hotspots" + (bad.isEmpty() ? QString() : ": " + bad.join(", ").left(300)));
-        check(unresolved == 0 && totalHot > 300, QString("EVERY hotspot resolves to a card (%1 of %2)").arg(totalHot - unresolved).arg(totalHot));
+        check(unresolved == 0 && totalHot > 380, QString("EVERY hotspot resolves to a card (%1 of %2)").arg(totalHot - unresolved).arg(totalHot));
         check(outside == 0 && tiny == 0, "every hotspot lies inside the screen and is big enough to see");
         check(tourOnly >= 7, "controls with no zone (level strip, scope readouts, string brackets, status...) have hotspots too");
     }

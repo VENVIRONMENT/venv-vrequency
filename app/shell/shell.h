@@ -14,7 +14,7 @@ class Sounds;
 class SinkProbe;
 
 // PG_PLAY is the instrument itself; its tab is called Synth. The app opens on it.
-enum PageId { PG_PLAY, PG_SOUND, PG_PULSE, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
+enum PageId { PG_PLAY, PG_SOUND, PG_PULSE, PG_BACK, PG_TUNE, PG_SYS, PG_HELP, PG_CHAT, PG_COUNT };
 const char *pageName(int p);                 // "synth", "sound"...: the name the control socket and the zones use
 const char *pageTitle(int p);                // "Synth", "Sound"...: what the tab says
 int pageFromName(const QString &n);          // -1 when unknown; "play" is the Synth page

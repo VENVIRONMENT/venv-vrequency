@@ -17,7 +17,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     testLayout(ctx);
     testKeys(ctx);
     testSounds(ctx);
-    testChordPads(ctx);
+    testBacking(ctx);
     testLooper(ctx);
     testTouch(ctx);
     testSaving(ctx);

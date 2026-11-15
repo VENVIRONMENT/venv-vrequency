@@ -101,6 +101,10 @@ void favouritesOverwriteAndPage(Context &ctx, Client &c) {
 void tempoStepsByOne(Context &ctx) {
     MainWindow &w = ctx.w; Instrument &inst = ctx.inst;
     inst.set(S_BPM, 100); wait(40);
+    w.setPage(PG_BACK); w.shot(); tap(w, zn::plus(zn::bpm2)); wait(60);
+    check(std::lround(inst.uiState().set.bpm) == 101, "Backing page tempo steps by 1");
+    w.shot(); tap(w, zn::minus(zn::bpm2)); wait(60);
+    check(std::lround(inst.uiState().set.bpm) == 100, "Backing page tempo steps back by 1");
     w.setPage(PG_TUNE); w.shot(); tap(w, zn::plus(zn::bpm)); wait(60);
     check(std::lround(inst.uiState().set.bpm) == 101, "Tune page tempo steps by 1");
     w.setPage(PG_PLAY); w.shot();

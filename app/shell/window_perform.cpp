@@ -30,6 +30,11 @@ void MainWindow::perform(int act, bool shift) {
     case A_FAVOURITE: sounds.saveFavourite(); break;
     case A_METRO: set(S_METRO, u.set.metro ? 0 : 1); toast(u.set.metro ? "Metronome off" : "Metronome on", 900); break;
     case A_TAP: tapTempo(); break;
+    case A_BACK_STYLE: set(S_BACKSTYLE, (float)((u.set.backStyle + 1) % BS_COUNT)); toast(QString("Backing: %1").arg(backStyleName((u.set.backStyle + 1) % BS_COUNT)), 1000); break;
+    case A_BACK_MODE: set(S_BACKMODE, (float)((u.set.backMode + 1) % BM_COUNT)); toast(QString("Chord taps: %1").arg(backModeName((u.set.backMode + 1) % BM_COUNT)), 1000); break;
+    case A_BACK_CLEAR: inst.cmd(EV_BACK, BC_CLEAR); toast("Backing cleared", 900); break;
+    case A_BACK_PLAY: inst.cmd(EV_BACK, BC_PLAYSTOP); break;
+    case A_BACK_REMOVE: inst.cmd(EV_BACK, BC_REMOVE_LAST); break;
     case A_LOOP_UNDO: inst.cmd(EV_LOOP, LC_UNDO); break;
     case A_LOOP_PLAY: inst.cmd(EV_LOOP, LC_PLAYSTOP); break;
     case A_LOOP_CLEAR: inst.cmd(EV_LOOP, LC_CLEAR); toast("Loop cleared", 900); break;
@@ -44,7 +49,7 @@ void MainWindow::perform(int act, bool shift) {
     case A_TOUR: if (tourView) { if (tourView->isOpen()) tourView->close(); else tourView->open(QString(), QString(), false, nullptr, true); } break;
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
-    case A_SCOPE_VIEW: toast(synthPage.toggleScopeView() ? "Scope: 3D stack" : "Scope: line", 900); break;
+    case A_SCOPE_VIEW: toast(QString("Scope: ") + synthPage.cycleScopeView(), 900); break;
     case A_POLY:
         releaseAllKeys(); // the held keys belong to the old way of playing
         set(S_POLY, u.set.poly ? 0 : 1);

@@ -72,6 +72,13 @@ const Case cases[] = {
     {R"({"cmd":"loop","action":"record"})", true, 100},
     {R"({"cmd":"loop","action":"dance"})", false, 0},
     {R"({"cmd":"loop","action":"clear"})", true, 100},
+    {R"({"cmd":"backing","chords":["I","vi",4,5],"style":"pulse"})", true, 150},
+    {R"({"cmd":"backing","chords":[9]})", false, 0},
+    {R"({"cmd":"backing","chords":"I"})", false, 0},
+    {R"({"cmd":"backing","action":"stop"})", true, 100},
+    {R"({"cmd":"backing","action":"play"})", true, 100},
+    {R"({"cmd":"backing","action":"remove_last"})", true, 0},
+    {R"({"cmd":"backing"})", false, 0},
     {R"({"cmd":"pulse","pad":0,"type":"train","tone":800,"length":120,"rate":30,"level":0.5})", true, 0},
     {R"({"cmd":"pulse","pad":0,"type":"banjo"})", false, 0},
     {R"({"cmd":"pulse","pad":8,"hit":true})", false, 0},
@@ -131,12 +138,13 @@ void socketEveryCommand(Context &ctx, Link &link) {
     const QJsonObject r = c.call(R"({"cmd":"state"})");
     {
         const QJsonObject st = r["result"].toObject();
-        check(st["chord_pads"].toObject().contains("playing") &&
+        check(st["backing"].toObject()["chords"].toArray().size() >= 3 &&
               st["pulse"].toObject()["pads"].toArray()[0].toObject()["type"].toString() == "train" && st["pulse"].toObject()["sync"].toBool() &&
               st["tempo"].toDouble() == 120 && st["page"].toString() == "synth" && !st.contains("beat"),
-              "state reflects what the commands did (a pulse pad, sync, tempo, page) and shows the chord pads");
+              "state reflects what the commands did (backing chords, a pulse pad, sync, tempo, page)");
     }
     inst.set(S_BPM, 100);
+    inst.cmd(EV_BACK, BC_CLEAR);
     inst.set(S_PULSESYNC, 0);
     for (int p = 0; p < kPulsePads; ++p) inst.pulseSet(p, PF_TYPE, pulseDefault(p).type);
     for (int p = 0; p < kPulsePads; ++p) { inst.pulseSet(p, PF_TONE, pulseDefault(p).tone); inst.pulseSet(p, PF_LENGTH, pulseDefault(p).lengthMs); inst.pulseSet(p, PF_RATE, pulseDefault(p).rate); inst.pulseSet(p, PF_LEVEL, pulseDefault(p).level); }

@@ -23,7 +23,7 @@ the only colour is in the scope while the Glitch control is on. The scope on the
 its own volts/div and time/div (they follow the signal and never change the pitch) and measured
 frequency and level. Touching it is the X-Y sound control.
 
-More pictures: [Sound](docs/shots/1-sound.png), [Tune](docs/shots/3-tune.png),
+More pictures: [Sound](docs/shots/1-sound.png), [Backing](docs/shots/2-backing.png), [Tune](docs/shots/3-tune.png),
 [System](docs/shots/4-system.png), [Help](docs/shots/5-help.png), [Key test](docs/shots/6-keytest.png), [Glitch](docs/shots/7-glitch.png), [Pulse](docs/shots/9-pulse.png), [Chat with a copilot](docs/shots/14-chat.png), [the chat dock on Synth](docs/shots/16-dock-synth.png), [the dock on Help](docs/shots/17-dock-help.png), [a highlight caption](docs/shots/18-caption.png), [the tour](docs/shots/20-tour-synth.png), [the tour's start-here walk](docs/shots/24-tour-start-here.png).
 
 ## Play it in ten seconds
@@ -39,7 +39,7 @@ More pictures: [Sound](docs/shots/1-sound.png), [Tune](docs/shots/3-tune.png),
 | `Enter` | Loop pedal: count-in → record → (press again) loop → (again) overdub. |
 | `Left` / `Right`, `Up` / `Down` | Pitch bend, octave (held notes sweep). On the Q20 these are on the symbol layer. |
 | `1`‥`9`, `0` | Sounds 1‥10 (number layer on the Q20). |
-| `Alt` + `Z`‥`M`, or the pads on screen | Chord pads I‥VII. `$` turns the bottom row into chord keys. |
+| `Alt` + `Z`‥`M`, or the pads on screen | Backing chords I‥VII. `$` turns the bottom row into chord keys. |
 | `Ctrl` + `R` / `Z` / `F` / `N` | New random sound / undo / save favourite / mutate. |
 | Drag on the scope | XY sound control (filter, vibrato, timbre, space, bend, glitch). |
 | Drag along a string on screen | Play and slide by touch. |
@@ -60,9 +60,9 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
 - **Sounds**: ten factory sounds in slots 1‥0, five sine-based dream sounds (Haze, Fuzz, Teeth,
   Bend, Grain) offered as favourites, a randomiser that invents playable instruments
   (every result is loudness-normalised), mutate, undo, favourites, an all-parameters editor.
-- **Chord pads**: the seven diatonic chords of the scale under the strings. **Hold** latches one
-  chord, **Drone** latches drone notes; a held chord can sound over drones. Stop / Play silences and
-  brings back what they hold. The pads keep the sound they started with while you change the lead.
+- **Backing**: diatonic triads/sevenths from the scale. Tap up to eight chords for a looping
+  progression, or latch one chord, or latch drone notes. Sustain / pulse / arpeggio styles.
+  The backing keeps the sound it started with while you change the lead. `Ctrl`+`Space` starts and stops it.
 - **Pulse**: eight pulse pads, made for pure tones, clicks, noise and silence: click, tick (1-3
   samples), noise burst, sine blip, gated tone, pulse train, sub thump and hiss, any pad any kind,
   each with Tone, Length, Rate and Level. Each pad shows a picture of its real sound (drawn by its own
@@ -73,7 +73,7 @@ The full how-to is [docs/GUIDE.md](docs/GUIDE.md). A short version is built in: 
   (`Ctrl`+`Y` opens a chat dock on whatever page you are on, so you can ask about the control Rook is pointing at without leaving it). Local Unix socket only, off with `--no-control`. See [docs/CONTROL.md](docs/CONTROL.md).
 - **Looper**: event-based (notes, slides, bends, XY moves, sound changes), count-in, bar-snapped,
   up to 64 bars, six layers, undo, stop/start, clear. Each layer keeps its own sound. Follows tempo.
-- **Saving**: sounds, favourites, sessions (settings + sounds + chord pads + loops + pulse pads), WAV export and play-back of the last recording
+- **Saving**: sounds, favourites, sessions (settings + sounds + backing + loops + pulse pads), WAV export and play-back of the last recording
   under `~/vrequency/`. Key bindings are editable in `~/vrequency/keymap.json`.
 - **Listen** (optional): estimates key and tempo from the default audio input with confidence
   values. *This Hackberry has no microphone*, so it reports that instead of guessing.
@@ -94,9 +94,9 @@ machine. Nothing is installed system-wide and nothing starts at boot.
 Tests:
 
 ```bash
-./build/vrequency_tests                                   # 398 engine checks (offline rendering)
+./build/vrequency_tests                                   # 439 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 345 checks through the real app + audio thread (one needs a real audio backend)
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 344 checks through the real app + audio thread (one needs a real audio backend)
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 

@@ -40,12 +40,17 @@ void Instrument::publish() {
         u.str[s].target = v >= 0 ? voices[v].target : top;
         u.str[s].held = strings[s].n;
         u.str[s].topCol = strings[s].n > 0 ? (strings[s].col[strings[s].n - 1] & 0xff) : -1;
+        if (st.poly) polyMasks(s, u.str[s].heldMask, u.str[s].soundMask);
+        else u.str[s].heldMask = u.str[s].soundMask = 0;
+        if (st.poly) u.str[s].gate = u.str[s].soundMask != 0;
     }
     u.set = st;
     u.beat = beat;
-    u.padsPlaying = padsPlaying;
-    u.holdChord = holdChord; u.droneMask = droneMask; u.curChord = padsPlaying ? curChord : -1;
-    std::memcpy(u.padsName, parts[1].patch.name, sizeof u.padsName);
+    u.backPlaying = backPlaying;
+    for (int i = 0; i < kProgMax; ++i) u.prog[i] = prog[i];
+    u.progLen = progLen; u.progPos = backPlaying ? progPos : -1; u.selSlot = selSlot;
+    u.holdChord = holdChord; u.droneMask = droneMask; u.curChord = backPlaying ? curChord : -1;
+    std::memcpy(u.backName, parts[1].patch.name, sizeof u.backName);
     std::memcpy(u.leadName, parts[0].patch.name, sizeof u.leadName);
     u.loopState = loopState;
     u.loopBars = (int)(loopLen / 4.0 + 0.5);

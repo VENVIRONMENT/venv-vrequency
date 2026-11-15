@@ -14,7 +14,7 @@ enum EvType : uint8_t {
     EV_SET,        // a = Setting, f = value
     EV_PATCHPARAM, // a = Param, f = value (lead part)
     EV_LOOP,       // a = LoopCmd
-    EV_PADS,       // the chord pads: stop them, or bring back what they held
+    EV_BACK,       // a = BackCmd, b = argument
     EV_OCTAVE,     // a = delta (+1 / -1): held notes sweep with it
     EV_PULSE,      // a = pulse pad, f = velocity (0 = full): a tap; written into the loop while it records
     EV_PULSESET,   // a = pulse pad, b = PulseField, f = value
@@ -23,6 +23,7 @@ enum EvType : uint8_t {
 };
 
 enum LoopCmd { LC_PEDAL, LC_UNDO, LC_CLEAR, LC_PLAYSTOP };
+enum BackCmd { BC_PLAYSTOP, BC_CLEAR, BC_REMOVE_LAST, BC_RESYNC_SOUND, BC_SELECT_SLOT };
 
 struct Event {
     uint8_t type = 0;

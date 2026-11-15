@@ -11,7 +11,7 @@ namespace selftest {
 // the cards
 void tourCards(TourContext &ctx) {
     const CardDb &db = ctx.db; const auto &check = ctx.check;
-    check(db.ok && db.pages.size() == 9 && db.cardCount() >= 160 && db.concepts.size() >= 23,
+    check(db.ok && db.pages.size() == 10 && db.cardCount() >= 180 && db.concepts.size() >= 23,
           QString("the help cards are built into the program: %1 pages, %2 cards, %3 concepts").arg(db.pages.size()).arg(db.cardCount()).arg(db.concepts.size()));
     check(db.conceptCard("recall") && db.conceptCard("scale-lock") && db.conceptCard("strings") && db.conceptCard("slides") && db.conceptCard("loop-pedal"),
           "the concepts include Recall, scale lock, strings, slides and the loop pedal");

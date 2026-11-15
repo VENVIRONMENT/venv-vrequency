@@ -14,7 +14,7 @@ using namespace td;
 
 namespace selftest {
 namespace {
-// the state a player could hear or feel, as bytes: settings, sounds, chord pads, loop, pulse pads
+// the state a player could hear or feel, as bytes: settings, sounds, backing, loop, pulse pads
 QByteArray synthBytes(MainWindow &w, Instrument &inst) {
     SessionData sd; inst.snapshot(sd);
     QJsonObject o = store::sessionToJson(sd);
@@ -87,7 +87,7 @@ void tourReachesNothing(TourContext &ctx) {
     QJsonObject sa = result(ctx.call(R"({"cmd":"state"})")); sa.remove("tour"); sa.remove("help_focus");
     check(taps > 300 && keys > 150, QString("a long sequence of tour taps and keys ran (%1 taps, %2 key presses)").arg(taps).arg(keys));
     check(sounded == 0 && heldInTour == 0 && inst.uiState().voices == 0, "no note ever sounded while the tour was open");
-    check(before == after, "the synth's state (settings, sounds, chord pads, loop, pulse pads, page, armed modes) is byte-identical before and after");
+    check(before == after, "the synth's state (settings, sounds, backing, loop, pulse pads, page, armed modes) is byte-identical before and after");
     check(QJsonDocument(sa).toJson(QJsonDocument::Compact) == stateBefore, "and so is the state the copilot reads");
     check(QJsonDocument(result(ctx.call(R"({"cmd":"get_params"})"))).toJson(QJsonDocument::Compact) == paramsBefore, "and the sound parameters");
     check(inst.uiState().droppedEvents == dropped0 && w.armedModes().isEmpty() && w.page() == PG_SOUND, "no event was dropped, nothing was armed, the page is the one it was");

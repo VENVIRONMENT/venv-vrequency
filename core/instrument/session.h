@@ -18,7 +18,9 @@ struct LayerData {
 // Everything needed to save and restore a musical session.
 struct SessionData {
     Settings settings;
-    Patch lead, pads;            // pads: the chord pads' sound
+    Patch lead, backing;
+    int prog[kProgMax] = {0};
+    int progLen = 0;
     int holdChord = -1;
     int droneMask = 0;
     double loopBeats = 0;

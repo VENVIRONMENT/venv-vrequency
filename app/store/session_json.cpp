@@ -31,9 +31,10 @@ QJsonObject settingsToJson(const td::Settings &s) {
     o["root"] = s.tuning.root; o["scale"] = s.tuning.scale; o["octave"] = s.tuning.octave;
     o["rowInterval"] = s.tuning.rowInterval;
     o["bpm"] = s.bpm; o["volume"] = s.volume; o["xyMap"] = s.xyMap; o["xyHold"] = s.xyHold; o["poly"] = s.poly;
-    o["padMode"] = s.padMode; o["metro"] = s.metro;
+    o["backMode"] = s.backMode; o["backStyle"] = s.backStyle; o["chordBeats"] = s.chordBeats;
+    o["arpRate"] = s.arpRate; o["seventh"] = s.seventh; o["metro"] = s.metro;
     o["bendRange"] = s.bendRange; o["bendTime"] = s.bendTime; o["glideScale"] = s.glideScale;
-    o["loopVol"] = s.loopVol; o["latencyMs"] = s.latencyMs;
+    o["backVol"] = s.backVol; o["loopVol"] = s.loopVol; o["latencyMs"] = s.latencyMs;
     o["pulseSync"] = s.pulseSync;
     return o;
 }
@@ -49,11 +50,16 @@ td::Settings settingsFromJson(const QJsonObject &o) {
     s.xyMap = qBound(0, o["xyMap"].toInt(0), td::XY_COUNT - 1);
     s.xyHold = o["xyHold"].toBool(false);
     s.poly = o["poly"].toBool(false);
-    s.padMode = qBound(0, o["padMode"].toInt(0), td::PM_COUNT - 1);
+    s.backMode = qBound(0, o["backMode"].toInt(0), td::BM_COUNT - 1);
+    s.backStyle = qBound(0, o["backStyle"].toInt(0), td::BS_COUNT - 1);
+    s.chordBeats = qBound(1, o["chordBeats"].toInt(4), 8);
+    s.arpRate = qBound(1, o["arpRate"].toInt(2), 4);
+    s.seventh = o["seventh"].toBool(false);
     s.metro = o["metro"].toBool(false);
     s.bendRange = (float)qBound(1.0, o["bendRange"].toDouble(2), 12.0);
     s.bendTime = (float)qBound(10.0, o["bendTime"].toDouble(120), 1000.0);
     s.glideScale = (float)qBound(0.0, o["glideScale"].toDouble(1), 4.0);
+    s.backVol = (float)qBound(0.0, o["backVol"].toDouble(0.7), 1.0);
     s.loopVol = (float)qBound(0.0, o["loopVol"].toDouble(0.9), 1.0);
     s.latencyMs = (float)qBound(0.0, o["latencyMs"].toDouble(0), 500.0);
     s.pulseSync = o["pulseSync"].toBool(false); // files from before 1.0 have "kit" and "beatVol": left out
@@ -132,7 +138,10 @@ QJsonObject sessionToJson(const td::SessionData &s) {
     o["format"] = "vrequency-session-1";
     o["settings"] = settingsToJson(s.settings);
     o["lead"] = patchToJson(s.lead);
-    o["pads"] = patchToJson(s.pads);
+    o["backing"] = patchToJson(s.backing);
+    QJsonArray prog;
+    for (int i = 0; i < s.progLen; ++i) prog.append(s.prog[i]);
+    o["progression"] = prog;
     o["holdChord"] = s.holdChord;
     o["droneMask"] = s.droneMask;
     o["loopBeats"] = s.loopBeats;
@@ -145,8 +154,10 @@ bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
     if (o["format"].toString() != "vrequency-session-1") return false;
     s.settings = settingsFromJson(o["settings"].toObject());
     s.lead = patchFromJson(o["lead"].toObject());
-    // sessions from before 1.0 call the chord pads' sound "backing"; their progression is left out
-    s.pads = patchFromJson(o[o.contains("pads") ? "pads" : "backing"].toObject());
+    s.backing = patchFromJson(o["backing"].toObject());
+    QJsonArray prog = o["progression"].toArray();
+    s.progLen = qMin((int)prog.size(), td::kProgMax);
+    for (int i = 0; i < s.progLen; ++i) s.prog[i] = prog[i].toInt();
     s.holdChord = o["holdChord"].toInt(-1);
     s.droneMask = o["droneMask"].toInt(0);
     s.loopBeats = o["loopBeats"].toDouble(0);

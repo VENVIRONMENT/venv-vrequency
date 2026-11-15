@@ -1,4 +1,4 @@
-// venv-vrequency — the control socket: loop and pulse pad commands.
+// venv-vrequency — the control socket: loop, backing chords and pulse pad commands.
 #include "app/control/control.h"
 #include "app/control/control_internal.h"
 #include "app/shell/mainwindow.h"
@@ -25,6 +25,51 @@ QJsonObject ControlServer::cmdLoop(const QJsonObject &a, QString &e) {
     else if (act == "undo") inst.cmd(EV_LOOP, LC_UNDO);
     else { e = "action must be record, play, stop, clear or undo"; return {}; }
     QJsonObject r; r["action"] = act;
+    return r;
+}
+
+QJsonObject ControlServer::cmdBacking(const QJsonObject &a, QString &e) {
+    Args A{a, e};
+    const QString act = A.str("action", "", 12);
+    const bool seventh = A.has("seventh") ? A.boolean("seventh", false) : inst.uiState().set.seventh;
+    const int beats = A.integer("beats", 1, 8, 0);
+    const QString style = A.str("style", "", 12);
+    if (!e.isEmpty()) return {};
+    std::vector<int> chords;
+    if (a.contains("chords")) {
+        if (!a["chords"].isArray() || a["chords"].toArray().isEmpty() || a["chords"].toArray().size() > kProgMax) {
+            e = "'chords' must be a list of 1 to 8 chords (1 to 7 or I to VII)"; return {};
+        }
+        for (const QJsonValue &v : a["chords"].toArray()) {
+            const int d = parseDegree(v);
+            if (d < 0) { e = "a chord must be 1 to 7 or a numeral I to VII"; return {}; }
+            chords.push_back(d);
+        }
+    } else if (act.isEmpty() && !a.contains("seventh") && !a.contains("beats") && style.isEmpty()) {
+        e = "give 'chords', 'action' (play, stop, clear, remove_last), 'style', 'seventh' or 'beats'"; return {};
+    }
+    int styleIdx = -1;
+    if (!style.isEmpty()) {
+        const QString s = style.toLower().remove(' ').remove('-');
+        static const char *N[] = {"sustain", "pulse", "arpup", "arpdown", "arpupdn"};
+        for (int i = 0; i < BS_COUNT; ++i) if (s == N[i]) styleIdx = i;
+        if (styleIdx < 0) { e = "style must be sustain, pulse, arp up, arp down or arp up-dn"; return {}; }
+    }
+    if (!act.isEmpty() && act != "play" && act != "stop" && act != "clear" && act != "remove_last") { e = "action must be play, stop, clear or remove_last"; return {}; }
+    const UiState u = inst.uiState();
+    if (a.contains("seventh")) inst.set(S_SEVENTH, seventh ? 1.0f : 0.0f);
+    if (beats > 0) inst.set(S_CHORDBEATS, (float)beats);
+    if (styleIdx >= 0) inst.set(S_BACKSTYLE, (float)styleIdx);
+    if (!chords.empty()) {
+        inst.cmd(EV_BACK, BC_CLEAR);
+        inst.set(S_BACKMODE, (float)BM_PROG);
+        for (int d : chords) inst.cmd(EV_CHORD, d);
+    }
+    if (act == "clear") inst.cmd(EV_BACK, BC_CLEAR);
+    else if (act == "remove_last") inst.cmd(EV_BACK, BC_REMOVE_LAST);
+    else if (act == "play" && !u.backPlaying) inst.cmd(EV_BACK, BC_PLAYSTOP);
+    else if (act == "stop" && u.backPlaying) inst.cmd(EV_BACK, BC_PLAYSTOP);
+    QJsonObject r; r["chords"] = (int)chords.size();
     return r;
 }
 

@@ -15,7 +15,7 @@ namespace selftest {
 namespace {
 // every page as it stands, while a slide is held
 void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
-    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-pulse", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-pulse", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p);
         if (p == PG_PULSE) { // hits in the strip, a latched pad, the pulse train selected
@@ -24,9 +24,9 @@ void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
             w.pulsePage.hitPad(5); wait(200);
         }
         if (p == PG_CHAT) { // a conversation, so the page has something to show
-            w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want some pulses under it?", "ask", false);
+            w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
             w.chat.add("you", "yes, something slow with a soft pad", "say", true);
-            w.chat.add("rook", "On it: a pulse train on pad 6, synced, tempo down to 84. Play over it and I will listen.", "say", false);
+            w.chat.add("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
             w.chat.add("rook", "Tip: hold Space and slide between the top row keys for long glides.", "tip", false);
             w.chat.seen();
             w.chat.toggle(); w.chat.toggle(); w.setPage(PG_CHAT); // leaves the draft empty, unread cleared

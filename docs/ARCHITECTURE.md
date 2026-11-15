@@ -28,7 +28,7 @@ tests ─▶  core
 |---|---|
 | `core/synth` | one voice, a patch's parameters, a Part (a sound plus its live modulation), scales |
 | `core/fx` | master effects: chorus, delay, reverb, crusher, limiter; `ring.h` is the shared delay-line tap |
-| `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, the chord pads (`chord_pads.cpp`), the pulse pads' place in it (`pulse_pads.cpp`), looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
+| `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, the backing chords (`backing.cpp`), the pulse pads' place in it (`pulse_pads.cpp`), looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
 | `core/pulse` | the eight pulse sounds (`pulse_voice`: one generator, used by the audio thread and for the page's pictures), the bank of pads with LATCH, SYNC and a lock-free record of every hit (`pulse_bank`) |
 | `core/presets` | factory sounds, the randomiser, loudness normalisation |
 | `core/analysis` | key and tempo estimation (Listen) |
@@ -41,7 +41,7 @@ lock-free queues of `EventPort` and reads its state through `uiState()` and the 
 | Folder | What |
 |---|---|
 | `app/shell` | the window (`MainWindow`) and `Shell`, the services a page may use; split by subject: keys, actions, pointer, painting the frame, saving state, the zone catalogue |
-| `app/pages/<name>` | one folder per page: synth (with the scope and chord pads), sound, pulse, tune, system, help, chat |
+| `app/pages/<name>` | one folder per page: synth (with the scope and chord pads), sound, pulse, backing, tune, system, help, chat |
 | `app/ui` | the immediate-mode drawing toolkit, the palette, the zone names |
 | `app/control` | the local control socket, one file per group of commands (see `docs/CONTROL.md`) |
 | `app/tour` | the interactive tour and its demo pictures |
@@ -61,7 +61,7 @@ window services. **A page never includes `app/shell/mainwindow.h`.** If a page n
 from the window, add a small virtual to `Shell` and implement it in `MainWindow`.
 
 The window keeps what belongs to every page: the string keys and chord rows, the key map's actions,
-the tab row, toasts, saving state, and the table `pageOf` that lists the seven pages.
+the tab row, toasts, saving state, and the table `pageOf` that lists the eight pages.
 
 ## Audio thread and the engine lock
 
@@ -69,7 +69,7 @@ One real-time thread runs `Instrument::process()`. The UI thread talks to it thr
 queues of `EventPort` (keys, settings, commands, `setPatch`) and reads `uiState()` and the scope
 buffer without locking. Next to that there is one mutex, `Instrument::mx`.
 
-**What `mx` protects.** All the engine's non-atomic state (settings, parts, chord pads, pulse pads, looper
+**What `mx` protects.** All the engine's non-atomic state (settings, parts, backing, pulse pads, looper
 layers). `process()` holds it for the whole of every callback, so the audio
 thread always sees one consistent state. Anything that touches that state from another thread must
 take it too.
@@ -79,7 +79,7 @@ take it too.
 | Site | Thread | What it does under the lock | Changed |
 |---|---|---|---|
 | `Instrument::process` (`core/instrument/process.cpp`) | audio | renders the blocks of one callback, then `publish()` | no |
-| `Instrument::snapshot` (`session.cpp`) | UI (autosave, save session, tour/self-test) | copies settings, patches, the pulse pads' settings, and up to 6 loop layers (at most 6 x 6000 events of 24 bytes, about 0.9 MB) into the caller's `SessionData`; allocates the copy | the caller's previous `out.layers` is now freed before the lock |
+| `Instrument::snapshot` (`session.cpp`) | UI (autosave, save session, tour/self-test) | copies settings, patches, the progression, the pulse pads' settings, and up to 6 loop layers (at most 6 x 6000 events of 24 bytes, about 0.9 MB) into the caller's `SessionData`; allocates the copy | the caller's previous `out.layers` is now freed before the lock |
 | `Instrument::restore` (`session.cpp`) | UI (start-up, load session, tour) | `panic()`, `loopClear()`, copies the session into fixed arrays, `publish()`; no allocation, no IO | no |
 
 All file IO and JSON work (`saveState`, `saveSession`, `loadSession`) happens outside the lock, on a
@@ -112,7 +112,7 @@ longer needs one is reported as stale.
 ## Checking
 
 ```
-bash scripts/build.sh                                         # build + 434 engine checks
+bash scripts/build.sh                                         # build + 439 engine checks
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --selftest   # in-app self-test
 bash scripts/check_sizes.sh                                   # size and layer rules
 ```

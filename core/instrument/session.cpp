@@ -12,8 +12,9 @@ void Instrument::snapshot(SessionData &out) {
     std::lock_guard<std::mutex> lk(mx);
     out.settings = st;
     out.lead = parts[0].patch;
-    out.pads = parts[1].patch;
-    out.holdChord = holdChord; out.droneMask = droneMask;
+    out.backing = parts[1].patch;
+    for (int i = 0; i < kProgMax; ++i) out.prog[i] = prog[i];
+    out.progLen = progLen; out.holdChord = holdChord; out.droneMask = droneMask;
     out.loopBeats = nLayers > 0 ? loopLen : 0;
     for (int p = 0; p < kPulsePads; ++p) out.pulse[p] = pulses.pad[p];
     for (int i = 0; i < nLayers; ++i) {
@@ -32,10 +33,11 @@ void Instrument::restore(const SessionData &in) {
     st.tuning.root = ((st.tuning.root % 12) + 12) % 12;
     st.tuning.scale = std::clamp(st.tuning.scale, 0, SC_COUNT - 1);
     parts[0].patch = in.lead; parts[0].patch.clamp();
-    parts[1].patch = in.pads; parts[1].patch.clamp();
-    holdChord = in.holdChord >= 0 && in.holdChord < 7 ? in.holdChord : -1;
-    droneMask = in.droneMask & 0x7f;
-    padsPlaying = false;
+    parts[1].patch = in.backing; parts[1].patch.clamp();
+    progLen = std::clamp(in.progLen, 0, kProgMax);
+    for (int i = 0; i < kProgMax; ++i) prog[i] = ((in.prog[i] % 7) + 7) % 7;
+    holdChord = in.holdChord; droneMask = in.droneMask & 0x7f; selSlot = -1;
+    backPlaying = false;
     pulses.sync = st.pulseSync;
     for (int p = 0; p < kPulsePads; ++p) { pulses.pad[p] = in.pulse[p]; pulseClamp(pulses.pad[p]); }
     nLayers = 0;

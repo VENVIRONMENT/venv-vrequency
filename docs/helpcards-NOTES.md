@@ -1,7 +1,7 @@
 # Help cards: notes for whoever wires the tour
 
-**Since these notes were written the Track and Backing pages have been removed** (with their cards,
-`concepts.track-flow`, and the `shelf`, `scell`, `mx*`, `pslot` and `bslot` families). What follows about them is history;
+**Since these notes were written the Track page and the Beat page have been removed** (with their cards,
+`concepts.track-flow`, `concepts.kept-beats`, and the `shelf`, `scell`, `mx*` and `beat*` families; the Backing page was removed and then restored in 0.14.0, and the Pulse page took the Beat page's place). What follows about them is history;
 `scripts/check_helpcards.py` gives the current counts.
 
 Source of truth for the cards is `docs/helpcards.json` (validated by `scripts/check_helpcards.py`).

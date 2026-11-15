@@ -1,6 +1,8 @@
 # app/pages
 target_sources(vrequency PRIVATE
   page.h
+  backing/backing_page.cpp
+  backing/backing_page.h
   chat/chat_page.cpp
   chat/chat_page.h
   help/help_page.cpp
@@ -28,7 +30,10 @@ target_sources(vrequency PRIVATE
   synth/chord_pads.h
   synth/scope.cpp
   synth/scope.h
+  synth/scope_level.cpp
   synth/scope_measure.cpp
+  synth/scope_phase.cpp
+  synth/scope_spectrum.cpp
   synth/scope_stack.cpp
   synth/scope_trace.cpp
   synth/synth_header.cpp

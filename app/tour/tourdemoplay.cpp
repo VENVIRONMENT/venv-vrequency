@@ -1,4 +1,4 @@
-// venv-vrequency — the tour's demo, playing pages: Synth, Sound, Pulse, Tune, System, Help and Chat pictures.
+// venv-vrequency — the tour's demo, playing pages: Synth, Sound, Pulse, Backing, Tune, System, Help and Chat pictures.
 #include "app/tour/tour.h"
 #include "app/tour/tourdemo.h"
 #include "audio/audio.h"
@@ -35,6 +35,8 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     rig.settle(3);
     QThread::msleep(300);                                                     // the pads that just sounded fade
     C("pulse");
+    w.setPage(PG_BACK); rig.settle(2);
+    C("backing");
     w.setPage(PG_TUNE); rig.settle(2);
     w.tunePage.listener.result = td::ListenResult();
     w.tunePage.listener.result.ok = true;
@@ -52,9 +54,9 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     w.keys.testOpen = false;
     w.setPage(PG_HELP); rig.settle(2);
     C("help");
-    w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want some pulses under it?", "ask", false);
+    w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
     w.chat.add("you", "yes, something slow with a soft pad", "say", true);
-    w.chat.add("rook", "On it: a pulse train on pad 6, synced, tempo down to 84. Play over it and I will listen.", "say", false);
+    w.chat.add("rook", "On it: I-vi-IV-V on sound 3, tempo down to 84. Play over it and I will listen.", "say", false);
     w.chat.seen();
     w.setPage(PG_CHAT); w.chat.draft.clear(); rig.settle(2);
     C("chat");

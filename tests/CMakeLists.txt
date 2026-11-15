@@ -8,7 +8,7 @@ add_executable(vrequency_tests
   pulse_tests.cpp
   pulse_pad_tests.cpp
   fx_tests.cpp
-  chord_pads_tests.cpp
+  backing_tests.cpp
   poly_tests.cpp
   looper_tests.cpp
   session_tests.cpp

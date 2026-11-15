@@ -35,6 +35,6 @@ struct TourDemo {
     static void capture(Rig &rig, int page, TourView::Pic &pic);       // the controls of whatever the scratch window shows now (page: a tour page)
     static td::LayerData melody(const td::Patch &sound, std::initializer_list<std::array<double, 3>> notes);
     static void extras(int page, TourView::Pic &pic);                  // named controls that are not zones
-    static void playPages(Rig &rig, std::vector<TourView::Pic> &pics); // synth, sound, pulse, tune, system, help, chat
+    static void playPages(Rig &rig, std::vector<TourView::Pic> &pics); // synth, sound, pulse, backing, tune, system, help, chat
     static void build(std::vector<TourView::Pic> &pics, SinkProbe *sink);
 };

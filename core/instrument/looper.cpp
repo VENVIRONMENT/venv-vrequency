@@ -29,7 +29,7 @@ void Instrument::loopPedal() {
     switch (loopState) {
     case L_EMPTY:
         if (barsRunning()) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
-        else { beat = 0; recStartBeat = 4; }
+        else { beat = 0; progOrigin = 0; recStartBeat = 4; lastPulseStep = lastArpStep = -1; }
         loopState = L_COUNTIN;
         break;
     case L_COUNTIN:

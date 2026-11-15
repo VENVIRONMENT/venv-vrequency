@@ -4,7 +4,7 @@
 //     state.json               last settings, the ten sound slots, current sound
 //     keymap.json              editable key bindings
 //     favourites/*.json        saved sounds
-//     sessions/*.json          saved sessions (settings, sounds, chord pads, loops, the pulse pads)
+//     sessions/*.json          saved sessions (settings, sounds, backing, loops, the pulse pads)
 //     recordings/*.wav         exported audio
 #pragma once
 #include "core/instrument/instrument.h"

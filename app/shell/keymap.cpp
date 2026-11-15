@@ -11,6 +11,7 @@ const char *actName(int act) {
         "next_page", "play_page",
         "sound_1", "sound_2", "sound_3", "sound_4", "sound_5", "sound_6", "sound_7", "sound_8", "sound_9", "sound_10",
         "key_up", "next_scale", "new_sound", "mutate_sound", "undo_sound", "save_favourite", "metronome", "tap_tempo",
+        "backing_style", "backing_mode", "backing_clear", "backing_start_stop", "backing_remove_last",
         "loop_undo", "loop_start_stop", "loop_clear", "record_wav", "help", "xy_mapping", "quit",
         "play_last_recording", "chat", "tour",
         "scope_view", "filter_open", "filter_close", "poly_mode"};
@@ -60,6 +61,8 @@ KeyMap KeyMap::defaults() {
     P(Qt::Key_0, A_SOUND_10);
     C(Qt::Key_K, A_KEY_UP); C(Qt::Key_S, A_SCALE_NEXT); C(Qt::Key_R, A_RANDOM); C(Qt::Key_N, A_MUTATE);
     C(Qt::Key_Z, A_UNDO_SOUND); C(Qt::Key_F, A_FAVOURITE); C(Qt::Key_M, A_METRO); C(Qt::Key_T, A_TAP);
+    C(Qt::Key_A, A_BACK_STYLE); C(Qt::Key_B, A_BACK_MODE); C(Qt::Key_Space, A_BACK_PLAY); // backing clear: its page's button
+    C(Qt::Key_Backspace, A_BACK_REMOVE);
     C(Qt::Key_U, A_LOOP_UNDO); C(Qt::Key_L, A_LOOP_PLAY); C(Qt::Key_D, A_LOOP_CLEAR);
     C(Qt::Key_E, A_RECORD); C(Qt::Key_H, A_HELP); C(Qt::Key_G, A_XYMAP); C(Qt::Key_Q, A_QUIT);
     C(Qt::Key_W, A_PLAY_LAST);

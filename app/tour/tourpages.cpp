@@ -10,6 +10,7 @@ const TourView::PageInfo kPages[] = {
     {"sound", "Sound", "Sound", PG_SOUND},
     {"sound-deep", "Sound: All parameters", "Edit", PG_SOUND},
     {"pulse", "Pulse", "Pulse", PG_PULSE},
+    {"backing", "Backing", "Bkng", PG_BACK},
     {"tune", "Tune", "Tune", PG_TUNE},
     {"system", "System", "Sys", PG_SYS},
     {"key-test", "System: Key test", "Keys", PG_SYS},
@@ -18,7 +19,7 @@ const TourView::PageInfo kPages[] = {
 };
 const int kPageCount = (int)(sizeof(kPages) / sizeof(kPages[0]));
 // "Start here": the pages in the order a new player needs them
-const char *kPath[] = {"synth", "sound", "tune", "pulse", "system", "help", "chat"};
+const char *kPath[] = {"synth", "sound", "tune", "backing", "pulse", "system", "help", "chat"};
 const int kPathLen = (int)(sizeof(kPath) / sizeof(kPath[0]));
 } // namespace
 
@@ -27,9 +28,10 @@ const char *tourPathAt(int i) { return kPath[qBound(0, i, kPathLen - 1)]; }
 
 // concepts worth reading beside each page (the READ ALSO chips of a page's intro card)
 QStringList tourReadAlso(const QString &page) {
-    if (page == "synth") return {"concepts.strings", "concepts.slides", "concepts.chord-modes", "concepts.loop-pedal"};
+    if (page == "synth") return {"concepts.strings", "concepts.slides", "concepts.scale-lock", "concepts.loop-pedal"};
     if (page == "sound" || page == "sound-deep") return {"concepts.adsr", "concepts.undo-map", "concepts.sessions-favourites-state"};
     if (page == "pulse") return {"concepts.pulse-kinds", "concepts.latch-sync", "concepts.loop-pedal"};
+    if (page == "backing") return {"concepts.backing-modes", "concepts.scale-lock", "concepts.tempo"};
     if (page == "tune") return {"concepts.scale-lock", "concepts.tempo", "concepts.slides"};
     if (page == "system" || page == "key-test") return {"concepts.q20-layers", "concepts.panic", "concepts.sessions-favourites-state"};
     if (page == "help") return {"concepts.command-layer", "concepts.q20-layers", "concepts.recall"};
@@ -45,6 +47,7 @@ const TourView::PageInfo &TourView::pageInfo(int i) { return kPages[qBound(0, i,
 int TourView::pageIndex(const QString &n0) {
     QString n = n0.trimmed().toLower();
     if (n == "play") n = "synth";
+    else if (n == "back") n = "backing";
     else if (n == "sys") n = "system";
     else if (n == "params") n = "sound-deep";
     for (int i = 0; i < kPageCount; ++i) if (n == kPages[i].id) return i;
