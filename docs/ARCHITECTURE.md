@@ -6,7 +6,7 @@ are checked by a machine: run `scripts/check_sizes.sh` (exit status 0 when they 
 ## The layers
 
 ```
-core/    the engine: sound, timing, the looper, the track. Plain C++17, no Qt, no devices.
+core/    the engine: sound, timing, the looper, the beat. Plain C++17, no Qt, no devices.
 audio/   the sound card: PipeWire (C), ALSA fallback, a silent clock. Knows only core/dsp.h.
 app/     the Qt 6 program: one hand-drawn window, the pages, the control socket, the tour.
 tests/   engine tests (no Qt) and the benchmark.
@@ -28,10 +28,9 @@ tests ─▶  core
 |---|---|
 | `core/synth` | one voice, a patch's parameters, a Part (a sound plus its live modulation), scales |
 | `core/fx` | master effects: chorus, delay, reverb, crusher, limiter; `ring.h` is the shared delay-line tap |
-| `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, backing, beat, looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
+| `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, the chord pads (`chord_pads.cpp`), beat, looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
 | `core/drums` | the drum kits, rendered once at start |
-| `core/track` | clips, lanes, chopping, picked sounds, track playback |
-| `core/presets` | factory sounds, the randomiser, the Keys/Guitar/Bass shelf, loudness normalisation |
+| `core/presets` | factory sounds, the randomiser, loudness normalisation |
 | `core/analysis` | key and tempo estimation (Listen) |
 
 Threads: one real-time thread calls `Instrument::process()`. Everything else talks to it through the
@@ -42,13 +41,13 @@ lock-free queues of `EventPort` and reads its state through `uiState()` and the 
 | Folder | What |
 |---|---|
 | `app/shell` | the window (`MainWindow`) and `Shell`, the services a page may use; split by subject: keys, actions, pointer, painting the frame, saving state, the zone catalogue |
-| `app/pages/<name>` | one folder per page: track, synth (with the scope and chord pads), sound, beat, backing, tune, system, help, chat |
+| `app/pages/<name>` | one folder per page: synth (with the scope and chord pads), sound, beat, tune, system, help, chat |
 | `app/ui` | the immediate-mode drawing toolkit, the palette, the zone names |
 | `app/control` | the local control socket, one file per group of commands (see `docs/CONTROL.md`) |
 | `app/tour` | the interactive tour and its demo pictures |
 | `app/guide` | highlights, the chat dock |
 | `app/chat` | the chat model behind the Chat page and ticker |
-| `app/store` | files on disk: sounds, settings, sessions, the track, WAV writing |
+| `app/store` | files on disk: sounds, settings, sessions, WAV writing |
 | `app/sounds` | the sound slots and favourites |
 | `app/selftest` | the in-app self-test (`--selftest`), one file per area |
 
@@ -62,7 +61,7 @@ window services. **A page never includes `app/shell/mainwindow.h`.** If a page n
 from the window, add a small virtual to `Shell` and implement it in `MainWindow`.
 
 The window keeps what belongs to every page: the string keys and chord rows, the key map's actions,
-the tab row, toasts, saving state, and the table `pageOf` that lists the nine pages.
+the tab row, toasts, saving state, and the table `pageOf` that lists the seven pages.
 
 ## Audio thread and the engine lock
 
@@ -70,8 +69,8 @@ One real-time thread runs `Instrument::process()`. The UI thread talks to it thr
 queues of `EventPort` (keys, settings, commands, `setPatch`) and reads `uiState()` and the scope
 buffer without locking. Next to that there is one mutex, `Instrument::mx`.
 
-**What `mx` protects.** All the engine's non-atomic state (settings, parts, backing, beat, looper
-layers, the track pointer). `process()` holds it for the whole of every callback, so the audio
+**What `mx` protects.** All the engine's non-atomic state (settings, parts, chord pads, beat, looper
+layers). `process()` holds it for the whole of every callback, so the audio
 thread always sees one consistent state. Anything that touches that state from another thread must
 take it too.
 
@@ -80,16 +79,14 @@ take it too.
 | Site | Thread | What it does under the lock | Changed |
 |---|---|---|---|
 | `Instrument::process` (`core/instrument/process.cpp`) | audio | renders the blocks of one callback, then `publish()` | no |
-| `Instrument::snapshot` (`session.cpp`) | UI (autosave, save session, track "keep", tour/self-test) | copies settings, patches, beat, and up to 6 loop layers (at most 6 x 6000 events of 24 bytes, about 0.9 MB) into the caller's `SessionData`; allocates the copy | the caller's previous `out.layers` is now freed before the lock |
+| `Instrument::snapshot` (`session.cpp`) | UI (autosave, save session, tour/self-test) | copies settings, patches, beat, and up to 6 loop layers (at most 6 x 6000 events of 24 bytes, about 0.9 MB) into the caller's `SessionData`; allocates the copy | the caller's previous `out.layers` is now freed before the lock |
 | `Instrument::restore` (`session.cpp`) | UI (start-up, load session, tour) | `panic()`, `loopClear()`, copies the session into fixed arrays, `publish()`; no allocation, no IO | no |
-| `Instrument::setTrack` (`core/track/transport.cpp`) | UI (every track edit) | swaps one `shared_ptr` and sets a flag; the new `TrackData` is built before the call and the old one is freed after it | no (already short) |
 
 All file IO and JSON work (`saveState`, `saveSession`, `loadSession`) happens outside the lock, on a
-`SessionData` copy. The offline renderer for track export uses its own `Instrument` and its own `mx`.
+`SessionData` copy.
 
 **The rule for new code.** From the UI thread, never do IO, JSON, preset building or large
-allocation while holding `mx`. Build the result first, then swap it in under the lock (as
-`setTrack` does) or copy a bounded amount of plain data. Do not take `mx` from the audio thread
+allocation while holding `mx`. Build the result first, then swap it in under the lock, or copy a bounded amount of plain data. Do not take `mx` from the audio thread
 except in `process()`. Prefer a queue event to the lock for anything small.
 
 **Known risk.** `snapshot()` still allocates and copies the loop layers under the lock, and the
@@ -115,7 +112,7 @@ longer needs one is reported as stale.
 ## Checking
 
 ```
-bash scripts/build.sh                                         # build + 522 engine checks
+bash scripts/build.sh                                         # build + 398 engine checks
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --selftest   # in-app self-test
 bash scripts/check_sizes.sh                                   # size and layer rules
 ```
