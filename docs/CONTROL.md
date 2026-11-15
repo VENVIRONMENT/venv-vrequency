@@ -287,7 +287,7 @@ closed shows the ticker, which can be touched (or `Ctrl`+`Y` pressed) to open th
 ### Zone names
 
 Names are stable; add new ones rather than renaming. Names ending in a digit are numbered from 0 (`string0`
-lowest, `pad0` first drum, `chord0` first chord pad...). The authoritative list for the current screen is
+lowest, `pad0` first pulse pad, `chord0` first chord pad...). The authoritative list for the current screen is
 `zones`.
 
 | Page | Zones |
