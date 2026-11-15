@@ -27,12 +27,12 @@ std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
         };
     } else if (helpPage == 2) {
         rows = {
-            {km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 1-4 (click, tick, noise, blip)"},
+            {km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 1-4, held like synth keys"},
             {km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 5-8 (gated, train, thump, hiss)"},
             {km.rows[2].mid(6, 4).split("", Qt::SkipEmptyParts).join(" ") + " / " + km.rows[1].mid(5, 4).split("", Qt::SkipEmptyParts).join(" "), "the same pads again, for the other hand"},
-            {"Left / Right", "Pulse page: select the pad before / after"},
+            {"Left / Right", "Pulse page: bend the held pads"},
             {km.rows[0].left(1) + QString::fromUtf8(" ‥ ") + km.rows[0].right(1), "Pulse page: the low string still plays"},
-            {K(A_LOOP), "loop pedal: pulse taps are recorded too"},
+            {K(A_LOOP), "loop pedal: held pads and bends are recorded too"},
             {"Loop", "Pulse page soft key: the same loop pedal"},
             {"Latch", "the selected pad keeps going until tapped again"},
             {"Sync", "every pad's RATE snaps to a division of the tempo"},

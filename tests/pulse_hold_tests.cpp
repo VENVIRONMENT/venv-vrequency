@@ -3,9 +3,11 @@
 #include "tests/support.h"
 #include "core/pulse/pulse_bank.h"
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 namespace {
+void bend(Rig &r, float amount) { Event e; e.type = EV_BEND; e.f = amount; r.inst.push(e); }
 int hitsOf(const std::vector<PulseTick> &t, int pad) {
     return (int)std::count_if(t.begin(), t.end(), [pad](const PulseTick &x) { return x.pad == pad; });
 }
@@ -71,5 +73,52 @@ void testPulseHold() {
         CHECK(!r.inst.uiState().pulseHeld[0], "and lets it go where the key came up");
         r.inst.cmd(EV_LOOP, LC_CLEAR); r.run(0.05);
         CHECK(!r.inst.uiState().pulseHeld[0], "clearing the loop never leaves a pad going");
+    }
+
+    SECTION("pulse pads: a held pad holds its sound, and bends");
+    {
+        Rig r;
+        r.inst.pulseSet(3, PF_TONE, 1000); // the sine blip, 50 ms long
+        r.run(0.01);
+        r.inst.pulseHold(3, true);
+        r.run(0.5); r.clear(); r.run(0.2);
+        CHECK(peak(r.L) > 0.2f && near(measureHz(r.L.data(), 9600), 1000, 0.005f),
+              "a held sine blip is a steady tone long past its length (%.1f Hz, peak %.2f)", measureHz(r.L.data(), 9600), peak(r.L));
+        CHECK(r.inst.uiState().pulseHits[3] == 1, "and it is one hit, not repeats (%u)", r.inst.uiState().pulseHits[3]);
+        bend(r, 1.0f); r.run(0.6); r.clear(); r.run(0.2);
+        const float up = 1000 * std::exp2(2.0f / 12.0f);
+        CHECK(near(measureHz(r.L.data(), 9600), up, 0.005f), "Right bends it up by the bend range (%.1f Hz, want %.1f)", measureHz(r.L.data(), 9600), up);
+        bend(r, 0.0f); r.run(0.6); r.clear(); r.run(0.2);
+        CHECK(near(measureHz(r.L.data(), 9600), 1000, 0.005f), "and it comes back when the arrow is let go (%.1f Hz)", measureHz(r.L.data(), 9600));
+        r.inst.pulseHold(3, false);
+        r.run(0.1); r.clear(); r.run(0.1);
+        CHECK(peak(r.L) < 1e-4f, "let go, it stops (peak %.6f)", peak(r.L));
+    }
+    for (int pad : {2, 6, 7}) { // noise burst, sub thump, hiss
+        Rig r;
+        r.inst.pulseHold(pad, true);
+        r.run(2.5); r.clear(); r.run(0.3);
+        const float held = peak(r.L);
+        r.inst.pulseHold(pad, false);
+        r.run(0.1); r.clear(); r.run(0.1);
+        CHECK(held > 0.05f && peak(r.L) < 1e-4f, "pad %d (%s) holds while held (peak %.2f after 2.5 s) and stops when let go",
+              pad + 1, pulseTypeName(pad), held);
+    }
+    {
+        Rig r;
+        r.inst.set(S_BPM, 120);
+        r.inst.pulseSet(3, PF_TONE, 1000);
+        r.run(0.05);
+        r.inst.cmd(EV_LOOP, LC_PEDAL);
+        r.run(2.0);                                     // recording from 2.0 s
+        r.inst.pulseHold(3, true); r.run(0.5);          // held from 0.05 s into the bar
+        bend(r, 1.0f); r.run(0.7);                       // bent from 0.55 s
+        bend(r, 0.0f); r.inst.pulseHold(3, false);       // let go at 1.25 s
+        r.run(0.55); r.inst.cmd(EV_LOOP, LC_PEDAL);
+        r.run(0.2); r.clear(); r.run(2.0);              // one cycle of playback, from 4.0 s
+        const float *x = r.L.data();
+        const float flat = measureHz(x + (int)(0.15 * SR), 9600), bent = measureHz(x + (int)(0.85 * SR), 9600);
+        CHECK(near(flat, 1000, 0.01f) && near(bent, 1000 * std::exp2(2.0f / 12.0f), 0.01f),
+              "a loop plays the held pad back with its bend (%.1f Hz, then %.1f Hz)", flat, bent);
     }
 }

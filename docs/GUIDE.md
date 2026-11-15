@@ -254,10 +254,17 @@ them, sync them to the tempo and record them with the loop pedal.
 
 **Play the pads.** Hold a pad, or use the keyboard: `Q` `W` `E` `R` (or `U` `I` `O` `P`) are pads 1
 to 4, `A` `S` `D` `F` (or `H` `J` `K` `L`) pads 5 to 8. The bottom row still plays the low string.
-A pad works like a synth key: it plays while you hold it and stops when you let go. A one-shot
-kind (click, blip, thump...) is hit again Rate times a second while held, so a quick press is one
-hit; a gated tone or pulse train runs on until you let go. With sustain (`Space`) down, a pad you
-let go keeps going until sustain lifts. Pressing a pad also **selects** it; `Left` / `Right` select the pad before or after without playing it.
+A pad works like a synth key: it sounds while you hold it and stops when you let go. Held, a
+sine blip becomes a steady tone, a noise burst or sub thump keeps its first hit and then holds,
+a hiss swells and holds, and a gated tone or pulse train runs on. A click or a tick is one spike
+with nothing to hold, so held it is hit again Rate times a second. A quick press is one hit. With sustain (`Space`) down, a pad you
+let go keeps going until sustain lifts. Pressing a pad also **selects** it.
+
+**Bend.** While a pad holds, `Left` / `Right` (or `[` / `]`) bend it, as they bend notes on the Synth
+page: its Tone slides down or up by the Bend range (Tune page, 2 semitones at first) at the Bend
+time, and back when you let the arrow go. A sine blip, gated tone or thump changes pitch, a click
+or a pulse train its ring, a noise burst or hiss its band. The low string, if it is sounding,
+bends with it. A loop records the bend with the pads and plays both back.
 Each pad shows a small picture of its sound. The picture is made by running the pad's own
 generator, the same code the audio uses, so it is the sound you hear (drawn again whenever a
 setting changes).
@@ -410,9 +417,9 @@ On the Pulse page only:
 
 | Key | Does |
 |---|---|
-| `Q` `W` `E` `R`, or `U` `I` `O` `P` | Pads 1 to 4 |
+| `Q` `W` `E` `R`, or `U` `I` `O` `P` | Pads 1 to 4 (held: the pad holds) |
 | `A` `S` `D` `F`, or `H` `J` `K` `L` | Pads 5 to 8 |
-| `Left` / `Right` | Select the pad before / after |
+| `Left` / `Right` | Bend the held pads (and the low string) down / up |
 
 To change any binding, edit `keymap.json` in the `vrequency` folder and restart the app. Deleting
 that file restores the defaults.

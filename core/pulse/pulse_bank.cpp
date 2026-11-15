@@ -20,7 +20,15 @@ bool PulseBank::active() const {
     return false;
 }
 
-void PulseBank::start(int p, float velocity, float bpm, bool endless, int delay) {
+// Live (part 0) when the player keeps it going, else the first loop layer holding it.
+int PulseBank::ownerOf(int p) const {
+    if (latched[p] || held[p] || sustained[p] || !loopHeld[p]) return 0;
+    int l = 0;
+    while (!(loopHeld[p] & (1u << l))) ++l;
+    return 2 + l;
+}
+
+void PulseBank::start(int p, float velocity, float bpm, bool endless, int delay, int owner) {
     for (PulseVoice &x : v) // the same pad again: the hit before fades instead of piling up
         if (x.active() && x.pad() == p && !x.releasing()) x.release(1.0f);
     int slot = -1;
@@ -29,14 +37,14 @@ void PulseBank::start(int p, float velocity, float bpm, bool endless, int delay)
         slot = 0;
         for (int i = 1; i < kPulseVoices; ++i) if (v[i].age() > v[slot].age()) slot = i;
     }
-    v[slot].start(p, pad[p], sr, rateOf(p, bpm), endless, delay);
+    v[slot].start(p, pad[p], sr, rateOf(p, bpm), endless, delay, owner < 0 ? ownerOf(p) : owner);
     vel[slot] = clampf(velocity, 0, 1.5f);
     ++hits[p];
 }
 
-void PulseBank::trigger(int p, float velocity, float bpm) {
+void PulseBank::trigger(int p, float velocity, float bpm, int owner) {
     if (p < 0 || p >= kPulsePads) return;
-    start(p, velocity, bpm, false, 0);
+    start(p, velocity, bpm, false, 0, owner);
 }
 
 void PulseBank::set(int p, int field, float val, float bpm) {
@@ -56,7 +64,7 @@ void PulseBank::set(int p, int field, float val, float bpm) {
 }
 
 void PulseBank::begin(int p, double beat, float bpm) {
-    if (pulseContinuous(pad[p].type)) { start(p, 1.0f, bpm, true, 0); return; }
+    if (runsOn(p)) { start(p, 1.0f, bpm, true, 0); return; }
     start(p, 1.0f, bpm, false, 0); // the first hit is now; the rest follow at the rate
     float perBeat = 1;
     const float r = sync ? pulseSyncRate(pad[p].rate, bpm, &perBeat) : pad[p].rate;
@@ -83,7 +91,7 @@ void PulseBank::latch(int p, bool on, double beat, float bpm) {
 void PulseBank::hold(int p, bool on, double beat, float bpm) {
     if (p < 0 || p >= kPulsePads) return;
     const bool was = going(p);
-    if (on) { held[p] = true; sustained[p] = false; if (was) start(p, 1.0f, bpm, pulseContinuous(pad[p].type), 0); }
+    if (on) { held[p] = true; sustained[p] = false; if (was) start(p, 1.0f, bpm, runsOn(p), 0); }
     else if (held[p]) { held[p] = false; if (sustainOn) sustained[p] = true; }
     follow(p, was, beat, bpm);
 }
@@ -117,7 +125,7 @@ void PulseBank::silence() {
 void PulseBank::tickLatches(int n, double beat0, double beat1, float bpm) {
     for (int p = 0; p < kPulsePads; ++p) {
         if (!going(p)) continue;
-        if (pulseContinuous(pad[p].type)) {
+        if (runsOn(p)) {
             bool running = false;
             for (const PulseVoice &x : v) if (x.active() && x.endless() && x.pad() == p && !x.releasing()) running = true;
             if (!running) start(p, 1.0f, bpm, true, 0);
@@ -153,11 +161,12 @@ void PulseBank::logTick(uint64_t frame, uint32_t dur, int p) {
     ringW.store(w + 1, std::memory_order_release);
 }
 
-void PulseBank::render(float *out, int n, double beat0, double beat1, float bpm, uint64_t frame0) {
+void PulseBank::render(float *out, int n, double beat0, double beat1, float bpm, uint64_t frame0, const float *bend) {
     tickLatches(n, beat0, beat1, bpm);
     for (int k = 0; k < kPulseVoices; ++k) {
         PulseVoice &x = v[k];
         if (!x.active()) continue;
+        x.setBend(bend ? bend[x.owner()] : 0.0f);
         const float g = vel[k];
         bool onset; int dur;
         for (int i = 0; i < n && x.active(); ++i) {
