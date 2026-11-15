@@ -3288,7 +3288,7 @@
   },
   "freq": {
    "title": "Freq",
-   "intro": "Up to four steady tones at exact frequencies. Set them a little apart to hear beats, in ratios for chords; bend, warp, hold, gate or play them.",
+   "intro": "Up to four steady tones at exact Hz: tap an Hz to type it, drag it to scrub. Set tones a little apart to hear beats; bend, warp, hold, gate or play them.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
@@ -3400,6 +3400,10 @@
      "use": [
       {
        "how": "Touch",
+       "text": "Tap a tone's Hz to type it (Enter sets); drag across it to scrub."
+      },
+      {
+       "how": "Touch",
        "text": "Tap a row to select it."
       },
       {
@@ -3425,6 +3429,7 @@
      ],
      "related": [
       "freq.freqsnap",
+      "freq.freqhz0",
       "freq.freqwave0",
       "concepts.beating"
      ],
@@ -6696,6 +6701,33 @@
     "freq.freqtone0"
    ],
    "ask": "Why do two close tones beat?"
+  },
+  "warp": {
+   "title": "WARP",
+   "kind": "area",
+   "summary": "Bend, fold, crush and drive a sound out of shape.",
+   "does": "Drive pushes the wave into soft clipping. Fold folds loud peaks back down: bright, metallic. Crush drops levels and sample rate: digital grit. Ring mod and bend move the pitch. All at 0 leaves the sound exactly as it was.",
+   "use": [
+    {
+     "how": "Touch",
+     "text": "Sound: tap WARP. Pulse: the WARP soft key. Freq: the bottom cells."
+    },
+    {
+     "how": "Touch",
+     "text": "Drag to set; on Freq a tap sets a cell to 0."
+    }
+   ],
+   "keys": [],
+   "recall": "Sound page WARP view, Pulse WARP soft key, Freq bend-and-warp row.",
+   "tips": [
+    "Fold and crush go well on slow sines; drive warms anything."
+   ],
+   "related": [
+    "freq.freqfold",
+    "freq.freqcrush",
+    "concepts.pulse-kinds"
+   ],
+   "ask": "What does each warp do to the sound?"
   }
  }
 }

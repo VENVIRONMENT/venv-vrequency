@@ -30,9 +30,9 @@ const char *tourPathAt(int i) { return kPath[qBound(0, i, kPathLen - 1)]; }
 // concepts worth reading beside each page (the READ ALSO chips of a page's intro card)
 QStringList tourReadAlso(const QString &page) {
     if (page == "synth") return {"concepts.strings", "concepts.slides", "concepts.scale-lock", "concepts.loop-pedal"};
-    if (page == "sound" || page == "sound-deep") return {"concepts.adsr", "concepts.undo-map", "concepts.sessions-favourites-state"};
-    if (page == "pulse") return {"concepts.pulse-kinds", "concepts.latch-sync", "concepts.loop-pedal"};
-    if (page == "freq") return {"concepts.beating", "concepts.latch-sync", "concepts.scale-lock"};
+    if (page == "sound" || page == "sound-deep") return {"concepts.adsr", "concepts.warp", "concepts.undo-map", "concepts.sessions-favourites-state"};
+    if (page == "pulse") return {"concepts.pulse-kinds", "concepts.warp", "concepts.latch-sync", "concepts.loop-pedal"};
+    if (page == "freq") return {"concepts.beating", "concepts.warp", "concepts.latch-sync", "concepts.scale-lock"};
     if (page == "backing") return {"concepts.backing-modes", "concepts.scale-lock", "concepts.tempo"};
     if (page == "tune") return {"concepts.scale-lock", "concepts.tempo", "concepts.slides"};
     if (page == "system" || page == "key-test") return {"concepts.q20-layers", "concepts.panic", "concepts.sessions-favourites-state"};
