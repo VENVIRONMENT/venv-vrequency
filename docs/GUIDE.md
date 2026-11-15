@@ -24,6 +24,7 @@ The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and 
 15. [Chat with a copilot](#15-chat-with-a-copilot)
 16. [Asking Rook while you play (the chat dock)](#16-asking-rook-while-you-play-the-chat-dock)
 17. [The tour](#17-the-tour)
+18. [Freq](#18-freq)
 
 ## 1. Start and quit
 
@@ -413,6 +414,15 @@ On the Pulse page only:
 | `A` `S` `D` `F`, or `H` `J` `K` `L` | Pads 5 to 8 |
 | `Left` / `Right` | Select the pad before / after |
 
+On the Freq page only (see [chapter 18](#18-freq)):
+
+| Key | Does |
+|---|---|
+| `1`‥`4` | Select a tone |
+| `Left` / `Right` | Move the selected tone 0.5 Hz (with `Shift`: 10 Hz) |
+| `Up` / `Down` | Move it a semitone |
+| Letters, with Keys on | Set tone 1 to that note |
+
 To change any binding, edit `keymap.json` in the `vrequency` folder and restart the app. Deleting
 that file restores the defaults.
 
@@ -513,7 +523,7 @@ app starts it offers the tour in a banner at the top (`Enter` takes it, `Esc` or
 offered once). Rook can also open it for you. It reopens on the page you left it on.
 
 **Reading it.** The chips under the title pick the page (Synth, Sound, Edit, Pulse,
-Bkng, Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
+Freq, Bkng, Tune, Sys, Keys, Help, Chat). Tap any control in the picture: it is ringed with a pulsing double rule,
 the rest dims, and the card on the right says what it does, how to use it by touch and by keys, and **Recall**,
 which is where to find it again. **Related** chips jump to the next card. Readouts that are not buttons (the
 level strip, scope readouts, the Listen result, the status box, the key list rows) have cards
@@ -525,8 +535,8 @@ The Edit chip is the All parameters editor; its Prev and Next flip through the f
 editor), `Space` or `Page Down` scrolls a long card, `Home` clears the selection, `Esc` closes a card, then the
 concept list, then the selection, then the tour.
 
-**Start here.** The first time, or from the banner, the tour walks eight pages in order (Synth, Sound, Tune,
-Backing, Pulse, System, Help, Chat) with Back, Next and **Explore freely**.
+**Start here.** The first time, or from the banner, the tour walks nine pages in order (Synth, Sound, Tune,
+Backing, Pulse, Freq, System, Help, Chat) with Back, Next and **Explore freely**.
 
 **Ask Rook.** The button at the bottom right leaves the tour, goes to the real page the card belongs to, and
 opens the chat dock with a question already written (not sent). Press `Enter` to send it; Rook is told the
@@ -537,3 +547,69 @@ page and which control you were reading (`via` is `tour`).
 The first time the tour opens in a run it draws its pictures (two or three seconds on the Pi; it says so).
 The cards come from `docs/helpcards.json`, built into the program; a damaged file shows a "Help unavailable"
 card, never a crash. `scripts/check_helpcards.py` checks that every control has a card.
+
+## 18. Freq
+
+![The Freq page](shots/27-freq.png)
+
+The Freq page plays up to four **steady tones at exact frequencies**. It is not about melodies: it is
+about what happens between tones. Two tones a little apart **beat** (the sound swells and fades), tones
+in simple ratios (3:2, 2:1) sound still and fused, and tone 2 can bend tone 1 into new sounds.
+
+**Start.** Open the **Freq** tab (after Pulse) and tap **Hold**. Tones 1 and 2 start at 220 Hz and
+221.5 Hz, so you hear one tone swelling and fading one and a half times a second. Tap **Hold** again
+(or press `Backspace`) to stop. Nothing sounds when the app starts.
+
+**The big view** shows the Freq sound's last 1.5 seconds, drawn from what actually came out. A steady
+tone is a flat band; beating tones make swells. The top right says the beat and how long one swell takes,
+for example *beat 1.50 Hz (0.67 s)*. The line under the tabs says which two tones make it: the beat is
+always the difference between the two lowest tones that are within 20 Hz of each other.
+
+Under it, **2 cycles** shows two waves of tone 1 from the real sound (so you see its shape change when
+you change waves or warp it), and **spectrum** shows which frequencies the sound is made of: every tone
+is a peak.
+
+**The four tone rows.** Each row is one tone:
+
+| Part | What it is |
+|---|---|
+| Number | Tap the row to select it (it gets a double frame). Tapping a row that is off also switches it on |
+| Wave | Sine, Tri, Square, Saw or Noise. Tap to step through them. Noise is hiss narrowed to a band at the tone's Hz |
+| Hz | The exact frequency, to two decimals |
+| Note | The nearest note (A3, E4...). For a tone within 20 Hz of tone 1 it shows the difference instead, like +1.50 |
+| Ratio | How the tone sits against tone 1: 3:2 is exact, ~3:2 is close, - is nothing simple |
+| Level | Tap or drag the bar |
+| ON / off | Switches the tone in or out (its settings are kept) |
+
+**Moving a tone.** Select it (tap it, or press `1` to `4`), then `Left` / `Right` move it by 0.5 Hz
+(hold `Shift` for 10 Hz) and `Up` / `Down` by a semitone. Every change glides over about 20 ms, so it
+never clicks. Try this: Hold, select tone 2, and press `Right` a few times. The beat speeds up by half a
+swell a second each time.
+
+**Bend and warp.** Six cells; tap or drag across each one.
+
+| Cell | Does |
+|---|---|
+| 2 > 1 | Tone 2 bends tone 1. Tap to choose **FM** (tone 2 wobbles tone 1's wave, adding new peaks) or **RING** (the two multiplied: you hear their sum and difference) or OFF; drag sideways for how much. Turn tone 2's level down to hear only its effect |
+| Fold | Folds loud parts of the wave back down: hollow, metallic overtones |
+| Filter | Takes away the highs above the setting, 40 Hz to 18 kHz (open) |
+| Drive | Soft overdrive: rounder, warmer, louder |
+| Crush | Off at the far left, then fewer levels and a lower sample rate: digital grit |
+| Delay | Sends the Freq sound into the echo the synth uses (its time comes from the current sound) |
+
+Fold, Drive, Crush and Filter work on all four tones together. However far you push them, the Freq sound
+never goes past full scale.
+
+**The soft keys.**
+
+| Key | Does |
+|---|---|
+| Hold | The tones sound and keep going |
+| Gate | The tones pulse on and off at the rate shown; `+` and `-` beside it change the rate. When **Sync** is on (Pulse page) the rate snaps to a note value of the tempo and the pulses land on the beat. Gate on its own also starts the tones |
+| Keys | The letter keys set tone 1 to the notes of your key and scale, the same notes the strings play. The other tones follow: a tone close to tone 1 keeps its Hz difference (so the beat stays the same), the others keep their ratio. Without Hold the tones sound only while you hold a key |
+| Snap | Moves the selected tone to the nearest simple ratio of tone 1 (1:1, 2:1, 3:2, 4:3, 5:4...). With tone 1 selected it moves to the nearest note instead. The small print says where it will go |
+
+`Enter` is still the loop pedal, `Space` sustain, `Backspace` panic (it stops Freq too), and with
+Keys off the letters play the synth as on every other page. Your tones, waves, bend and warp settings,
+the gate rate and Keys are saved with your state and in sessions; Hold and Gate are not, so the tones
+never start by themselves.

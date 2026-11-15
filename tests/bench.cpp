@@ -36,4 +36,14 @@ void bench() {
     std::printf("bench: 20 s of audio, up to %d voices (pool %d), heavy patch + all effects\n", maxV, kVoices);
     std::printf("  render time %.3f s  ->  %.1f%% of one core, %.1fx realtime\n", el, el / 20.0 * 100.0, 20.0 / el);
     std::printf("  worst 256-frame block %.3f ms of %.3f ms budget (%.0f%%)\n", worst * 1e3, period * 1e3, worst / period * 100);
+    // the Freq tones alone, at their busiest: four tones (one noise), FM, every warp stage
+    Instrument f(SR);
+    for (int i = 0; i < kFreqTones; ++i) f.freqSet(i, FF_ON, 1);
+    f.freqSet(3, FF_WAVE, FW_NOISE); f.freqSet(1, FF_WAVE, FW_SAW); f.freqSet(-1, FF_MOD, FM_FM);
+    f.freqSet(-1, FF_DRIVE, 0.5f); f.freqSet(-1, FF_FOLD, 0.5f); f.freqSet(-1, FF_CRUSH, 0.3f); f.freqSet(-1, FF_FILTER, 3000);
+    f.freqSet(-1, FF_GATE, 1); f.freqSet(-1, FF_HOLD, 1);
+    t0 = std::chrono::steady_clock::now();
+    for (int b = 0; b < blocks; ++b) f.process(l, r, 256);
+    el = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+    std::printf("bench: 20 s of the four Freq tones at their busiest: %.1f%% of one core\n", el / 20.0 * 100.0);
 }

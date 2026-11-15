@@ -146,7 +146,7 @@ tempo). Settings are applied before `latch` and `hit`. What each field means per
 The `beat` command of earlier versions is gone (the step sequencer was removed in 1.0); it is refused as unknown.
 
 ### page
-`name`: synth, sound, pulse, backing, tune, system, help or chat (`beat`, the old name, still opens Pulse). Changing page clears any highlight.
+`name`: synth, sound, pulse, freq, backing, tune, system, help or chat (`beat`, the old name, still opens Pulse). Changing page clears any highlight.
 ```
 {"id":28,"cmd":"page","name":"chat"}
 ```
@@ -195,7 +195,7 @@ While any chat_wait is pending, the Chat page says `copilot: listening`.
 
 ### tour
 Opens or closes the player's tour (see GUIDE chapter 17). It only draws; it never changes sound or settings.
-`action`: `open` (default) or `close`. `page`: tour page id (synth, sound, sound-deep, pulse, backing, tune, system,
+`action`: `open` (default) or `close`. `page`: tour page id (synth, sound, sound-deep, pulse, freq, backing, tune, system,
 key-test, help, chat; the aliases play, back, sys and params are accepted; case and spaces ignored). `element`: a control or zone name to select on that page
 (unknown names open the page with nothing selected). `guided`: true starts the eight-page walk. Bad types, unknown
 pages, or a page over 24 or element over 64 characters, are refused. The pictures are built after the reply, so the reply shows

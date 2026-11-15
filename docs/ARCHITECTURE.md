@@ -6,7 +6,7 @@ are checked by a machine: run `scripts/check_sizes.sh` (exit status 0 when they 
 ## The layers
 
 ```
-core/    the engine: sound, timing, the looper, the pulse pads. Plain C++17, no Qt, no devices.
+core/    the engine: sound, timing, the looper, the pulse pads, the Freq tones. Plain C++17, no Qt, no devices.
 audio/   the sound card: PipeWire (C), ALSA fallback, a silent clock. Knows only core/dsp.h.
 app/     the Qt 6 program: one hand-drawn window, the pages, the control socket, the tour.
 tests/   engine tests (no Qt) and the benchmark.
@@ -27,8 +27,9 @@ tests ─▶  core
 | Folder | What |
 |---|---|
 | `core/synth` | one voice, a patch's parameters, a Part (a sound plus its live modulation), scales |
-| `core/fx` | master effects: chorus, delay, reverb, crusher, limiter; `ring.h` is the shared delay-line tap |
-| `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, the backing chords (`backing.cpp`), the pulse pads' place in it (`pulse_pads.cpp`), looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
+| `core/fx` | master effects: chorus, delay, reverb, crusher, limiter; `ring.h` is the shared delay-line tap; `warp.*` is a mono drive / fold / crush / low-pass stage any sound can own (the Freq tones use it first) |
+| `core/instrument` | the Instrument: event queues (`event_port.h`), strings and lead, the backing chords (`backing.cpp`), the pulse pads' place in it (`pulse_pads.cpp`), the Freq tones' (`freq_tones.cpp`), looper, voices, the audio block (`process.cpp`), the state published to the UI (`ui_state.*`), sessions |
+| `core/freq` | the four Freq tones (`freq`: settings, beat, ratio and SNAP sums; `freq_bank`: the audio-thread oscillators, 2 > 1, GATE, warp and a lock-free tap of their output) |
 | `core/pulse` | the eight pulse sounds (`pulse_voice`: one generator, used by the audio thread and for the page's pictures), the bank of pads with LATCH, SYNC and a lock-free record of every hit (`pulse_bank`) |
 | `core/presets` | factory sounds, the randomiser, loudness normalisation |
 | `core/analysis` | key and tempo estimation (Listen) |
@@ -41,7 +42,7 @@ lock-free queues of `EventPort` and reads its state through `uiState()` and the 
 | Folder | What |
 |---|---|
 | `app/shell` | the window (`MainWindow`) and `Shell`, the services a page may use; split by subject: keys, actions, pointer, painting the frame, saving state, the zone catalogue |
-| `app/pages/<name>` | one folder per page: synth (with the scope and chord pads), sound, pulse, backing, tune, system, help, chat |
+| `app/pages/<name>` | one folder per page: synth (with the scope, its shared FFT `spectrum.*` and the chord pads), sound, pulse, freq, backing, tune, system, help, chat |
 | `app/ui` | the immediate-mode drawing toolkit, the palette, the zone names |
 | `app/control` | the local control socket, one file per group of commands (see `docs/CONTROL.md`) |
 | `app/tour` | the interactive tour and its demo pictures |
