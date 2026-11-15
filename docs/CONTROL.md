@@ -146,7 +146,7 @@ tempo). Settings are applied before `latch` and `hit`. What each field means per
 {"id":26,"cmd":"pulse","pad":6,"drive":0.6,"fold":0.3,"bend":-12,"hit":true}
 {"id":25,"cmd":"pulse","sync":true}
 ```
-The `beat` command of earlier versions is gone (the step sequencer was removed in 1.0); it is refused as unknown.
+The `beat` command of earlier versions is gone (the step sequencer was removed on the way to 1.0); it is refused as unknown.
 
 ### page
 `name`: synth, sound, pulse, freq, backing, tune, system, help or chat (`beat`, the old name, still opens Pulse). Changing page clears any highlight.
@@ -200,7 +200,7 @@ While any chat_wait is pending, the Chat page says `copilot: listening`.
 Opens or closes the player's tour (see GUIDE chapter 17). It only draws; it never changes sound or settings.
 `action`: `open` (default) or `close`. `page`: tour page id (synth, sound, sound-deep, pulse, freq, backing, tune, system,
 key-test, help, chat; the aliases play, back, sys and params are accepted; case and spaces ignored). `element`: a control or zone name to select on that page
-(unknown names open the page with nothing selected). `guided`: true starts the eight-page walk. Bad types, unknown
+(unknown names open the page with nothing selected). `guided`: true starts the nine-page walk. Bad types, unknown
 pages, or a page over 24 or element over 64 characters, are refused. The pictures are built after the reply, so the reply shows
 `"building":true` the first time. The reply carries the tour state (`open`, `building`, `page`, `selected`, `concept`, `concepts_open`, `guided`, `step`), which is also `state.tour`:
 ```
