@@ -41,7 +41,7 @@ adjustable 0–500 ms). On a wired output it is set to 0.
 
 ## Keyboard (Q20, ZitaoTech RP2040 firmware, Vial/QMK)
 
-The layout was read from `~/HackberryPi_CM5_Q20.vil`. The keyboard is an 8 × 7 switch matrix:
+The layout was read from the keyboard's Vial layout file. The keyboard is an 8 × 7 switch matrix:
 
 | Matrix row | Keys |
 |---|---|
@@ -61,10 +61,15 @@ The layout was read from `~/HackberryPi_CM5_Q20.vil`. The keyboard is an 8 × 7 
 - The firmware sends ordinary USB key codes with press and release; auto-repeat comes from the desktop and
   venv-vrequency ignores repeats (a held key is one note).
 
-### Rollover and ghosting — NOT yet verified on the physical keyboard
+### Rollover and ghosting
 
-I cannot press keys, so how many simultaneous keys this keyboard reports correctly is **unknown**.
-QMK boards normally have a diode per key (no ghosting), but I could not confirm that for the Q20.
+**Found on the device:** the Q20 registers about 11 to 12 keys at once. Pressing `Z` + `S` + `W`
+together can produce a ghost `Space`. That is one of the combinations the analysis below predicts,
+which suggests the matrix has no diodes. Avoid those combinations when playing, or check them with
+Key test.
+
+QMK boards normally have a diode per key (no ghosting). The analysis below was done before the keys
+were tried on the device.
 
 `scripts/ghost_analysis.py` works out which combinations *would* misbehave if there are no diodes
 (three pressed keys forming a rectangle in the matrix make a fourth appear):
