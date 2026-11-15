@@ -178,8 +178,8 @@ Start with `vrequency`. If there is no sound, check that GNOME's sound output is
 | 9c | Tap the Filter button on the scope until it says Glitch, hold a note, drag on the scope | Sound turns rough and digital while touched, coloured streaks trail from the wave, both stop when you lift | Tell me if it is too harsh, too quiet, or the colours are wrong |
 | 9d | Sound page, tap Haze (then Fuzz, Teeth, Bend, Grain) in Favourites, hold notes and slide | Soft, slow, washed sound; the scope draws a round wave | Tell me which are too quiet, too washed out or not buzzy enough. Nobody has heard these on the device yet |
 | 9e | Pulse tab. Tap each pad, then press `Q W E R` and `A S D F` | Eight different short sounds, each pad lights, each hit shows in the strip | Tell me which sounds are wrong, harsh or too loud or quiet. Nobody has heard them on the device yet |
-| 9f | Pulse tab: select pad 6 (pulse train), tap Latch, move Rate and Tone; tap pad 6 to stop | Clicks that keep going and follow the sliders; the picture changes with them | Tell me if anything clicks or crackles that should not |
-| 9g | Pulse tab: Sync on, latch pad 2 (tick), then record a loop on the Synth page | The ticks stay in time with the loop | |
+| 9f | Pulse tab: select pad 6 (tom), tap Latch, move Rate and Tone; tap pad 6 to stop | Tom hits that keep going and follow the sliders; the picture changes with them | Tell me if anything clicks or crackles that should not |
+| 9g | Pulse tab: Sync on, latch pad 1 (click), then record a loop on the Synth page | The clicks stay in time with the loop | |
 | 9h | System → Record, play a little, Record again, then Play last | You hear what you just played | Tell me what the message on screen says |
 | 9w | Quit and start the synth again | The pulse pads keep their kinds and settings | |
 | 9b | Hold a low note, then a high one | The trace stays still and the ms/div readout steps by itself; pitch is unaffected | |
