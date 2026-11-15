@@ -57,11 +57,11 @@ void tourSelection(TourContext &ctx) {
         press(w, Qt::Key_Period); check(t.pageId() == "backing", "the period key goes to the next page");
         press(w, Qt::Key_Comma); press(w, Qt::Key_Comma); check(t.pageId() == "sound-deep", "the comma key goes to the previous page");
         check(w.page() == PG_PLAY, "and the real app never left the Synth page");
-        check(t.variantsOnPage() == 4, "the All-parameters editor has four pictures (twelve parameters each)");
+        check(t.variantsOnPage() == 4, "the All-parameters editor has four pictures (eight or twelve parameters each)");
         w.shot(); tourTap(w, QString(zn::tour_hot) + zn::deepnext); w.shot();
         check(t.variantShown() == 1 && t.selectedName() == zn::deepnext, "tapping Next in the editor picture turns it to the next parameters");
-        t.select(zn::at(zn::param, 30)); w.shot();
-        check(t.variantShown() == 2 && t.selectedName() == zn::at(zn::param, 30), "a control on another picture of the page can be reached by name");
+        t.select(zn::at(zn::param, 20)); w.shot();
+        check(t.variantShown() == 2 && t.selectedName() == zn::at(zn::param, 20), "a control on another picture of the page can be reached by name");
         press(w, Qt::Key_Escape); press(w, Qt::Key_Escape);
         check(!t.isOpen(), "a second Esc leaves the tour");
     }
