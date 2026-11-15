@@ -13,8 +13,6 @@ void testLimiter() {
     p.p[P_LEVEL] = 4.0f; p.p[P_RESO] = 0.95f; p.p[P_DRIVE] = 1.0f;
     r.inst.setPatch(0, p);
     r.inst.set(S_VOLUME, 1.0f);
-    r.inst.set(S_BACKVOL, 1.0f);
-    r.inst.set(S_SEVENTH, 1);
     r.inst.cmd(EV_CHORD, 0);
     for (int s = 0; s < 3; ++s) r.inst.key(s, s + 1, true);
     r.run(2.0);

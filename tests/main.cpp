@@ -22,7 +22,7 @@ void testBeat();
 void testLimiter();
 void testXY();
 void testGlitch();
-void testBacking();
+void testChordPads();
 void testLooper();
 void testSessionRoundTrip();
 void testPatchSwitchClicks();
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
     testLimiter();
     testXY();
     testGlitch();
-    testBacking();
+    testChordPads();
     testLooper();
     testSessionRoundTrip();
     testPatchSwitchClicks();

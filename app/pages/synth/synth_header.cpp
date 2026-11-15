@@ -31,7 +31,7 @@ void SynthPage::paintHeader() {
     ui.txt(QRectF(552, 6, 86, 44), QString::number((int)std::round(u.set.bpm)), 28, INK, R, true);
     ui.txt(QRectF(552, 52, 86, 20), "bpm", 13, MID, R);
     double frac = u.beat - std::floor(u.beat);
-    bool running = u.backPlaying || u.loopState != L_EMPTY || u.beatPlaying;
+    bool running = u.padsPlaying || u.loopState != L_EMPTY || u.beatPlaying;
     ui.frame(QRectF(552, 24, 9, 9), running ? INK : LOW, running && frac < 0.25 ? INK : BG); // beat lamp
     ui.txt(QRectF(644, 6, 60, 44), QString("%1%2").arg(t.octave > 0 ? "+" : "").arg(t.octave), 28, INK, R, true);
     ui.txt(QRectF(644, 52, 60, 20), "oct", 13, MID, R);

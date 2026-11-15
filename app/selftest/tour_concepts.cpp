@@ -49,7 +49,7 @@ void tourGuidedWalk(TourContext &ctx) {
     check(ctx.tourState()["guided"].toBool() && ctx.tourState()["step"].toInt() == 1 && ctx.tourState()["page"].toString() == "synth", "Start here begins a guided walk on the Synth page");
     std::vector<QString> pages; pages.push_back(ctx.tourState()["page"].toString());
     for (int i = 0; i < 12 && ctx.tourState()["guided"].toBool(); ++i) { tourTap(w, zn::tour_next); w.shot(); if (ctx.tourState()["guided"].toBool()) pages.push_back(ctx.tourState()["page"].toString()); }
-    check(pages.size() == 10 && pages[1] == "sound" && pages.back() == "chat", QString("Next walks through %1 pages in order and then lets go").arg(pages.size()));
+    check(pages.size() == 7 && pages[1] == "sound" && pages.back() == "chat", QString("Next walks through %1 pages in order and then lets go").arg(pages.size()));
     check(t.isOpen() && !ctx.tourState()["guided"].toBool(), "after the last step the player can explore freely");
     w.shot(); t.select(zn::chat_send); w.shot();
     check(t.selectedName() == zn::chat_send, "and select anything");

@@ -65,7 +65,7 @@ public:
     struct PageInfo { const char *id, *label, *chip; int realPage; };
     static int pageCount();
     static const PageInfo &pageInfo(int i);
-    static int pageIndex(const QString &name);    // -1 when unknown; accepts play / back / sys too
+    static int pageIndex(const QString &name);    // -1 when unknown; accepts play / sys / params too
     static int picCount();                 // pages plus the extra pictures of pages that need more than one
     static int picPage(int pic);           // the page a picture belongs to
     static int variantPic(int page, int v); // the picture of a page's variant v (0 = its own)
@@ -177,7 +177,7 @@ private:
 // ---------------------------------------------------------------------------------- the pictures
 
 // Draws every tour page off-screen in a scratch copy of the app with a demo state (a filled
-// progression, a beat, a loop, a lit scope). Touches no file and no live audio.
+// chord, a beat, a loop, a lit scope). Touches no file and no live audio.
 class SinkProbe;
 void tourBuildPictures(std::vector<TourView::Pic> &pics, SinkProbe *sink = nullptr);   // sink: the real window's output device, shown on the System page
 // `vrequency --dump-zones`: prints one "page zone" line per real zone of every tour page.

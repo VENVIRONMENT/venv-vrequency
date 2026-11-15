@@ -18,7 +18,7 @@ QJsonObject ControlServer::cmdPage(const QJsonObject &a, QString &e) {
     if (n == "play") n = "synth";
     int p = -1;
     for (int i = 0; i < PG_COUNT; ++i) if (n == pageName(i)) p = i;
-    if (p < 0) { e = "page must be one of synth, sound, beat, backing, tune, system, help, chat"; return {}; }
+    if (p < 0) { e = "page must be one of synth, sound, beat, tune, system, help, chat"; return {}; }
     w.tour().close(); // the real page is wanted: the tour steps aside
     if (p == PG_CHAT && w.page() != PG_CHAT) w.chat.returnPage = w.page();
     w.goPage(p);
@@ -38,7 +38,7 @@ QJsonObject ControlServer::cmdTour(const QJsonObject &a, QString &e) {
     if (act == "close") { w.tour().close(); return w.tour().stateJson(); }
     QString err;
     if (!w.tour().open(page, element, guided, &err, true)) {
-        e = err + " (use synth, sound, sound-deep, beat, backing, tune, system, key-test, help or chat)";
+        e = err + " (use synth, sound, sound-deep, beat, tune, system, key-test, help or chat)";
         return {};
     }
     return w.tour().stateJson();
@@ -58,7 +58,7 @@ QJsonObject ControlServer::cmdGuide(const QString &cmd, const QJsonObject &a, QS
     int page = w.page(), sub = -1;
     if (A.has("page")) {
         const QString n = A.str("page", "", 12);
-        if (e.isEmpty()) { page = pageFromName(n); if (page < 0) e = "page must be one of synth, sound, beat, backing, tune, system, help, chat"; }
+        if (e.isEmpty()) { page = pageFromName(n); if (page < 0) e = "page must be one of synth, sound, beat, tune, system, help, chat"; }
     }
     if (A.has("sub")) {
         const QJsonValue v = a["sub"];

@@ -1,8 +1,6 @@
 # app/pages
 target_sources(vrequency PRIVATE
   page.h
-  backing/backing_page.cpp
-  backing/backing_page.h
   beat/beat_grid.cpp
   beat/beat_page.cpp
   beat/beat_page.h

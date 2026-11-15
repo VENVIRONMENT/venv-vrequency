@@ -1,4 +1,4 @@
-// venv-vrequency — the instrument: string keyboard, scale lock, backing sequencer,
+// venv-vrequency — the instrument: string keyboard, scale lock, chord pads,
 // event looper, voice pool and master effects.
 //
 // Threading model: one real-time thread calls process(). One other thread (the app's GUI
@@ -78,16 +78,10 @@ private:
 
     // transport
     double beat = 0;
-    // backing
-    bool backPlaying = false;
-    int prog[kProgMax] = {0};
-    int progLen = 0, selSlot = -1, holdChord = -1, droneMask = 0;
-    double progOrigin = 0;
-    int curChord = -1, progPos = -1;
-    int backDesired[kSlots];
-    long lastPulseStep = -1, lastArpStep = -1;
-    int arpIdx = 0, arpDir = 1;
-    double pulseOffBeat = -1, arpOffBeat = -1;
+    // chord pads
+    bool padsPlaying = false;
+    int holdChord = -1, droneMask = 0, curChord = -1;
+    int padDesired[kSlots];
     // looper
     int loopState = L_EMPTY;
     double loopLen = 0, loopStart = 0, recStartBeat = 0;
@@ -152,8 +146,8 @@ private:
     void applyOp(int part, const LoopEv &e, const Patch *patches, size_t nPatches); // one recorded event played on a part
 
     void chordTap(int degree);
-    bool backingActive() const { return backPlaying && (progLen > 0 || holdChord >= 0 || droneMask != 0); }
-    void tickBacking(double b0, double b1);
+    bool padsActive() const { return padsPlaying && (holdChord >= 0 || droneMask != 0); }
+    void tickPads();
 
     void loopPedal();
     void loopCommit(bool atLoopEnd);
@@ -170,7 +164,7 @@ private:
     void drumHit(int drum, float vel);
     void beatCmd(int cmd, int drum, int step, int arg);
     void tickBeat(double b0, double b1);
-    bool transportIdle() const { return !backingActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
+    bool transportIdle() const { return !padsActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
 
     void block(float *l, float *r, int n);
     void publish();

@@ -16,7 +16,7 @@ void testAudio(Context &ctx);            // audio_layout.cpp
 void testLayout(Context &ctx);
 void testKeys(Context &ctx);             // keys.cpp
 void testSounds(Context &ctx);           // sounds.cpp
-void testBacking(Context &ctx);          // backing.cpp
+void testChordPads(Context &ctx);        // chord_pads.cpp
 void testLooper(Context &ctx);           // looper.cpp
 void testTouch(Context &ctx);            // touch.cpp
 void testSaving(Context &ctx);           // saving.cpp

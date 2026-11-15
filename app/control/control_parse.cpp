@@ -25,15 +25,6 @@ int parseDrum(const QJsonValue &v) {
     return -1;
 }
 
-int parseDegree(const QJsonValue &v) { // a chord: 1..7 or a roman numeral
-    if (v.isDouble()) { const double d = v.toDouble(); return (d >= 1 && d <= 7 && d == std::floor(d)) ? (int)d - 1 : -1; }
-    if (!v.isString()) return -1;
-    static const char *R[7] = {"I", "II", "III", "IV", "V", "VI", "VII"};
-    const QString s = v.toString().trimmed().toUpper();
-    for (int i = 0; i < 7; ++i) if (s == R[i]) return i;
-    return -1;
-}
-
 QJsonObject msgJson(const ChatMsg &m) {
     QJsonObject o;
     o["seq"] = m.seq; o["from"] = m.from; o["text"] = m.text; o["kind"] = m.kind;

@@ -24,7 +24,7 @@ QString Guide::zoneLabel(const QString &name) const {
         {"help_next", "Next help page"}, {"help_ask", "Ask Rook"}, {"help_back", "Back to playing"},
         {"dock", "Chat dock"}, {"dock_history", "Dock messages"}, {"dock_input", "Dock input"},
         {"dock_send", "Dock Send"}, {"dock_full", "Open the Chat page"}, {"dock_close", "Hide the dock"},
-        {"ticker", "Message ticker"}, {"backmode", "Chord tap mode"}, {"backplay", "Backing play / stop"},
+        {"ticker", "Message ticker"}, {"padmode", "Chord pad mode"}, {"padplay", "Chord pads play / stop"},
     };
     if (fixed.contains(name)) return fixed[name];
     static const QRegularExpression lane("^mixer_(lane|fader|mute|solo)(\\d)$");

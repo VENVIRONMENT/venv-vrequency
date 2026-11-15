@@ -72,13 +72,6 @@ const Case cases[] = {
     {R"({"cmd":"loop","action":"record"})", true, 100},
     {R"({"cmd":"loop","action":"dance"})", false, 0},
     {R"({"cmd":"loop","action":"clear"})", true, 100},
-    {R"({"cmd":"backing","chords":["I","vi",4,5],"style":"pulse"})", true, 150},
-    {R"({"cmd":"backing","chords":[9]})", false, 0},
-    {R"({"cmd":"backing","chords":"I"})", false, 0},
-    {R"({"cmd":"backing","action":"stop"})", true, 100},
-    {R"({"cmd":"backing","action":"play"})", true, 100},
-    {R"({"cmd":"backing","action":"remove_last"})", true, 0},
-    {R"({"cmd":"backing"})", false, 0},
     {R"({"cmd":"beat","kit":"crunchy"})", true, 0},
     {R"({"cmd":"beat","kit":"disco"})", false, 0},
     {R"({"cmd":"beat","set_step":{"drum":"kick","step":0,"on":true}})", true, 0},
@@ -137,12 +130,11 @@ void socketEveryCommand(Context &ctx, Link &link) {
     const QJsonObject r = c.call(R"({"cmd":"state"})");
     {
         const QJsonObject st = r["result"].toObject();
-        check(st["backing"].toObject()["chords"].toArray().size() >= 3 &&
+        check(st["chord_pads"].toObject().contains("playing") &&
               st["beat"].toObject()["steps"].toObject()["kick"].toString().startsWith('x') && st["tempo"].toDouble() == 120 && st["page"].toString() == "synth",
-              "state reflects what the commands did (backing chords, beat steps, tempo, page)");
+              "state reflects what the commands did (beat steps, tempo, page) and shows the chord pads");
     }
     inst.set(S_BPM, 100);
     inst.beatDo(BT_ERASE, -1);
-    inst.cmd(EV_BACK, BC_CLEAR);
 }
 } // namespace selftest

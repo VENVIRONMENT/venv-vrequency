@@ -11,7 +11,6 @@ void bench() {
     heavy.p[P_SUB] = 0.4f; heavy.p[P_NOISE] = 0.05f; heavy.p[P_DRIVE] = 0.4f; heavy.p[P_FM] = 0.5f;
     heavy.p[P_ATK] = 0.01f; heavy.p[P_REL] = 6.0f;
     inst.setPatch(0, heavy);
-    inst.set(S_SEVENTH, 1);
     float l[256], r[256];
     inst.process(l, r, 256);
     inst.cmd(EV_CHORD, 0);

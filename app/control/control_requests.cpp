@@ -119,7 +119,6 @@ QJsonObject ControlServer::dispatch(const QString &cmd, const QJsonObject &a, QS
     if (cmd == "save_favourite") return cmdFavourite(a, e);
     if (cmd == "scale" || cmd == "tempo" || cmd == "octave" || cmd == "bend" || cmd == "sustain") return cmdPlayControls(cmd, a, e);
     if (cmd == "loop") return cmdLoop(a, e);
-    if (cmd == "backing") return cmdBacking(a, e);
     if (cmd == "beat") return cmdBeat(a, e);
     if (cmd == "page") return cmdPage(a, e);
     if (cmd == "highlight" || cmd == "unhighlight" || cmd == "zones") return cmdGuide(cmd, a, e);

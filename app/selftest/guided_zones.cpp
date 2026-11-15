@@ -52,7 +52,7 @@ void guideZoneListing(Context &ctx, Link &link) {
         }
         rowsPer[sub] = n;
     }
-    check(rowsPer[0] == 16 && rowsPer[1] == 16 && rowsPer[2] == 14 && unique, QString("every help row on all three sections is a named zone (%1/%2/%3)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]));
+    check(rowsPer[0] == 16 && rowsPer[1] == 12 && rowsPer[2] == 14 && unique, QString("every help row on all three sections is a named zone (%1/%2/%3)").arg(rowsPer[0]).arg(rowsPer[1]).arg(rowsPer[2]));
     w.setPage(PG_HELP); w.shot();
     QStringList hz = w.zoneNames();
     check(hz.contains(zn::help_ask) && hz.contains(zn::help_next) && hz.contains(zn::help_back) && hz.contains(zn::help_section), "the Help page has Ask Rook, next section, back and its section title as zones");
