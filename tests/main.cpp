@@ -19,6 +19,8 @@ void testPresetsAndRandomiser();
 void testExtraSounds();
 void testPulseSounds();
 void testPulsePads();
+void testFreqTones();
+void testFreqInstrument();
 void testLimiter();
 void testXY();
 void testGlitch();
@@ -38,6 +40,8 @@ int main(int argc, char **argv) {
     testExtraSounds();
     testPulseSounds();
     testPulsePads();
+    testFreqTones();
+    testFreqInstrument();
     testLimiter();
     testXY();
     testGlitch();

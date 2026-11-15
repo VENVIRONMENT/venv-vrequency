@@ -20,6 +20,7 @@ enum EvType : uint8_t {
     EV_PULSESET,   // a = pulse pad, b = PulseField, f = value
     EV_PULSELATCH, // a = pulse pad, b = on / off
     EV_NOTE,       // a = string, b = id, c = down, f = MIDI pitch (any, not scale-locked), g = velocity 0..1: a note from outside the keyboard
+    EV_FREQSET,    // a = Freq tone (0..3; -1 for the rest), b = FreqField, f = value
 };
 
 enum LoopCmd { LC_PEDAL, LC_UNDO, LC_CLEAR, LC_PLAYSTOP };

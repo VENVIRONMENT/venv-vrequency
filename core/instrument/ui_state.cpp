@@ -65,6 +65,7 @@ void Instrument::publish() {
         u.pulse[p] = pulses.pad[p]; u.pulseLatched[p] = pulses.latched[p]; u.pulseHits[p] = pulses.hits[p];
     }
     u.pulsing = pulses.active();
+    u.freq = freq.s; u.freqKeyHeld = freq.keyHeld; u.freqSounding = freq.active();
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
     u.sustain = sustain; u.bend = parts[0].bend;
     u.xyX = xyX; u.xyY = xyY; u.xyTouch = xyTouch;

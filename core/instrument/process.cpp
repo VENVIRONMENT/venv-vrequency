@@ -62,6 +62,8 @@ void Instrument::block(float *l, float *r, int n) {
         renderPulses(dryL, dryR, n, b0, b1);
         ++nActive; // keeps the effects running and the idle shortcut off
     }
+    if (freq.active()) { renderFreq(dryL, dryR, sD, n, b0, b1); ++nActive; }
+    else freq.idle(n);
 
     // Nothing sounding and every effect tail has died away: skip the effects
     // entirely (saves battery while the instrument sits idle).

@@ -2,6 +2,7 @@
 #pragma once
 #include "core/instrument/limits.h"
 #include "core/instrument/settings.h"
+#include "core/freq/freq.h"
 #include "core/pulse/pulse.h"
 #include <cstdint>
 
@@ -37,6 +38,9 @@ struct UiState {
     bool pulseLatched[kPulsePads] = {false};
     uint32_t pulseHits[kPulsePads] = {0}; // counts every hit of each pad (pads light up on a change)
     bool pulsing = false;                 // a pulse sounds or a pad is latched
+    // the Freq tones
+    FreqState freq;                       // HOLD and GATE as they are now
+    bool freqKeyHeld = false, freqSounding = false; // KEYS: a letter key is down; the tones sound or fade
     // meters
     float peak = 0, limiter = 1;
     int voices = 0;

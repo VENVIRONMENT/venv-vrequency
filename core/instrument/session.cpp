@@ -17,6 +17,7 @@ void Instrument::snapshot(SessionData &out) {
     out.progLen = progLen; out.holdChord = holdChord; out.droneMask = droneMask;
     out.loopBeats = nLayers > 0 ? loopLen : 0;
     for (int p = 0; p < kPulsePads; ++p) out.pulse[p] = pulses.pad[p];
+    out.freq = freq.s;
     for (int i = 0; i < nLayers; ++i) {
         LayerData ld;
         ld.ev.assign(layers[i].ev.begin(), layers[i].ev.begin() + layers[i].n);
@@ -40,6 +41,7 @@ void Instrument::restore(const SessionData &in) {
     backPlaying = false;
     pulses.sync = st.pulseSync;
     for (int p = 0; p < kPulsePads; ++p) { pulses.pad[p] = in.pulse[p]; pulseClamp(pulses.pad[p]); }
+    freq.restore(in.freq);
     nLayers = 0;
     if (in.loopBeats >= 4 && !in.layers.empty()) {
         loopLen = std::min(in.loopBeats, kMaxLoopBeats);

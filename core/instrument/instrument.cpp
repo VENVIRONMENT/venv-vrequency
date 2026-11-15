@@ -7,6 +7,7 @@ namespace td {
 Instrument::Instrument(float sampleRate) : sr(sampleRate) {
     chorus.init(sr); delay.init(sr); reverb.init(sr); crush.init(sr); limiter.init(sr);
     pulses.init(sr);
+    freq.init(sr);
     for (int p = 0; p < kParts; ++p)
         for (int s = 0; s < kSlots; ++s) { slotVoice[p][s] = -1; slotNote[p][s] = 0; }
     for (int s = 0; s < kSlots; ++s) { polyKey[s] = -1; polySound[s] = -1; polyPending[s] = false; }

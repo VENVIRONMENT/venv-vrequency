@@ -95,6 +95,7 @@ void Instrument::panic() {
         if (v.active()) v.kill(sr);
     backPlaying = false;
     pulses.silence();
+    freq.silence();
     if (loopState == L_COUNTIN || loopState == L_REC || closing) loopClear();
     else if (loopState == L_PLAY || loopState == L_OVERDUB) {
         if (recLayer >= 0) recLayer = -1;

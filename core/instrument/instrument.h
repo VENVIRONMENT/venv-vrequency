@@ -19,6 +19,7 @@
 #include "core/instrument/limits.h"
 #include "core/instrument/settings.h"
 #include "core/instrument/ui_state.h"
+#include "core/freq/freq_bank.h"
 #include "core/pulse/pulse_bank.h"
 #include "core/synth/params.h"
 #include "core/synth/part.h"
@@ -43,6 +44,7 @@ public:
     void readScope(float *dst, int n) const; // most recent n mono samples
     // every pulse hit, click and gate since `cursor` (see PulseBank::readTicks); lock-free
     int readPulseTicks(uint32_t &cursor, PulseTick *dst, int max) const { return pulses.readTicks(cursor, dst, max); }
+    void readFreqScope(float *dst, int n) const { freq.readScope(dst, n); } // the Freq tones' own output; lock-free
 
     // master output tap for WAV recording (interleaved stereo float)
     void setRecording(bool on) { recOn.store(on); }
@@ -62,6 +64,7 @@ public:
     const Part &part(int i) const { return parts[i]; }
     const Crush &crusher() const { return crush; }
     const PulseBank &pulseBank() const { return pulses; }
+    const FreqBank &freqBank() const { return freq; }
 
 private:
     float sr;
@@ -105,6 +108,7 @@ private:
     int countBeat = 0;
     // the pulse pads
     PulseBank pulses;
+    FreqBank freq;                            // the Freq page's four tones (freq_tones.cpp)
     // click
     float clickEnv = 0, clickPh = 0, clickFreq = 1500;
 
@@ -173,6 +177,7 @@ private:
     void trigClick(bool accent);
     void pulseHit(int pad, float vel, bool record);   // pulse_pads.cpp: a tap (recorded into the loop) or a loop's hit
     void renderPulses(float *l, float *r, int n, double b0, double b1);
+    void renderFreq(float *l, float *r, float *send, int n, double b0, double b1);
     bool pulsesOnGrid() const { return st.pulseSync && pulses.active(); }  // synced latches follow the beat clock
     bool barsRunning() const { return backingActive() || pulsesOnGrid(); }  // a new loop waits for a bar line
 
