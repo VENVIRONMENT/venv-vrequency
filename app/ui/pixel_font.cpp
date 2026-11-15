@@ -1,4 +1,5 @@
-// venv-vrequency — the MGS1 pixel-font mockup (VREQUENCY_FONT=MGS1): two faces, five roles.
+// venv-vrequency — the MGS1 pixel fonts, the default type: two faces, five roles.
+// VREQUENCY_FONT=classic brings back the old DejaVu Sans Mono look.
 // The faces are bundled in assets/fonts (MGS1 Fonts by Andrew Gleeson, CC BY-SA 4.0).
 #include "app/ui/ui.h"
 #include <QFontMetrics>
@@ -6,7 +7,7 @@
 #include <cmath>
 
 bool Ui::pixelFont() {
-    static const bool on = qEnvironmentVariable("VREQUENCY_FONT").startsWith("MGS1");
+    static const bool on = !qEnvironmentVariable("VREQUENCY_FONT").startsWith("classic", Qt::CaseInsensitive);
     return on;
 }
 

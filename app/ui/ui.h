@@ -33,7 +33,7 @@ public:
 
     // ---- text and rules ----
     QFont font(int px, bool bold) const;
-    static bool pixelFont();                                  // mockup: VREQUENCY_FONT=MGS1, pixel faces by role
+    static bool pixelFont();                                  // MGS1 pixel faces by role (off: VREQUENCY_FONT=classic)
     static int pixelRole(int px, bool bold);                  // an old pixel size as one of five roles
     void pixelTxt(QRectF r, const QString &s, int role, QColor c, int align); // shrink, then shorten, to fit
     int chW(int px) const;                                    // character cell width at a size

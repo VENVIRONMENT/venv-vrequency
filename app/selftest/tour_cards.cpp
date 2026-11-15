@@ -57,14 +57,17 @@ void tourCardsFit(TourContext &ctx) {
         const TourView::Fit f = t.measure(c);
         ++n;
         if (f.px < 13) ++small;
-        if (f.scrollA || f.scrollB) { ++scroll; names << where + "." + c.key; }
+        if (f.scrollA || f.scrollB) { ++scroll; names << where + "." + c.key + (f.scrollA ? (f.scrollB ? " (both)" : " (top)") : " (bottom)"); }
         if (c.title.size() * 7 > 296) ++titleBad; // even at the smallest title size it must fit one line
     };
     for (const CardPage &p : db.pages) for (const HelpCard &c : p.cards) one(c, p.id);
     for (const HelpCard &c : db.concepts) one(c, "concepts");
     std::printf("  info  %d cards measured; %d need a smaller font than the default\n", n, small);
-    check(scroll == 0, QString("no card needs scrolling at the default font (%1 of %2 would)").arg(scroll).arg(n) + (names.isEmpty() ? QString() : ": " + names.join(", ").left(200)));
-    check(small <= 8, QString("only a few cards need the one-step-smaller font (%1)").arg(small));
+    check(scroll == 0, QString("no card needs scrolling at the default font (%1 of %2 would)").arg(scroll).arg(n) + (names.isEmpty() ? QString() : ": " + names.join(", ")));
+    // With the MGS1 pixel faces the body text is the same face (HUD 24) at every step; the step
+    // only tightens the line spacing and the bold labels, so it is reported, not failed.
+    if (Ui::pixelFont()) std::printf("  info  pixel font: %d cards use the tighter step\n", small);
+    else check(small <= 8, QString("only a few cards need the one-step-smaller font (%1)").arg(small));
     int introScroll = 0;
     for (int p = 0; p < TourView::pageCount(); ++p) { const TourView::Fit f = t.measureIntro(p); if (f.scrollA || f.scrollB) ++introScroll; }
     check(introScroll == 0 && titleBad == 0, "the page intro cards fit too, and every title fits on one line");

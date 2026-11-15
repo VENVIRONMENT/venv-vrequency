@@ -22,7 +22,7 @@ QFont Ui::font(int px, bool bold) const {
     quint32 key = (quint32)px << 1 | (bold ? 1u : 0u);
     auto it = fontCache.constFind(key);
     if (it != fontCache.constEnd()) return it.value();
-    // MOCKUP SWITCH: VREQUENCY_FONT=MGS1 draws text in two pixel faces by role (pixel_font.cpp)
+    // the MGS1 pixel faces by role (pixel_font.cpp); VREQUENCY_FONT=classic keeps DejaVu Sans Mono
     QString family = "DejaVu Sans Mono";
     int size = px;
     if (pixelFont()) {
@@ -44,7 +44,8 @@ QFont Ui::font(int px, bool bold) const {
 }
 
 int Ui::chW(int px) const {
-    if (pixelFont()) px = 1000 + pixelRole(px, true);
+    // pixel faces: measure the regular face for this size (bold labels shrink to fit by themselves)
+    if (pixelFont()) px = 1000 + pixelRole(px, false);
     auto it = widthCache.constFind(px);
     if (it != widthCache.constEnd()) return it.value();
     int v = QFontMetrics(font(px, true)).horizontalAdvance(QLatin1Char('M'));

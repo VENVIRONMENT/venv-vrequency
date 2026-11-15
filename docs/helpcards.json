@@ -2153,7 +2153,7 @@
      "title": "SOUND NAME",
      "kind": "readout",
      "summary": "The current sound, its slot number and how many voices play.",
-     "does": "Shows the sound's name, Sound 1-10 if it came from a slot (Unsaved sound after New, Mutate, Undo or a favourite) and the voice count. Tags: REC while recording a file, Limit when the output is being held back, No audio device.",
+     "does": "Name, slot (Sound 1-10, or Unsaved after New, Mutate or Undo) and voice count. Tags: REC while recording, Limit when the output is held back, No audio device.",
      "use": [
       {
        "how": "Touch",
@@ -2169,7 +2169,7 @@
       "0",
       "Ctrl+R"
      ],
-     "recall": "Synth page, top left. Ctrl+Z undoes a sound change. Limit: lower Master volume (System page).",
+     "recall": "Synth page, top left. Ctrl+Z undoes a sound change. Limit: lower Master volume.",
      "tips": [
       "A name ending in * is a mutated copy of another sound."
      ],
@@ -2217,11 +2217,11 @@
      "title": "SCOPE / TOUCH PAD",
      "kind": "pad",
      "summary": "Drag to change the sound while you play: two controls at once.",
-     "does": "The scope draws the real output wave. Dragging on it is the X-Y pad: left-right is one control and bottom-top another, chosen by the mapping button (Filter: cutoff and resonance). Lift and the sound returns unless Hold is on.",
+     "does": "The scope draws the real output. Drag on it: left-right and bottom-top each move a control, set by the mapping button (Filter: cutoff, resonance). Let go and it returns, unless Hold is on.",
      "use": [
       {
        "how": "Touch",
-       "text": "Press and drag anywhere on the scope. X and Y percent show while you touch."
+       "text": "Drag anywhere on the scope."
       },
       {
        "how": "Keys",
@@ -2231,16 +2231,14 @@
      "keys": [
       "Ctrl+G"
      ],
-     "recall": "Synth page, the big box under the header. Mapping: its corner button or System page. Backspace clears Glitch.",
+     "recall": "Synth page, the big box. Mapping: corner button or System page.",
      "tips": [
-      "Moves are recorded into the loop while it records.",
-      "The wave drawing never changes the pitch."
+      "Moves are recorded into a loop."
      ],
      "related": [
       "synth.xymap",
       "synth.xyhold",
-      "concepts.xy-mappings",
-      "concepts.scope-readouts"
+      "concepts.xy-mappings"
      ],
      "ask": "What does dragging on the scope actually change?"
     },
@@ -2303,26 +2301,24 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Press a note to play it, drag along the string to slide."
+       "text": "Press to play; drag to slide."
       },
       {
        "how": "Keys",
-       "text": "Q W E R T Y U I O P, left to right. Hold Shift for semitones."
+       "text": "Q to P. Shift for semitones."
       }
      ],
      "keys": [
       "Q..P",
-      "Shift (chromatic)",
-      "Space (sustain)"
+      "Shift",
+      "Space"
      ],
      "recall": "Synth page, top string. On the Q20 these are the top letter row. Backspace stops stuck notes.",
      "tips": [
-      "Bright frames mark the key's root note.",
-      "Brackets show the real pitch, so you can watch a slide."
+      "Bright frames mark the root; brackets show the real pitch."
      ],
      "related": [
       "synth.string1",
-      "synth.string0",
       "concepts.slides",
       "concepts.strings"
      ],
@@ -2336,11 +2332,11 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Press to play; drag along the string to slide."
+       "text": "Press to play; drag to slide."
       },
       {
        "how": "Keys",
-       "text": "A S D F G H J K L. Hold one, tap another to slide."
+       "text": "A to L. Hold one, tap another to slide."
       }
      ],
      "keys": [
@@ -2349,12 +2345,11 @@
      ],
      "recall": "Synth page, middle string. Change spacing in Tune, String gap.",
      "tips": [
-      "Hold a note on each row and re-finger to glide a whole chord."
+      "Hold a note on each row to glide a chord."
      ],
      "related": [
       "synth.string2",
       "synth.string0",
-      "tune.rowint-",
       "concepts.strings"
      ],
      "ask": "How are the three strings tuned against each other?"
@@ -2395,29 +2390,28 @@
      "title": "CHORD PADS I-VII",
      "kind": "pad",
      "summary": "The seven chords of your key; what a tap does depends on mode.",
-     "does": "Pads show each chord's name and Roman numeral (small letters = minor). In Prog mode a tap adds it to a looping progression of up to eight and starts it; Hold latches one chord; Drone toggles that chord's root as a held note.",
+     "does": "Each pad shows a chord and its numeral (small = minor). Prog: a tap adds it to a looping progression of up to eight. Hold: latches one chord. Drone: toggles its root as a held note.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap a pad. Mode is the small button beside the pads."
+       "text": "Tap a pad. Mode: the button beside the pads."
       },
       {
        "how": "Keys",
-       "text": "Alt + Z..M plays chords I to VII."
+       "text": "Alt+Z..M: chords I to VII."
       }
      ],
      "keys": [
       "Alt+Z..M",
-      "Ctrl+B (mode)",
-      "Ctrl+P (play)"
+      "Ctrl+B mode",
+      "Ctrl+P play"
      ],
-     "recall": "Synth page and Backing page. Ctrl+X clears backing, Ctrl+Backspace removes the last chord.",
+     "recall": "Synth and Backing pages. Ctrl+X clears; Ctrl+Backspace removes the last chord.",
      "tips": [
-      "Chords change with the key and scale. Backing keeps the sound it started with."
+      "Chords follow the key and scale."
      ],
      "related": [
       "synth.backmode",
-      "synth.pslot0",
       "backing.bmode0",
       "concepts.backing-modes"
      ],
@@ -2533,11 +2527,11 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap Loop. Watch the label: count, REC, Loop, DUB."
+       "text": "Tap Loop; the label shows the next step."
       },
       {
        "how": "Keys",
-       "text": "Enter does the same; Ctrl+L stops and starts; Ctrl+D clears."
+       "text": "Enter = tap. Ctrl+L stop/start, Ctrl+D clear."
       }
      ],
      "keys": [
@@ -2548,12 +2542,10 @@
      ],
      "recall": "Synth page, bottom left. Undo removes the last layer; Ctrl+D erases the loop. Volume: System page.",
      "tips": [
-      "Up to 64 bars and six layers; each layer keeps its own sound.",
-      "Slow loops? System page, Loop fix."
+      "Up to 64 bars and six layers, each with its own sound."
      ],
      "related": [
       "synth.loop_undo",
-      "synth.loop_playstop",
       "system.latency-",
       "concepts.loop-pedal"
      ],
@@ -4828,7 +4820,7 @@
      "use": [
       {
        "how": "Touch",
-       "text": "Tap a beat. It shows next bar until it starts."
+       "text": "Tap a beat; it waits for the next bar."
       },
       {
        "how": "Keys",
@@ -4836,10 +4828,8 @@
       }
      ],
      "keys": [
-      "Left",
-      "Right",
-      "[",
-      "]"
+      "Left / Right",
+      "[ / ]"
      ],
      "recall": "Beat page, row under the pads. A beat cannot be deleted or renamed yet; Left/Right moves along the row.",
      "tips": [
@@ -4847,7 +4837,6 @@
      ],
      "related": [
       "beat.beatnew",
-      "beat.beatmore",
       "concepts.kept-beats",
       "concepts.bar-lines"
      ],
@@ -4916,7 +4905,7 @@
       },
       {
        "how": "Keys",
-       "text": "Enter on this page, or Ctrl+I from any page."
+       "text": "Enter here, or Ctrl+I anywhere."
       }
      ],
      "keys": [
@@ -4925,11 +4914,10 @@
      ],
      "recall": "Beat page, transport row. Ctrl+I anywhere. Stopping the beat also switches Rec off. Erase fixes mistakes.",
      "tips": [
-      "Out of time on Bluetooth? System page, Loop fix moves recorded hits earlier."
+      "Late on Bluetooth? System page, Loop fix."
      ],
      "related": [
       "beat.beaterase",
-      "beat.beatplay",
       "system.latency-",
       "concepts.bar-lines"
      ],
@@ -5470,29 +5458,28 @@
      "title": "CHORD PADS I-VII",
      "kind": "pad",
      "summary": "The seven chords of your key; what a tap does depends on mode.",
-     "does": "Pads show each chord's name and Roman numeral (small letters = minor). In Prog mode a tap adds it to a looping progression of up to eight and starts it; Hold latches one chord; Drone toggles that chord's root as a held note.",
+     "does": "Each pad shows a chord and its numeral (small = minor). Prog: a tap adds it to a looping progression of up to eight. Hold: latches one chord. Drone: toggles its root as a held note.",
      "use": [
       {
        "how": "Touch",
-       "text": "Tap a pad. Mode is the small button beside the pads."
+       "text": "Tap a pad. Mode: the button beside the pads."
       },
       {
        "how": "Keys",
-       "text": "Alt + Z..M plays chords I to VII."
+       "text": "Alt+Z..M: chords I to VII."
       }
      ],
      "keys": [
       "Alt+Z..M",
-      "Ctrl+B (mode)",
-      "Ctrl+P (play)"
+      "Ctrl+B mode",
+      "Ctrl+P play"
      ],
-     "recall": "Synth page and Backing page. Ctrl+X clears backing, Ctrl+Backspace removes the last chord.",
+     "recall": "Synth and Backing pages. Ctrl+X clears; Ctrl+Backspace removes the last chord.",
      "tips": [
-      "Chords change with the key and scale. Backing keeps the sound it started with."
+      "Chords follow the key and scale."
      ],
      "related": [
       "synth.backmode",
-      "synth.pslot0",
       "backing.bmode0",
       "concepts.backing-modes"
      ],
@@ -7247,11 +7234,11 @@
    "use": [
     {
      "how": "Keys",
-     "text": "Press a letter. Hold shapes across rows for chords."
+     "text": "Press a letter; hold shapes across rows for chords."
     },
     {
      "how": "Touch",
-     "text": "Press a note box on screen; drag along it to slide."
+     "text": "Press a note; drag to slide."
     }
    ],
    "keys": [
@@ -7261,12 +7248,11 @@
    ],
    "recall": "Synth page, the three strings. Tune page, String gap changes the spacing.",
    "tips": [
-    "On the Track page letters become commands: Esc returns to Synth."
+    "On Track, letters are commands: Esc returns."
    ],
    "related": [
     "synth.string2",
     "synth.string1",
-    "synth.string0",
     "tune.rowint-"
    ],
    "ask": "How are the three strings laid out?"
@@ -7469,7 +7455,7 @@
    "use": [
     {
      "how": "Touch",
-     "text": "Drag on the scope; choose the pair with the corner button."
+     "text": "Drag on the scope; pick the pair with the corner button."
     },
     {
      "how": "Keys",
@@ -7486,7 +7472,6 @@
    "related": [
     "synth.xy",
     "synth.xymap",
-    "system.xymap0",
     "concepts.glitch"
    ],
    "ask": "Which touch pad mapping should I use?"
@@ -7617,7 +7602,7 @@
    "title": "SCOPE READOUTS",
    "kind": "readout",
    "summary": "The numbers around the scope describe the real output.",
-   "does": "Top band: volts per division, time per division (they follow the signal by themselves), trigger state (Trig'd, Auto) and sample rate. Bottom: measured frequency, peak-to-peak level and note. These never change the sound.",
+   "does": "Top: volts and time per division (they follow the signal), trigger state and sample rate. Bottom: frequency, peak-to-peak level and note. They never change the sound.",
    "use": [
     {
      "how": "Touch",
@@ -7625,7 +7610,7 @@
     }
    ],
    "keys": [],
-   "recall": "Synth page. Faint X and Y labels name the current touch pad axes; X and Y percent shows while touching.",
+   "recall": "Synth page. Faint X and Y labels name the pad's axes.",
    "tips": [
     "Frequency reads an octave low on sounds with a SUB: that is the wave's true repeat rate."
    ],
@@ -7678,7 +7663,7 @@
    "title": "ADSR ENVELOPE",
    "kind": "area",
    "summary": "Attack, Decay, Sustain, Release: the shape of a note's volume.",
-   "does": "Attack is how fast a note fades in. Decay is how fast it falls to Sustain, the level held while the key is down. Release is the fade after you let go. Short attack and decay with low sustain is a pluck; long attack is a pad.",
+   "does": "Attack: how fast a note fades in. Decay: how fast it falls to Sustain, the level held while the key is down. Release: the fade after you let go.",
    "use": [
     {
      "how": "Touch",
@@ -7686,7 +7671,7 @@
     }
    ],
    "keys": [],
-   "recall": "Sound page quick sliders (Attack, Release); Sound > All parameters, pages 1 and 2.",
+   "recall": "Sound page: Attack, Release. All parameters: Decay, Sustain.",
    "tips": [
     "The filter has its own envelope: F.ATK, F.DEC, F.SUS, F.REL."
    ],
