@@ -15,6 +15,7 @@ enum Act {
     A_LOOP_UNDO, A_LOOP_PLAY, A_LOOP_CLEAR, A_RECORD, A_HELP, A_XYMAP, A_QUIT,
     A_BEAT_PLAY, A_BEAT_REC, A_PLAY_LAST, A_CHAT, A_TOUR,
     A_SCOPE_VIEW, A_FILTER_OPEN, A_FILTER_CLOSE, // the scope's 3D/line switch; held: sweep the cutoff
+    A_POLY,                                      // the letter keys: three strings or every key its own note
     A_COUNT
 };
 

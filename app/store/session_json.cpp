@@ -30,7 +30,7 @@ QJsonObject settingsToJson(const td::Settings &s) {
     QJsonObject o;
     o["root"] = s.tuning.root; o["scale"] = s.tuning.scale; o["octave"] = s.tuning.octave;
     o["rowInterval"] = s.tuning.rowInterval;
-    o["bpm"] = s.bpm; o["volume"] = s.volume; o["xyMap"] = s.xyMap; o["xyHold"] = s.xyHold;
+    o["bpm"] = s.bpm; o["volume"] = s.volume; o["xyMap"] = s.xyMap; o["xyHold"] = s.xyHold; o["poly"] = s.poly;
     o["padMode"] = s.padMode; o["metro"] = s.metro;
     o["bendRange"] = s.bendRange; o["bendTime"] = s.bendTime; o["glideScale"] = s.glideScale;
     o["loopVol"] = s.loopVol; o["latencyMs"] = s.latencyMs;
@@ -48,6 +48,7 @@ td::Settings settingsFromJson(const QJsonObject &o) {
     s.volume = (float)qBound(0.0, o["volume"].toDouble(s.volume), 1.0);
     s.xyMap = qBound(0, o["xyMap"].toInt(0), td::XY_COUNT - 1);
     s.xyHold = o["xyHold"].toBool(false);
+    s.poly = o["poly"].toBool(false);
     s.padMode = qBound(0, o["padMode"].toInt(0), td::PM_COUNT - 1);
     s.metro = o["metro"].toBool(false);
     s.bendRange = (float)qBound(1.0, o["bendRange"].toDouble(2), 12.0);

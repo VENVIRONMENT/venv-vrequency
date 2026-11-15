@@ -10,6 +10,7 @@ Instrument::Instrument(float sampleRate) : sr(sampleRate) {
     for (long &s : skipStep) s = -1;
     for (int p = 0; p < kParts; ++p)
         for (int s = 0; s < kSlots; ++s) { slotVoice[p][s] = -1; slotNote[p][s] = 0; }
+    for (int s = 0; s < kSlots; ++s) { polyKey[s] = -1; polyPending[s] = false; }
     for (int s = 0; s < kSlots; ++s) padDesired[s] = -1;
     for (auto &ly : layers) ly.ev.resize(kLayerEvents);
     for (auto &a : sendSm) a[0] = a[1] = a[2] = 0;

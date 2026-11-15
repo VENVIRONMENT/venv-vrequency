@@ -23,6 +23,7 @@ void testLimiter();
 void testXY();
 void testGlitch();
 void testChordPads();
+void testPoly();
 void testLooper();
 void testSessionRoundTrip();
 void testPatchSwitchClicks();
@@ -41,6 +42,7 @@ int main(int argc, char **argv) {
     testXY();
     testGlitch();
     testChordPads();
+    testPoly();
     testLooper();
     testSessionRoundTrip();
     testPatchSwitchClicks();

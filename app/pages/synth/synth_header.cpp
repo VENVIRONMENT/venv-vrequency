@@ -15,7 +15,7 @@ void SynthPage::paintHeader() {
     const Recorder &rec = sh.recorderNow();
     ui.txt(QRectF(18, 6, 430, 44), ui.fit(sounds.lead.name, 30, 428), 30, INK, L, true);
     QString slotTxt = sounds.curSlot >= 0 ? QString("Sound %1").arg(sounds.curSlot + 1) : QString("Unsaved sound");
-    ui.txt(QRectF(20, 52, 230, 20), QString("%1   %2 voices").arg(slotTxt).arg(u.voices), 13, MID, L);
+    ui.txt(QRectF(20, 52, 230, 20), QString("%1   %2").arg(slotTxt, u.set.poly ? "Poly" : "Strings"), 13, MID, L); // the keyboard mode (Ctrl+P)
     if (rec.recording()) {
         if ((sh.clock.elapsed() / 400) % 2 == 0) ui.tag(QRectF(250, 54, 104, 17), QString("REC %1 s").arg(rec.seconds()), 12);
     } else if (sh.noAudioDevice()) {

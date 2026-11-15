@@ -21,6 +21,7 @@ void Instrument::applySetting(int s, float v) {
     case S_XYHOLD: st.xyHold = v > 0.5f; if (!st.xyHold && !xyTouch) applyXY(0, st.xyMap, xyX, xyY, false, false); break;
     case S_PADMODE: st.padMode = std::clamp((int)v, 0, PM_COUNT - 1); break;
     case S_METRO: st.metro = v > 0.5f; break;
+    case S_POLY: setPoly(v > 0.5f); break;
     case S_BENDRANGE: st.bendRange = clampf(v, 1, 12); break;
     case S_BENDTIME: st.bendTime = clampf(v, 10, 1000); break;
     case S_GLIDESCALE: st.glideScale = clampf(v, 0, 4); break;

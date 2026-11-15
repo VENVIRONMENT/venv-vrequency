@@ -23,6 +23,7 @@ void Instrument::keyDown(int s, int col, bool chromatic) {
     // low byte = column (pitch); high bits identify the source (keyboard / touch)
     float pitch = (float)st.tuning.noteFor(s, col & 0xff, chromatic);
     ss.col[ss.n] = col; ss.pitch[ss.n] = pitch; ++ss.n;
+    if (st.poly) { polyDown(s, col, pitch); return; } // every key its own voice
     ss.pendingOff = false;
     // A string that is already sounding slides; a silent one attacks.
     if (slotVoice[0][s] >= 0) leadOp(OP_GLIDE, s, pitch);
@@ -52,6 +53,7 @@ void Instrument::keyUp(int s, int col) {
     bool wasTop = idx == ss.n - 1;
     for (int i = idx; i < ss.n - 1; ++i) { ss.col[i] = ss.col[i + 1]; ss.pitch[i] = ss.pitch[i + 1]; }
     --ss.n;
+    if (st.poly) { polyUp(s, col); return; }
     if (ss.n == 0) {
         if (sustain) ss.pendingOff = true;
         else leadOp(OP_OFF, s, 0);
@@ -62,6 +64,7 @@ void Instrument::keyUp(int s, int col) {
 
 void Instrument::setSustain(bool on) {
     sustain = on;
+    if (!on) polyRelease();
     if (!on)
         for (int s = 0; s < kStrings; ++s)
             if (strings[s].pendingOff) { strings[s].pendingOff = false; leadOp(OP_OFF, s, 0); }
@@ -71,16 +74,18 @@ void Instrument::shiftOctave(int delta) {
     int o = st.tuning.octave + delta;
     if (o < -3 || o > 3) return;
     st.tuning.octave = o;
+    if (st.poly) polyOctave(delta);
     for (int s = 0; s < kStrings; ++s) {
         StringState &ss = strings[s];
         for (int i = 0; i < ss.n; ++i) ss.pitch[i] += 12.0f * delta;
-        if (slotVoice[0][s] >= 0) leadOp(OP_GLIDE, s, slotNote[0][s] + 12.0f * delta);
+        if (!st.poly && slotVoice[0][s] >= 0) leadOp(OP_GLIDE, s, slotNote[0][s] + 12.0f * delta);
     }
 }
 
 void Instrument::panic() {
     crush.set(false, 0, 0); glitchOwner = -1;
     for (int s = 0; s < kStrings; ++s) { strings[s].n = 0; strings[s].pendingOff = false; }
+    for (int s = 0; s < kSlots; ++s) { polyKey[s] = -1; polyPending[s] = false; }
     sustain = false;
     for (int p = 0; p < kParts; ++p) {
         bendTarget[p] = 0; parts[p].bend = 0;

@@ -10,6 +10,7 @@ enum Setting {
     S_PADMODE, S_METRO,
     S_BENDRANGE, S_BENDTIME, S_GLIDESCALE, S_LOOPVOL, S_LATENCY,
     S_KIT, S_BEATVOL,
+    S_POLY,
     S_COUNT
 };
 
@@ -46,6 +47,7 @@ struct Settings {
     float latencyMs = 0;   // output delay (e.g. Bluetooth): loop recordings are shifted earlier by this
     int kit = KIT_SOFT;    // drum kit
     float beatVol = 0.7f;
+    bool poly = false;     // the letter keys: false = three strings (one note per row, slides), true = every key its own note
 };
 
 } // namespace td

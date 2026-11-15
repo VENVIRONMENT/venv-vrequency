@@ -47,6 +47,11 @@ void MainWindow::perform(int act, bool shift) {
     case A_XYMAP: set(S_XYMAP, (float)((u.set.xyMap + 1) % XY_COUNT)); break;
     case A_QUIT: close(); break;
     case A_SCOPE_VIEW: toast(synthPage.toggleScopeView() ? "Scope: 3D stack" : "Scope: line", 900); break;
+    case A_POLY:
+        releaseAllKeys(); // the held keys belong to the old way of playing
+        set(S_POLY, u.set.poly ? 0 : 1);
+        toast(u.set.poly ? "Keys: strings (one note per row, slides)" : "Keys: poly (every key its own note)", 1400);
+        break;
     case A_FILTER_OPEN: nudgeCutoff(0.5); break;   // from a button or the socket: one step
     case A_FILTER_CLOSE: nudgeCutoff(-0.5); break;
     default:

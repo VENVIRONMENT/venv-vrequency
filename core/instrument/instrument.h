@@ -73,6 +73,10 @@ private:
 
     StringState strings[kStrings];
     bool sustain = false;
+    // poly mode: which key holds each lead voice slot (-1 free), and slots waiting for sustain to lift
+    int polyKey[kSlots];
+    bool polyPending[kSlots];
+    int polyNext = 0;
     float xyX = 0.5f, xyY = 0.5f;
     bool xyTouch = false;
 
@@ -129,6 +133,11 @@ private:
     void keyDown(int s, int col, bool chromatic);
     void noteDown(int s, int id, float pitch, float vel);
     void keyUp(int s, int col);
+    void setPoly(bool on);                    // poly.cpp
+    void polyDown(int s, int col, float pitch);
+    void polyUp(int s, int col);
+    void polyRelease();                       // sustain lifted: let pending poly notes go
+    void polyOctave(int delta);
     void setSustain(bool on);
     void panic();
     void shiftOctave(int delta);

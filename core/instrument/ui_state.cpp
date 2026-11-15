@@ -32,10 +32,12 @@ void Instrument::publish() {
     int nv = 0;
     for (auto &v : voices) if (v.active()) ++nv;
     for (int s = 0; s < kStrings; ++s) {
-        int v = slotVoice[0][s];
-        u.str[s].gate = v >= 0;
-        u.str[s].note = v >= 0 ? voices[v].note : 0;
-        u.str[s].target = v >= 0 ? voices[v].target : 0;
+        int v = st.poly ? -1 : slotVoice[0][s]; // poly: slots are per key, not per row
+        const StringState &ss = strings[s];
+        const float top = ss.n > 0 ? ss.pitch[ss.n - 1] : 0;
+        u.str[s].gate = st.poly ? ss.n > 0 : v >= 0;
+        u.str[s].note = v >= 0 ? voices[v].note : top;
+        u.str[s].target = v >= 0 ? voices[v].target : top;
         u.str[s].held = strings[s].n;
         u.str[s].topCol = strings[s].n > 0 ? (strings[s].col[strings[s].n - 1] & 0xff) : -1;
     }

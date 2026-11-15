@@ -9,6 +9,7 @@ add_executable(vrequency_tests
   beat_tests.cpp
   fx_tests.cpp
   chord_pads_tests.cpp
+  poly_tests.cpp
   looper_tests.cpp
   session_tests.cpp
   analysis_tests.cpp)

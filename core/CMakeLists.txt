@@ -9,6 +9,7 @@ add_library(vreqcore STATIC
   instrument/events.cpp
   instrument/instrument.cpp
   instrument/lead.cpp
+  instrument/poly.cpp
   instrument/loop_record.cpp
   instrument/looper.cpp
   instrument/process.cpp

@@ -8,8 +8,8 @@
     "hdr_sound": {
      "title": "SOUND NAME",
      "kind": "readout",
-     "summary": "The current sound, its slot number and how many voices play.",
-     "does": "Name, slot (Sound 1-10, or Unsaved after New, Mutate or Undo) and voice count. Tags: REC while recording, Limit when the output is held back, No audio device.",
+     "summary": "The current sound, its slot and how the keys play.",
+     "does": "Name, slot (Sound 1-10, or Unsaved) and the key mode: Strings (one note per row, slides) or Poly (every key its own note). Tags: REC, Limit, No audio device.",
      "use": [
       {
        "how": "Touch",
@@ -18,12 +18,17 @@
       {
        "how": "Keys",
        "text": "Press 1-9 or 0 to jump to sound 1-10."
+      },
+      {
+       "how": "Keys",
+       "text": "Ctrl+P switches Strings and Poly."
       }
      ],
      "keys": [
       "1..9",
       "0",
-      "Ctrl+R"
+      "Ctrl+R",
+      "Ctrl+P"
      ],
      "recall": "Synth page, top left. Ctrl+Z undoes a sound change. Limit: lower Master volume.",
      "tips": [
