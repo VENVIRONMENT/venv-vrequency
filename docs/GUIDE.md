@@ -267,11 +267,11 @@ What **Tone** means depends on the kind:
 | Click | a damped cosine: one spike and a short ring | the ring, Hz |
 | Metal | six square waves at the clashing ratios of an analogue hi-hat, through a high band and two high-passes | the lowest square; the band sits 20 times higher |
 | Snap | a short body dropping from twice Tone to Tone in 8 ms, under a burst of band-passed noise, like a snare | the body; the noise band sits 25 times higher |
-| FM ping | a sine at Tone phase-modulated by a sine at 1.4 times Tone; the modulation fades three times faster than the ping, so it starts glassy and rings out pure | pitch |
+| Scratch | a turntable scratch: a rough tone (a sine with its second and third harmonics, and a little grit) pushed forward to 1.6 times speed, stopped, then pulled back to 1.2 times, over Length | pitch at normal speed |
 | Clap | band-passed noise in three 3.5 ms bursts 11 ms apart, then a tail | the band |
-| Zap | a sine sweeping down from 25 times Tone to Tone | where it lands |
+| Tom | an 808-style tom: a sine falling from 2.5 times Tone to Tone in about 20 ms, with a 2 ms noise strike | where it lands |
 | Sub thump | a low sine falling from four times Tone to Tone in about 15 ms | where it falls to |
-| Knock | two sine modes, Tone and 2.7 times Tone, a touch sharp at the strike, the upper one dying faster | the low mode |
+| 808 | a long, tuned sub boom: a sine gliding down from twice Tone (40 ms), ringing over Length, softly saturated | the note it lands on: tune it to the song |
 
 **Length** is how long one hit lasts; every kind fits its decay into it. **Rate** is how often a
 latched pad is hit again.

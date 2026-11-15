@@ -33,8 +33,8 @@ private:
     int padNo = 0, type = 0, pos = 0, len = 1, wait = 0, fadeLen = 1;
     float sr = 48000, tone = 1000, rate = 4, level = 0.8f, relGain = 1, relCoef = 0.99f;
     float decay = 1, decayCoef = 1;   // the main exponential envelope, multiplied each sample
-    float decay2 = 1, decay2Coef = 1; // a second one: the snap's noise, the ping's index, the knock's upper mode
-    double ph = 0, ph2 = 0;           // sine phases (0..1): the body, and the modulator or upper mode
+    float decay2 = 1, decay2Coef = 1; // a second one: the snap's noise, the tom's strike
+    double ph = 0;                    // sine phase (0..1)
     double sq[6] = {0};               // metal: the six squares' phases
     float hpA = 0, hp[4] = {0};       // metal: two one-pole high-passes (in and out of each)
     float ic1 = 0, ic2 = 0, svA1 = 0, svA2 = 0, svA3 = 0, svK = 0.5f, svNorm = 1; // a band-pass (metal, snap, clap)

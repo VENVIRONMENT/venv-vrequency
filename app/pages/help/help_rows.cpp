@@ -27,8 +27,8 @@ std::vector<HelpRow> helpRows(const KeyMap &km, int helpPage) {
         };
     } else if (helpPage == 2) {
         rows = {
-            {km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 1-4 (click, metal, snap, ping)"},
-            {km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 5-8 (clap, zap, thump, knock)"},
+            {km.rows[2].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 1-4 (click, metal, snap, scratch)"},
+            {km.rows[1].left(4).split("", Qt::SkipEmptyParts).join(" "), "Pulse page: pads 5-8 (clap, tom, thump, 808)"},
             {km.rows[2].mid(6, 4).split("", Qt::SkipEmptyParts).join(" ") + " / " + km.rows[1].mid(5, 4).split("", Qt::SkipEmptyParts).join(" "), "the same pads again, for the other hand"},
             {"Left / Right", "Pulse page: select the pad before / after"},
             {km.rows[0].left(1) + QString::fromUtf8(" ‥ ") + km.rows[0].right(1), "Pulse page: the low string still plays"},

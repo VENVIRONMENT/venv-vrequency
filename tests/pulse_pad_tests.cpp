@@ -37,12 +37,12 @@ void testPulsePads() {
     }
     {
         Rig r;
-        r.inst.pulseSet(0, PF_TYPE, PT_PING); r.inst.pulseSet(0, PF_TONE, 660); r.inst.pulseSet(0, PF_LENGTH, 200);
+        r.inst.pulseSet(0, PF_TYPE, PT_TOM); r.inst.pulseSet(0, PF_TONE, 660); r.inst.pulseSet(0, PF_LENGTH, 200);
         r.run(0.01); r.clear();
-        r.inst.hit(0); r.run(0.15);
+        r.inst.hit(0); r.run(0.2);
         const UiState u = r.inst.uiState();
-        CHECK(u.pulse[0].type == PT_PING && u.pulse[0].tone == 660 && u.pulse[0].lengthMs == 200, "any pad can be any kind, with its own settings");
-        CHECK(near(measureHz(r.L.data() + 2400, 4800), 660, 0.005f), "and it plays them (%.1f Hz)", measureHz(r.L.data() + 2400, 4800));
+        CHECK(u.pulse[0].type == PT_TOM && u.pulse[0].tone == 660 && u.pulse[0].lengthMs == 200, "any pad can be any kind, with its own settings");
+        CHECK(near(measureHz(r.L.data() + 4800, 3600), 660, 0.02f), "and it plays them (%.1f Hz)", measureHz(r.L.data() + 4800, 3600));
         r.inst.pulseSet(0, PF_TONE, 1e9f); r.inst.pulseSet(0, PF_LEVEL, -3); r.run(0.01);
         CHECK(r.inst.uiState().pulse[0].tone == kPulseToneMax && r.inst.uiState().pulse[0].level == 0, "settings out of range are held at the limits");
     }
@@ -62,15 +62,15 @@ void testPulsePads() {
     }
     {
         Rig r;
-        r.inst.pulseLatch(5, true); // the zap, 160 ms: latched it is hit again at its rate
+        r.inst.pulseLatch(5, true); // the tom: latched it is hit again at its rate
         std::vector<PulseTick> t = pulseTicks(r, 1.02);
-        CHECK(ticksOf(t, 5) == 5, "a latched zap repeats at RATE (%d hits in 1.02 s at 4 Hz)", ticksOf(t, 5));
+        CHECK(ticksOf(t, 5) == 5, "a latched tom repeats at RATE (%d hits in 1.02 s at 4 Hz)", ticksOf(t, 5));
         r.inst.pulseSet(5, PF_RATE, 8);
         r.run(0.01);
         t = pulseTicks(r, 1.0);
         CHECK(ticksOf(t, 5) >= 7 && ticksOf(t, 5) <= 9, "and a new rate is followed at once (%d in 1 s at 8 Hz)", ticksOf(t, 5));
         r.inst.pulseLatch(5, false);
-        r.run(0.2); r.clear(); r.run(0.2);
+        r.run(0.5); r.clear(); r.run(0.2); // the last hit rings out its 420 ms first
         CHECK(peak(r.L) < 1e-4f, "unlatched it stops (peak %.6f)", peak(r.L));
         r.inst.pulseLatch(2, true); r.inst.pulseLatch(4, true); r.run(0.3);
         r.inst.cmd(EV_PANIC);

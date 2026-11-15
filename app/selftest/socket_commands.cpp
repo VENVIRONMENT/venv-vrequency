@@ -79,7 +79,7 @@ const Case cases[] = {
     {R"({"cmd":"backing","action":"play"})", true, 100},
     {R"({"cmd":"backing","action":"remove_last"})", true, 0},
     {R"({"cmd":"backing"})", false, 0},
-    {R"({"cmd":"pulse","pad":0,"type":"zap","tone":800,"length":120,"rate":30,"level":0.5})", true, 0},
+    {R"({"cmd":"pulse","pad":0,"type":"tom","tone":800,"length":120,"rate":30,"level":0.5})", true, 0},
     {R"({"cmd":"pulse","pad":0,"type":"banjo"})", false, 0},
     {R"({"cmd":"pulse","pad":8,"hit":true})", false, 0},
     {R"({"cmd":"pulse","hit":true})", false, 0},
@@ -139,7 +139,7 @@ void socketEveryCommand(Context &ctx, Link &link) {
     {
         const QJsonObject st = r["result"].toObject();
         check(st["backing"].toObject()["chords"].toArray().size() >= 3 &&
-              st["pulse"].toObject()["pads"].toArray()[0].toObject()["type"].toString() == "zap" && st["pulse"].toObject()["sync"].toBool() &&
+              st["pulse"].toObject()["pads"].toArray()[0].toObject()["type"].toString() == "tom" && st["pulse"].toObject()["sync"].toBool() &&
               st["tempo"].toDouble() == 120 && st["page"].toString() == "synth" && !st.contains("beat"),
               "state reflects what the commands did (backing chords, a pulse pad, sync, tempo, page)");
     }

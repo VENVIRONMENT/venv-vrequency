@@ -22,6 +22,7 @@ void PulseVoice::setFilters() {
     if (type == PT_METAL) { fc = tone * 20.0f; Q = 1.2f; }
     else if (type == PT_SNAP) { fc = tone * 25.0f; Q = 0.8f; }
     else if (type == PT_CLAP) { fc = tone; Q = 1.5f; }
+    else if (type == PT_SCRATCH) { fc = tone * 6.0f; Q = 1.0f; }
     fc = std::clamp(fc, 20.0f, 0.45f * sr);
     const float g = std::tan(kPi * fc / sr);
     svK = 1.0f / Q;
@@ -47,7 +48,7 @@ void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rate
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     len = lengthSamples(p, sr);
     fadeLen = std::max(1, std::min((int)(0.001f * sr), len / 4));
-    ph = ph2 = 0; ic1 = ic2 = 0;
+    ph = 0; ic1 = ic2 = 0;
     for (float &h : hp) h = 0;
     for (double &q : sq) q = 0;
     rng.s = kSeed;
@@ -58,10 +59,9 @@ void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rate
     case PT_CLICK: tau = sec / 5.0f; break;
     case PT_METAL: tau = sec / 5.0f; break;
     case PT_SNAP: tau = sec / 6.0f; tau2 = sec / 3.5f; break;
-    case PT_PING: tau = sec / 4.0f; tau2 = sec / 12.0f; break;
+    case PT_TOM: tau = sec / 4.0f; tau2 = 0.002f; break;
     case PT_CLAP: tau = sec / 3.5f; break;
-    case PT_ZAP: tau = sec / 3.0f; tau2 = sec / 14.0f; break;
-    case PT_KNOCK: tau = sec / 4.0f; tau2 = sec / 9.0f; break;
+    case PT_BOOM: tau = sec / 3.0f; break;
     default: break;
     }
     decay = decay2 = 1;
@@ -113,10 +113,14 @@ float PulseVoice::next(bool &onset, int &dur) {
         decay2 *= decay2Coef;
         break;
     }
-    case PT_PING: { // phase modulation: the index (up to 3.5) fades three times faster than the ping
-        y = (float)std::sin(kTwoPi * ph + 3.5 * decay2 * std::sin(kTwoPi * ph2)) * decay;
-        ph = wrap(ph + tone / sr); ph2 = wrap(ph2 + std::min(tone * 1.4f, 0.45f * sr) / sr);
-        decay2 *= decay2Coef;
+    case PT_SCRATCH: { // two strokes: forward (up to 1.6 times speed), then back (up to 1.2)
+        const float x = pos / (float)len;
+        const float speed = x < 0.5f ? 1.6f * std::sin(kPi * x / 0.5f) : 1.2f * std::sin(kPi * (x - 0.5f) / 0.5f);
+        const double step = std::min(tone * speed, 0.15f * sr) / sr;
+        const float voice = sine(ph) * 0.6f + sine(2 * ph) * 0.3f + sine(3 * ph) * 0.15f; // a rough, vocal-ish tone
+        ph = wrap(ph + step);
+        const float grit = clampf(band(rng.bipolar()) * svNorm * 0.5f, -1, 1);
+        y = (voice + 0.25f * grit) * std::min(1.0f, speed * 1.3f);
         break;
     }
     case PT_CLAP: { // bursts at 0, 11 and 22 ms (3.5 ms each), then a tail from 33 ms
@@ -127,22 +131,22 @@ float PulseVoice::next(bool &onset, int &dur) {
         y = x * env;
         break;
     }
-    case PT_ZAP: // the pitch falls from 25 times TONE towards TONE
-        y = sine(ph) * decay;
-        ph = wrap(ph + std::min(tone * (1.0f + 24.0f * decay2), 0.45f * sr) / sr);
+    case PT_TOM: { // falls from 2.5 times TONE in about 20 ms; a 2 ms noise strike on top
+        y = 0.78f * sine(ph) * decay + 0.22f * rng.bipolar() * decay2;
+        ph = wrap(ph + tone * (1.0f + 1.5f * std::exp(-t / 0.02f)) / sr);
         decay2 *= decay2Coef;
         break;
+    }
     case PT_THUMP: { // the pitch falls from four times the tone to the tone, time constant 15 ms
         const float drop = std::exp(-t / 0.015f);
         y = sine(ph) * decay;
         ph = wrap(ph + tone * (1.0f + 3.0f * drop) / sr);
         break;
     }
-    case PT_KNOCK: { // two modes of a struck block, both a touch sharp at the strike
-        const float bend = 1.0f + 0.3f * std::exp(-t / 0.003f);
-        y = 0.75f * sine(ph) * decay + 0.35f * sine(ph2) * decay2;
-        ph = wrap(ph + tone * bend / sr); ph2 = wrap(ph2 + std::min(tone * 2.7f * bend, 0.45f * sr) / sr);
-        decay2 *= decay2Coef;
+    case PT_BOOM: { // glides down from twice TONE (40 ms), then rings long; soft saturation gives it weight
+        const float x = sine(ph) * decay;
+        y = std::tanh(1.8f * x) / std::tanh(1.8f);
+        ph = wrap(ph + tone * (1.0f + std::exp(-t / 0.04f)) / sr);
         break;
     }
     }

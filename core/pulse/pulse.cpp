@@ -7,11 +7,11 @@
 namespace td {
 
 namespace {
-const char *const kNames[kPulseTypes] = {"CLICK", "METAL", "SNAP", "FM PING", "CLAP", "ZAP", "SUB THUMP", "KNOCK"};
-const char *const kKeys[kPulseTypes] = {"click", "metal", "snap", "ping", "clap", "zap", "thump", "knock"};
+const char *const kNames[kPulseTypes] = {"CLICK", "METAL", "SNAP", "SCRATCH", "CLAP", "TOM", "SUB THUMP", "808"};
+const char *const kKeys[kPulseTypes] = {"click", "metal", "snap", "scratch", "clap", "tom", "thump", "808"};
 const char *const kLines[kPulseTypes] = {
-    "A SHORT RINGING CLICK", "CLASHING SQUARES, HIGH AND BRIGHT", "A PITCHED BODY UNDER BRIGHT NOISE", "A GLASSY FM STRIKE",
-    "THREE QUICK NOISE BURSTS AND A TAIL", "A SINE THAT SWEEPS DOWN FAST", "A LOW SINE THAT DROPS IN PITCH", "TWO WOODEN SINE MODES"};
+    "A SHORT RINGING CLICK", "CLASHING SQUARES, HIGH AND BRIGHT", "A PITCHED BODY UNDER BRIGHT NOISE", "A TONE PUSHED AND PULLED, LIKE VINYL",
+    "THREE QUICK NOISE BURSTS AND A TAIL", "A SINE THAT FALLS, STRUCK", "A LOW SINE THAT DROPS IN PITCH", "A LONG TUNED BOOM"};
 int clampType(int t) { return t < 0 ? 0 : (t >= kPulseTypes ? kPulseTypes - 1 : t); }
 } // namespace
 
@@ -19,8 +19,8 @@ PulsePad pulseDefault(int pad) {
     //                       type      tone    length  rate  level
     static const PulsePad D[kPulsePads] = {
         {PT_CLICK, 3000, 3, 4, 0.8f},   {PT_METAL, 400, 80, 8, 0.7f},     {PT_SNAP, 190, 180, 2, 0.9f},
-        {PT_PING, 880, 700, 2, 0.6f},   {PT_CLAP, 1200, 260, 2, 0.7f},    {PT_ZAP, 110, 160, 4, 0.6f},
-        {PT_THUMP, 45, 350, 1, 0.9f},   {PT_KNOCK, 800, 60, 4, 0.7f}};
+        {PT_SCRATCH, 330, 260, 2, 0.5f}, {PT_CLAP, 1200, 260, 2, 0.7f},   {PT_TOM, 140, 420, 4, 0.9f},
+        {PT_THUMP, 45, 350, 1, 0.9f},   {PT_BOOM, 49, 1600, 0.5f, 0.75f}};
     return D[pad < 0 ? 0 : (pad >= kPulsePads ? kPulsePads - 1 : pad)];
 }
 

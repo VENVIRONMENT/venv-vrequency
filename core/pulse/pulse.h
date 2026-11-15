@@ -7,18 +7,19 @@
 //              the lowest square (the band sits twenty times above it)
 //   SNAP       a short pitched body (TONE, dropping from twice it) under a burst of bright noise
 //              (band at 25 times TONE), like a snare
-//   FM PING    a sine carrier at TONE, phase-modulated at 1.4 times TONE by an index that fades
-//              faster than the ping: a glassy, bell-like strike
+//   SCRATCH    a turntable scratch: a tone with its second and third harmonics, plus a little
+//              grit, pushed forward then pulled back (two strokes over LENGTH); TONE is the
+//              pitch at normal speed
 //   CLAP       band-passed noise (band at TONE) in three quick bursts 11 ms apart, then a tail
-//   ZAP        a sine that sweeps down from 25 times TONE to TONE: a laser-like drop
+//   TOM        an 808 tom: a sine falling from 2.5 times TONE to TONE, with a short noise strike
 //   SUB THUMP  a low sine that falls from four times TONE to TONE in about 15 ms
-//   KNOCK      two sine modes (TONE and 2.7 times TONE) with a tiny pitch drop: wood or a rim
+//   808        a long, tuned sub boom: a sine gliding down from twice TONE, softly saturated
 // RATE sets how often a latched pad repeats. LEVEL is 0..1.
 #pragma once
 
 namespace td {
 
-enum PulseType { PT_CLICK, PT_METAL, PT_SNAP, PT_PING, PT_CLAP, PT_ZAP, PT_THUMP, PT_KNOCK, kPulseTypes };
+enum PulseType { PT_CLICK, PT_METAL, PT_SNAP, PT_SCRATCH, PT_CLAP, PT_TOM, PT_THUMP, PT_BOOM, kPulseTypes };
 enum PulseField { PF_TYPE, PF_TONE, PF_LENGTH, PF_RATE, PF_LEVEL, PF_COUNT };
 constexpr int kPulsePads = 8;
 

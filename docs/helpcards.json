@@ -2451,7 +2451,7 @@
   },
   "pulse": {
    "title": "Pulse",
-   "intro": "Eight pulse pads: clicks, metal, snaps, claps, pings, zaps, thumps and knocks. Pick a pad, shape it with four sliders, latch it, sync it, loop it.",
+   "intro": "Eight pulse pads: click, metal, snap, scratch, clap, tom, sub thump and 808. Pick a pad, shape it with four sliders, latch it, sync it, loop it.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
@@ -2596,8 +2596,8 @@
     "pad3": {
      "title": "PAD 4",
      "kind": "pad",
-     "summary": "Plays pad 4 and selects it. Starts as FM ping.",
-     "does": "A sine at TONE bent by another at 1.4 times it, fading fast: a glassy strike. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 4 and selects it. Starts as scratch.",
+     "does": "A turntable scratch: a rough tone pushed forward, then pulled back, over LENGTH. TONE is its pitch at normal speed. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2664,8 +2664,8 @@
     "pad5": {
      "title": "PAD 6",
      "kind": "pad",
-     "summary": "Plays pad 6 and selects it. Starts as zap.",
-     "does": "A sine that sweeps down from 25 times TONE to TONE: a laser-like drop. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 6 and selects it. Starts as tom.",
+     "does": "An 808 tom: a sine falling from 2.5 times TONE to TONE, with a short noise strike. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2732,8 +2732,8 @@
     "pad7": {
      "title": "PAD 8",
      "kind": "pad",
-     "summary": "Plays pad 8 and selects it. Starts as knock.",
-     "does": "Two sine modes, TONE and 2.7 times TONE, struck: wood or a rim. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
+     "summary": "Plays pad 8 and selects it. Starts as 808.",
+     "does": "A long, tuned 808 boom: a sine gliding down from twice TONE, softly saturated. Set TONE to the song's key. Tap: it plays and is selected. TYPE makes it any of the eight kinds. A latched pad shows LATCH: tap it to stop it.",
      "use": [
       {
        "how": "Touch",
@@ -2790,7 +2790,7 @@
      "title": "TONE",
      "kind": "slider",
      "summary": "Hz: pitch, ring or band, by kind.",
-     "does": "Pitch for FM ping, sub thump and zap (where they land), snap's body and knock's low mode. Ring for click. Band for clap; metal's squares start at it, their band 20 times higher. 20 Hz to 18 kHz.",
+     "does": "Pitch for tom, sub thump and 808 (where they land), scratch (at normal speed) and snap's body. Ring for click. Band for clap; metal's squares start at it, their band 20 times higher. 20 Hz to 18 kHz.",
      "use": [
       {
        "how": "Touch",
@@ -2977,7 +2977,7 @@
      "title": "TYPE",
      "kind": "button",
      "summary": "The selected pad's kind: the next of eight.",
-     "does": "Steps the selected pad through click, metal, snap, FM ping, clap, zap, sub thump and knock. The pad keeps its tone, length, rate and level; their meaning follows the new kind.",
+     "does": "Steps the selected pad through click, metal, snap, scratch, clap, tom, sub thump and 808. The pad keeps its tone, length, rate and level; their meaning follows the new kind.",
      "use": [
       {
        "how": "Touch",
@@ -5780,7 +5780,7 @@
    "title": "PULSE KINDS",
    "kind": "area",
    "summary": "The eight sounds a pulse pad can be.",
-   "does": "Click and knock: short struck sounds. Metal, snap and clap: noise and squares, like hats, snares and claps. FM ping: a glassy strike. Zap and sub thump: sines that fall in pitch.",
+   "does": "Click: a struck spike. Metal, snap and clap: squares and noise, like hats, snares and claps. Scratch: a tone pushed and pulled like vinyl. Tom, sub thump and 808: sines that fall in pitch.",
    "use": [
     {
      "how": "Touch",

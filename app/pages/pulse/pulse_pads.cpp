@@ -34,11 +34,11 @@ QString what(const PulsePad &p, int /*onsets*/, float sr) { // the top right of 
     switch (p.type) {
     case PT_METAL: return QString("band %1").arg(hz(std::min(p.tone * 20, top)));
     case PT_SNAP: return QString("body %1").arg(hz(p.tone));
-    case PT_PING: return QString("%1, fm x1.4").arg(hz(p.tone));
+    case PT_SCRATCH: return QString("%1, two strokes").arg(hz(p.tone));
     case PT_CLAP: return QString("band %1").arg(hz(p.tone));
-    case PT_ZAP: return QString("%1 > %2").arg(hz(std::min(p.tone * 25, top))).arg(hz(p.tone));
+    case PT_TOM: return QString("%1 > %2").arg(hz(std::min(p.tone * 2.5f, top))).arg(hz(p.tone));
     case PT_THUMP: return QString("%1 > %2").arg((int)std::round(p.tone * 4)).arg(hz(p.tone));
-    case PT_KNOCK: return QString("%1 + %2").arg(hz(p.tone)).arg(hz(std::min(p.tone * 2.7f, top)));
+    case PT_BOOM: return QString("%1 > %2").arg(hz(std::min(p.tone * 2, top))).arg(hz(p.tone));
     default: return QString("ring %1").arg(hz(p.tone));
     }
 }

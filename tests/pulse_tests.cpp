@@ -71,22 +71,24 @@ void testPulseSounds() {
         CHECK(goertzel(cl.data() + (int)(0.04 * SR), w, 1200) > 2.0f * goertzel(cl.data() + (int)(0.04 * SR), w, 6000), "with its noise in a band around TONE");
     }
 
-    SECTION("pulse: pitched strikes");
+    SECTION("pulse: scratch, tom, sub thump and 808");
     {
-        std::vector<float> pg = render(kind(PT_PING, 880, 700), 0.7);
-        const int w = (int)(0.03 * SR);
-        CHECK(shareAt(pg.data() + (int)(0.003 * SR), w, 880) < 0.8f, "an FM ping starts rich (%.2f of its energy at TONE)", shareAt(pg.data() + (int)(0.003 * SR), w, 880));
-        CHECK(near(measureHz(pg.data() + (int)(0.35 * SR), w * 3), 880, 0.005f) && shareAt(pg.data() + (int)(0.35 * SR), w * 3, 880) > 0.95f,
-              "and rings out as a pure TONE (%.1f Hz)", measureHz(pg.data() + (int)(0.35 * SR), w * 3));
-        std::vector<float> z = render(kind(PT_ZAP, 110, 300), 0.3);
-        const float early = measureHz(z.data(), (int)(0.004 * SR)), late = measureHz(z.data() + (int)(0.15 * SR), (int)(0.12 * SR));
-        CHECK(early > 1000 && near(late, 110, 0.05f), "a zap sweeps from high (%.0f Hz) down to TONE (%.1f Hz)", early, late);
+        std::vector<float> sc = render(kind(PT_SCRATCH, 330, 400), 0.4);
+        const int L = (int)(0.4 * SR), w = (int)(0.01 * SR);
+        auto lv = [&](float x) { return rms(sc.data() + (int)(x * L) - w / 2, w); };
+        CHECK(lv(0.25f) > 4 * lv(0.5f) && lv(0.75f) > 4 * lv(0.5f), "a scratch is two strokes with a stop between (%.3f, %.3f, turn %.3f)", lv(0.25f), lv(0.75f), lv(0.5f));
+        const float fwd = measureHz(sc.data() + (int)(0.22 * L), (int)(0.06 * L)), back = measureHz(sc.data() + (int)(0.72 * L), (int)(0.06 * L));
+        CHECK(fwd > 1.2f * back && fwd > 330 * 1.3f, "pushed faster than it is pulled back, so it is higher (%.0f Hz, then %.0f Hz)", fwd, back);
+        std::vector<float> tm = render(kind(PT_TOM, 140, 420), 0.42);
+        const float early = measureHz(tm.data() + (int)(0.002 * SR), (int)(0.01 * SR)), late = measureHz(tm.data() + (int)(0.12 * SR), (int)(0.15 * SR));
+        CHECK(early > 1.6f * 140 && near(late, 140, 0.02f), "a tom falls from well above TONE (%.0f Hz) to TONE (%.1f Hz)", early, late);
         std::vector<float> s = render(kind(PT_THUMP, 45, 400), 0.4);
         const float e2 = measureHz(s.data(), (int)(0.025 * SR)), l2 = measureHz(s.data() + (int)(0.1 * SR), (int)(0.25 * SR));
         CHECK(e2 > 90 && near(l2, 45, 0.05f), "a sub thump falls from above twice its tone (%.0f Hz) to TONE (%.1f Hz)", e2, l2);
-        std::vector<float> k = render(kind(PT_KNOCK, 800, 400), 0.4); // long enough to measure its modes
-        const int a = (int)(0.012 * SR), n = (int)(0.08 * SR);
-        const float modes = shareAt(k.data() + a, n, 800) + shareAt(k.data() + a, n, 2160);
-        CHECK(modes > 0.9f && shareAt(k.data() + a, n, 2160) > 0.01f, "a knock is two modes, TONE and 2.7 times TONE (%.2f of its energy)", modes);
+        std::vector<float> b = render(kind(PT_BOOM, 49, 1600), 1.6);
+        const float bl = measureHz(b.data() + (int)(0.3 * SR), (int)(0.5 * SR));
+        CHECK(near(bl, 49, 0.02f), "an 808 settles on TONE, so it can be tuned (%.1f Hz)", bl);
+        CHECK(rms(b.data() + (int)(1.0 * SR), w * 5) > 0.15f * rms(b.data() + (int)(0.1 * SR), w * 5), "and it rings long: a second in it keeps over 15 %% of its level");
+        CHECK(peak(b) <= 1.0f, "its saturation stays inside full scale (peak %.3f)", peak(b));
     }
 }
