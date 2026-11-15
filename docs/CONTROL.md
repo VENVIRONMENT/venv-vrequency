@@ -292,10 +292,11 @@ lowest, `pad0` first drum, `chord0` first chord pad...). The authoritative list 
 
 | Page | Zones |
 |---|---|
-| every page but Synth | `tab_synth` `tab_sound` `tab_pulse` `tab_backing` `tab_tune` `tab_system` `tab_help` `tab_chat` |
+| every page but Synth | `tab_synth` `tab_sound` `tab_pulse` `tab_freq` `tab_backing` `tab_tune` `tab_system` `tab_help` `tab_chat` |
 | synth | `hdr_sound` (name) `hdr_tune` (key, tempo, octave) `key_readout` `tempo_readout` `octave_readout` `xy` (scope pad) `xymap` `xyhold` `string0` `string1` `string2` `pslot0`-`pslot7` (filled progression slots) `chord0`-`chord6` `backmode` `backplay` `loop_pedal` `loop_undo` `loop_playstop` `sustain` `octave_down` `octave_up` `new_sound` `menu` |
-| sound | `slot0`-`slot9` `newsound` `mutate` `undosound` `slotsave` `fav` `deep` `param<N>` `deepprev` `deepnext` `favitem0`-`favitem5` `favprev` `favdel` |
-| pulse | `pad0`-`pad7` `pulsewave` (the selected pad's picture) `pulsetone` `pulselength` `pulserate` `pulselevel` `pulselast` (the strip) `pulseloop` `pulselatch` `pulsesync` `pulsetype` |
+| sound | `slot0`-`slot9` `newsound` `mutate` `undosound` `slotsave` `fav` `deep` `warp` (the Warp view) `param<N>` `deepprev` `deepnext` `favitem0`-`favitem5` `favprev` `favdel` |
+| pulse | `pad0`-`pad7` `pulsewave` (the selected pad's picture) `pulsetone` `pulselength` `pulserate` `pulselevel` `pulselast` (the strip) `pulseloop` `pulselatch` `pulsesync` `pulsewarp` `pulsetype` (the pad's name: tap for the next kind); with Warp on, `pulsedrive` `pulsefold` `pulsecrush` `pulsebend` |
+| freq | `freqscope` `freqcycles` `freqspectrum` `freqtone0`-`freqtone3` (rows) `freqwave0`-`3` `freqhz0`-`3` (tap: type an Hz, drag: scrub) `freqlevel0`-`3` `freqon0`-`3` `freqmod` (2 > 1) `freqfold` `freqfilter` `freqdrive` `freqcrush` `freqdelay` `freqhold` `freqgate` `freqrate-/+` `freqkeys` `freqsnap` |
 | backing | `bmode0`-`bmode2` `bstyle0`-`bstyle4` `bslot0`-`bslot7` `chord0`-`chord6` `backmode` `backplay` `bremove` `bclear` `bseventh` `bmetro` `chordbeats-/+` `arprate-/+` `bpm2-/+` `backvol` `bresync` |
 | tune | `root0`-`root11` `scale0`-`scale7` `oct-/+` `rowint-/+` `bendr-/+` `bpm-/+` `tap` `glidescale` `listen` `lkey` `ltempo` `lboth` `lnext` |
 | system | `volume` `loopvol` `xymap0`-`xymap5` `xyhold2` `chordrow` `recwav` `playlast` `savesession` `keytest` `session0`... `panic` `latency-/+` `factory` `quit` |
