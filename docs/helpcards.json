@@ -2495,7 +2495,7 @@
      "title": "PAD 1",
      "kind": "pad",
      "summary": "Plays pad 1 and selects it. Starts as click.",
-     "does": "A short ringing click: TONE is its ring, LENGTH how fast it dies. Hold it: it repeats at RATE until you let go; arrows bend its ring. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "A short ringing click: TONE is its ring, LENGTH how fast it dies. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2516,7 +2516,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2529,7 +2529,7 @@
      "title": "PAD 2",
      "kind": "pad",
      "summary": "Plays pad 2 and selects it. Starts as tick.",
-     "does": "One to three samples at full height, nothing else. TONE sets the width. Hold it: it repeats at RATE until you let go; arrows bend its ring. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "One to three samples at full height, nothing else. TONE sets the width. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2550,7 +2550,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2563,7 +2563,7 @@
      "title": "PAD 3",
      "kind": "pad",
      "summary": "Plays pad 3 and selects it. Starts as noise burst.",
-     "does": "White noise that dies at once. TONE is a low-pass: lower is darker. Hold it: it holds until you let go, and the arrows bend it; sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "White noise that dies at once. TONE is a low-pass: lower is darker. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2584,7 +2584,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2597,7 +2597,7 @@
      "title": "PAD 4",
      "kind": "pad",
      "summary": "Plays pad 4 and selects it. Starts as sine blip.",
-     "does": "A short pure sine at TONE for LENGTH, with soft edges. Hold it: it holds until you let go, and the arrows bend it; sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "A short pure sine at TONE for LENGTH, with soft edges. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2618,7 +2618,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2631,7 +2631,7 @@
      "title": "PAD 5",
      "kind": "pad",
      "summary": "Plays pad 5 and selects it. Starts as gated tone.",
-     "does": "A pure sine switched on and off RATE times a second, for LENGTH. Hold it: it holds until you let go, and the arrows bend it; sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "A pure sine switched on and off RATE times a second, for LENGTH. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2652,7 +2652,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2665,7 +2665,7 @@
      "title": "PAD 6",
      "kind": "pad",
      "summary": "Plays pad 6 and selects it. Starts as pulse train.",
-     "does": "Clicks RATE times a second for LENGTH. TONE is each click's ring. Hold it: it holds until you let go, and the arrows bend it; sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "Clicks RATE times a second for LENGTH. TONE is each click's ring. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2686,7 +2686,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2699,7 +2699,7 @@
      "title": "PAD 7",
      "kind": "pad",
      "summary": "Plays pad 7 and selects it. Starts as sub thump.",
-     "does": "A low sine that drops from four times TONE to TONE in about 15 ms. Hold it: it holds until you let go, and the arrows bend it; sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "A low sine that drops from four times TONE to TONE in about 15 ms. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2720,7 +2720,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -2733,7 +2733,7 @@
      "title": "PAD 8",
      "kind": "pad",
      "summary": "Plays pad 8 and selects it. Starts as hiss.",
-     "does": "Band-passed noise that swells, then fades, over LENGTH. TONE is the band. Hold it: it holds until you let go, and the arrows bend it; sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
+     "does": "Band-passed noise that swells, then fades, over LENGTH. TONE is the band. Hold it: it plays until you let go (a one-shot repeats at RATE); sustain keeps it. TYPE makes it any of the eight kinds. Latched: tap to stop.",
      "use": [
       {
        "how": "Touch",
@@ -2754,7 +2754,7 @@
      ],
      "recall": "Pulse page, pad grid. Keys work only on the Pulse page; with Loop recording, holds go into the loop.",
      "tips": [
-      "While a pad holds, Left / Right (or [ ]) bend it, as on the Synth page."
+      "Left / Right select the pad before or after without playing it."
      ],
      "related": [
       "pulse.pulsetype",
@@ -5802,7 +5802,7 @@
    "title": "LATCH AND SYNC",
    "kind": "area",
    "summary": "Pads that keep going, in time or free.",
-   "does": "Holding a pad holds its sound until you let go. LATCH keeps it going on its own: a gated tone or pulse train runs on, other kinds repeat at RATE. SYNC snaps every RATE to the tempo so pads fall on the beat.",
+   "does": "Holding a pad keeps it going until you let go. LATCH keeps it going on its own: a gated tone or pulse train runs on, other kinds repeat at RATE. SYNC snaps every RATE to the tempo so pads fall on the beat.",
    "use": [
     {
      "how": "Touch",

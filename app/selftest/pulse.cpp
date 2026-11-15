@@ -29,11 +29,8 @@ void testPulse(Context &ctx) {
     const uint32_t a0 = inst.uiState().pulseHits[4];
     press(w, Qt::Key_A); wait(80);
     check(inst.uiState().pulseHits[4] == a0 + 1 && w.pulsePage.selected() == 4, "A plays pad 5 and selects it");
-    const uint32_t r0 = inst.uiState().pulseHits[4];
-    key(w, Qt::Key_Right, true); wait(40);
-    check(w.pulsePage.selected() == 4 && inst.uiState().pulseHits[4] == r0 && inst.uiState().bend > 0, "Right bends on the Pulse page too (no pad played or picked)");
-    key(w, Qt::Key_Right, false); wait(40);
-    w.pulsePage.select(5);
+    press(w, Qt::Key_Right); wait(40);
+    check(w.pulsePage.selected() == 5, "Right selects the next pad");
     key(w, Qt::Key_S, true); wait(300);               // pad 6, the pulse train: held like a synth key
     check(inst.uiState().pulseHeld[5] && inst.uiState().pulsing, "holding S keeps pad 6 going");
     key(w, Qt::Key_S, false); wait(400);

@@ -7,9 +7,9 @@
 
 namespace td {
 
-void Instrument::pulseHit(int pad, float vel, bool record, int part) {
+void Instrument::pulseHit(int pad, float vel, bool record) {
     if (pad < 0 || pad >= kPulsePads) return;
-    pulses.trigger(pad, vel, st.bpm, part);
+    pulses.trigger(pad, vel, st.bpm);
     if (record) loopRecord(OP_PULSE, pad, vel, 0);
 }
 
@@ -24,9 +24,7 @@ void Instrument::holdPulse(int pad, bool down, int layer) {
 void Instrument::renderPulses(float *l, float *r, int n, double b0, double b1) {
     float m[kBlock];
     for (int i = 0; i < n; ++i) m[i] = 0;
-    float bend[kParts]; // each part's bend: the pulses bend with the lead, a loop's with its layer
-    for (int p = 0; p < kParts; ++p) bend[p] = parts[p].bend;
-    pulses.render(m, n, b0, b1, st.bpm, frames, bend);
+    pulses.render(m, n, b0, b1, st.bpm, frames);
     const float g = 0.8f; // in the middle, dry: a pulse is meant to be exact
     for (int i = 0; i < n; ++i) { l[i] += m[i] * g; r[i] += m[i] * g; }
 }

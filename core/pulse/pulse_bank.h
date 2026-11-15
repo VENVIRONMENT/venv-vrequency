@@ -33,7 +33,7 @@ public:
     uint32_t hits[kPulsePads] = {0};   // counts every hit (taps, latch repeats, loop playback)
 
     // ---- audio thread ----
-    void trigger(int p, float vel, float bpm, int owner = 0); // a tap: plays at once (owner: see PulseVoice::start)
+    void trigger(int p, float vel, float bpm);        // a tap: plays at once
     void set(int p, int field, float v, float bpm);   // one setting of a pad
     void latch(int p, bool on, double beat, float bpm);
     void hold(int p, bool on, double beat, float bpm);                 // the pad's key down / up
@@ -43,11 +43,8 @@ public:
     bool going(int p) const { return latched[p] || held[p] || sustained[p] || loopHeld[p]; }
     void silence();                                   // fade everything, drop every latch
     // adds n samples of the pulses (mono) to out; beat0..beat1 is the beat clock over the block,
-    // frame0 the sample clock at its start; bend: each part's bend in semitones (or null), which
-    // every voice owned by that part follows
-    void render(float *out, int n, double beat0, double beat1, float bpm, uint64_t frame0, const float *bend = nullptr);
-    // a going pad holds its sound (every kind but click and tick); latched, a one-shot repeats
-    bool runsOn(int p) const { return pulseContinuous(pad[p].type) || (!latched[p] && pad[p].type != PT_CLICK && pad[p].type != PT_TICK); }
+    // frame0 the sample clock at its start
+    void render(float *out, int n, double beat0, double beat1, float bpm, uint64_t frame0);
     bool active() const;
     float rateOf(int p, float bpm) const;             // RATE with SYNC applied
 
@@ -63,8 +60,7 @@ private:
     float vel[kPulseVoices] = {0};
     PulseTick ring[kPulseTickRing];
     std::atomic<uint32_t> ringW{0};
-    void start(int p, float velocity, float bpm, bool endless, int delay, int owner = -1); // owner -1: ownerOf(p)
-    int ownerOf(int p) const;
+    void start(int p, float velocity, float bpm, bool endless, int delay);
     void logTick(uint64_t frame, uint32_t dur, int p);
     bool sustainOn = false;
     void begin(int p, double beat, float bpm); // a pad starts going

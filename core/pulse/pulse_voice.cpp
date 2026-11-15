@@ -33,13 +33,12 @@ void PulseVoice::setFilters() {
     clickTau = std::min(3.0f / fc, 0.2f / rate);               // one click of a train: three cycles of its ring
 }
 
-void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rateHz, bool endlessRun, int delay, int owner) {
+void PulseVoice::start(int pad, const PulsePad &p0, float sampleRate, float rateHz, bool endlessRun, int delay) {
     PulsePad p = p0;
     pulseClamp(p);
-    on = true; runOn = endlessRun && p.type != PT_CLICK && p.type != PT_TICK; fading = false;
-    padNo = pad; type = p.type; sr = sampleRate; ownerPart = owner;
+    on = true; runOn = endlessRun && pulseContinuous(p.type); fading = false;
+    padNo = pad; type = p.type; sr = sampleRate;
     pos = 0; wait = std::max(0, delay); relGain = 1;
-    baseTone = p.tone; bendSemis = 0;
     tone = std::min(p.tone, 0.45f * sr); level = p.level;
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     len = lengthSamples(p, sr);
@@ -57,18 +56,10 @@ void PulseVoice::retune(const PulsePad &p0, float rateHz) {
     PulsePad p = p0;
     pulseClamp(p);
     if (p.type != type) { release(); return; }   // another kind: this one fades, the latch starts the new one
-    baseTone = p.tone;
-    tone = std::min(baseTone * std::exp2(bendSemis / 12.0f), 0.45f * sr); level = p.level;
+    tone = std::min(p.tone, 0.45f * sr); level = p.level;
     rate = std::clamp(rateHz, kPulseRateMin, kPulseRateMax);
     setFilters();
     if (type == PT_TRAIN) decayCoef = std::exp(-1.0f / (std::max(clickTau, 1e-5f) * sr));
-}
-
-void PulseVoice::setBend(float semis) {
-    if (std::fabs(semis - bendSemis) < 1e-4f) return;
-    bendSemis = semis;
-    tone = std::clamp(baseTone * std::exp2(semis / 12.0f), 1.0f, 0.45f * sr);
-    setFilters();
 }
 
 void PulseVoice::release(float ms) {
@@ -93,8 +84,7 @@ float PulseVoice::next(bool &onset, int &dur) {
         break;
     case PT_NOISE:
         lp += lpA * (rng.bipolar() - lp);
-        y = clampf(lp * lpNorm * decay, -1, 1);
-        if (!runOn || decay > 0.5f) decay *= decayCoef; // held: the burst settles to a steady hiss
+        y = clampf(lp * lpNorm * decay, -1, 1); decay *= decayCoef;
         break;
     case PT_BLIP:
         y = sine(ph) * std::min(1.0f, pos / (0.0005f * sr)); ph = wrap(ph + tone / sr);
@@ -114,8 +104,7 @@ float PulseVoice::next(bool &onset, int &dur) {
         break;
     case PT_THUMP: { // the pitch falls from four times the tone to the tone, time constant 15 ms
         const float drop = std::exp(-(pos / sr) / 0.015f);
-        y = sine(ph) * decay;
-        if (!runOn || decay > 0.6f) decay *= decayCoef; // held: it settles at the tone and stays
+        y = sine(ph) * decay; decay *= decayCoef;
         ph = wrap(ph + tone * (1.0f + 3.0f * drop) / sr);
         break;
     }
@@ -123,7 +112,7 @@ float PulseVoice::next(bool &onset, int &dur) {
         const float v0 = rng.bipolar() * 0.6f, v3 = v0 - ic2;
         const float v1 = svA1 * ic1 + svA2 * v3, v2 = ic2 + svA2 * ic1 + svA3 * v3;
         ic1 = 2 * v1 - ic1; ic2 = 2 * v2 - ic2;
-        const float x = runOn ? std::min(pos / (float)len, 0.35f) : pos / (float)len; // held: stays at its peak
+        const float x = pos / (float)len;
         const float s = x < 0.35f ? std::sin(0.5f * kPi * x / 0.35f) : std::cos(0.5f * kPi * (x - 0.35f) / 0.65f);
         y = clampf(svK * v1 * svNorm, -1, 1) * s * s;
         break;

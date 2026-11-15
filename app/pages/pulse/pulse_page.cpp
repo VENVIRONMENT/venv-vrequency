@@ -14,8 +14,11 @@ bool PulsePage::key(int qtKey, int plainAct) {
     int pad, r, c;
     if (sh.km.pulseKey(qtKey, pad)) { holdPad(pad, qtKey); return true; }
     if (sh.km.stringKey(qtKey, r, c) && r != 0) return true;   // between the pad keys: nothing
-    (void)plainAct;
-    return false;                            // the arrows bend and Enter is the loop pedal, as everywhere
+    if (plainAct == A_BEND_DOWN || plainAct == A_BEND_UP) {    // the pad before or after
+        select((sel + (plainAct == A_BEND_UP ? 1 : kPulsePads - 1)) % kPulsePads);
+        return true;
+    }
+    return false;                            // Enter is the loop pedal, as everywhere
 }
 
 void PulsePage::hitPad(int pad) {
@@ -88,7 +91,7 @@ void PulsePage::paint() {
         if (u.pulseHits[p] != seenHits[p]) { seenHits[p] = u.pulseHits[p]; padLit[p] = now; }
     const KeyMap &km = sh.km;
     auto four = [](const QString &row) { return row.left(4).split("", Qt::SkipEmptyParts).join(" "); };
-    ui.section(60, QString("Pulse  8 pads   hold, or keys %1 / %2;  arrows bend").arg(four(km.rows[2]), four(km.rows[1])));
+    ui.section(60, QString("Pulse  8 pads   tap, or keys %1 / %2").arg(four(km.rows[2]), four(km.rows[1])));
     paintPads(now);
     paintSelected(306);
     ui.section(530, "Last 4 s  every hit, one lane per pad (oldest left)");
