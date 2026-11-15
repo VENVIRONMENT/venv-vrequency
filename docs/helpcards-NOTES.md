@@ -16,8 +16,8 @@ the zone lists read from the code.
 - A card's key is a real zone name. Families share one card via `match` (the key is also listed in
   `match`): `chord0..6`, `slot0..9`, `favitem0..5`, `beatslot0..6`, `root0..11`,
   `session0..3`, and every `name-`/`name+` pair.
-- Tabs: the `synth` page's card list holds the seven tab cards (`tab_synth`..`tab_chat`); every other tabbed page
-  has one card with `match` = all seven tabs ("PAGE TABS").
+- Tabs: the `synth` page's card list holds the nine tab cards (`tab_synth`..`tab_chat`); every other tabbed page
+  has one card with `match` = all nine tabs ("PAGE TABS").
 - `sound-deep` is the All-parameters editor (40 `param%d` cards). The 8 quick sliders on the Sound page
   (`param16,17,11,14,31,32,34,37`) use the same card text as on `sound-deep`. `key-test` is the overlay.
 - `related` ids are `page.zone` (a zone inside a `match` list counts) or `concepts.<id>`.
@@ -100,7 +100,7 @@ Documentation errors:
 10. (Gone with the Track page.) GUIDE section 10 ("Things it does not do yet: ... a volume for each lane") and STATUS "No per-lane volume"
     are stale: the lane mixer (0.9.0) provides exactly that.
 11. (Fixed.) GUIDE section 3 lists the tabs without Chat ("Track, Synth, Sound, Beat, Backing, Tune, System, Help").
-12. Test counts disagree: README says 517 engine / 227 app checks, STATUS 522 / 238.
-13. `docs/shots/9-beat.png` is out of date: only 8 tabs (no Chat), and Beat volume reads 0%; others show 9 tabs.
+12. Test counts: README and STATUS now agree (519 engine, 396 self-test).
+13. `docs/shots/9-beat.png` is gone (the Pulse page picture is `9-pulse.png`); it showed 8 tabs and a Beat volume.
 14. Zone-name oddities worth knowing when writing hotspots: `xymap` (scope button) vs `xymap0..5` (System page),
     `xyhold` vs `xyhold2`, `bpm` / `bpm2` / `bpm3`, `oct` vs `octdn` / `octup`, `favprev`, `hdr_sound`.
