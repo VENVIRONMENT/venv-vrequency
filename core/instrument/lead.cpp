@@ -94,8 +94,7 @@ void Instrument::panic() {
     for (auto &v : voices)
         if (v.active()) v.kill(sr);
     padsPlaying = false;
-    beatPlaying = beatRec = false; drums.silence();
-    if (beatSwitching) beatSwitchNow(); // a beat waiting for the bar line arrives now
+    pulses.silence();
     if (loopState == L_COUNTIN || loopState == L_REC || closing) loopClear();
     else if (loopState == L_PLAY || loopState == L_OVERDUB) {
         if (recLayer >= 0) recLayer = -1;

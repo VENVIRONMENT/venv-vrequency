@@ -1,7 +1,6 @@
 // venv-vrequency — engine tests: the check macros, the rig that renders the instrument offline,
 // and the measurements the tests share.
 #pragma once
-#include "core/drums/drums.h"
 #include "core/dsp.h"
 #include "core/instrument/instrument.h"
 #include "core/instrument/session.h"
@@ -121,15 +120,15 @@ inline float shareAt(const float *x, int n, double hz) {
     return e > 0 ? (float)(2.0 * (c * c + q * q) / (n * e)) : 0;
 }
 
-// seconds at which each new hit of `drum` was counted, to the nearest block of 256 frames
-inline std::vector<double> hitTimes(Rig &r, int drum, double seconds) {
-    std::vector<double> out;
-    uint32_t seen = r.inst.uiState().drumHits[drum];
-    double t = 0;
+// every pulse tick (hit, click, gate) the instrument logs while it renders `seconds`
+inline std::vector<PulseTick> pulseTicks(Rig &r, double seconds) {
+    std::vector<PulseTick> out;
+    uint32_t cur = 0;
+    PulseTick buf[kPulseTickRing];
+    r.inst.readPulseTicks(cur, buf, kPulseTickRing); // only what comes from now on
     r.run(seconds, [&] {
-        t += 256.0 / SR;
-        uint32_t now = r.inst.uiState().drumHits[drum];
-        for (; seen < now; ++seen) out.push_back(t);
+        int n = r.inst.readPulseTicks(cur, buf, kPulseTickRing);
+        out.insert(out.end(), buf, buf + n);
     });
     return out;
 }

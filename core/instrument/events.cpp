@@ -1,6 +1,5 @@
 // venv-vrequency — the audio thread's side of the event queue: settings and commands.
 #include "core/instrument/instrument.h"
-#include "core/drums/drums.h"
 #include "core/dsp.h"
 #include "core/synth/params.h"
 #include "core/synth/scale.h"
@@ -27,8 +26,7 @@ void Instrument::applySetting(int s, float v) {
     case S_GLIDESCALE: st.glideScale = clampf(v, 0, 4); break;
     case S_LOOPVOL: st.loopVol = clampf(v, 0, 1); break;
     case S_LATENCY: st.latencyMs = clampf(v, 0, 500); break;
-    case S_KIT: st.kit = std::clamp((int)v, 0, kKits - 1); break;
-    case S_BEATVOL: st.beatVol = clampf(v, 0, 1); break;
+    case S_PULSESYNC: st.pulseSync = pulses.sync = v > 0.5f; break;
     default: break;
     }
 }
@@ -74,8 +72,9 @@ void Instrument::handle(const Event &e) {
         break;
     case EV_PADS: padsPlaying = !padsPlaying; break;
     case EV_OCTAVE: shiftOctave(e.a); break;
-    case EV_DRUM: drumHit(e.a, e.f > 0 ? e.f : 1.0f); break;
-    case EV_BEAT: beatCmd(e.a, e.b, e.c, e.d); break;
+    case EV_PULSE: pulseHit(e.a, e.f > 0 ? e.f : 1.0f, true); break;
+    case EV_PULSESET: pulses.set(e.a, e.b, e.f, st.bpm); break;
+    case EV_PULSELATCH: pulses.latch(e.a, e.b != 0, beat, st.bpm); break;
     }
 }
 

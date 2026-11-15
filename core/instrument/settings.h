@@ -1,6 +1,5 @@
 // venv-vrequency — the performance settings and the names of their choices.
 #pragma once
-#include "core/drums/drums.h"
 #include "core/synth/scale.h"
 
 namespace td {
@@ -9,8 +8,8 @@ enum Setting {
     S_ROOT, S_SCALE, S_OCTAVE, S_ROWINT, S_BPM, S_VOLUME, S_XYMAP, S_XYHOLD,
     S_PADMODE, S_METRO,
     S_BENDRANGE, S_BENDTIME, S_GLIDESCALE, S_LOOPVOL, S_LATENCY,
-    S_KIT, S_BEATVOL,
     S_POLY,
+    S_PULSESYNC,
     S_COUNT
 };
 
@@ -45,9 +44,8 @@ struct Settings {
     float glideScale = 1;  // multiplies each patch's glide time
     float loopVol = 0.9f;
     float latencyMs = 0;   // output delay (e.g. Bluetooth): loop recordings are shifted earlier by this
-    int kit = KIT_SOFT;    // drum kit
-    float beatVol = 0.7f;
     bool poly = false;     // the letter keys: false = three strings (one note per row, slides), true = every key its own note
+    bool pulseSync = false; // the pulse pads' RATE snaps to divisions of the tempo
 };
 
 } // namespace td

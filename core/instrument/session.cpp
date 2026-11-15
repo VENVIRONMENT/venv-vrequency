@@ -1,6 +1,5 @@
 // venv-vrequency — bulk state: copying a session out of the instrument and putting one back.
 #include "core/instrument/instrument.h"
-#include "core/drums/drums.h"
 #include "core/instrument/session.h"
 #include "core/synth/scale.h"
 #include <algorithm>
@@ -16,7 +15,7 @@ void Instrument::snapshot(SessionData &out) {
     out.pads = parts[1].patch;
     out.holdChord = holdChord; out.droneMask = droneMask;
     out.loopBeats = nLayers > 0 ? loopLen : 0;
-    for (int d = 0; d < kDrums; ++d) out.beat[d] = beatPat[d];
+    for (int p = 0; p < kPulsePads; ++p) out.pulse[p] = pulses.pad[p];
     for (int i = 0; i < nLayers; ++i) {
         LayerData ld;
         ld.ev.assign(layers[i].ev.begin(), layers[i].ev.begin() + layers[i].n);
@@ -37,8 +36,8 @@ void Instrument::restore(const SessionData &in) {
     holdChord = in.holdChord >= 0 && in.holdChord < 7 ? in.holdChord : -1;
     droneMask = in.droneMask & 0x7f;
     padsPlaying = false;
-    st.kit = std::clamp(st.kit, 0, kKits - 1);
-    for (int d = 0; d < kDrums; ++d) beatPat[d] = in.beat[d];
+    pulses.sync = st.pulseSync;
+    for (int p = 0; p < kPulsePads; ++p) { pulses.pad[p] = in.pulse[p]; pulseClamp(pulses.pad[p]); }
     nLayers = 0;
     if (in.loopBeats >= 4 && !in.layers.empty()) {
         loopLen = std::min(in.loopBeats, kMaxLoopBeats);

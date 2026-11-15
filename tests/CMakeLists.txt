@@ -5,8 +5,8 @@ add_executable(vrequency_tests
   scale_tests.cpp
   keys_tests.cpp
   sound_tests.cpp
-  drum_tests.cpp
-  beat_tests.cpp
+  pulse_tests.cpp
+  pulse_pad_tests.cpp
   fx_tests.cpp
   chord_pads_tests.cpp
   poly_tests.cpp

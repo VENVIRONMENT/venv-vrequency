@@ -1,4 +1,4 @@
-// venv-vrequency — the audio block: events in, the clocks ticked, voices, drums and effects mixed out.
+// venv-vrequency — the audio block: events in, the clocks ticked, voices, pulses and effects mixed out.
 #include "core/instrument/instrument.h"
 #include "core/dsp.h"
 #include "core/synth/params.h"
@@ -25,7 +25,6 @@ void Instrument::block(float *l, float *r, int n) {
     double b0 = beat, b1 = beat + (double)st.bpm / 60.0 / sr * n;
     tickLoop(b0, b1);
     tickPads();
-    tickBeat(b0, b1);
     beat = b1;
 
     parts[0].gain = 1.0f;
@@ -59,15 +58,8 @@ void Instrument::block(float *l, float *r, int n) {
         }
     }
 
-    if (drums.active()) {
-        float dl[kBlock], dr[kBlock];
-        for (int i = 0; i < n; ++i) dl[i] = dr[i] = 0;
-        drums.render(st.kit, dl, dr, n);
-        const float g = st.beatVol * 0.85f, rv = drums.reverbSend(st.kit);
-        for (int i = 0; i < n; ++i) {
-            dryL[i] += dl[i] * g; dryR[i] += dr[i] * g;
-            sR[i] += 0.5f * (dl[i] + dr[i]) * g * rv;
-        }
+    if (pulses.active()) {
+        renderPulses(dryL, dryR, n, b0, b1);
         ++nActive; // keeps the effects running and the idle shortcut off
     }
 

@@ -9,7 +9,6 @@
 // runs, the audio thread waits. How long that is, and why it was left as it is, is in
 // docs/ARCHITECTURE.md ("Audio thread and the engine lock").
 #pragma once
-#include "core/drums/drum_kit.h"
 #include "core/fx/chorus.h"
 #include "core/fx/crush.h"
 #include "core/fx/delay.h"
@@ -20,6 +19,7 @@
 #include "core/instrument/limits.h"
 #include "core/instrument/settings.h"
 #include "core/instrument/ui_state.h"
+#include "core/pulse/pulse_bank.h"
 #include "core/synth/params.h"
 #include "core/synth/part.h"
 #include "core/synth/voice.h"
@@ -37,10 +37,12 @@ public:
     ~Instrument();
 
     // ---- the control thread (one writer; see the top of this file) ----
-    // push, key, set, cmd, note, hit and beatDo come from EventPort (event_port.h)
+    // push, key, set, cmd, note, hit, pulseSet and pulseLatch come from EventPort (event_port.h)
     void setPatch(int part, const Patch &p); // lock-free hand-off
     UiState uiState() const;
     void readScope(float *dst, int n) const; // most recent n mono samples
+    // every pulse hit, click and gate since `cursor` (see PulseBank::readTicks); lock-free
+    int readPulseTicks(uint32_t &cursor, PulseTick *dst, int max) const { return pulses.readTicks(cursor, dst, max); }
 
     // master output tap for WAV recording (interleaved stereo float)
     void setRecording(bool on) { recOn.store(on); }
@@ -59,7 +61,7 @@ public:
     const Voice &voice(int i) const { return voices[i]; }
     const Part &part(int i) const { return parts[i]; }
     const Crush &crusher() const { return crush; }
-    const DrumKit &drumKit() const { return drums; }
+    const PulseBank &pulseBank() const { return pulses; }
 
 private:
     float sr;
@@ -94,17 +96,8 @@ private:
     bool closing = false, loopFull = false;
     uint32_t evSeq = 0;
     int countBeat = 0;
-    // beat
-    DrumKit drums;
-    uint16_t beatPat[kDrums] = {0};
-    bool beatPlaying = false, beatRec = false;
-    long lastDrumStep = -1;
-    uint16_t beatNext[kDrums] = {0};   // the beat to switch to
-    int beatNextKit = 0;
-    bool beatSwitching = false;
-    void beatSwitchNow();
-    long skipStep[kDrums];             // a step just recorded by hand: do not sound it twice
-    uint32_t drumHits[kDrums] = {0};
+    // the pulse pads
+    PulseBank pulses;
     // click
     float clickEnv = 0, clickPh = 0, clickFreq = 1500;
 
@@ -170,10 +163,9 @@ private:
     void resetLayerPart(int li);
     void quietPart(int p);                   // its notes end, its crusher, modulation and bend are let go
     void trigClick(bool accent);
-    void drumHit(int drum, float vel);
-    void beatCmd(int cmd, int drum, int step, int arg);
-    void tickBeat(double b0, double b1);
-    bool transportIdle() const { return !padsActive() && (loopState == L_EMPTY || loopState == L_STOPPED); }
+    void pulseHit(int pad, float vel, bool record);   // pulse_pads.cpp: a tap (recorded into the loop) or a loop's hit
+    void renderPulses(float *l, float *r, int n, double b0, double b1);
+    bool barsRunning() const { return padsActive() || (st.pulseSync && pulses.active()); } // a new loop waits for a bar line
 
     void block(float *l, float *r, int n);
     void publish();

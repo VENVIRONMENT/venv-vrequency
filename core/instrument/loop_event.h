@@ -4,7 +4,7 @@
 
 namespace td {
 
-enum LoopOp : uint8_t { OP_ON, OP_GLIDE, OP_OFF, OP_BEND, OP_XY, OP_PATCH, OP_PARAM };
+enum LoopOp : uint8_t { OP_ON, OP_GLIDE, OP_OFF, OP_BEND, OP_XY, OP_PATCH, OP_PARAM, OP_PULSE }; // OP_PULSE: slot = pulse pad, a = velocity
 
 struct LoopEv {
     double beat = 0;

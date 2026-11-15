@@ -56,9 +56,10 @@ void Instrument::publish() {
     } else u.loopPos = 0;
     u.layers = nLayers; u.countBeat = countBeat;
     u.loopFull = loopFull; u.loopClosing = closing;
-    u.beatPlaying = beatPlaying; u.beatRec = beatRec; u.beatSwitching = beatSwitching;
-    u.beatStep = beatPlaying ? (int)((((long)std::floor(beat * 4.0) % kDrumSteps) + kDrumSteps) % kDrumSteps) : -1;
-    for (int d = 0; d < kDrums; ++d) { u.beatPat[d] = beatPat[d]; u.drumHits[d] = drumHits[d]; }
+    for (int p = 0; p < kPulsePads; ++p) {
+        u.pulse[p] = pulses.pad[p]; u.pulseLatched[p] = pulses.latched[p]; u.pulseHits[p] = pulses.hits[p];
+    }
+    u.pulsing = pulses.active();
     u.peak = peakHold; u.limiter = limiter.reduction; u.voices = nv;
     u.sustain = sustain; u.bend = parts[0].bend;
     u.xyX = xyX; u.xyY = xyY; u.xyTouch = xyTouch;

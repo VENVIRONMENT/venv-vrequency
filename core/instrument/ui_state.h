@@ -1,8 +1,8 @@
 // venv-vrequency — the state the audio thread publishes for the interface to draw.
 #pragma once
-#include "core/drums/drums.h"
 #include "core/instrument/limits.h"
 #include "core/instrument/settings.h"
+#include "core/pulse/pulse.h"
 #include <cstdint>
 
 namespace td {
@@ -29,12 +29,11 @@ struct UiState {
     float loopPos = 0;
     int loopBars = 0, layers = 0, countBeat = 0;
     bool loopFull = false, loopClosing = false;
-    // beat
-    bool beatPlaying = false, beatRec = false;
-    int beatStep = -1;                 // the step sounding now, -1 when stopped
-    bool beatSwitching = false;        // another beat waits for the next bar
-    uint16_t beatPat[kDrums] = {0};
-    uint32_t drumHits[kDrums] = {0};   // counts every hit of each drum (pads light up on a change)
+    // the pulse pads
+    PulsePad pulse[kPulsePads];
+    bool pulseLatched[kPulsePads] = {false};
+    uint32_t pulseHits[kPulsePads] = {0}; // counts every hit of each pad (pads light up on a change)
+    bool pulsing = false;                 // a pulse sounds or a pad is latched
     // meters
     float peak = 0, limiter = 1;
     int voices = 0;

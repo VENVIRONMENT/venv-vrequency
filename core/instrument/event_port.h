@@ -23,10 +23,10 @@ public:
     void note(int string, int id, float midi, bool down, float vel = 1.0f) {
         Event e; e.type = EV_NOTE; e.a = (int16_t)string; e.b = (int16_t)id; e.c = down; e.f = midi; e.g = vel; push(e);
     }
-    void hit(int drum, float vel = 1.0f) { Event e; e.type = EV_DRUM; e.a = (int16_t)drum; e.f = vel; push(e); }
-    void beatDo(int cmd, int drum = -1, int step = 0, int arg = 2) {
-        Event e; e.type = EV_BEAT; e.a = (int16_t)cmd; e.b = (int16_t)drum; e.c = (int16_t)step; e.d = (int16_t)arg; push(e);
-    }
+    // the pulse pads: a tap, one setting (PulseField), latch on or off
+    void hit(int pad, float vel = 1.0f) { Event e; e.type = EV_PULSE; e.a = (int16_t)pad; e.f = vel; push(e); }
+    void pulseSet(int pad, int field, float v) { Event e; e.type = EV_PULSESET; e.a = (int16_t)pad; e.b = (int16_t)field; e.f = v; push(e); }
+    void pulseLatch(int pad, bool on) { Event e; e.type = EV_PULSELATCH; e.a = (int16_t)pad; e.b = on; push(e); }
 
 protected:
     Spsc<Event, 1024> evq;

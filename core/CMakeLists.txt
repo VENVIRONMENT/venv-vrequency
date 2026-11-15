@@ -2,9 +2,6 @@
 # Includes are written from the repository root: #include "core/instrument/instrument.h".
 add_library(vreqcore STATIC
   analysis/analysis.cpp
-  drums/drum_kit.cpp
-  drums/kit_sounds.cpp
-  instrument/beat.cpp
   instrument/chord_pads.cpp
   instrument/events.cpp
   instrument/instrument.cpp
@@ -13,11 +10,15 @@ add_library(vreqcore STATIC
   instrument/loop_record.cpp
   instrument/looper.cpp
   instrument/process.cpp
+  instrument/pulse_pads.cpp
   instrument/session.cpp
   instrument/ui_state.cpp
   instrument/voices.cpp
   presets/factory.cpp
   presets/normalise.cpp
-  presets/random.cpp)
+  presets/random.cpp
+  pulse/pulse.cpp
+  pulse/pulse_bank.cpp
+  pulse/pulse_voice.cpp)
 target_include_directories(vreqcore PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(vreqcore PUBLIC Threads::Threads)

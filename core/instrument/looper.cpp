@@ -28,7 +28,7 @@ void Instrument::resetLayerPart(int li) {
 void Instrument::loopPedal() {
     switch (loopState) {
     case L_EMPTY:
-        if (padsActive() || beatPlaying) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
+        if (barsRunning()) recStartBeat = std::ceil((beat + 2.0) / 4.0) * 4.0;
         else { beat = 0; recStartBeat = 4; }
         loopState = L_COUNTIN;
         break;
@@ -93,7 +93,7 @@ void Instrument::loopPlayStop() {
         for (int i = 0; i < kLayers; ++i) partOff(2 + i, false);
         loopState = L_STOPPED;
     } else if (loopState == L_STOPPED && nLayers > 0) {
-        loopStart = (padsActive() || beatPlaying) ? std::ceil(beat / 4.0) * 4.0 : beat;
+        loopStart = (barsRunning()) ? std::ceil(beat / 4.0) * 4.0 : beat;
         for (int i = 0; i < nLayers; ++i) resetLayerPart(i);
         loopState = L_PLAY;
     }
@@ -108,6 +108,7 @@ void Instrument::applyOp(int part, const LoopEv &e, const Patch *patches, size_t
     case OP_XY: applyXY(part, e.slot & 0x0f, e.a, e.b, (e.slot & 0x80) != 0, (e.slot & 0x40) != 0); break;
     case OP_PATCH: if (e.slot < nPatches) parts[part].patch = patches[e.slot]; break;
     case OP_PARAM: if (e.slot < P_COUNT) parts[part].patch.p[e.slot] = e.a; break;
+    case OP_PULSE: pulseHit(e.slot, e.a * st.loopVol, false); break;
     }
 }
 
@@ -126,7 +127,7 @@ void Instrument::tickLoop(double b0, double b1) {
     // beat clicks (count-in always, metronome when enabled)
     double m = std::ceil(b0);
     bool onBeat = m < b1;
-    if (onBeat && (loopState == L_COUNTIN || st.metro || (beatPlaying && beatRec))) trigClick(((long)m) % 4 == 0);
+    if (onBeat && (loopState == L_COUNTIN || st.metro)) trigClick(((long)m) % 4 == 0);
 
     switch (loopState) {
     case L_COUNTIN:
