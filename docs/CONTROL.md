@@ -146,7 +146,7 @@ tempo). Settings are applied before `latch` and `hit`. What each field means per
 {"id":26,"cmd":"pulse","pad":6,"drive":0.6,"fold":0.3,"bend":-12,"hit":true}
 {"id":25,"cmd":"pulse","sync":true}
 ```
-The `beat` command of earlier versions is gone (the step sequencer was removed on the way to 1.0); it is refused as unknown.
+The `beat` command of earlier versions is gone (the step sequencer was removed in 1.0); it is refused as unknown.
 
 ### page
 `name`: synth, sound, pulse, freq, backing, tune, system, help or chat (`beat`, the old name, still opens Pulse). Changing page clears any highlight.

@@ -1,6 +1,6 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.14.0 and the default
+A guide to playing the synth, page by page. Everything here describes version 1.0.0 and the default
 key bindings. The Track page and the Beat page (drum kits and the step sequencer) are gone; the Pulse
 page took the Beat page's place.
 
