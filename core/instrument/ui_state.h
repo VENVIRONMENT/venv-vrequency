@@ -35,6 +35,7 @@ struct UiState {
     // the pulse pads
     PulsePad pulse[kPulsePads];
     bool pulseLatched[kPulsePads] = {false};
+    bool pulseHeld[kPulsePads] = {false};   // going without the latch: key held, sustained or a loop's hold
     uint32_t pulseHits[kPulsePads] = {0}; // counts every hit of each pad (pads light up on a change)
     bool pulsing = false;                 // a pulse sounds or a pad is latched
     // meters

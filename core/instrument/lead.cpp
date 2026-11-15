@@ -64,6 +64,10 @@ void Instrument::keyUp(int s, int col) {
 
 void Instrument::setSustain(bool on) {
     sustain = on;
+    if (!on)
+        for (int p = 0; p < kPulsePads; ++p)
+            if (pulses.sustained[p]) loopRecord(OP_PULSE, p, 1.0f, 2.0f);
+    pulses.setSustain(on, beat, st.bpm);
     if (!on) polyRelease();
     if (!on)
         for (int s = 0; s < kStrings; ++s)

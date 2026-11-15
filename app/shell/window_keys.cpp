@@ -14,6 +14,7 @@ void MainWindow::updateBend() {
 void MainWindow::releaseAllKeys() {
     for (auto it = keys.held.begin(); it != keys.held.end(); ++it)
         if (it.value().kind == HK_STRING) inst.key(it.value().a, it.value().b, false);
+        else if (it.value().kind == HK_PAGE && pageOf[it.value().a]) pageOf[it.value().a]->keyUp(it.key());
     keys.held.clear();
     synthPage.releaseTouches();
     keys.chromatic = keys.chord = keys.command = false;
@@ -38,6 +39,7 @@ void MainWindow::handleKey(int key, bool down) {
         Held h = it.value();
         keys.held.erase(it);
         if (h.kind == HK_STRING) inst.key(h.a, h.b, false);
+        else if (h.kind == HK_PAGE) { if (pageOf[h.a]) pageOf[h.a]->keyUp(key); }
         else if (h.kind == HK_ACT) {
             switch (h.a) {
             case A_SUSTAIN: keys.susKey = false; inst.cmd(EV_SUSTAIN, keys.susLatch ? 1 : 0); break;
@@ -71,7 +73,7 @@ void MainWindow::handleKey(int key, bool down) {
         if (guide.dockFocus && chat.key(key, plainAct, true)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
         if (!guide.dockFocus && plainAct == A_HOME) { guide.dockClose(); keys.held[key] = {HK_NONE, 0, 0}; return; } // Esc again closes it
     }
-    if (pageOf[pg] && !keys.testOpen && pageOf[pg]->key(key, plainAct)) { keys.held[key] = {HK_NONE, 0, 0}; return; }
+    if (pageOf[pg] && !keys.testOpen && pageOf[pg]->key(key, plainAct)) { keys.held[key] = {HK_PAGE, pg, 0}; return; }
     if (keys.command) {
         const int act = km.command.value(key, A_NONE);
         if (act == A_FILTER_OPEN || act == A_FILTER_CLOSE) { // held: sweeps until the key comes up

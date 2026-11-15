@@ -5,7 +5,7 @@
 #include <QString>
 #include <QStringList>
 
-enum HeldKind { HK_STRING, HK_ACT, HK_NONE };
+enum HeldKind { HK_STRING, HK_ACT, HK_NONE, HK_PAGE }; // HK_PAGE: a = the page that took it
 struct Held { int kind; int a, b; };          // what a physical key did when pressed
 
 struct KeyState {

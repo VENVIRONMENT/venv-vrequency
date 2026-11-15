@@ -30,6 +30,8 @@ void Instrument::loopBeginLayer() {
     // notes already sounding become part of the take
     for (int s = 0; s < kStrings; ++s)
         if (slotVoice[0][s] >= 0) loopRecord(OP_ON, s, slotNote[0][s], 1.0f);
+    for (int p = 0; p < kPulsePads; ++p) // and so do the pads whose keys are down
+        if (pulses.held[p]) loopRecord(OP_PULSE, p, 1.0f, 1.0f);
 }
 
 void Instrument::loopCommit(bool atLoopEnd) {
@@ -38,10 +40,11 @@ void Instrument::loopCommit(bool atLoopEnd) {
     double pos = 0;
     if (!atLoopEnd && loopLen > 0) { pos = std::fmod(beat - loopStart, loopLen); if (pos < 0) pos += loopLen; }
     // close any note still open in the recorded stream
-    bool on[kStrings] = {false};
+    bool on[kStrings] = {false}, pad[kPulsePads] = {false};
     std::sort(ly.ev.begin(), ly.ev.begin() + ly.n, [](const LoopEv &x, const LoopEv &y) { return x.seq < y.seq; });
     for (int i = 0; i < ly.n; ++i) {
         const LoopEv &e = ly.ev[i];
+        if (e.op == OP_PULSE && e.slot < kPulsePads && e.b > 0.5f) { pad[e.slot] = e.b < 1.5f; continue; }
         if (e.slot < kStrings) {
             if (e.op == OP_ON || e.op == OP_GLIDE) on[e.slot] = true;
             else if (e.op == OP_OFF) on[e.slot] = false;
@@ -52,6 +55,12 @@ void Instrument::loopCommit(bool atLoopEnd) {
             LoopEv &e = ly.ev[ly.n++];
             e.beat = atLoopEnd ? loopLen - 1e-6 : pos;
             e.op = OP_OFF; e.slot = (uint8_t)s; e.a = e.b = 0; e.seq = evSeq++;
+        }
+    for (int p = 0; p < kPulsePads; ++p)
+        if (pad[p] && ly.n < kLayerEvents) {
+            LoopEv &e = ly.ev[ly.n++];
+            e.beat = atLoopEnd ? loopLen - 1e-6 : pos;
+            e.op = OP_PULSE; e.slot = (uint8_t)p; e.a = 1; e.b = 2; e.seq = evSeq++;
         }
     std::sort(ly.ev.begin(), ly.ev.begin() + ly.n, [](const LoopEv &x, const LoopEv &y) {
         return x.beat < y.beat || (x.beat == y.beat && x.seq < y.seq);

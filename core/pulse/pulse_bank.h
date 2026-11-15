@@ -1,8 +1,8 @@
 // venv-vrequency — the eight pulse pads on the audio thread: their settings, the voices that play
 // them, LATCH (a pad that keeps going) and a record of every hit for the Pulse page's strip.
 //
-// LATCH: a latched gated tone or pulse train runs without end; a latched one-shot is hit again
-// RATE times a second. With SYNC the rate is snapped to a division of the tempo, and latched
+// A pad that is GOING (latched, its key held, kept by sustain, or held by a loop layer) runs on:
+// a gated tone or pulse train without end, a one-shot hit again RATE times a second. With SYNC the rate is snapped to a division of the tempo, and latched
 // one-shots then fall exactly on that grid of the beat clock.
 #pragma once
 #include "core/pulse/pulse_voice.h"
@@ -26,6 +26,9 @@ public:
     void init(float sampleRate);
     PulsePad pad[kPulsePads];
     bool latched[kPulsePads] = {false};
+    bool held[kPulsePads] = {false};       // its key is down
+    bool sustained[kPulsePads] = {false};  // its key came up while sustain was down
+    uint32_t loopHeld[kPulsePads] = {0};   // bit per loop layer holding it
     bool sync = false;
     uint32_t hits[kPulsePads] = {0};   // counts every hit (taps, latch repeats, loop playback)
 
@@ -33,6 +36,11 @@ public:
     void trigger(int p, float vel, float bpm);        // a tap: plays at once
     void set(int p, int field, float v, float bpm);   // one setting of a pad
     void latch(int p, bool on, double beat, float bpm);
+    void hold(int p, bool on, double beat, float bpm);                 // the pad's key down / up
+    void setSustain(bool on, double beat, float bpm);                  // up: lets the sustained pads go
+    void loopHold(int p, int layer, bool on, double beat, float bpm);  // a loop layer's recorded hold
+    void dropLoop(int layer);                                          // a layer went quiet: its holds end
+    bool going(int p) const { return latched[p] || held[p] || sustained[p] || loopHeld[p]; }
     void silence();                                   // fade everything, drop every latch
     // adds n samples of the pulses (mono) to out; beat0..beat1 is the beat clock over the block,
     // frame0 the sample clock at its start
@@ -54,6 +62,10 @@ private:
     std::atomic<uint32_t> ringW{0};
     void start(int p, float velocity, float bpm, bool endless, int delay);
     void logTick(uint64_t frame, uint32_t dur, int p);
+    bool sustainOn = false;
+    void begin(int p, double beat, float bpm); // a pad starts going
+    void stop(int p);                          // a pad stops going: its endless sound fades
+    void follow(int p, bool was, double beat, float bpm);
     void tickLatches(int n, double beat0, double beat1, float bpm);
 };
 

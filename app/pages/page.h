@@ -12,6 +12,9 @@ public:
     // A key went down while the page is showing (not during the key test). True: the page used it.
     // It is asked before the command layer, so a page that leaves Ctrl+key alone must say so itself.
     virtual bool key(int /*qtKey*/, int /*plainAct*/) { return false; }
+    // A key this page took came back up (also when the window lets every key go), whichever page
+    // is showing by then.
+    virtual void keyUp(int /*qtKey*/) {}
     virtual void tick() {}                       // every frame, whichever page is showing
     virtual void disarm() {}                     // the page changed: every armed mode is dropped
 };

@@ -172,6 +172,7 @@ private:
     void quietPart(int p);                   // its notes end, its crusher, modulation and bend are let go
     void trigClick(bool accent);
     void pulseHit(int pad, float vel, bool record);   // pulse_pads.cpp: a tap (recorded into the loop) or a loop's hit
+    void holdPulse(int pad, bool down, int layer);    // a pad key down / up (layer -1, recorded) or a loop layer's hold
     void renderPulses(float *l, float *r, int n, double b0, double b1);
     bool pulsesOnGrid() const { return st.pulseSync && pulses.active(); }  // synced latches follow the beat clock
     bool barsRunning() const { return backingActive() || pulsesOnGrid(); }  // a new loop waits for a bar line

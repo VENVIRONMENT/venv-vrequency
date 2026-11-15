@@ -19,6 +19,7 @@ enum EvType : uint8_t {
     EV_PULSE,      // a = pulse pad, f = velocity (0 = full): a tap; written into the loop while it records
     EV_PULSESET,   // a = pulse pad, b = PulseField, f = value
     EV_PULSELATCH, // a = pulse pad, b = on / off
+    EV_PULSEHOLD,  // a = pulse pad, b = key down / up: the pad goes while held (and sustained); recorded
     EV_NOTE,       // a = string, b = id, c = down, f = MIDI pitch (any, not scale-locked), g = velocity 0..1: a note from outside the keyboard
 };
 

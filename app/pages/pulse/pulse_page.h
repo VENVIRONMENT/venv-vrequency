@@ -7,6 +7,7 @@
 #include "app/pages/page.h"
 #include "app/pages/pulse/pulse_picture.h"
 #include "core/pulse/pulse_bank.h"
+#include <QHash>
 #include <deque>
 
 class QJsonObject;
@@ -16,10 +17,12 @@ public:
     explicit PulsePage(Shell &s) : Page(s) {}
     void paint() override;
     bool key(int qtKey, int plainAct) override;
+    void keyUp(int qtKey) override;
     void tick() override { drainTicks(); }
 
     // what the window, the control socket, the tour and the self-test reach
     void hitPad(int pad);                    // a tap: plays it and selects it (a latched pad: lets it go)
+    void holdPad(int pad, int qtKey);        // a pad key down: it goes until that key comes up
     void setLatch(int pad, bool on);
     void select(int pad);
     void cycleType();                        // TYPE: the selected pad's next kind
@@ -30,6 +33,8 @@ public:
 
 private:
     int sel = 0;
+    QHash<int, int> keyPad;                  // pad keys down -> the pad each holds
+    static constexpr int kTouchKey = -100;   // keyPad's key for a finger on pad p: kTouchKey - p
     uint32_t seenHits[td::kPulsePads] = {0};
     qint64 padLit[td::kPulsePads] = {0};     // when each pad last sounded
     PulsePicture small[td::kPulsePads], big;
