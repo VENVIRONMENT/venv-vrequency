@@ -101,7 +101,7 @@ Tests:
 ```bash
 ./build/vrequency_tests                                   # 519 engine checks (offline rendering)
 ./build/vrequency_tests --bench                           # CPU at full polyphony
-QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 396 checks through the real app + audio thread (one needs a real audio backend)
+QT_QPA_PLATFORM=offscreen ./build/vrequency --selftest    # 401 checks through the real app + audio thread (one needs a real audio backend)
 QT_QPA_PLATFORM=offscreen ./build/vrequency --audio null --render docs/shots   # redraw the pictures
 ```
 
