@@ -1,7 +1,8 @@
 # How to use venv-vrequency
 
-A guide to playing the synth, page by page. Everything here describes version 0.14.0, with the
-Track page and the beat sequencer taken out (the way to 1.0), and the default key bindings.
+A guide to playing the synth, page by page. Everything here describes version 0.14.0 and the default
+key bindings. The Track page and the Beat page (drum kits and the step sequencer) are gone; the Pulse
+page took the Beat page's place.
 
 The short version is also built into the app: press `Ctrl`+`H`, or tap Menu and then the Help tab.
 
@@ -81,7 +82,7 @@ The bottom row:
 - **− / +**: octave down or up.
 - **New**: invents a new random sound.
 - **Menu**: opens the Sound page, which has the tab strip along the top for all the other pages:
-  Synth, Sound, Pulse, Backing, Tune, System, Help and Chat, in that order.
+  Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat, in that order.
 
 `Tab` steps through the pages and `Esc` returns to Synth.
 
@@ -393,7 +394,7 @@ Everything is kept in the `vrequency` folder in your home folder.
 the speaker. The same again stops it. You can play along while it runs.
 
 To load a session, tap it in the list on the System page, then start the loop, or tap a chord.
-Sessions saved by earlier versions load too; their track, beat and drum kit are left out.
+Sessions saved before 1.0 load too; their old drum kit and beat settings are left out.
 
 ## 12. System page
 
