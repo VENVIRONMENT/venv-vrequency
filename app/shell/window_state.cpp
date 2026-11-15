@@ -5,7 +5,7 @@
 
 using namespace td;
 
-// The state file, read at start-up: settings, sounds, the pulse pads and the chat. Nothing
+// The state file, read at start-up: settings, sounds, the pulse pads, the Freq tones and the chat. Nothing
 // in a scratch window. An old file's "beat" and "beats" are left out.
 void MainWindow::loadState(SessionData &sd) {
     QJsonObject st;
@@ -14,11 +14,13 @@ void MainWindow::loadState(SessionData &sd) {
         sounds.load(st);
         keys.chordRow = st["chordRow"].toBool(false);
         store::pulseFromJson(st["pulse"].toArray(), sd.pulse);
+        store::freqFromJson(st["freq"].toObject(), sd.freq);
         chat.load(st);
         tourSeenFlag = st["tourSeen"].toBool(false);
         tourLastPageName = st["tourPage"].toString();
     }
     pulsePage.load(st);
+    freqPage.load(st);
 }
 
 void MainWindow::saveState() {
@@ -31,6 +33,8 @@ void MainWindow::saveState() {
     o["chordRow"] = keys.chordRow;
     o["pulse"] = store::pulseToJson(sd.pulse);
     pulsePage.save(o);
+    o["freq"] = store::freqToJson(sd.freq);
+    freqPage.save(o);
     chat.save(o);
     o["tourSeen"] = tourSeenFlag;
     if (!tourLastPageName.isEmpty()) o["tourPage"] = tourLastPageName;

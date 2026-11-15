@@ -10,6 +10,7 @@ target_sources(vrequency PRIVATE
   guided_zones.cpp
   harness.cpp
   harness.h
+  freq.cpp
   health.cpp
   keys.cpp
   listening.cpp

@@ -11,6 +11,7 @@
 #include "app/guide/guide.h"
 #include "app/pages/backing/backing_page.h"
 #include "app/pages/chat/chat_page.h"
+#include "app/pages/freq/freq_page.h"
 #include "app/pages/help/help_page.h"
 #include "app/pages/pulse/pulse_page.h"
 #include "app/pages/sound/sound_page.h"
@@ -58,6 +59,7 @@ public:
     SynthPage synthPage{*this, chordPads};
     SoundPage soundPage{*this};
     PulsePage pulsePage{*this};
+    FreqPage freqPage{*this};
     BackingPage backingPage{*this, chordPads};
     TunePage tunePage{*this};
     SystemPage systemPage{*this};

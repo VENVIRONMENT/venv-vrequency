@@ -1,4 +1,4 @@
-// venv-vrequency — the tour's demo, playing pages: Synth, Sound, Pulse, Backing, Tune, System, Help and Chat pictures.
+// venv-vrequency — the tour's demo, playing pages: Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat pictures.
 #include "app/tour/tour.h"
 #include "app/tour/tourdemo.h"
 #include "audio/audio.h"
@@ -35,6 +35,10 @@ void TourDemo::playPages(Rig &rig, std::vector<TourView::Pic> &pics) {
     rig.settle(3);
     QThread::msleep(300);                                                     // the pads that just sounded fade
     C("pulse");
+    w.setPage(PG_FREQ); inst.freqSet(2, FF_ON, 1); inst.freqSet(-1, FF_HOLD, 1);  // two tones beating, a fifth above
+    pump(inst, 1700); rig.settle(2);
+    C("freq");
+    inst.freqSet(-1, FF_HOLD, 0); inst.freqSet(2, FF_ON, 0); pump(inst, 60);
     w.setPage(PG_BACK); rig.settle(2);
     C("backing");
     w.setPage(PG_TUNE); rig.settle(2);

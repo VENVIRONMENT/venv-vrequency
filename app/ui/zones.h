@@ -64,6 +64,26 @@ inline constexpr char pulsetone[] = "pulsetone";
 inline constexpr char pulsetype[] = "pulsetype";
 inline constexpr char pulsewave[] = "pulsewave";
 
+// ---- Freq ----
+inline constexpr char freqcrush[] = "freqcrush";
+inline constexpr char freqcycles[] = "freqcycles";
+inline constexpr char freqdelay[] = "freqdelay";
+inline constexpr char freqdrive[] = "freqdrive";
+inline constexpr char freqfilter[] = "freqfilter";
+inline constexpr char freqfold[] = "freqfold";
+inline constexpr char freqgate[] = "freqgate";
+inline constexpr char freqhold[] = "freqhold";
+inline constexpr char freqkeys[] = "freqkeys";
+inline constexpr char freqlevel[] = "freqlevel";   // family: a tone's level bar
+inline constexpr char freqmod[] = "freqmod";
+inline constexpr char freqon[] = "freqon";   // family: a tone's ON / off
+inline constexpr char freqrate[] = "freqrate";   // stepper: GATE's rate
+inline constexpr char freqscope[] = "freqscope";
+inline constexpr char freqsnap[] = "freqsnap";
+inline constexpr char freqspectrum[] = "freqspectrum";
+inline constexpr char freqtone[] = "freqtone";   // family: a tone's row
+inline constexpr char freqwave[] = "freqwave";   // family: a tone's wave
+
 // ---- Backing ----
 inline constexpr char arprate[] = "arprate";
 inline constexpr char backmode[] = "backmode";

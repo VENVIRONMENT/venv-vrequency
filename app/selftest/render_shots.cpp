@@ -15,13 +15,16 @@ namespace selftest {
 namespace {
 // every page as it stands, while a slide is held
 void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
-    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-pulse", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
+    static const char *files[PG_COUNT] = {"0-play", "1-sound", "9-pulse", "27-freq", "2-backing", "3-tune", "4-system", "5-help", "14-chat"};
     for (int p = 0; p < PG_COUNT; ++p) {
         w.setPage(p);
         if (p == PG_PULSE) { // hits in the strip, a latched pad, the pulse train selected
             for (int k : {0, 2, 6, 3, 7, 1}) { w.pulsePage.hitPad(k); w.shot(); wait(160); }
             w.pulsePage.setLatch(4, true); wait(500);
             w.pulsePage.hitPad(5); wait(200);
+        }
+        if (p == PG_FREQ) { // two tones beating, a third a fifth up, held long enough to fill the 1.5 s view
+            inst.freqSet(2, FF_ON, 1); inst.freqSet(-1, FF_HOLD, 1); w.freqPage.select(1); wait(1700);
         }
         if (p == PG_CHAT) { // a conversation, so the page has something to show
             w.chat.add("rook", "Hi. I can hear A minor pentatonic at 100 bpm. Want a backing under it?", "ask", false);
@@ -34,6 +37,7 @@ void shootPages(MainWindow &w, Instrument &inst, const QString &dir) {
         for (int i = 0; i < 30; ++i) { w.shot(); wait(40); } // let the trace and the auto-range settle
         w.shot().save(QString("%1/%2.png").arg(dir).arg(files[p]));
         if (p == PG_PULSE) { w.pulsePage.setLatch(4, false); wait(60); }
+        if (p == PG_FREQ) { inst.freqSet(-1, FF_HOLD, 0); inst.freqSet(2, FF_ON, 0); w.freqPage.select(0); wait(60); }
     }
 }
 

@@ -10,6 +10,7 @@ const TourView::PageInfo kPages[] = {
     {"sound", "Sound", "Sound", PG_SOUND},
     {"sound-deep", "Sound: All parameters", "Edit", PG_SOUND},
     {"pulse", "Pulse", "Pulse", PG_PULSE},
+    {"freq", "Freq", "Freq", PG_FREQ},
     {"backing", "Backing", "Bkng", PG_BACK},
     {"tune", "Tune", "Tune", PG_TUNE},
     {"system", "System", "Sys", PG_SYS},
@@ -19,7 +20,7 @@ const TourView::PageInfo kPages[] = {
 };
 const int kPageCount = (int)(sizeof(kPages) / sizeof(kPages[0]));
 // "Start here": the pages in the order a new player needs them
-const char *kPath[] = {"synth", "sound", "tune", "backing", "pulse", "system", "help", "chat"};
+const char *kPath[] = {"synth", "sound", "tune", "backing", "pulse", "freq", "system", "help", "chat"};
 const int kPathLen = (int)(sizeof(kPath) / sizeof(kPath[0]));
 } // namespace
 
@@ -31,6 +32,7 @@ QStringList tourReadAlso(const QString &page) {
     if (page == "synth") return {"concepts.strings", "concepts.slides", "concepts.scale-lock", "concepts.loop-pedal"};
     if (page == "sound" || page == "sound-deep") return {"concepts.adsr", "concepts.undo-map", "concepts.sessions-favourites-state"};
     if (page == "pulse") return {"concepts.pulse-kinds", "concepts.latch-sync", "concepts.loop-pedal"};
+    if (page == "freq") return {"concepts.beating", "concepts.latch-sync", "concepts.scale-lock"};
     if (page == "backing") return {"concepts.backing-modes", "concepts.scale-lock", "concepts.tempo"};
     if (page == "tune") return {"concepts.scale-lock", "concepts.tempo", "concepts.slides"};
     if (page == "system" || page == "key-test") return {"concepts.q20-layers", "concepts.panic", "concepts.sessions-favourites-state"};

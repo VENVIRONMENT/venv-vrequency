@@ -5,6 +5,10 @@ target_sources(vrequency PRIVATE
   backing/backing_page.h
   chat/chat_page.cpp
   chat/chat_page.h
+  freq/freq_page.cpp
+  freq/freq_page.h
+  freq/freq_rows.cpp
+  freq/freq_views.cpp
   help/help_page.cpp
   help/help_page.h
   help/help_rows.cpp
@@ -36,6 +40,8 @@ target_sources(vrequency PRIVATE
   synth/scope_spectrum.cpp
   synth/scope_stack.cpp
   synth/scope_trace.cpp
+  synth/spectrum.cpp
+  synth/spectrum.h
   synth/synth_header.cpp
   synth/synth_page.cpp
   synth/synth_page.h

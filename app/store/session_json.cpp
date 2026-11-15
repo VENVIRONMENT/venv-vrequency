@@ -148,6 +148,7 @@ QJsonObject sessionToJson(const td::SessionData &s) {
     o["loopBeats"] = s.loopBeats;
     o["layers"] = layersToJson(s.layers);
     o["pulse"] = pulseToJson(s.pulse);
+    o["freq"] = freqToJson(s.freq);
     return o;
 }
 
@@ -163,6 +164,7 @@ bool sessionFromJson(const QJsonObject &o, td::SessionData &s) {
     s.droneMask = o["droneMask"].toInt(0);
     s.loopBeats = o["loopBeats"].toDouble(0);
     pulseFromJson(o["pulse"].toArray(), s.pulse); // an old session's "beat" is left out
+    freqFromJson(o["freq"].toObject(), s.freq); // older sessions have none: the defaults
     s.layers = layersFromJson(o["layers"].toArray());
     return true;
 }

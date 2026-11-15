@@ -719,8 +719,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -735,7 +735,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -747,6 +747,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -1219,8 +1220,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -1235,7 +1236,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -1247,6 +1248,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -2456,8 +2458,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -2472,7 +2474,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -2484,6 +2486,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -2997,15 +3000,15 @@
     }
    }
   },
-  "backing": {
-   "title": "Backing",
-   "intro": "Backing chords from your key: pick what a chord tap does, how they play, and how long each lasts.",
+  "freq": {
+   "title": "Freq",
+   "intro": "Up to four steady tones at exact frequencies. Set them a little apart to hear beats, in ratios for chords; bend, warp, hold, gate or play them.",
    "cards": {
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -3020,7 +3023,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -3032,6 +3035,497 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
+      "tab_backing",
+      "tab_tune",
+      "tab_system",
+      "tab_help",
+      "tab_chat"
+     ]
+    },
+    "freqscope": {
+     "title": "FREQ OUTPUT",
+     "kind": "readout",
+     "summary": "The Freq sound's last 1.5 s: beating shows as swells.",
+     "does": "The tones' own output, after the warp cells, before the delay: the loudest and quietest sample around each moment. Top right: the beat between the two lowest tones within 20 Hz, and how long one swell takes.",
+     "use": [
+      {
+       "how": "Both",
+       "text": "Hold two tones a little apart and watch the band swell and shrink."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, the big view. It draws only the Freq tones, never the synth.",
+     "tips": [
+      "1.5 Hz apart makes one swell every 0.67 s: the beat is the difference."
+     ],
+     "related": [
+      "freq.freqcycles",
+      "freq.freqspectrum",
+      "concepts.beating"
+     ],
+     "ask": "Why do two close tones swell and fade?"
+    },
+    "freqcycles": {
+     "title": "2 CYCLES",
+     "kind": "readout",
+     "summary": "Two periods of tone 1, from the real output.",
+     "does": "The newest stretch of the Freq output two periods of tone 1 long, starting where it crosses zero going up. A pure sine is a smooth wave; other tones, warp and 2 > 1 change its shape.",
+     "use": [
+      {
+       "how": "Both",
+       "text": "Change a tone's wave or turn up Drive and watch the shape change."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, under the big view on the left.",
+     "tips": [],
+     "related": [
+      "freq.freqscope",
+      "freq.freqspectrum"
+     ],
+     "ask": "What does the 2 cycles view show?"
+    },
+    "freqspectrum": {
+     "title": "SPECTRUM",
+     "kind": "readout",
+     "summary": "Which frequencies the Freq sound is made of.",
+     "does": "An FFT of the newest 4096 samples of the Freq output on a log axis, 30 Hz to 16 kHz. Each tone is a peak; FM and RING add side peaks; Drive, Fold and Crush add many.",
+     "use": [
+      {
+       "how": "Both",
+       "text": "Switch 2 > 1 to FM and watch new peaks appear."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, under the big view on the right. The same FFT as the Synth scope's.",
+     "tips": [],
+     "related": [
+      "freq.freqmod",
+      "freq.freqscope"
+     ],
+     "ask": "How do I read the spectrum?"
+    },
+    "freqtone0": {
+     "title": "TONE ROW",
+     "kind": "list",
+     "summary": "One tone: wave, Hz, note, ratio, level, on.",
+     "does": "A steady tone at an exact frequency. Tap a row to select it (double frame); an off row is switched on. Next to the Hz: the nearest note, or +Hz from tone 1 when within 20 Hz; then the ratio to tone 1.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a row to select it."
+      },
+      {
+       "how": "Keys",
+       "text": "1-4 select a tone; Left/Right move it 0.5 Hz, Up/Down a semitone."
+      },
+      {
+       "how": "Keys",
+       "text": "Hold Shift for 10 Hz steps."
+      }
+     ],
+     "keys": [
+      "1..4",
+      "Left",
+      "Right",
+      "Up",
+      "Down",
+      "Shift"
+     ],
+     "recall": "Freq page, the four rows. Arrows move the selected tone.",
+     "tips": [
+      "~3:2 means close to 3:2 but not exact: Snap makes it exact."
+     ],
+     "related": [
+      "freq.freqsnap",
+      "freq.freqwave0",
+      "concepts.beating"
+     ],
+     "ask": "What do the numbers in a tone row mean?",
+     "match": [
+      "freqtone0",
+      "freqtone1",
+      "freqtone2",
+      "freqtone3"
+     ]
+    },
+    "freqwave0": {
+     "title": "WAVE",
+     "kind": "button",
+     "summary": "The tone's wave: tap for the next one.",
+     "does": "Sine, Tri, Square, Saw or Noise. Square and Saw are bright (band-limited, so no aliasing); Noise is noise filtered to a narrow band at the tone's Hz.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap the wave box to step through the five."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, the box after the tone number.",
+     "tips": [],
+     "related": [
+      "freq.freqtone0",
+      "freq.freqspectrum"
+     ],
+     "ask": "What does each wave sound like?",
+     "match": [
+      "freqwave0",
+      "freqwave1",
+      "freqwave2",
+      "freqwave3"
+     ]
+    },
+    "freqlevel0": {
+     "title": "LEVEL",
+     "kind": "slider",
+     "summary": "How loud the tone is. Tap or drag.",
+     "does": "0 to 100%. At 0 the tone is silent but still bends tone 1 when it is tone 2 and 2 > 1 is on. Four tones at full stay inside full scale.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag along the bar."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, the bar in each row.",
+     "tips": [
+      "Tone 2 at 0% with 2 > 1 on: you hear only its effect on tone 1."
+     ],
+     "related": [
+      "freq.freqmod",
+      "freq.freqon0"
+     ],
+     "ask": "Why can I not hear tone 2?",
+     "match": [
+      "freqlevel0",
+      "freqlevel1",
+      "freqlevel2",
+      "freqlevel3"
+     ]
+    },
+    "freqon0": {
+     "title": "ON / OFF",
+     "kind": "toggle",
+     "summary": "Switches one tone in or out.",
+     "does": "An off tone is silent, dimmed, and leaves the beat and 2 > 1 out. Its settings are kept. Switching fades over about 20 ms, so it never clicks.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap ON or off at the end of the row."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, right end of each row. Tapping an off row also switches it on.",
+     "tips": [],
+     "related": [
+      "freq.freqtone0",
+      "freq.freqhold"
+     ],
+     "ask": "How do I turn a tone off?",
+     "match": [
+      "freqon0",
+      "freqon1",
+      "freqon2",
+      "freqon3"
+     ]
+    },
+    "freqmod": {
+     "title": "2 > 1",
+     "kind": "button",
+     "summary": "Tone 2 bends tone 1: OFF, FM or RING.",
+     "does": "FM: tone 2 pushes tone 1's phase back and forth, adding side peaks. RING: tone 1 times tone 2, giving the sum and difference. Tap to change the mode; drag sideways to set the amount.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap to cycle OFF, FM, RING."
+      },
+      {
+       "how": "Touch",
+       "text": "Drag left or right to set the amount."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, first bend-and-warp cell. Needs tone 2 on.",
+     "tips": [
+      "Tone 2 a few Hz from tone 1 with RING gives a slow tremolo."
+     ],
+     "related": [
+      "freq.freqspectrum",
+      "freq.freqlevel0"
+     ],
+     "ask": "What is the difference between FM and RING?"
+    },
+    "freqfold": {
+     "title": "FOLD",
+     "kind": "slider",
+     "summary": "Folds the wave back on itself: hollow, metallic.",
+     "does": "A wave folder on the whole Freq sound: the loud parts fold back down instead of clipping, adding bright overtones. 0% leaves it alone.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag across the cell."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, bend and warp row, second cell.",
+     "tips": [],
+     "related": [
+      "freq.freqdrive",
+      "freq.freqspectrum"
+     ],
+     "ask": "What does Fold do to a sine?"
+    },
+    "freqfilter": {
+     "title": "FILTER",
+     "kind": "slider",
+     "summary": "Low-pass on the Freq sound, 40 Hz to 18 kHz.",
+     "does": "Cuts the highs above the cutoff, 12 dB per octave, with no resonance peak. Open (18 kHz) leaves everything. Moves in octaves.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag across the cell: left is dark, right is open."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, bend and warp row, third cell.",
+     "tips": [
+      "Use it to tame Square, Saw or Crush."
+     ],
+     "related": [
+      "freq.freqcrush",
+      "freq.freqspectrum"
+     ],
+     "ask": "How do I make the Freq sound darker?"
+    },
+    "freqdrive": {
+     "title": "DRIVE",
+     "kind": "slider",
+     "summary": "Soft saturation: rounder, louder, warmer.",
+     "does": "Pushes the Freq sound into a soft clipper, so sines grow overtones and quiet tones come up. It never goes past full scale.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag across the cell."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, bend and warp row, fourth cell.",
+     "tips": [],
+     "related": [
+      "freq.freqfold",
+      "freq.freqscope"
+     ],
+     "ask": "Why does Drive make it louder?"
+    },
+    "freqcrush": {
+     "title": "CRUSH",
+     "kind": "slider",
+     "summary": "Fewer bits and a lower sample rate, from one amount.",
+     "does": "Off at the far left. Then the sound is held in steps (down to about 2 kHz) and rounded to fewer levels (down to 2 bits). The cell shows the bits and the rate.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag across the cell; the far left is off."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, bend and warp row, fifth cell.",
+     "tips": [
+      "Crush then Filter: the grit without the fizz."
+     ],
+     "related": [
+      "freq.freqfilter",
+      "concepts.glitch"
+     ],
+     "ask": "What does Crush do?"
+    },
+    "freqdelay": {
+     "title": "DELAY",
+     "kind": "slider",
+     "summary": "Sends the Freq sound into the master delay.",
+     "does": "How much goes into the tempo delay the synth uses (its time and feedback come from the current sound). Dry at the far left.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap or drag across the cell."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, bend and warp row, last cell. The views draw the sound before the delay.",
+     "tips": [],
+     "related": [
+      "freq.freqscope",
+      "concepts.tempo"
+     ],
+     "ask": "Where does the Freq delay get its time from?"
+    },
+    "freqhold": {
+     "title": "HOLD",
+     "kind": "toggle",
+     "summary": "The tones sound and keep going.",
+     "does": "Every tone that is on sounds until HOLD is tapped again or Backspace (panic). It fades in and out over 5 ms. With GATE on as well, the held tones pulse. Off when the app starts.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap Hold."
+      },
+      {
+       "how": "Keys",
+       "text": "Backspace stops everything, Freq too."
+      }
+     ],
+     "keys": [
+      "Backspace"
+     ],
+     "recall": "Freq page, first soft key.",
+     "tips": [],
+     "related": [
+      "freq.freqgate",
+      "freq.freqkeys",
+      "concepts.panic"
+     ],
+     "ask": "How do I start and stop the tones?"
+    },
+    "freqgate": {
+     "title": "GATE",
+     "kind": "toggle",
+     "summary": "Pulses the tones on and off at a rate.",
+     "does": "A square on/off at the rate shown, with 1 ms edges. With SYNC on (Pulse page) the rate snaps to a note value of the tempo and lands on the beat. + and - step the rate.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap Gate to switch it; + and - change the rate."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, second soft key; the rate is its small print.",
+     "tips": [
+      "Gate alone also starts the tones."
+     ],
+     "related": [
+      "freq.freqrate-",
+      "pulse.pulsesync",
+      "concepts.latch-sync"
+     ],
+     "ask": "How do I make the tones pulse in time?"
+    },
+    "freqrate-": {
+     "title": "GATE RATE",
+     "kind": "stepper",
+     "summary": "GATE's rate, one step slower or faster.",
+     "does": "Free: 0.25 Hz to 50 Hz in steps. With SYNC on: the next note value of the tempo (whole bar down to 1/64).",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap + or - beside Gate."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, the + and - beside the Gate soft key.",
+     "tips": [],
+     "related": [
+      "freq.freqgate",
+      "pulse.pulsesync"
+     ],
+     "ask": "What rates can GATE use?",
+     "match": [
+      "freqrate-",
+      "freqrate+"
+     ]
+    },
+    "freqkeys": {
+     "title": "KEYS",
+     "kind": "toggle",
+     "summary": "The letter keys set tone 1 to scale notes.",
+     "does": "On this page the letters set tone 1 to a note of the key and scale (as the strings would), and the other tones follow: close ones keep their Hz offset, the rest their ratio. Without HOLD, they sound only while a key is held.",
+     "use": [
+      {
+       "how": "Keys",
+       "text": "Press a letter: tone 1 jumps to that note."
+      },
+      {
+       "how": "Touch",
+       "text": "Tap Keys to switch it."
+      }
+     ],
+     "keys": [
+      "Q..P",
+      "A..L",
+      "Z..M",
+      "Shift"
+     ],
+     "recall": "Freq page, third soft key. Off: the letters play the synth as usual.",
+     "tips": [
+      "Shift with a letter: the chromatic note."
+     ],
+     "related": [
+      "freq.freqtone0",
+      "concepts.scale-lock",
+      "concepts.beating"
+     ],
+     "ask": "How do I play the Freq tones from the keys?"
+    },
+    "freqsnap": {
+     "title": "SNAP",
+     "kind": "button",
+     "summary": "The selected tone to the nearest simple ratio.",
+     "does": "Moves the selected tone to the nearest of 1:1, 2:1, 3:2, 4:3, 5:4, 5:3, 6:5, 8:5, 3:1 and so on of tone 1 (above or below). With tone 1 selected: the nearest equal-tempered note. The small print says where it goes.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Select a tone, then tap Snap."
+      }
+     ],
+     "keys": [],
+     "recall": "Freq page, last soft key.",
+     "tips": [
+      "Snap, then nudge with Left/Right for a slow beat."
+     ],
+     "related": [
+      "freq.freqtone0",
+      "concepts.beating"
+     ],
+     "ask": "What does SNAP do to tone 1?"
+    }
+   }
+  },
+  "backing": {
+   "title": "Backing",
+   "intro": "Backing chords from your key: pick what a chord tap does, how they play, and how long each lasts.",
+   "cards": {
+    "tab_synth": {
+     "title": "PAGE TABS",
+     "kind": "tab",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "use": [
+      {
+       "how": "Touch",
+       "text": "Tap a tab to go there."
+      },
+      {
+       "how": "Keys",
+       "text": "Tab steps to the next page; Esc goes to Synth."
+      }
+     ],
+     "keys": [
+      "Tab",
+      "Esc"
+     ],
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
+     "tips": [
+      "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
+     ],
+     "related": [
+      "synth.menu"
+     ],
+     "ask": "What is on each of the pages?",
+     "match": [
+      "tab_synth",
+      "tab_sound",
+      "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -3616,8 +4110,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -3632,7 +4126,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -3644,6 +4138,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -4229,8 +4724,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -4245,7 +4740,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -4257,6 +4752,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -4779,8 +5275,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -4795,7 +5291,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -4807,6 +5303,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -4951,8 +5448,8 @@
     "tab_synth": {
      "title": "PAGE TABS",
      "kind": "tab",
-     "summary": "The strip of seven tabs along the top.",
-     "does": "Synth, Sound, Pulse, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
+     "summary": "The strip of nine tabs along the top.",
+     "does": "Synth, Sound, Pulse, Freq, Backing, Tune, System, Help and Chat. The page you are on is inverted. Chat shows how many copilot messages are unread. The Synth page has no strip: Menu or any tab brings you here.",
      "use": [
       {
        "how": "Touch",
@@ -4967,7 +5464,7 @@
       "Tab",
       "Esc"
      ],
-     "recall": "Top of every page except Synth. Tab cycles forward through all seven; Esc returns to Synth.",
+     "recall": "Top of every page except Synth. Tab cycles forward through all nine; Esc returns to Synth.",
      "tips": [
       "Ctrl+H toggles Help and Ctrl+Y toggles Chat from anywhere."
      ],
@@ -4979,6 +5476,7 @@
       "tab_synth",
       "tab_sound",
       "tab_pulse",
+      "tab_freq",
       "tab_backing",
       "tab_tune",
       "tab_system",
@@ -5851,6 +6349,29 @@
     "backing.bresync"
    ],
    "ask": "How do I build a chord progression?"
+  },
+  "beating": {
+   "title": "BEATING",
+   "kind": "area",
+   "summary": "Two close tones swell and fade: the beat.",
+   "does": "Two tones a few Hz apart drift in and out of step, so the sum swells and fades. The swells come as often as the difference: 220 and 221.5 Hz beat 1.5 times a second. Exact ratios (3:2) sound still.",
+   "use": [
+    {
+     "how": "Both",
+     "text": "On the Freq page, hold tones 1 and 2 and nudge tone 2 with Left/Right."
+    }
+   ],
+   "keys": [],
+   "recall": "Freq page: the beat is in the section line and the big view.",
+   "tips": [
+    "Slower than about 15 Hz you hear swells; faster, it turns into roughness."
+   ],
+   "related": [
+    "freq.freqscope",
+    "freq.freqsnap",
+    "freq.freqtone0"
+   ],
+   "ask": "Why do two close tones beat?"
   }
  }
 }

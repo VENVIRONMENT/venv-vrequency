@@ -22,6 +22,7 @@ int runSelfTest(MainWindow &w, Instrument &inst, AudioOut &audio, const QString 
     testTouch(ctx);
     testSaving(ctx);
     testPulse(ctx);
+    testFreq(ctx);
     testListeningBack(ctx);
     testControlSocket(ctx);
     testGuidedHelp(ctx);
